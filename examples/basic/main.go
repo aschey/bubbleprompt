@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	prompt "github.com/aschey/bubbleprompt"
 	tea "github.com/charmbracelet/bubbletea"
@@ -11,6 +12,10 @@ import (
 
 type model struct {
 	prompt prompt.Model
+}
+
+type completerModel struct {
+	suggestions []prompt.Suggest
 }
 
 func (m model) Init() tea.Cmd {
@@ -27,6 +32,11 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
+func (m completerModel) completer(input string) []prompt.Suggest {
+	time.Sleep(100 * time.Millisecond)
+	return prompt.FilterHasPrefix(input, m.suggestions)
+}
+
 func main() {
 	suggestions := []prompt.Suggest{
 		{Name: "first option", Description: "test desc"},
@@ -36,12 +46,14 @@ func main() {
 		{Name: "fifth option", Description: "test desc2"},
 	}
 
+	completerModel := completerModel{suggestions: suggestions}
+
 	defaultStyle := lipgloss.
 		NewStyle().
 		PaddingLeft(1)
 
 	m := model{prompt: prompt.New(
-		prompt.OptionInitialSuggestions(suggestions),
+		completerModel.completer,
 		prompt.OptionPrompt(">>> "),
 		prompt.OptionNameFormatter(func(name string, columnWidth int) string {
 			return defaultStyle.

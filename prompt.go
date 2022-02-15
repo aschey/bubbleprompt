@@ -2,7 +2,6 @@ package prompt
 
 import (
 	"strings"
-	"time"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -16,34 +15,38 @@ type Suggest struct {
 
 type errMsg error
 
+type Formatter func(name string, columnWidth int) string
+
+type Completer func(input string) []Suggest
+
 type Model struct {
+	completer                  Completer
 	suggestions                []Suggest
-	filteredSuggestions        []Suggest
 	textInput                  textinput.Model
 	NameForegroundColor        string
 	NameBackgroundColor        string
-	NameFormatter              func(name string, columnWidth int) string
+	NameFormatter              Formatter
 	DescriptionForegroundColor string
 	DescriptionBackgroundColor string
-	DescriptionFormatter       func(description string, columnWidth int) string
+	DescriptionFormatter       Formatter
 	prevText                   string
 	updating                   bool
 	err                        error
 }
 
-func New(opts ...Option) Model {
+func New(completer Completer, opts ...Option) Model {
 	textInput := textinput.New()
 	textInput.Focus()
 
 	model := Model{
+		completer:                  completer,
 		updating:                   false,
 		textInput:                  textInput,
 		NameForegroundColor:        "",
 		NameBackgroundColor:        "14",
 		DescriptionForegroundColor: "",
 		DescriptionBackgroundColor: "37",
-		suggestions:                []Suggest{},
-		filteredSuggestions:        []Suggest{},
+		suggestions:                completer(""),
 	}
 
 	for _, opt := range opts {
@@ -53,6 +56,18 @@ func New(opts ...Option) Model {
 	}
 
 	return model
+}
+
+func FilterHasPrefix(search string, suggestions []Suggest) []Suggest {
+	lowerSearch := strings.ToLower(search)
+	filtered := []Suggest{}
+	for _, s := range suggestions {
+		if strings.HasPrefix(strings.ToLower(s.Name), lowerSearch) {
+			filtered = append(filtered, s)
+		}
+	}
+
+	return filtered
 }
 
 func (m Model) SetPrompt(prompt string) {
@@ -74,9 +89,8 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		}
 	case completionMsg:
 		m.updating = false
-		m.filteredSuggestions = msg
+		m.suggestions = msg
 
-	// We handle errors just like any other message
 	case errMsg:
 		m.err = msg
 		return m, nil
@@ -98,14 +112,7 @@ type completionMsg []Suggest
 
 func (m Model) updateCompletions() tea.Cmd {
 	return func() tea.Msg {
-		time.Sleep(100 * time.Millisecond)
-		search := strings.ToLower(m.textInput.Value())
-		filtered := []Suggest{}
-		for _, s := range m.suggestions {
-			if strings.HasPrefix(strings.ToLower(s.Name), search) {
-				filtered = append(filtered, s)
-			}
-		}
+		filtered := m.completer(m.textInput.Value())
 
 		return completionMsg(filtered)
 	}
@@ -115,7 +122,7 @@ func (m Model) View() string {
 	maxNameLen := 0
 	maxDescLen := 0
 
-	for _, s := range m.filteredSuggestions {
+	for _, s := range m.suggestions {
 		if len(s.Name) > maxNameLen {
 			maxNameLen = len(s.Name)
 		}
@@ -129,7 +136,7 @@ func (m Model) View() string {
 		PaddingLeft(1)
 
 	prompts := []string{m.textInput.View()}
-	for _, s := range m.filteredSuggestions {
+	for _, s := range m.suggestions {
 		var name string
 		if m.NameFormatter == nil {
 			name = defaultStyle.

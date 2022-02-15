@@ -9,14 +9,6 @@ func OptionPrompt(prompt string) Option {
 	}
 }
 
-func OptionInitialSuggestions(suggestions []Suggest) Option {
-	return func(model *Model) error {
-		model.suggestions = suggestions
-		model.filteredSuggestions = suggestions
-		return nil
-	}
-}
-
 func OptionNameForegroundColor(color string) Option {
 	return func(model *Model) error {
 		model.NameForegroundColor = color
@@ -31,7 +23,7 @@ func OptionNameBackgroundColor(color string) Option {
 	}
 }
 
-func OptionNameFormatter(nameFormatter func(name string, columnWidth int) string) Option {
+func OptionNameFormatter(nameFormatter Formatter) Option {
 	return func(model *Model) error {
 		model.NameFormatter = nameFormatter
 		return nil
@@ -52,7 +44,7 @@ func OptionDescriptionBackgroundColor(color string) Option {
 	}
 }
 
-func OptionDescriptionFormatter(descriptionFormatter func(name string, columnWidth int) string) Option {
+func OptionDescriptionFormatter(descriptionFormatter Formatter) Option {
 	return func(model *Model) error {
 		model.DescriptionFormatter = descriptionFormatter
 		return nil
