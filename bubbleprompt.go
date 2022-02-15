@@ -2,13 +2,14 @@ package bubbleprompt
 
 import (
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
-type suggest struct {
+type Suggest struct {
 	name        string
 	description string
 }
@@ -16,24 +17,31 @@ type suggest struct {
 type errMsg error
 
 type Model struct {
-	suggestions []suggest
-	textInput   textinput.Model
-	err         error
+	suggestions         []Suggest
+	filteredSuggestions []Suggest
+	textInput           textinput.Model
+	prevText            string
+	updating            bool
+	err                 error
 }
 
 func New() Model {
 	ti := textinput.New()
 	ti.Prompt = ">>> "
 	ti.Focus()
+	suggestions := []Suggest{
+		{name: "first option", description: "test desc"},
+		{name: "second option", description: "test desc2"},
+		{name: "third option", description: "test desc2"},
+		{name: "fourth option", description: "test desc2"},
+		{name: "fifth option", description: "test desc2"},
+	}
 	return Model{
-		textInput: ti,
-		suggestions: []suggest{
-			{name: "first option", description: "test desc"},
-			{name: "second option", description: "test desc2"},
-			{name: "third option", description: "test desc2"},
-			{name: "fourth option", description: "test desc2"},
-			{name: "fifth option", description: "test desc2"},
-		}}
+		updating:            false,
+		textInput:           ti,
+		suggestions:         suggestions,
+		filteredSuggestions: suggestions,
+	}
 }
 
 func (m Model) Init() tea.Cmd {
@@ -49,6 +57,9 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		case tea.KeyEnter, tea.KeyCtrlC, tea.KeyEsc:
 			return m, tea.Quit
 		}
+	case completionMsg:
+		m.updating = false
+		m.filteredSuggestions = msg
 
 	// We handle errors just like any other message
 	case errMsg:
@@ -58,21 +69,38 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 	m.textInput, cmd = m.textInput.Update(msg)
 	m.textInput.Value()
-	return m, cmd
+
+	if m.updating || m.prevText == m.textInput.Value() {
+		return m, cmd
+	}
+	m.prevText = m.textInput.Value()
+
+	m.updating = true
+	return m, tea.Batch(cmd, m.updateCompletions())
+}
+
+type completionMsg []Suggest
+
+func (m Model) updateCompletions() tea.Cmd {
+	return func() tea.Msg {
+		time.Sleep(100 * time.Millisecond)
+		search := strings.ToLower(m.textInput.Value())
+		filtered := []Suggest{}
+		for _, s := range m.suggestions {
+			if strings.HasPrefix(strings.ToLower(s.name), search) {
+				filtered = append(filtered, s)
+			}
+		}
+
+		return completionMsg(filtered)
+	}
 }
 
 func (m Model) View() string {
 	maxNameLen := 0
 	maxDescLen := 0
-	search := strings.ToLower(m.textInput.Value())
-	filtered := []suggest{}
-	for _, s := range m.suggestions {
-		if strings.HasPrefix(strings.ToLower(s.name), search) {
-			filtered = append(filtered, s)
-		}
-	}
 
-	for _, s := range filtered {
+	for _, s := range m.filteredSuggestions {
 		if len(s.name) > maxNameLen {
 			maxNameLen = len(s.name)
 		}
@@ -91,7 +119,7 @@ func (m Model) View() string {
 		Background(lipgloss.Color("9"))
 
 	prompts := []string{m.textInput.View()}
-	for _, s := range filtered {
+	for _, s := range m.filteredSuggestions {
 		name := nameStyle.PaddingRight(maxNameLen - len(s.name) + 1).Render(s.name)
 		desc := descStyle.PaddingRight(maxDescLen - len(s.description) + 1).Render(s.description)
 		line := lipgloss.JoinHorizontal(lipgloss.Bottom, padding, name, desc)
