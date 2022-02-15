@@ -57,12 +57,14 @@ func main() {
 		prompt.OptionPrompt(">>> "),
 		prompt.OptionNameFormatter(func(name string, columnWidth int) string {
 			return defaultStyle.
+				Copy().
 				PaddingRight(columnWidth - len(name) + 1).
 				Background(lipgloss.Color("14")).
 				Render(name)
 		}),
 		prompt.OptionDescriptionFormatter(func(description string, columnWidth int) string {
 			return defaultStyle.
+				Copy().
 				PaddingRight(columnWidth - len(description) + 1).
 				Background(lipgloss.Color("37")).
 				Render(description)

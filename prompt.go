@@ -140,9 +140,11 @@ func (m Model) View() string {
 		var name string
 		if m.NameFormatter == nil {
 			name = defaultStyle.
+				Copy().
 				Foreground(lipgloss.Color(m.NameForegroundColor)).
 				Background(lipgloss.Color(m.NameBackgroundColor)).
-				PaddingRight(maxNameLen - len(s.Name) + 1).Render(s.Name)
+				PaddingRight(maxNameLen - len(s.Name) + 1).
+				Render(s.Name)
 		} else {
 			name = m.NameFormatter(s.Name, maxNameLen)
 		}
@@ -150,9 +152,11 @@ func (m Model) View() string {
 		var desc string
 		if m.DescriptionFormatter == nil {
 			desc = defaultStyle.
+				Copy().
 				Foreground(lipgloss.Color(m.DescriptionForegroundColor)).
 				Background(lipgloss.Color(m.DescriptionBackgroundColor)).
-				PaddingRight(maxDescLen - len(s.Description) + 1).Render(s.Description)
+				PaddingRight(maxDescLen - len(s.Description) + 1).
+				Render(s.Description)
 		} else {
 			desc = m.DescriptionFormatter(s.Description, maxDescLen)
 		}
