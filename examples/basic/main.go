@@ -13,11 +13,13 @@ type model struct {
 }
 
 func (m model) Init() tea.Cmd {
-	return nil
+	return m.prompt.Init()
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	return m, nil
+	p, cmd := m.prompt.Update(msg)
+	m.prompt = p
+	return m, cmd
 }
 
 func (m model) View() string {
