@@ -20,8 +20,10 @@ type Model struct {
 	suggestions                []Suggest
 	filteredSuggestions        []Suggest
 	textInput                  textinput.Model
+	NameForegroundColor        string
 	NameBackgroundColor        string
 	NameFormatter              func(name string, columnWidth int) string
+	DescriptionForegroundColor string
 	DescriptionBackgroundColor string
 	DescriptionFormatter       func(description string, columnWidth int) string
 	prevText                   string
@@ -36,8 +38,10 @@ func New(opts ...Option) Model {
 	model := Model{
 		updating:                   false,
 		textInput:                  textInput,
-		NameBackgroundColor:        "8",
-		DescriptionBackgroundColor: "9",
+		NameForegroundColor:        "",
+		NameBackgroundColor:        "14",
+		DescriptionForegroundColor: "",
+		DescriptionBackgroundColor: "37",
 		suggestions:                []Suggest{},
 		filteredSuggestions:        []Suggest{},
 	}
@@ -129,6 +133,7 @@ func (m Model) View() string {
 		var name string
 		if m.NameFormatter == nil {
 			name = defaultStyle.
+				Foreground(lipgloss.Color(m.NameForegroundColor)).
 				Background(lipgloss.Color(m.NameBackgroundColor)).
 				PaddingRight(maxNameLen - len(s.Name) + 1).Render(s.Name)
 		} else {
@@ -138,10 +143,11 @@ func (m Model) View() string {
 		var desc string
 		if m.DescriptionFormatter == nil {
 			desc = defaultStyle.
+				Foreground(lipgloss.Color(m.DescriptionForegroundColor)).
 				Background(lipgloss.Color(m.DescriptionBackgroundColor)).
 				PaddingRight(maxDescLen - len(s.Description) + 1).Render(s.Description)
 		} else {
-			desc = m.DescriptionFormatter(s.Description, maxNameLen)
+			desc = m.DescriptionFormatter(s.Description, maxDescLen)
 		}
 
 		line := lipgloss.JoinHorizontal(lipgloss.Bottom, padding, name, desc)

@@ -46,13 +46,13 @@ func main() {
 		prompt.OptionNameFormatter(func(name string, columnWidth int) string {
 			return defaultStyle.
 				PaddingRight(columnWidth - len(name) + 1).
-				Background(lipgloss.Color("8")).
+				Background(lipgloss.Color("14")).
 				Render(name)
 		}),
 		prompt.OptionDescriptionFormatter(func(description string, columnWidth int) string {
 			return defaultStyle.
 				PaddingRight(columnWidth - len(description) + 1).
-				Background(lipgloss.Color("9")).
+				Background(lipgloss.Color("37")).
 				Render(description)
 		}),
 	)}
