@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"os"
 
-	bubbleprompt "github.com/aschey/bubbleprompt"
+	prompt "github.com/aschey/bubbleprompt"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type model struct {
-	prompt bubbleprompt.Model
+	prompt prompt.Model
 }
 
 func (m model) Init() tea.Cmd {
@@ -27,7 +27,14 @@ func (m model) View() string {
 }
 
 func main() {
-	m := model{prompt: bubbleprompt.New()}
+	suggestions := []prompt.Suggest{
+		{Name: "first option", Description: "test desc"},
+		{Name: "second option", Description: "test desc2"},
+		{Name: "third option", Description: "test desc2"},
+		{Name: "fourth option", Description: "test desc2"},
+		{Name: "fifth option", Description: "test desc2"},
+	}
+	m := model{prompt: prompt.New(prompt.OptionInitialSuggestions(suggestions), prompt.OptionPrompt(">>> "))}
 
 	if err := tea.NewProgram(m).Start(); err != nil {
 		fmt.Printf("Could not start program :(\n%v\n", err)

@@ -1,4 +1,4 @@
-package bubbleprompt
+package prompt
 
 import (
 	"strings"
@@ -10,8 +10,8 @@ import (
 )
 
 type Suggest struct {
-	name        string
-	description string
+	Name        string
+	Description string
 }
 
 type errMsg error
@@ -25,23 +25,24 @@ type Model struct {
 	err                 error
 }
 
-func New() Model {
-	ti := textinput.New()
-	ti.Prompt = ">>> "
-	ti.Focus()
-	suggestions := []Suggest{
-		{name: "first option", description: "test desc"},
-		{name: "second option", description: "test desc2"},
-		{name: "third option", description: "test desc2"},
-		{name: "fourth option", description: "test desc2"},
-		{name: "fifth option", description: "test desc2"},
-	}
-	return Model{
+func New(opts ...Option) Model {
+	textInput := textinput.New()
+	textInput.Focus()
+
+	model := Model{
 		updating:            false,
-		textInput:           ti,
-		suggestions:         suggestions,
-		filteredSuggestions: suggestions,
+		textInput:           textInput,
+		suggestions:         []Suggest{},
+		filteredSuggestions: []Suggest{},
 	}
+
+	for _, opt := range opts {
+		if err := opt(&model); err != nil {
+			panic(err)
+		}
+	}
+
+	return model
 }
 
 func (m Model) Init() tea.Cmd {
@@ -87,7 +88,7 @@ func (m Model) updateCompletions() tea.Cmd {
 		search := strings.ToLower(m.textInput.Value())
 		filtered := []Suggest{}
 		for _, s := range m.suggestions {
-			if strings.HasPrefix(strings.ToLower(s.name), search) {
+			if strings.HasPrefix(strings.ToLower(s.Name), search) {
 				filtered = append(filtered, s)
 			}
 		}
@@ -101,11 +102,11 @@ func (m Model) View() string {
 	maxDescLen := 0
 
 	for _, s := range m.filteredSuggestions {
-		if len(s.name) > maxNameLen {
-			maxNameLen = len(s.name)
+		if len(s.Name) > maxNameLen {
+			maxNameLen = len(s.Name)
 		}
-		if len(s.description) > maxDescLen {
-			maxDescLen = len(s.description)
+		if len(s.Description) > maxDescLen {
+			maxDescLen = len(s.Description)
 		}
 	}
 	padding := lipgloss.NewStyle().PaddingLeft(m.textInput.Cursor() + len(m.textInput.Prompt)).Render("")
@@ -120,8 +121,8 @@ func (m Model) View() string {
 
 	prompts := []string{m.textInput.View()}
 	for _, s := range m.filteredSuggestions {
-		name := nameStyle.PaddingRight(maxNameLen - len(s.name) + 1).Render(s.name)
-		desc := descStyle.PaddingRight(maxDescLen - len(s.description) + 1).Render(s.description)
+		name := nameStyle.PaddingRight(maxNameLen - len(s.Name) + 1).Render(s.Name)
+		desc := descStyle.PaddingRight(maxDescLen - len(s.Description) + 1).Render(s.Description)
 		line := lipgloss.JoinHorizontal(lipgloss.Bottom, padding, name, desc)
 		prompts = append(prompts, line)
 	}
