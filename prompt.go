@@ -17,12 +17,16 @@ type Suggest struct {
 type errMsg error
 
 type Model struct {
-	suggestions         []Suggest
-	filteredSuggestions []Suggest
-	textInput           textinput.Model
-	prevText            string
-	updating            bool
-	err                 error
+	suggestions                []Suggest
+	filteredSuggestions        []Suggest
+	textInput                  textinput.Model
+	NameBackgroundColor        string
+	NameFormatter              func(name string, columnWidth int) string
+	DescriptionBackgroundColor string
+	DescriptionFormatter       func(description string, columnWidth int) string
+	prevText                   string
+	updating                   bool
+	err                        error
 }
 
 func New(opts ...Option) Model {
@@ -30,10 +34,12 @@ func New(opts ...Option) Model {
 	textInput.Focus()
 
 	model := Model{
-		updating:            false,
-		textInput:           textInput,
-		suggestions:         []Suggest{},
-		filteredSuggestions: []Suggest{},
+		updating:                   false,
+		textInput:                  textInput,
+		NameBackgroundColor:        "8",
+		DescriptionBackgroundColor: "9",
+		suggestions:                []Suggest{},
+		filteredSuggestions:        []Suggest{},
 	}
 
 	for _, opt := range opts {
@@ -43,6 +49,10 @@ func New(opts ...Option) Model {
 	}
 
 	return model
+}
+
+func (m Model) SetPrompt(prompt string) {
+	m.textInput.Prompt = prompt
 }
 
 func (m Model) Init() tea.Cmd {
@@ -110,19 +120,30 @@ func (m Model) View() string {
 		}
 	}
 	padding := lipgloss.NewStyle().PaddingLeft(m.textInput.Cursor() + len(m.textInput.Prompt)).Render("")
-	nameStyle := lipgloss.
+	defaultStyle := lipgloss.
 		NewStyle().
-		PaddingLeft(1).
-		Background(lipgloss.Color("8"))
-
-	descStyle := nameStyle.
-		Copy().
-		Background(lipgloss.Color("9"))
+		PaddingLeft(1)
 
 	prompts := []string{m.textInput.View()}
 	for _, s := range m.filteredSuggestions {
-		name := nameStyle.PaddingRight(maxNameLen - len(s.Name) + 1).Render(s.Name)
-		desc := descStyle.PaddingRight(maxDescLen - len(s.Description) + 1).Render(s.Description)
+		var name string
+		if m.NameFormatter == nil {
+			name = defaultStyle.
+				Background(lipgloss.Color(m.NameBackgroundColor)).
+				PaddingRight(maxNameLen - len(s.Name) + 1).Render(s.Name)
+		} else {
+			name = m.NameFormatter(s.Name, maxNameLen)
+		}
+
+		var desc string
+		if m.DescriptionFormatter == nil {
+			desc = defaultStyle.
+				Background(lipgloss.Color(m.DescriptionBackgroundColor)).
+				PaddingRight(maxDescLen - len(s.Description) + 1).Render(s.Description)
+		} else {
+			desc = m.DescriptionFormatter(s.Description, maxNameLen)
+		}
+
 		line := lipgloss.JoinHorizontal(lipgloss.Bottom, padding, name, desc)
 		prompts = append(prompts, line)
 	}
