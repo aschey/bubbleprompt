@@ -8,57 +8,25 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type Suggest struct {
+type Suggestion struct {
 	Name        string
 	Description string
+	Placeholder string
 }
 
 type errMsg error
 
 type Formatter func(name string, columnWidth int, selected bool) string
 
-type Completer func(input string) []Suggest
-
-type Text struct {
-	ForegroundColor         string
-	SelectedForegroundColor string
-	BackgroundColor         string
-	SelectedBackgroundColor string
-	Formatter               Formatter
-}
-
-func (t Text) format(text string, maxLen int, selected bool) string {
-	defaultStyle := lipgloss.
-		NewStyle().
-		PaddingLeft(1)
-
-	foregroundColor := t.ForegroundColor
-	backgroundColor := t.BackgroundColor
-	if selected {
-		foregroundColor = t.SelectedForegroundColor
-		backgroundColor = t.SelectedBackgroundColor
-	}
-	var formattedText string
-	if t.Formatter == nil {
-		formattedText = defaultStyle.
-			Copy().
-			Foreground(lipgloss.Color(foregroundColor)).
-			Background(lipgloss.Color(backgroundColor)).
-			PaddingRight(maxLen - len(text) + 1).
-			Render(text)
-	} else {
-		formattedText = t.Formatter(text, maxLen, selected)
-	}
-
-	return formattedText
-}
+type Completer func(input string) []Suggestion
 
 type Model struct {
 	completer    Completer
-	suggestions  []Suggest
+	suggestions  []Suggestion
 	textInput    textinput.Model
 	Name         Text
 	Description  Text
+	typedText    string
 	prevText     string
 	updating     bool
 	listPosition int
@@ -98,9 +66,9 @@ func New(completer Completer, opts ...Option) Model {
 	return model
 }
 
-func FilterHasPrefix(search string, suggestions []Suggest) []Suggest {
+func FilterHasPrefix(search string, suggestions []Suggestion) []Suggestion {
 	lowerSearch := strings.ToLower(search)
-	filtered := []Suggest{}
+	filtered := []Suggestion{}
 	for _, s := range suggestions {
 		if strings.HasPrefix(strings.ToLower(s.Name), lowerSearch) {
 			filtered = append(filtered, s)
@@ -120,25 +88,36 @@ func (m Model) Init() tea.Cmd {
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	var cmd tea.Cmd
+	m.textInput, cmd = m.textInput.Update(msg)
 
+	runCompletions := false
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyEnter, tea.KeyCtrlC, tea.KeyEsc:
 			return m, tea.Quit
-		case tea.KeyDown:
-			if m.listPosition < len(m.suggestions)-1 {
+		case tea.KeyUp, tea.KeyDown:
+			if msg.Type == tea.KeyUp && m.listPosition > -1 {
+				m.listPosition--
+			} else if msg.Type == tea.KeyDown && m.listPosition < len(m.suggestions)-1 {
 				m.listPosition++
 			} else {
 				m.listPosition = -1
 			}
 
-		case tea.KeyUp:
 			if m.listPosition > -1 {
-				m.listPosition--
+				m.textInput.SetValue(m.suggestions[m.listPosition].Name)
+			} else {
+				m.textInput.SetValue(m.typedText)
 			}
 
+			m.textInput.SetCursor(len(m.textInput.Value()))
+			break
+		default:
+			m.typedText = m.textInput.Value()
+			runCompletions = true
 		}
+
 	case completionMsg:
 		m.updating = false
 		m.suggestions = msg
@@ -148,10 +127,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		return m, nil
 	}
 
-	m.textInput, cmd = m.textInput.Update(msg)
-	m.textInput.Value()
-
-	if m.updating || m.prevText == m.textInput.Value() {
+	if m.updating || m.prevText == m.textInput.Value() || !runCompletions {
 		return m, cmd
 	}
 	m.prevText = m.textInput.Value()
@@ -160,7 +136,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	return m, tea.Batch(cmd, m.updateCompletions())
 }
 
-type completionMsg []Suggest
+type completionMsg []Suggestion
 
 func (m Model) updateCompletions() tea.Cmd {
 	return func() tea.Msg {
@@ -182,7 +158,7 @@ func (m Model) View() string {
 			maxDescLen = len(s.Description)
 		}
 	}
-	padding := lipgloss.NewStyle().PaddingLeft(m.textInput.Cursor() + len(m.textInput.Prompt)).Render("")
+	padding := lipgloss.NewStyle().PaddingLeft(len(m.typedText) + len(m.textInput.Prompt)).Render("")
 
 	prompts := []string{m.textInput.View()}
 	for i, s := range m.suggestions {

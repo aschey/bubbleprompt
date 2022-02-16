@@ -15,7 +15,7 @@ type model struct {
 }
 
 type completerModel struct {
-	suggestions []prompt.Suggest
+	suggestions []prompt.Suggestion
 }
 
 func (m model) Init() tea.Cmd {
@@ -32,13 +32,13 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
-func (m completerModel) completer(input string) []prompt.Suggest {
+func (m completerModel) completer(input string) []prompt.Suggestion {
 	time.Sleep(100 * time.Millisecond)
 	return prompt.FilterHasPrefix(input, m.suggestions)
 }
 
 func main() {
-	suggestions := []prompt.Suggest{
+	suggestions := []prompt.Suggestion{
 		{Name: "first option", Description: "test desc"},
 		{Name: "second option", Description: "test desc2"},
 		{Name: "third option", Description: "test desc2"},
