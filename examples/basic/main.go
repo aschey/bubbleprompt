@@ -55,17 +55,27 @@ func main() {
 	m := model{prompt: prompt.New(
 		completerModel.completer,
 		prompt.OptionPrompt(">>> "),
-		prompt.OptionNameFormatter(func(name string, columnWidth int) string {
+		prompt.OptionNameFormatter(func(name string, columnWidth int, selected bool) string {
+			foreground := ""
+			if selected {
+				foreground = "240"
+			}
 			return defaultStyle.
 				Copy().
 				PaddingRight(columnWidth - len(name) + 1).
+				Foreground(lipgloss.Color(foreground)).
 				Background(lipgloss.Color("14")).
 				Render(name)
 		}),
-		prompt.OptionDescriptionFormatter(func(description string, columnWidth int) string {
+		prompt.OptionDescriptionFormatter(func(description string, columnWidth int, selected bool) string {
+			foreground := ""
+			if selected {
+				foreground = "240"
+			}
 			return defaultStyle.
 				Copy().
 				PaddingRight(columnWidth - len(description) + 1).
+				Foreground(lipgloss.Color(foreground)).
 				Background(lipgloss.Color("37")).
 				Render(description)
 		}),

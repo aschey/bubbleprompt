@@ -11,42 +11,70 @@ func OptionPrompt(prompt string) Option {
 
 func OptionNameForegroundColor(color string) Option {
 	return func(model *Model) error {
-		model.NameForegroundColor = color
+		model.Name.ForegroundColor = color
+		return nil
+	}
+}
+
+func OptionSelectedNameForegroundColor(color string) Option {
+	return func(model *Model) error {
+		model.Name.SelectedForegroundColor = color
 		return nil
 	}
 }
 
 func OptionNameBackgroundColor(color string) Option {
 	return func(model *Model) error {
-		model.NameBackgroundColor = color
+		model.Name.BackgroundColor = color
+		return nil
+	}
+}
+
+func OptionSelectedNameBackgroundColor(color string) Option {
+	return func(model *Model) error {
+		model.Name.SelectedBackgroundColor = color
 		return nil
 	}
 }
 
 func OptionNameFormatter(nameFormatter Formatter) Option {
 	return func(model *Model) error {
-		model.NameFormatter = nameFormatter
+		model.Name.Formatter = nameFormatter
 		return nil
 	}
 }
 
 func OptionDescriptionForegroundColor(color string) Option {
 	return func(model *Model) error {
-		model.DescriptionBackgroundColor = color
+		model.Description.BackgroundColor = color
+		return nil
+	}
+}
+
+func OptionSelectedDescriptionForegroundColor(color string) Option {
+	return func(model *Model) error {
+		model.Description.SelectedBackgroundColor = color
 		return nil
 	}
 }
 
 func OptionDescriptionBackgroundColor(color string) Option {
 	return func(model *Model) error {
-		model.DescriptionBackgroundColor = color
+		model.Description.BackgroundColor = color
+		return nil
+	}
+}
+
+func OptionSelectedDescriptionBackgroundColor(color string) Option {
+	return func(model *Model) error {
+		model.Description.SelectedBackgroundColor = color
 		return nil
 	}
 }
 
 func OptionDescriptionFormatter(descriptionFormatter Formatter) Option {
 	return func(model *Model) error {
-		model.DescriptionFormatter = descriptionFormatter
+		model.Description.Formatter = descriptionFormatter
 		return nil
 	}
 }
