@@ -88,52 +88,63 @@ func (m Model) Init() tea.Cmd {
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	var cmd tea.Cmd
+	// Update text input if the user typed something
 	m.textInput, cmd = m.textInput.Update(msg)
 
-	runCompletions := false
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyEnter, tea.KeyCtrlC, tea.KeyEsc:
 			return m, tea.Quit
+
+		// Select next/previous list entry
 		case tea.KeyUp, tea.KeyDown:
 			if msg.Type == tea.KeyUp && m.listPosition > -1 {
 				m.listPosition--
 			} else if msg.Type == tea.KeyDown && m.listPosition < len(m.suggestions)-1 {
 				m.listPosition++
 			} else {
+				// -1 means no item selected
 				m.listPosition = -1
 			}
 
 			if m.listPosition > -1 {
+				// Set the input to the suggestion's selected text
 				m.textInput.SetValue(m.suggestions[m.listPosition].Name)
 			} else {
+				// If no selection, set the text back to the last thing the user typed
 				m.textInput.SetValue(m.typedText)
 			}
 
+			// Move cursor to the end of the line
 			m.textInput.SetCursor(len(m.textInput.Value()))
-			break
+			return m, cmd
+
 		default:
 			m.typedText = m.textInput.Value()
-			runCompletions = true
+
+			if m.updating || m.prevText == m.textInput.Value() {
+				return m, cmd
+			}
+			m.prevText = m.textInput.Value()
+
+			m.updating = true
+			return m, tea.Batch(cmd, m.updateCompletions())
 		}
 
 	case completionMsg:
 		m.updating = false
 		m.suggestions = msg
+		return m, cmd
 
 	case errMsg:
 		m.err = msg
-		return m, nil
-	}
+		return m, cmd
 
-	if m.updating || m.prevText == m.textInput.Value() || !runCompletions {
+	default:
 		return m, cmd
 	}
-	m.prevText = m.textInput.Value()
 
-	m.updating = true
-	return m, tea.Batch(cmd, m.updateCompletions())
 }
 
 type completionMsg []Suggestion
