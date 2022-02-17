@@ -30,6 +30,7 @@ type Model struct {
 	prevText     string
 	updating     bool
 	listPosition int
+	placeholder  string
 	err          error
 }
 
@@ -55,6 +56,7 @@ func New(completer Completer, opts ...Option) Model {
 		},
 		suggestions:  completer(""),
 		listPosition: -1,
+		placeholder:  "",
 	}
 
 	for _, opt := range opts {
@@ -78,7 +80,7 @@ func FilterHasPrefix(search string, suggestions []Suggestion) []Suggestion {
 	return filtered
 }
 
-func (m Model) SetPrompt(prompt string) {
+func (m *Model) SetPrompt(prompt string) {
 	m.textInput.Prompt = prompt
 }
 
@@ -93,6 +95,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		m.placeholder = ""
 		switch msg.Type {
 		case tea.KeyEnter, tea.KeyCtrlC, tea.KeyEsc:
 			return m, tea.Quit
@@ -110,7 +113,10 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 			if m.listPosition > -1 {
 				// Set the input to the suggestion's selected text
-				m.textInput.SetValue(m.suggestions[m.listPosition].Name)
+				curSuggestion := m.suggestions[m.listPosition]
+				m.placeholder = curSuggestion.Placeholder
+				m.textInput.SetValue(curSuggestion.Name)
+
 			} else {
 				// If no selection, set the text back to the last thing the user typed
 				m.textInput.SetValue(m.typedText)
@@ -120,7 +126,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			m.textInput.SetCursor(len(m.textInput.Value()))
 			return m, cmd
 
-		default:
+		case tea.KeyRunes:
 			m.typedText = m.textInput.Value()
 
 			if m.updating || m.prevText == m.textInput.Value() {
@@ -130,6 +136,9 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 			m.updating = true
 			return m, tea.Batch(cmd, m.updateCompletions())
+
+		default:
+			return m, cmd
 		}
 
 	case completionMsg:
@@ -171,7 +180,9 @@ func (m Model) View() string {
 	}
 	padding := lipgloss.NewStyle().PaddingLeft(len(m.typedText) + len(m.textInput.Prompt)).Render("")
 
-	prompts := []string{m.textInput.View()}
+	textView := m.textInput.View() + m.placeholder
+
+	prompts := []string{textView}
 	for i, s := range m.suggestions {
 		selected := i == m.listPosition
 		name := m.Name.format(s.Name, maxNameLen, selected)

@@ -39,7 +39,7 @@ func (m completerModel) completer(input string) []prompt.Suggestion {
 
 func main() {
 	suggestions := []prompt.Suggestion{
-		{Name: "first option", Description: "test desc"},
+		{Name: "first option", Description: "test desc", Placeholder: "[hh]"},
 		{Name: "second option", Description: "test desc2"},
 		{Name: "third option", Description: "test desc2"},
 		{Name: "fourth option", Description: "test desc2"},
