@@ -2,6 +2,25 @@ package prompt
 
 import "github.com/charmbracelet/lipgloss"
 
+type Formatter func(name string, columnWidth int, selected bool) string
+
+type Placeholder struct {
+	ForegroundColor string
+	BackgroundColor string
+	Formatter       func(text string) string
+}
+
+func (p Placeholder) format(text string) string {
+	if p.Formatter == nil {
+		return lipgloss.
+			NewStyle().
+			Foreground(lipgloss.Color(p.ForegroundColor)).
+			Background(lipgloss.Color(p.BackgroundColor)).
+			Render(text)
+	}
+	return p.Formatter(text)
+}
+
 type Text struct {
 	ForegroundColor         string
 	SelectedForegroundColor string

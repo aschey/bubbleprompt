@@ -16,22 +16,21 @@ type Suggestion struct {
 
 type errMsg error
 
-type Formatter func(name string, columnWidth int, selected bool) string
-
 type Completer func(input string) []Suggestion
 
 type Model struct {
-	completer    Completer
-	suggestions  []Suggestion
-	textInput    textinput.Model
-	Name         Text
-	Description  Text
-	typedText    string
-	prevText     string
-	updating     bool
-	listPosition int
-	placeholder  string
-	err          error
+	completer        Completer
+	suggestions      []Suggestion
+	textInput        textinput.Model
+	Name             Text
+	Description      Text
+	Placeholder      Placeholder
+	typedText        string
+	prevText         string
+	updating         bool
+	listPosition     int
+	placeholderValue string
+	err              error
 }
 
 func New(completer Completer, opts ...Option) Model {
@@ -54,9 +53,13 @@ func New(completer Completer, opts ...Option) Model {
 			BackgroundColor:         "37",
 			SelectedBackgroundColor: "37",
 		},
-		suggestions:  completer(""),
-		listPosition: -1,
-		placeholder:  "",
+		Placeholder: Placeholder{
+			ForegroundColor: "10",
+			BackgroundColor: "",
+		},
+		suggestions:      completer(""),
+		listPosition:     -1,
+		placeholderValue: "",
 	}
 
 	for _, opt := range opts {
@@ -95,7 +98,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		m.placeholder = ""
+		m.placeholderValue = ""
 		switch msg.Type {
 		case tea.KeyEnter, tea.KeyCtrlC, tea.KeyEsc:
 			return m, tea.Quit
@@ -114,7 +117,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			if m.listPosition > -1 {
 				// Set the input to the suggestion's selected text
 				curSuggestion := m.suggestions[m.listPosition]
-				m.placeholder = curSuggestion.Placeholder
+				m.placeholderValue = curSuggestion.Placeholder
 				m.textInput.SetValue(curSuggestion.Name)
 
 			} else {
@@ -180,7 +183,7 @@ func (m Model) View() string {
 	}
 	padding := lipgloss.NewStyle().PaddingLeft(len(m.typedText) + len(m.textInput.Prompt)).Render("")
 
-	textView := m.textInput.View() + m.placeholder
+	textView := m.textInput.View() + m.Placeholder.format(m.placeholderValue)
 
 	prompts := []string{textView}
 	for i, s := range m.suggestions {
