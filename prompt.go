@@ -153,7 +153,6 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			ret := lipgloss.JoinVertical(lipgloss.Left, m.textInput.Prompt+textValue, executorValue)
 			m.history = append(m.history, ret)
 			cmds = append(cmds, m.updateCompletions())
-			m.viewport.LineDown(2)
 
 		case tea.KeyRunes, tea.KeyBackspace:
 			m.typedText = m.textInput.Value()
@@ -177,6 +176,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	}
 
 	m.viewport.SetContent(m.render())
+	m.viewport.GotoBottom()
 	return m, tea.Batch(cmds...)
 
 }
@@ -217,8 +217,11 @@ func (m Model) render() string {
 		line := lipgloss.JoinHorizontal(lipgloss.Bottom, padding, name, description)
 		prompts = append(prompts, line)
 	}
-	extraLines := strings.Repeat("\n", 5-len(m.suggestions)+1)
-	prompts = append(prompts, extraLines)
+	extraHeight := 5 - len(m.suggestions) - 1
+	if extraHeight > 0 {
+		extraLines := strings.Repeat("\n", extraHeight)
+		prompts = append(prompts, extraLines)
+	}
 
 	ret := lipgloss.JoinVertical(lipgloss.Left, prompts...)
 	return ret
