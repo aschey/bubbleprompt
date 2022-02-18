@@ -27,7 +27,7 @@ type Model struct {
 	suggestions      []Suggestion
 	textInput        textinput.Model
 	viewport         viewport.Model
-	history          []string
+	previousCommands []string
 	Name             Text
 	Description      Text
 	Placeholder      Placeholder
@@ -147,11 +147,16 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 				curSuggestion = &m.suggestions[m.listPosition]
 			}
 			textValue := m.textInput.Value()
+
+			// Reset all text and selection state
 			m.textInput.SetValue("")
+			m.typedText = ""
+			m.listPosition = -1
+
 			executorValue := m.executor(textValue, curSuggestion, m.suggestions)
 
-			ret := lipgloss.JoinVertical(lipgloss.Left, m.textInput.Prompt+textValue, executorValue)
-			m.history = append(m.history, ret)
+			commandResult := lipgloss.JoinVertical(lipgloss.Left, m.textInput.Prompt+textValue, executorValue)
+			m.previousCommands = append(m.previousCommands, commandResult)
 			cmds = append(cmds, m.updateCompletions())
 
 		case tea.KeyRunes, tea.KeyBackspace:
@@ -195,6 +200,7 @@ func (m Model) render() string {
 	maxNameLen := 0
 	maxDescLen := 0
 
+	// Determine longest name and description to calculate padding
 	for _, s := range m.suggestions {
 		if len(s.Name) > maxNameLen {
 			maxNameLen = len(s.Name)
@@ -203,11 +209,15 @@ func (m Model) render() string {
 			maxDescLen = len(s.Description)
 		}
 	}
-	padding := lipgloss.NewStyle().PaddingLeft(len(m.typedText) + len(m.textInput.Prompt)).Render("")
+
+	// Calculate left offset for suggestions
+	padding := lipgloss.
+		NewStyle().
+		PaddingLeft(len(m.textInput.Prompt + m.typedText)).
+		Render("")
 
 	textView := m.textInput.View() + m.Placeholder.format(m.placeholderValue)
-
-	prompts := append(m.history, textView)
+	prompts := append(m.previousCommands, textView)
 
 	for i, s := range m.suggestions {
 		selected := i == m.listPosition
@@ -217,6 +227,8 @@ func (m Model) render() string {
 		line := lipgloss.JoinHorizontal(lipgloss.Bottom, padding, name, description)
 		prompts = append(prompts, line)
 	}
+
+	// Reserve height for prompts that were filtered out
 	extraHeight := 5 - len(m.suggestions) - 1
 	if extraHeight > 0 {
 		extraLines := strings.Repeat("\n", extraHeight)
