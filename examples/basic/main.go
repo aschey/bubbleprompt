@@ -37,6 +37,10 @@ func (m completerModel) completer(input string) []prompt.Suggestion {
 	return prompt.FilterHasPrefix(input, m.suggestions)
 }
 
+func executor(input string, selected *prompt.Suggestion, suggestions []prompt.Suggestion) string {
+	return "hi"
+}
+
 func main() {
 	suggestions := []prompt.Suggestion{
 		{Name: "first option", Description: "test desc", Placeholder: "[hh]"},
@@ -54,6 +58,7 @@ func main() {
 
 	m := model{prompt: prompt.New(
 		completerModel.completer,
+		executor,
 		prompt.OptionPrompt(">>> "),
 		prompt.OptionNameFormatter(func(name string, columnWidth int, selected bool) string {
 			foreground := ""

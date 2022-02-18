@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -18,10 +19,15 @@ type errMsg error
 
 type Completer func(input string) []Suggestion
 
+type Executor func(input string, selected *Suggestion, suggestions []Suggestion) string
+
 type Model struct {
 	completer        Completer
+	executor         Executor
 	suggestions      []Suggestion
 	textInput        textinput.Model
+	viewport         viewport.Model
+	history          []string
 	Name             Text
 	Description      Text
 	Placeholder      Placeholder
@@ -30,36 +36,33 @@ type Model struct {
 	updating         bool
 	listPosition     int
 	placeholderValue string
+	ready            bool
 	err              error
 }
 
-func New(completer Completer, opts ...Option) Model {
+func New(completer Completer, executor Executor, opts ...Option) Model {
 	textInput := textinput.New()
 	textInput.Focus()
 
 	model := Model{
 		completer: completer,
-		updating:  false,
+		executor:  executor,
 		textInput: textInput,
 		Name: Text{
-			ForegroundColor:         "",
 			SelectedForegroundColor: "240",
 			BackgroundColor:         "14",
 			SelectedBackgroundColor: "14",
 		},
 		Description: Text{
-			ForegroundColor:         "",
 			SelectedForegroundColor: "240",
 			BackgroundColor:         "37",
 			SelectedBackgroundColor: "37",
 		},
 		Placeholder: Placeholder{
 			ForegroundColor: "10",
-			BackgroundColor: "",
 		},
-		suggestions:      completer(""),
-		listPosition:     -1,
-		placeholderValue: "",
+		suggestions:  completer(""),
+		listPosition: -1,
 	}
 
 	for _, opt := range opts {
@@ -93,21 +96,32 @@ func (m Model) Init() tea.Cmd {
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	var cmd tea.Cmd
+	var cmds []tea.Cmd
 	// Update text input if the user typed something
 	m.textInput, cmd = m.textInput.Update(msg)
+	cmds = append(cmds, cmd)
 
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		if !m.ready {
+			m.viewport = viewport.New(msg.Width, msg.Height)
+			m.ready = true
+		} else {
+			m.viewport.Width = msg.Width
+			m.viewport.Height = msg.Height
+		}
+
 	case tea.KeyMsg:
 		m.placeholderValue = ""
 		switch msg.Type {
-		case tea.KeyEnter, tea.KeyCtrlC, tea.KeyEsc:
+		case tea.KeyCtrlC, tea.KeyEsc:
 			return m, tea.Quit
 
 		// Select next/previous list entry
-		case tea.KeyUp, tea.KeyDown:
+		case tea.KeyUp, tea.KeyDown, tea.KeyTab:
 			if msg.Type == tea.KeyUp && m.listPosition > -1 {
 				m.listPosition--
-			} else if msg.Type == tea.KeyDown && m.listPosition < len(m.suggestions)-1 {
+			} else if (msg.Type == tea.KeyDown || msg.Type == tea.KeyTab) && m.listPosition < len(m.suggestions)-1 {
 				m.listPosition++
 			} else {
 				// -1 means no item selected
@@ -119,7 +133,6 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 				curSuggestion := m.suggestions[m.listPosition]
 				m.placeholderValue = curSuggestion.Placeholder
 				m.textInput.SetValue(curSuggestion.Name)
-
 			} else {
 				// If no selection, set the text back to the last thing the user typed
 				m.textInput.SetValue(m.typedText)
@@ -127,35 +140,44 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 			// Move cursor to the end of the line
 			m.textInput.SetCursor(len(m.textInput.Value()))
-			return m, cmd
 
-		case tea.KeyRunes:
+		case tea.KeyEnter:
+			var curSuggestion *Suggestion
+			if m.listPosition > -1 {
+				curSuggestion = &m.suggestions[m.listPosition]
+			}
+			textValue := m.textInput.Value()
+			m.textInput.SetValue("")
+			executorValue := m.executor(textValue, curSuggestion, m.suggestions)
+
+			ret := lipgloss.JoinVertical(lipgloss.Left, m.textInput.Prompt+textValue, executorValue)
+			m.history = append(m.history, ret)
+			cmds = append(cmds, m.updateCompletions())
+			m.viewport.LineDown(2)
+
+		case tea.KeyRunes, tea.KeyBackspace:
 			m.typedText = m.textInput.Value()
 
 			if m.updating || m.prevText == m.textInput.Value() {
 				return m, cmd
 			}
 			m.prevText = m.textInput.Value()
-
 			m.updating = true
-			return m, tea.Batch(cmd, m.updateCompletions())
-
-		default:
-			return m, cmd
+			cmds = append(cmds, m.updateCompletions())
+			m.viewport.LineDown(2)
 		}
 
 	case completionMsg:
 		m.updating = false
 		m.suggestions = msg
-		return m, cmd
 
 	case errMsg:
 		m.err = msg
-		return m, cmd
 
-	default:
-		return m, cmd
 	}
+
+	m.viewport.SetContent(m.render())
+	return m, tea.Batch(cmds...)
 
 }
 
@@ -169,7 +191,7 @@ func (m Model) updateCompletions() tea.Cmd {
 	}
 }
 
-func (m Model) View() string {
+func (m Model) render() string {
 	maxNameLen := 0
 	maxDescLen := 0
 
@@ -185,7 +207,8 @@ func (m Model) View() string {
 
 	textView := m.textInput.View() + m.Placeholder.format(m.placeholderValue)
 
-	prompts := []string{textView}
+	prompts := append(m.history, textView)
+
 	for i, s := range m.suggestions {
 		selected := i == m.listPosition
 		name := m.Name.format(s.Name, maxNameLen, selected)
@@ -194,7 +217,16 @@ func (m Model) View() string {
 		line := lipgloss.JoinHorizontal(lipgloss.Bottom, padding, name, description)
 		prompts = append(prompts, line)
 	}
+	extraLines := strings.Repeat("\n", 5-len(m.suggestions)+1)
+	prompts = append(prompts, extraLines)
 
-	ret := lipgloss.JoinVertical(lipgloss.Left, prompts[:]...)
+	ret := lipgloss.JoinVertical(lipgloss.Left, prompts...)
 	return ret
+}
+
+func (m Model) View() string {
+	if !m.ready {
+		return "\n  Initializing..."
+	}
+	return m.viewport.View()
 }
