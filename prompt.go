@@ -101,10 +101,16 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	m.textInput, cmd = m.textInput.Update(msg)
 	cmds = append(cmds, cmd)
 
+	m.viewport, cmd = m.viewport.Update(msg)
+	cmds = append(cmds, cmd)
+
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		if !m.ready {
 			m.viewport = viewport.New(msg.Width, msg.Height)
+			// Remove keybindings from viewport so they don't interfere with prompt keybindings
+			// TODO: maybe map these to something else in the future
+			m.viewport.KeyMap = viewport.KeyMap{}
 			m.ready = true
 		} else {
 			m.viewport.Width = msg.Width
