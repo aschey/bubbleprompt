@@ -29,11 +29,14 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		var newCmd tea.Cmd
 		executorModel := *m.executorModel
 		executorModel, newCmd = executorModel.Update(msg)
+		m.executorModel = &executorModel
 		scrollToBottom = true
+
 		// Check if the model sent the quit command
-		// The only way to do this reliably is to use reflection to check that
-		// the first output parameter of the function command is tea.Quit
-		if reflect.TypeOf(newCmd).Out(0) == reflect.TypeOf(tea.Quit).Out(0) {
+		// When this happens we just want to quit the executor, not the entire program
+		// The only way to do this reliably without actually invoking the function is
+		// to use reflection to check that the address is equal to tea.Quit's address
+		if newCmd != nil && reflect.ValueOf(newCmd).Pointer() == reflect.ValueOf(tea.Quit).Pointer() {
 			textValue := m.textInput.Value()
 			executorValue := executorModel.View()
 

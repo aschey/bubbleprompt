@@ -18,6 +18,29 @@ type completerModel struct {
 	suggestions []prompt.Suggestion
 }
 
+type StringModel struct {
+	iters int
+	val   string
+}
+
+type tickMsg struct{}
+
+func (s StringModel) Init() tea.Cmd {
+	return nil
+}
+
+func (s StringModel) Update(tea.Msg) (tea.Model, tea.Cmd) {
+	s.iters++
+	if s.iters == 10 {
+		return s, tea.Quit
+	}
+	return s, tea.Tick(100*time.Millisecond, func(time.Time) tea.Msg { return tickMsg{} })
+}
+
+func (s StringModel) View() string {
+	return s.val + fmt.Sprintf("%d", s.iters)
+}
+
 func (m model) Init() tea.Cmd {
 	return m.prompt.Init()
 }
@@ -38,7 +61,7 @@ func (m completerModel) completer(input string) []prompt.Suggestion {
 }
 
 func executor(input string, selected *prompt.Suggestion, suggestions []prompt.Suggestion) tea.Model {
-	return prompt.NewStringModel("hello")
+	return StringModel{val: "test", iters: 0}
 }
 
 func main() {
