@@ -3,6 +3,7 @@ package prompt
 import (
 	"strings"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -97,20 +98,25 @@ func (m Model) Init() tea.Cmd {
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
-	// Update text input if the user typed something
+
+	// Order is important here, there's some strange freezing behavior
+	// that happens if we update the text input before the viewport
+	m.viewport, cmd = m.viewport.Update(msg)
+	cmds = append(cmds, cmd)
+
 	m.textInput, cmd = m.textInput.Update(msg)
 	cmds = append(cmds, cmd)
 
-	m.viewport, cmd = m.viewport.Update(msg)
-	cmds = append(cmds, cmd)
+	// Scroll to bottom if the user typed something
+	scrollToBottom := false
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		if !m.ready {
-			m.viewport = viewport.New(msg.Width, msg.Height)
-			// Remove keybindings from viewport so they don't interfere with prompt keybindings
-			// TODO: maybe map these to something else in the future
-			m.viewport.KeyMap = viewport.KeyMap{}
+			m.viewport = viewport.New(msg.Width, msg.Height-1)
+			// TODO: register better bindings for these once the new input reader is merged
+			m.viewport.KeyMap.Up = key.NewBinding(key.WithKeys("ctrl+a"))
+			m.viewport.KeyMap.Down = key.NewBinding(key.WithKeys("ctrl+s"))
 			m.ready = true
 		} else {
 			m.viewport.Width = msg.Width
@@ -164,6 +170,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			commandResult := lipgloss.JoinVertical(lipgloss.Left, m.textInput.Prompt+textValue, executorValue)
 			m.previousCommands = append(m.previousCommands, commandResult)
 			cmds = append(cmds, m.updateCompletions())
+			scrollToBottom = true
 
 		case tea.KeyRunes, tea.KeyBackspace:
 			m.typedText = m.textInput.Value()
@@ -174,7 +181,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			m.prevText = m.textInput.Value()
 			m.updating = true
 			cmds = append(cmds, m.updateCompletions())
-			m.viewport.LineDown(2)
+			scrollToBottom = true
 		}
 
 	case completionMsg:
@@ -187,9 +194,11 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	}
 
 	m.viewport.SetContent(m.render())
-	m.viewport.GotoBottom()
-	return m, tea.Batch(cmds...)
+	if scrollToBottom {
+		m.viewport.GotoBottom()
+	}
 
+	return m, tea.Batch(cmds...)
 }
 
 type completionMsg []Suggestion
