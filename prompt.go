@@ -23,22 +23,23 @@ type Completer func(input string) []Suggestion
 type Executor func(input string, selected *Suggestion, suggestions []Suggestion) string
 
 type Model struct {
-	completer        Completer
-	executor         Executor
-	suggestions      []Suggestion
-	textInput        textinput.Model
-	viewport         viewport.Model
-	previousCommands []string
-	Name             Text
-	Description      Text
-	Placeholder      Placeholder
-	typedText        string
-	prevText         string
-	updating         bool
-	listPosition     int
-	placeholderValue string
-	ready            bool
-	err              error
+	completer          Completer
+	executor           Executor
+	suggestions        []Suggestion
+	textInput          textinput.Model
+	viewport           viewport.Model
+	previousCommands   []string
+	Name               SuggestionText
+	Description        SuggestionText
+	Placeholder        Text
+	SelectedSuggestion Text
+	typedText          string
+	prevText           string
+	updating           bool
+	listPosition       int
+	placeholderValue   string
+	ready              bool
+	err                error
 }
 
 func New(completer Completer, executor Executor, opts ...Option) Model {
@@ -49,17 +50,20 @@ func New(completer Completer, executor Executor, opts ...Option) Model {
 		completer: completer,
 		executor:  executor,
 		textInput: textInput,
-		Name: Text{
+		Name: SuggestionText{
 			SelectedForegroundColor: "240",
 			BackgroundColor:         "14",
 			SelectedBackgroundColor: "14",
 		},
-		Description: Text{
+		Description: SuggestionText{
 			SelectedForegroundColor: "240",
 			BackgroundColor:         "37",
 			SelectedBackgroundColor: "37",
 		},
-		Placeholder: Placeholder{
+		Placeholder: Text{
+			ForegroundColor: "6",
+		},
+		SelectedSuggestion: Text{
 			ForegroundColor: "10",
 		},
 		suggestions:  completer(""),
@@ -169,19 +173,23 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 			commandResult := lipgloss.JoinVertical(lipgloss.Left, m.textInput.Prompt+textValue, executorValue)
 			m.previousCommands = append(m.previousCommands, commandResult)
-			cmds = append(cmds, m.updateCompletions())
 			scrollToBottom = true
+			cmds = append(cmds, m.updateCompletions())
 
 		case tea.KeyRunes, tea.KeyBackspace:
 			m.typedText = m.textInput.Value()
-
-			if m.updating || m.prevText == m.textInput.Value() {
-				return m, cmd
-			}
-			m.prevText = m.textInput.Value()
-			m.updating = true
-			cmds = append(cmds, m.updateCompletions())
+			// Unselect selected item since user has changed the input
+			m.listPosition = -1
 			scrollToBottom = true
+
+			// If completer is already running or the text input hasn't changed, don't run the completer again
+			if !m.updating && m.prevText != m.textInput.Value() {
+				m.updating = true
+				// Store last text ran against completer to compare against next time
+				m.prevText = m.textInput.Value()
+				cmds = append(cmds, m.updateCompletions())
+			}
+
 		}
 
 	case completionMsg:
@@ -190,7 +198,6 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 	case errMsg:
 		m.err = msg
-
 	}
 
 	m.viewport.SetContent(m.render())
@@ -232,6 +239,17 @@ func (m Model) render() string {
 		Render("")
 
 	textView := m.textInput.View() + m.Placeholder.format(m.placeholderValue)
+
+	// If an item is selected, parse out the text portion and apply formatting
+	if m.listPosition > -1 {
+		prompt := m.textInput.Prompt
+		value := m.textInput.Value()
+		formattedSuggestion := m.SelectedSuggestion.format(value)
+		remainder := textView[len(prompt)+len(value):]
+		textView = prompt + formattedSuggestion + remainder
+
+	}
+
 	prompts := append(m.previousCommands, textView)
 
 	for i, s := range m.suggestions {

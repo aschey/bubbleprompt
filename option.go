@@ -78,3 +78,45 @@ func OptionDescriptionFormatter(descriptionFormatter Formatter) Option {
 		return nil
 	}
 }
+
+func OptionPlaceholderForegroundColor(color string) Option {
+	return func(model *Model) error {
+		model.Placeholder.ForegroundColor = color
+		return nil
+	}
+}
+
+func OptionPlaceholderBackgroundColor(color string) Option {
+	return func(model *Model) error {
+		model.Placeholder.BackgroundColor = color
+		return nil
+	}
+}
+
+func OptionPlaceholderFormatter(formatter func(text string) string) Option {
+	return func(model *Model) error {
+		model.Placeholder.Formatter = formatter
+		return nil
+	}
+}
+
+func OptionSelectedSuggestionForegroundColor(color string) Option {
+	return func(model *Model) error {
+		model.SelectedSuggestion.ForegroundColor = color
+		return nil
+	}
+}
+
+func OptionSelectedSuggestionBackgroundColor(color string) Option {
+	return func(model *Model) error {
+		model.SelectedSuggestion.BackgroundColor = color
+		return nil
+	}
+}
+
+func OptionSelectedSuggestionFormatter(formatter func(text string) string) Option {
+	return func(model *Model) error {
+		model.SelectedSuggestion.Formatter = formatter
+		return nil
+	}
+}

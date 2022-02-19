@@ -4,13 +4,13 @@ import "github.com/charmbracelet/lipgloss"
 
 type Formatter func(name string, columnWidth int, selected bool) string
 
-type Placeholder struct {
+type Text struct {
 	ForegroundColor string
 	BackgroundColor string
 	Formatter       func(text string) string
 }
 
-func (p Placeholder) format(text string) string {
+func (p Text) format(text string) string {
 	if p.Formatter == nil {
 		return lipgloss.
 			NewStyle().
@@ -21,7 +21,7 @@ func (p Placeholder) format(text string) string {
 	return p.Formatter(text)
 }
 
-type Text struct {
+type SuggestionText struct {
 	ForegroundColor         string
 	SelectedForegroundColor string
 	BackgroundColor         string
@@ -29,7 +29,7 @@ type Text struct {
 	Formatter               Formatter
 }
 
-func (t Text) format(text string, maxLen int, selected bool) string {
+func (t SuggestionText) format(text string, maxLen int, selected bool) string {
 	defaultStyle := lipgloss.
 		NewStyle().
 		PaddingLeft(1)
