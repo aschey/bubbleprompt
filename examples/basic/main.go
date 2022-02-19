@@ -37,8 +37,8 @@ func (m completerModel) completer(input string) []prompt.Suggestion {
 	return prompt.FilterHasPrefix(input, m.suggestions)
 }
 
-func executor(input string, selected *prompt.Suggestion, suggestions []prompt.Suggestion) string {
-	return "hi"
+func executor(input string, selected *prompt.Suggestion, suggestions []prompt.Suggestion) tea.Model {
+	return prompt.NewStringModel("hello")
 }
 
 func main() {

@@ -1,6 +1,9 @@
 package prompt
 
 import (
+	"reflect"
+	"strings"
+
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -22,35 +25,60 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	// Scroll to bottom if the user typed something
 	scrollToBottom := false
 
-	switch msg := msg.(type) {
-	case tea.WindowSizeMsg:
-		m.updateWindowSizeMsg(msg)
+	if m.executorModel != nil {
+		var newCmd tea.Cmd
+		executorModel := *m.executorModel
+		executorModel, newCmd = executorModel.Update(msg)
+		scrollToBottom = true
+		// Check if the model sent the quit command
+		// The only way to do this reliably is to use reflection to check that
+		// the first output parameter of the function command is tea.Quit
+		if reflect.TypeOf(newCmd).Out(0) == reflect.TypeOf(tea.Quit).Out(0) {
+			textValue := m.textInput.Value()
+			executorValue := executorModel.View()
 
-	case tea.KeyMsg:
-		m.placeholderValue = ""
-		switch msg.Type {
-		case tea.KeyCtrlC, tea.KeyEsc:
-			return m, tea.Quit
-
-		// Select next/previous list entry
-		case tea.KeyUp, tea.KeyDown, tea.KeyTab:
-			m.updateChosenListEntry(msg)
-
-		case tea.KeyEnter:
-			scrollToBottom = true
-			cmds = m.submit(msg, cmds)
-
-		case tea.KeyRunes, tea.KeyBackspace:
-			scrollToBottom = true
-			cmds = m.updateKeypress(msg, cmds)
+			// Store the whole user input including the prompt state and the executor result
+			// However note that we don't include all of textinput.View() because we don't want to include the cursor
+			commandResult := lipgloss.JoinVertical(lipgloss.Left, m.textInput.Prompt+textValue, executorValue)
+			m.previousCommands = append(m.previousCommands, commandResult)
+			m.executorModel = nil
+			// Reset text after executor finished
+			m.textInput.SetValue("")
+			cmds = append(cmds, m.updateCompletions())
+		} else {
+			cmds = append(cmds, newCmd)
 		}
+	} else {
+		switch msg := msg.(type) {
+		case tea.WindowSizeMsg:
+			m.updateWindowSizeMsg(msg)
 
-	case completionMsg:
-		m.updating = false
-		m.suggestions = msg
+		case tea.KeyMsg:
+			m.placeholderValue = ""
+			switch msg.Type {
+			case tea.KeyCtrlC, tea.KeyEsc:
+				return m, tea.Quit
 
-	case errMsg:
-		m.err = msg
+			// Select next/previous list entry
+			case tea.KeyUp, tea.KeyDown, tea.KeyTab:
+				m.updateChosenListEntry(msg)
+
+			case tea.KeyEnter:
+				scrollToBottom = true
+				cmds = m.submit(msg, cmds)
+
+			case tea.KeyRunes, tea.KeyBackspace:
+				scrollToBottom = true
+				cmds = m.updateKeypress(msg, cmds)
+			}
+
+		case completionMsg:
+			m.updating = false
+			m.suggestions = msg
+
+		case errMsg:
+			m.err = msg
+		}
 	}
 
 	m.viewport.SetContent(m.render())
@@ -104,20 +132,16 @@ func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 		curSuggestion = &m.suggestions[m.listPosition]
 	}
 	textValue := m.textInput.Value()
-
 	// Reset all text and selection state
-	m.textInput.SetValue("")
+	// We'll reset the text input after the executor finished
+	// so we can capture the final output
 	m.typedText = ""
 	m.listPosition = -1
 
-	executorValue := m.executor(textValue, curSuggestion, m.suggestions)
+	executorModel := m.executor(textValue, curSuggestion, m.suggestions)
+	m.executorModel = &executorModel
 
-	// Store the whole user input including the prompt state and the executor result
-	// However note that we don't include all of textinput.View() because we don't want to include the cursor
-	commandResult := lipgloss.JoinVertical(lipgloss.Left, m.textInput.Prompt+textValue, executorValue)
-	m.previousCommands = append(m.previousCommands, commandResult)
-
-	return append(cmds, m.updateCompletions())
+	return append(cmds, executorModel.Init(), m.updateCompletions())
 }
 
 func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
@@ -134,4 +158,72 @@ func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	}
 
 	return cmds
+}
+
+func (m Model) render() string {
+	maxNameLen := 0
+	maxDescLen := 0
+
+	// Determine longest name and description to calculate padding
+	for _, s := range m.suggestions {
+		if len(s.Name) > maxNameLen {
+			maxNameLen = len(s.Name)
+		}
+		if len(s.Description) > maxDescLen {
+			maxDescLen = len(s.Description)
+		}
+	}
+
+	// Calculate left offset for suggestions
+	padding := lipgloss.
+		NewStyle().
+		PaddingLeft(len(m.textInput.Prompt + m.typedText)).
+		Render("")
+
+	prompts := m.previousCommands
+	suggestionLength := len(m.suggestions)
+
+	if m.executorModel != nil {
+		// Executor is running, render next executor view
+		// We're not going to render suggestions here, so set the length to 0 to apply the appropriate padding below the output
+		suggestionLength = 0
+		textView := m.textInput.Prompt + m.textInput.Value() + m.Placeholder.format(m.placeholderValue)
+		prompts = append(prompts, textView)
+		executorModel := *m.executorModel
+		// Add a newline to ensure the text gets pushed up
+		// this ensures the text doesn't jump if the completer takes a while to finish
+		prompts = append(prompts, executorModel.View()+"\n")
+	} else {
+		textView := m.textInput.View() + m.Placeholder.format(m.placeholderValue)
+		prompts = append(prompts, textView)
+
+		// If an item is selected, parse out the text portion and apply formatting
+		if m.listPosition > -1 {
+			prompt := m.textInput.Prompt
+			value := m.textInput.Value()
+			formattedSuggestion := m.SelectedSuggestion.format(value)
+			remainder := textView[len(prompt)+len(value):]
+			textView = prompt + formattedSuggestion + remainder
+
+		}
+		for i, s := range m.suggestions {
+			selected := i == m.listPosition
+			name := m.Name.format(s.Name, maxNameLen, selected)
+			description := m.Description.format(s.Description, maxDescLen, selected)
+
+			line := lipgloss.JoinHorizontal(lipgloss.Bottom, padding, name, description)
+			prompts = append(prompts, line)
+		}
+
+	}
+
+	// Reserve height for prompts that were filtered out
+	extraHeight := 5 - suggestionLength - 1
+	if extraHeight > 0 {
+		extraLines := strings.Repeat("\n", extraHeight)
+		prompts = append(prompts, extraLines)
+	}
+
+	ret := lipgloss.JoinVertical(lipgloss.Left, prompts...)
+	return ret
 }

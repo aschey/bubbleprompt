@@ -6,7 +6,6 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 type Suggestion struct {
@@ -19,7 +18,25 @@ type errMsg error
 
 type Completer func(input string) []Suggestion
 
-type Executor func(input string, selected *Suggestion, suggestions []Suggestion) string
+type Executor func(input string, selected *Suggestion, suggestions []Suggestion) tea.Model
+
+type StringModel string
+
+func NewStringModel(output string) StringModel {
+	return StringModel(output)
+}
+
+func (s StringModel) Init() tea.Cmd {
+	return nil
+}
+
+func (s StringModel) Update(tea.Msg) (tea.Model, tea.Cmd) {
+	return s, tea.Quit
+}
+
+func (s StringModel) View() string {
+	return string(s)
+}
 
 type Model struct {
 	completer          Completer
@@ -32,6 +49,7 @@ type Model struct {
 	Description        SuggestionText
 	Placeholder        Text
 	SelectedSuggestion Text
+	executorModel      *tea.Model
 	typedText          string
 	prevText           string
 	updating           bool
@@ -106,60 +124,6 @@ func (m Model) updateCompletions() tea.Cmd {
 
 		return completionMsg(filtered)
 	}
-}
-
-func (m Model) render() string {
-	maxNameLen := 0
-	maxDescLen := 0
-
-	// Determine longest name and description to calculate padding
-	for _, s := range m.suggestions {
-		if len(s.Name) > maxNameLen {
-			maxNameLen = len(s.Name)
-		}
-		if len(s.Description) > maxDescLen {
-			maxDescLen = len(s.Description)
-		}
-	}
-
-	// Calculate left offset for suggestions
-	padding := lipgloss.
-		NewStyle().
-		PaddingLeft(len(m.textInput.Prompt + m.typedText)).
-		Render("")
-
-	textView := m.textInput.View() + m.Placeholder.format(m.placeholderValue)
-
-	// If an item is selected, parse out the text portion and apply formatting
-	if m.listPosition > -1 {
-		prompt := m.textInput.Prompt
-		value := m.textInput.Value()
-		formattedSuggestion := m.SelectedSuggestion.format(value)
-		remainder := textView[len(prompt)+len(value):]
-		textView = prompt + formattedSuggestion + remainder
-
-	}
-
-	prompts := append(m.previousCommands, textView)
-
-	for i, s := range m.suggestions {
-		selected := i == m.listPosition
-		name := m.Name.format(s.Name, maxNameLen, selected)
-		description := m.Description.format(s.Description, maxDescLen, selected)
-
-		line := lipgloss.JoinHorizontal(lipgloss.Bottom, padding, name, description)
-		prompts = append(prompts, line)
-	}
-
-	// Reserve height for prompts that were filtered out
-	extraHeight := 5 - len(m.suggestions) - 1
-	if extraHeight > 0 {
-		extraLines := strings.Repeat("\n", extraHeight)
-		prompts = append(prompts, extraLines)
-	}
-
-	ret := lipgloss.JoinVertical(lipgloss.Left, prompts...)
-	return ret
 }
 
 func (m Model) View() string {
