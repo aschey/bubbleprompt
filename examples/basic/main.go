@@ -32,14 +32,14 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
-func (m completerModel) completer(input string) []prompt.Suggestion {
+func (m completerModel) completer(input string) prompt.Suggestions {
 	time.Sleep(100 * time.Millisecond)
 	return prompt.FilterHasPrefix(input, m.suggestions)
 }
 
-func executor(input string, selected *prompt.Suggestion, suggestions []prompt.Suggestion) tea.Model {
+func executor(input string, selected *prompt.Suggestion, suggestions prompt.Suggestions) tea.Model {
 	return prompt.NewAsyncStringModel(func() string {
-		time.Sleep(1000 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		return "test"
 	})
 }

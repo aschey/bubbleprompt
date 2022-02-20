@@ -56,7 +56,10 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		}
 	} else {
 		// Ensure text input is processing while executor is not running
-		m.textInput.Focus()
+		if !m.textInput.Focused() {
+			cmds = append(cmds, m.textInput.Focus())
+		}
+
 		switch msg := msg.(type) {
 		case tea.WindowSizeMsg:
 			m.updateWindowSizeMsg(msg)
@@ -80,7 +83,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 		case completionMsg:
 			m.updating = false
-			m.suggestions = msg
+			m.suggestions = Suggestions(msg)
 
 		case errMsg:
 			m.err = msg
@@ -161,8 +164,7 @@ func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	// Performance optimization: if this is a string model, we don't need to go through the whole update cycle
 	// Just call the view method once and finalize the result
 	// This makes the output a little cleaner if the completer function is slow
-	stringModel, ok := executorModel.(StringModel)
-	if ok {
+	if stringModel, ok := executorModel.(StringModel); ok {
 		m.finalizeExecutor(stringModel)
 	} else {
 		m.executorModel = &executorModel
@@ -189,69 +191,46 @@ func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 }
 
 func (m Model) render() string {
-	maxNameLen := 0
-	maxDescLen := 0
-
-	// Determine longest name and description to calculate padding
-	for _, s := range m.suggestions {
-		if len(s.Name) > maxNameLen {
-			maxNameLen = len(s.Name)
-		}
-		if len(s.Description) > maxDescLen {
-			maxDescLen = len(s.Description)
-		}
-	}
-
-	// Calculate left offset for suggestions
-	padding := lipgloss.
-		NewStyle().
-		PaddingLeft(len(m.textInput.Prompt + m.typedText)).
-		Render("")
-
-	prompts := m.previousCommands
+	lines := m.previousCommands
 	suggestionLength := len(m.suggestions)
 
 	if m.executorModel != nil {
 		// Executor is running, render next executor view
 		// We're not going to render suggestions here, so set the length to 0 to apply the appropriate padding below the output
 		suggestionLength = 0
-		textView := m.textInput.Prompt + m.textInput.Value() + m.Placeholder.format(m.placeholderValue)
-		prompts = append(prompts, textView)
+		textView := m.textInput.Prompt + m.textInput.Value() + m.Formatters.Placeholder.format(m.placeholderValue)
+		lines = append(lines, textView)
 		executorModel := *m.executorModel
 		// Add a newline to ensure the text gets pushed up
 		// this ensures the text doesn't jump if the completer takes a while to finish
-		prompts = append(prompts, executorModel.View()+"\n")
+		lines = append(lines, executorModel.View()+"\n")
 	} else {
-		textView := m.textInput.View() + m.Placeholder.format(m.placeholderValue)
-		prompts = append(prompts, textView)
+		textView := m.textInput.View() + m.Formatters.Placeholder.format(m.placeholderValue)
+		lines = append(lines, textView)
 
 		// If an item is selected, parse out the text portion and apply formatting
 		if m.listPosition > -1 {
 			prompt := m.textInput.Prompt
 			value := m.textInput.Value()
-			formattedSuggestion := m.SelectedSuggestion.format(value)
+			formattedSuggestion := m.Formatters.SelectedSuggestion.format(value)
 			remainder := textView[len(prompt)+len(value):]
 			textView = prompt + formattedSuggestion + remainder
 
 		}
-		for i, s := range m.suggestions {
-			selected := i == m.listPosition
-			name := m.Name.format(s.Name, maxNameLen, selected)
-			description := m.Description.format(s.Description, maxDescLen, selected)
 
-			line := lipgloss.JoinHorizontal(lipgloss.Bottom, padding, name, description)
-			prompts = append(prompts, line)
-		}
-
+		// Calculate left offset for suggestions
+		paddingSize := len(m.textInput.Prompt + m.typedText)
+		prompts := m.suggestions.render(paddingSize, m.listPosition, m.Formatters)
+		lines = append(lines, prompts...)
 	}
 
 	// Reserve height for prompts that were filtered out
 	extraHeight := 5 - suggestionLength - 1
 	if extraHeight > 0 {
 		extraLines := strings.Repeat("\n", extraHeight)
-		prompts = append(prompts, extraLines)
+		lines = append(lines, extraLines)
 	}
 
-	ret := lipgloss.JoinVertical(lipgloss.Left, prompts...)
+	ret := lipgloss.JoinVertical(lipgloss.Left, lines...)
 	return ret
 }

@@ -8,37 +8,35 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type Suggestion struct {
-	Name        string
-	Description string
-	Placeholder string
-}
-
 type errMsg error
 
-type Completer func(input string) []Suggestion
+type Completer func(input string) Suggestions
 
-type Executor func(input string, selected *Suggestion, suggestions []Suggestion) tea.Model
+type Executor func(input string, selected *Suggestion, suggestions Suggestions) tea.Model
 
-type Model struct {
-	completer          Completer
-	executor           Executor
-	suggestions        []Suggestion
-	textInput          textinput.Model
-	viewport           viewport.Model
-	previousCommands   []string
+type Formatters struct {
 	Name               SuggestionText
 	Description        SuggestionText
 	Placeholder        Text
 	SelectedSuggestion Text
-	executorModel      *tea.Model
-	typedText          string
-	prevText           string
-	updating           bool
-	listPosition       int
-	placeholderValue   string
-	ready              bool
-	err                error
+}
+
+type Model struct {
+	completer        Completer
+	executor         Executor
+	suggestions      Suggestions
+	textInput        textinput.Model
+	viewport         viewport.Model
+	Formatters       Formatters
+	previousCommands []string
+	executorModel    *tea.Model
+	typedText        string
+	prevText         string
+	updating         bool
+	listPosition     int
+	placeholderValue string
+	ready            bool
+	err              error
 }
 
 func New(completer Completer, executor Executor, opts ...Option) Model {
@@ -49,21 +47,23 @@ func New(completer Completer, executor Executor, opts ...Option) Model {
 		completer: completer,
 		executor:  executor,
 		textInput: textInput,
-		Name: SuggestionText{
-			SelectedForegroundColor: "240",
-			BackgroundColor:         "14",
-			SelectedBackgroundColor: "14",
-		},
-		Description: SuggestionText{
-			SelectedForegroundColor: "240",
-			BackgroundColor:         "37",
-			SelectedBackgroundColor: "37",
-		},
-		Placeholder: Text{
-			ForegroundColor: "6",
-		},
-		SelectedSuggestion: Text{
-			ForegroundColor: "10",
+		Formatters: Formatters{
+			Name: SuggestionText{
+				SelectedForegroundColor: "240",
+				BackgroundColor:         "14",
+				SelectedBackgroundColor: "14",
+			},
+			Description: SuggestionText{
+				SelectedForegroundColor: "240",
+				BackgroundColor:         "37",
+				SelectedBackgroundColor: "37",
+			},
+			Placeholder: Text{
+				ForegroundColor: "6",
+			},
+			SelectedSuggestion: Text{
+				ForegroundColor: "10",
+			},
 		},
 		suggestions:  completer(""),
 		listPosition: -1,
@@ -78,7 +78,7 @@ func New(completer Completer, executor Executor, opts ...Option) Model {
 	return model
 }
 
-func FilterHasPrefix(search string, suggestions []Suggestion) []Suggestion {
+func FilterHasPrefix(search string, suggestions Suggestions) Suggestions {
 	lowerSearch := strings.ToLower(search)
 	filtered := []Suggestion{}
 	for _, s := range suggestions {
@@ -98,7 +98,7 @@ func (m Model) Init() tea.Cmd {
 	return textinput.Blink
 }
 
-type completionMsg []Suggestion
+type completionMsg Suggestions
 
 func (m Model) updateCompletions() tea.Cmd {
 	return func() tea.Msg {
