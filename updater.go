@@ -37,16 +37,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		// The only way to do this reliably without actually invoking the function is
 		// to use reflection to check that the address is equal to tea.Quit's address
 		if newCmd != nil && reflect.ValueOf(newCmd).Pointer() == reflect.ValueOf(tea.Quit).Pointer() {
-			textValue := m.textInput.Value()
-			executorValue := executorModel.View()
-
-			// Store the whole user input including the prompt state and the executor result
-			// However note that we don't include all of textinput.View() because we don't want to include the cursor
-			commandResult := lipgloss.JoinVertical(lipgloss.Left, m.textInput.Prompt+textValue, executorValue)
-			m.previousCommands = append(m.previousCommands, commandResult)
-			m.executorModel = nil
-			// Reset text after executor finished
-			m.textInput.SetValue("")
+			m.finalizeExecutor(executorModel)
 			cmds = append(cmds, m.updateCompletions())
 		} else {
 			cmds = append(cmds, newCmd)
@@ -90,6 +81,19 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	}
 
 	return m, tea.Batch(cmds...)
+}
+
+func (m *Model) finalizeExecutor(executorModel tea.Model) {
+	textValue := m.textInput.Value()
+	executorValue := executorModel.View()
+
+	// Store the whole user input including the prompt state and the executor result
+	// However note that we don't include all of textinput.View() because we don't want to include the cursor
+	commandResult := lipgloss.JoinVertical(lipgloss.Left, m.textInput.Prompt+textValue, executorValue)
+	m.previousCommands = append(m.previousCommands, commandResult)
+	m.executorModel = nil
+	// Reset text after executor finished
+	m.textInput.SetValue("")
 }
 
 func (m *Model) updateWindowSizeMsg(msg tea.WindowSizeMsg) {
@@ -142,9 +146,18 @@ func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	m.listPosition = -1
 
 	executorModel := m.executor(textValue, curSuggestion, m.suggestions)
-	m.executorModel = &executorModel
+	// Performance optimization: if this is a string model, we don't need to go through the whole update cycle
+	// Just call the view method once and finalize the result
+	// This makes the output a little cleaner if the completer function is slow
+	stringModel, ok := executorModel.(StringModel)
+	if ok {
+		m.finalizeExecutor(stringModel)
+	} else {
+		m.executorModel = &executorModel
+		cmds = append(cmds, executorModel.Init())
+	}
 
-	return append(cmds, executorModel.Init(), m.updateCompletions())
+	return append(cmds, m.updateCompletions())
 }
 
 func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {

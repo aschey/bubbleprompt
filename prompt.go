@@ -20,24 +20,6 @@ type Completer func(input string) []Suggestion
 
 type Executor func(input string, selected *Suggestion, suggestions []Suggestion) tea.Model
 
-type StringModel string
-
-func NewStringModel(output string) StringModel {
-	return StringModel(output)
-}
-
-func (s StringModel) Init() tea.Cmd {
-	return nil
-}
-
-func (s StringModel) Update(tea.Msg) (tea.Model, tea.Cmd) {
-	return s, tea.Quit
-}
-
-func (s StringModel) View() string {
-	return string(s)
-}
-
 type Model struct {
 	completer          Completer
 	executor           Executor
