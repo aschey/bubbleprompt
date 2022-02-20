@@ -1,3 +1,5 @@
+github.com/aschey/tui-tester v0.0.0-20220220212211-a76f606ef616 h1:fJby3daTjpM3UXXCgxvJEdbtA4X6XHSkZL16mw1dO0Q=
+github.com/aschey/tui-tester v0.0.0-20220220212211-a76f606ef616/go.mod h1:gfm5CzkybTjZJpm74jB4YQe+ihI3bo4zUsCzzCx+omA=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
 github.com/charmbracelet/bubbles v0.10.2 h1:VK1Q7nnBMDFTlrMmvBgE9nidtU5udsIcZvFXvjE2Cfk=

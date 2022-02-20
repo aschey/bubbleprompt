@@ -1,12 +1,10 @@
 package prompt
 
 import (
-	"fmt"
-	"os"
-	"regexp"
 	"strings"
 	"testing"
 
+	tester "github.com/aschey/tui-tester"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -45,37 +43,6 @@ func executor(input string, selected *Suggestion, suggestions Suggestions) tea.M
 	})
 }
 
-type reader struct {
-	iter int
-}
-
-func (r *reader) Read(p []byte) (n int, err error) {
-	if r.iter == 0 {
-		n = copy(p, "test")
-		r.iter++
-		return n, nil
-	}
-	//time.Sleep(1000 * time.Millisecond)
-	n = copy(p, []byte{3})
-	return n, nil
-}
-
-type writer struct {
-	last string
-}
-
-const ansi = "[\u001B\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)?\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))"
-
-var re = regexp.MustCompile(ansi)
-
-func (w *writer) Write(p []byte) (n int, err error) {
-	last := strings.TrimSpace(re.ReplaceAllString(string(p), ""))
-	if len(last) > 0 {
-		w.last = last
-	}
-	return len(p), nil
-}
-
 func Test(t *testing.T) {
 
 	suggestions := []Suggestion{
@@ -95,22 +62,17 @@ func Test(t *testing.T) {
 	m.prompt.ready = true
 	m.prompt.viewport = viewport.New(80, 30)
 
-	// data := [2]byte{}
-	// data[0] = 3
-	// data = append(data, '3')
-	// in := bytes.NewReader(data[:])
+	program := func(tester *tester.Tester) {
+		if err := tea.NewProgram(m, tea.WithInput(tester), tea.WithOutput(tester)).Start(); err != nil {
+			panic(err)
+		}
+	}
 
-	in := reader{}
-	out := writer{}
-	if err := tea.NewProgram(m, tea.WithInput(&in), tea.WithOutput(&out)).Start(); err != nil {
-		fmt.Printf("Could not start program :(\n%v\n", err)
-		os.Exit(1)
-	}
-	lines := strings.Split(out.last, "\n")
-	if !strings.Contains(lines[1], "first") {
-		panic("fail")
-	}
-	// var buf []byte
-	// out.Read(buf)
-	// println("out", string(buf))
+	tester := tester.New(program)
+	tester.Send([]byte("test"))
+	tester.WaitFor(func(out string) bool {
+		return strings.Contains(out, "test")
+	})
+	tester.Send([]byte{3})
+	tester.WaitForTermination()
 }

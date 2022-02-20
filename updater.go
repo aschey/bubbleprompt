@@ -218,8 +218,6 @@ func (m Model) render() string {
 		lines = append(lines, executorModel.View()+"\n")
 	case completing:
 		textView := m.textInput.View() + m.Formatters.Placeholder.format(m.placeholderValue)
-		lines = append(lines, textView)
-
 		// If an item is selected, parse out the text portion and apply formatting
 		if m.listPosition > -1 {
 			prompt := m.textInput.Prompt
@@ -227,8 +225,9 @@ func (m Model) render() string {
 			formattedSuggestion := m.Formatters.SelectedSuggestion.format(value)
 			remainder := textView[len(prompt)+len(value):]
 			textView = prompt + formattedSuggestion + remainder
-
 		}
+
+		lines = append(lines, textView)
 
 		// Calculate left offset for suggestions
 		paddingSize := len(m.textInput.Prompt + m.typedText)

@@ -9,6 +9,7 @@ require (
 )
 
 require (
+	github.com/aschey/tui-tester v0.0.0-20220220212211-a76f606ef616 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/containerd/console v1.0.2 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
