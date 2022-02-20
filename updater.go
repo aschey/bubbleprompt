@@ -32,6 +32,9 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	m.textInput, cmd = m.textInput.Update(msg)
 	cmds = append(cmds, cmd)
 
+	m.completer, cmd = m.completer.Update(msg)
+	cmds = append(cmds, cmd)
+
 	// Scroll to bottom if the user typed something
 	scrollToBottom := false
 
@@ -50,7 +53,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		// to use reflection to check that the address is equal to tea.Quit's address
 		if newCmd != nil && reflect.ValueOf(newCmd).Pointer() == reflect.ValueOf(tea.Quit).Pointer() {
 			m.finalizeExecutor(executorModel)
-			cmds = append(cmds, m.updateCompletions())
+			cmds = append(cmds, m.completer.updateCompletions(m.textInput.Value()))
 		} else {
 			cmds = append(cmds, newCmd)
 		}
@@ -80,10 +83,6 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 				scrollToBottom = true
 				cmds = m.updateKeypress(msg, cmds)
 			}
-
-		case completionMsg:
-			m.updating = false
-			m.suggestions = Suggestions(msg)
 
 		case errMsg:
 			m.err = msg
@@ -127,7 +126,7 @@ func (m *Model) updateWindowSizeMsg(msg tea.WindowSizeMsg) {
 func (m *Model) updateChosenListEntry(msg tea.KeyMsg) {
 	if msg.Type == tea.KeyUp && m.listPosition > -1 {
 		m.listPosition--
-	} else if (msg.Type == tea.KeyDown || msg.Type == tea.KeyTab) && m.listPosition < len(m.suggestions)-1 {
+	} else if (msg.Type == tea.KeyDown || msg.Type == tea.KeyTab) && m.listPosition < len(m.completer.suggestions)-1 {
 		m.listPosition++
 	} else {
 		// -1 means no item selected
@@ -136,7 +135,7 @@ func (m *Model) updateChosenListEntry(msg tea.KeyMsg) {
 
 	if m.listPosition > -1 {
 		// Set the input to the suggestion's selected text
-		curSuggestion := m.suggestions[m.listPosition]
+		curSuggestion := m.completer.suggestions[m.listPosition]
 		m.placeholderValue = curSuggestion.Placeholder
 		m.textInput.SetValue(curSuggestion.Name)
 	} else {
@@ -151,16 +150,15 @@ func (m *Model) updateChosenListEntry(msg tea.KeyMsg) {
 func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	var curSuggestion *Suggestion
 	if m.listPosition > -1 {
-		curSuggestion = &m.suggestions[m.listPosition]
+		curSuggestion = &m.completer.suggestions[m.listPosition]
 	}
 	textValue := m.textInput.Value()
 	// Reset all text and selection state
-	// We'll reset the text input after the executor finished
-	// so we can capture the final output
+	// We'll reset the text input after the executor finished so we can capture the final output
 	m.typedText = ""
 	m.listPosition = -1
 
-	executorModel := m.executor(textValue, curSuggestion, m.suggestions)
+	executorModel := m.executor(textValue, curSuggestion, m.completer.suggestions)
 	// Performance optimization: if this is a string model, we don't need to go through the whole update cycle
 	// Just call the view method once and finalize the result
 	// This makes the output a little cleaner if the completer function is slow
@@ -171,28 +169,21 @@ func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 		cmds = append(cmds, executorModel.Init())
 	}
 
-	return append(cmds, m.updateCompletions())
+	return append(cmds, m.completer.updateCompletions(""))
 }
 
 func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	m.typedText = m.textInput.Value()
 	// Unselect selected item since user has changed the input
 	m.listPosition = -1
-
-	// If completer is already running or the text input hasn't changed, don't run the completer again
-	if !m.updating && m.prevText != m.textInput.Value() {
-		m.updating = true
-		// Store last text ran against completer to compare against next time
-		m.prevText = m.textInput.Value()
-		cmds = append(cmds, m.updateCompletions())
-	}
+	cmds = append(cmds, m.completer.updateCompletions(m.textInput.Value()))
 
 	return cmds
 }
 
 func (m Model) render() string {
 	lines := m.previousCommands
-	suggestionLength := len(m.suggestions)
+	suggestionLength := len(m.completer.suggestions)
 
 	if m.executorModel != nil {
 		// Executor is running, render next executor view
@@ -220,7 +211,7 @@ func (m Model) render() string {
 
 		// Calculate left offset for suggestions
 		paddingSize := len(m.textInput.Prompt + m.typedText)
-		prompts := m.suggestions.render(paddingSize, m.listPosition, m.Formatters)
+		prompts := m.completer.suggestions.render(paddingSize, m.listPosition, m.Formatters)
 		lines = append(lines, prompts...)
 	}
 

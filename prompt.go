@@ -10,8 +10,6 @@ import (
 
 type errMsg error
 
-type Completer func(input string) Suggestions
-
 type Executor func(input string, selected *Suggestion, suggestions Suggestions) tea.Model
 
 type Formatters struct {
@@ -22,17 +20,14 @@ type Formatters struct {
 }
 
 type Model struct {
-	completer        Completer
+	completer        completerModel
 	executor         Executor
-	suggestions      Suggestions
 	textInput        textinput.Model
 	viewport         viewport.Model
 	Formatters       Formatters
 	previousCommands []string
 	executorModel    *tea.Model
 	typedText        string
-	prevText         string
-	updating         bool
 	listPosition     int
 	placeholderValue string
 	ready            bool
@@ -44,7 +39,7 @@ func New(completer Completer, executor Executor, opts ...Option) Model {
 	textInput.Focus()
 
 	model := Model{
-		completer: completer,
+		completer: newCompleterModel(completer),
 		executor:  executor,
 		textInput: textInput,
 		Formatters: Formatters{
@@ -65,7 +60,6 @@ func New(completer Completer, executor Executor, opts ...Option) Model {
 				ForegroundColor: "10",
 			},
 		},
-		suggestions:  completer(""),
 		listPosition: -1,
 	}
 
@@ -95,17 +89,7 @@ func (m *Model) SetPrompt(prompt string) {
 }
 
 func (m Model) Init() tea.Cmd {
-	return textinput.Blink
-}
-
-type completionMsg Suggestions
-
-func (m Model) updateCompletions() tea.Cmd {
-	return func() tea.Msg {
-		filtered := m.completer(m.textInput.Value())
-
-		return completionMsg(filtered)
-	}
+	return tea.Batch(textinput.Blink, m.completer.Init())
 }
 
 func (m Model) View() string {
