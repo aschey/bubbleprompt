@@ -8,14 +8,14 @@ func NewStringModel(output string) StringModel {
 	return StringModel(output)
 }
 
-func (s StringModel) Init() tea.Cmd {
+func (m StringModel) Init() tea.Cmd {
 	return nil
 }
 
-func (s StringModel) Update(tea.Msg) (tea.Model, tea.Cmd) {
-	return s, tea.Quit
+func (m StringModel) Update(tea.Msg) (tea.Model, tea.Cmd) {
+	return m, tea.Quit
 }
 
-func (s StringModel) View() string {
-	return string(s)
+func (m StringModel) View() string {
+	return string(m)
 }

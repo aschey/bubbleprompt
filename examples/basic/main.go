@@ -38,7 +38,10 @@ func (m completerModel) completer(input string) []prompt.Suggestion {
 }
 
 func executor(input string, selected *prompt.Suggestion, suggestions []prompt.Suggestion) tea.Model {
-	return prompt.NewStringModel("test")
+	return prompt.NewAsyncStringModel(func() string {
+		time.Sleep(1000 * time.Millisecond)
+		return "test"
+	})
 }
 
 func main() {

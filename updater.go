@@ -11,6 +11,16 @@ import (
 )
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
+	// Check for exit signals before anything else
+	// to reduce chance of program becoming frozen
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.Type {
+		case tea.KeyCtrlC, tea.KeyEsc:
+			return m, tea.Quit
+		}
+	}
+
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 
@@ -26,6 +36,8 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	scrollToBottom := false
 
 	if m.executorModel != nil {
+		// Don't process text input while executor is running
+		m.textInput.Blur()
 		var newCmd tea.Cmd
 		executorModel := *m.executorModel
 		executorModel, newCmd = executorModel.Update(msg)
@@ -43,6 +55,8 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			cmds = append(cmds, newCmd)
 		}
 	} else {
+		// Ensure text input is processing while executor is not running
+		m.textInput.Focus()
 		switch msg := msg.(type) {
 		case tea.WindowSizeMsg:
 			m.updateWindowSizeMsg(msg)
@@ -50,8 +64,6 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		case tea.KeyMsg:
 			m.placeholderValue = ""
 			switch msg.Type {
-			case tea.KeyCtrlC, tea.KeyEsc:
-				return m, tea.Quit
 
 			// Select next/previous list entry
 			case tea.KeyUp, tea.KeyDown, tea.KeyTab:
