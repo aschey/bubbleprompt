@@ -4,17 +4,14 @@ import (
 	"strings"
 	"testing"
 
-	tester "github.com/aschey/tui-tester"
+	"github.com/MarvinJWendt/testza"
+	tuitest "github.com/aschey/tui-tester"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type model struct {
 	prompt Model
-}
-
-type testCompleterModel struct {
-	suggestions []Suggestion
 }
 
 func (m model) Init() tea.Cmd {
@@ -32,25 +29,20 @@ func (m model) View() string {
 }
 
 func (m completerModel) completer(input string) Suggestions {
-	//time.Sleep(100 * time.Millisecond)
 	return FilterHasPrefix(input, m.suggestions)
 }
 
 func executor(input string, selected *Suggestion, suggestions Suggestions) tea.Model {
-	return NewAsyncStringModel(func() string {
-		//time.Sleep(10 * time.Millisecond)
-		return "test"
-	})
+	return NewStringModel("result")
 }
 
-func Test(t *testing.T) {
-
+func TestBasicCompleter(t *testing.T) {
 	suggestions := []Suggestion{
-		{Name: "first option", Description: "test desc", Placeholder: "[hh]"},
+		{Name: "first option", Description: "test desc", Placeholder: "[test placeholder]"},
 		{Name: "second option", Description: "test desc2"},
-		{Name: "third option", Description: "test desc2"},
-		{Name: "fourth option", Description: "test desc2"},
-		{Name: "fifth option", Description: "test desc2"},
+		{Name: "third option", Description: "test desc3"},
+		{Name: "fourth option", Description: "test desc4"},
+		{Name: "fifth option", Description: "test desc5"},
 	}
 
 	completerModel := completerModel{suggestions: suggestions}
@@ -62,17 +54,25 @@ func Test(t *testing.T) {
 	m.prompt.ready = true
 	m.prompt.viewport = viewport.New(80, 30)
 
-	program := func(tester *tester.Tester) {
+	program := func(tester *tuitest.Tester) {
 		if err := tea.NewProgram(m, tea.WithInput(tester), tea.WithOutput(tester)).Start(); err != nil {
 			panic(err)
 		}
 	}
 
-	tester := tester.New(program)
-	tester.Send([]byte("test"))
-	tester.WaitFor(func(out string) bool {
-		return strings.Contains(out, "test")
+	tester := tuitest.New(program)
+
+	_, lines, err := tester.WaitFor(func(out string, outputLines []string) bool {
+		return len(outputLines) > 1 && strings.Contains(outputLines[1], suggestions[0].Name)
 	})
-	tester.Send([]byte{3})
-	tester.WaitForTermination()
+	testza.AssertNoError(t, err)
+
+	for i := 1; i < len(suggestions); i++ {
+		testza.AssertContains(t, lines[i], suggestions[i-1].Name)
+		testza.AssertContains(t, lines[i], suggestions[i-1].Description)
+	}
+
+	tester.SendByte(tuitest.KeyCtrlC)
+
+	testza.AssertNoError(t, tester.WaitForTermination())
 }
