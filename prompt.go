@@ -10,14 +10,21 @@ import (
 
 type errMsg error
 
-type Executor func(input string, selected *Suggestion, suggestions Suggestions) tea.Model
-
 type Formatters struct {
 	Name               SuggestionText
 	Description        SuggestionText
 	Placeholder        Text
 	SelectedSuggestion Text
 }
+
+type modelState int
+
+const (
+	completing modelState = iota
+	executing
+)
+
+type Executor func(input string, selected *Suggestion, suggestions Suggestions) tea.Model
 
 type Model struct {
 	completer        completerModel
@@ -27,6 +34,7 @@ type Model struct {
 	Formatters       Formatters
 	previousCommands []string
 	executorModel    *tea.Model
+	modelState       modelState
 	typedText        string
 	listPosition     int
 	placeholderValue string

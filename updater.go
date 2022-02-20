@@ -38,55 +38,11 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	// Scroll to bottom if the user typed something
 	scrollToBottom := false
 
-	if m.executorModel != nil {
-		// Don't process text input while executor is running
-		m.textInput.Blur()
-		var newCmd tea.Cmd
-		executorModel := *m.executorModel
-		executorModel, newCmd = executorModel.Update(msg)
-		m.executorModel = &executorModel
-		scrollToBottom = true
-
-		// Check if the model sent the quit command
-		// When this happens we just want to quit the executor, not the entire program
-		// The only way to do this reliably without actually invoking the function is
-		// to use reflection to check that the address is equal to tea.Quit's address
-		if newCmd != nil && reflect.ValueOf(newCmd).Pointer() == reflect.ValueOf(tea.Quit).Pointer() {
-			m.finalizeExecutor(executorModel)
-			cmds = append(cmds, m.completer.updateCompletions(m.textInput.Value()))
-		} else {
-			cmds = append(cmds, newCmd)
-		}
-	} else {
-		// Ensure text input is processing while executor is not running
-		if !m.textInput.Focused() {
-			cmds = append(cmds, m.textInput.Focus())
-		}
-
-		switch msg := msg.(type) {
-		case tea.WindowSizeMsg:
-			m.updateWindowSizeMsg(msg)
-
-		case tea.KeyMsg:
-			m.placeholderValue = ""
-			switch msg.Type {
-
-			// Select next/previous list entry
-			case tea.KeyUp, tea.KeyDown, tea.KeyTab:
-				m.updateChosenListEntry(msg)
-
-			case tea.KeyEnter:
-				scrollToBottom = true
-				cmds = m.submit(msg, cmds)
-
-			case tea.KeyRunes, tea.KeyBackspace:
-				scrollToBottom = true
-				cmds = m.updateKeypress(msg, cmds)
-			}
-
-		case errMsg:
-			m.err = msg
-		}
+	switch m.modelState {
+	case executing:
+		cmds, scrollToBottom = m.updateExecuting(msg, cmds)
+	case completing:
+		cmds, scrollToBottom = m.updateCompleting(msg, cmds)
 	}
 
 	m.viewport.SetContent(m.render())
@@ -97,6 +53,61 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
+func (m *Model) updateExecuting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) {
+	// Don't process text input while executor is running
+	if m.textInput.Focused() {
+		m.textInput.Blur()
+	}
+
+	executorModel, cmd := (*m.executorModel).Update(msg)
+	m.executorModel = &executorModel
+
+	// Check if the model sent the quit command
+	// When this happens we just want to quit the executor, not the entire program
+	// The only way to do this reliably without actually invoking the function is
+	// to use reflection to check that the address is equal to tea.Quit's address
+	if cmd != nil && reflect.ValueOf(cmd).Pointer() == reflect.ValueOf(tea.Quit).Pointer() {
+		m.finalizeExecutor(executorModel)
+		return cmds, true
+	} else {
+		return append(cmds, cmd), true
+	}
+}
+
+func (m *Model) updateCompleting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) {
+	scrollToBottom := false
+	// Ensure text input is processing while executor is not running
+	if !m.textInput.Focused() {
+		cmds = append(cmds, m.textInput.Focus())
+	}
+
+	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.updateWindowSizeMsg(msg)
+
+	case tea.KeyMsg:
+		m.placeholderValue = ""
+		switch msg.Type {
+
+		// Select next/previous list entry
+		case tea.KeyUp, tea.KeyDown, tea.KeyTab:
+			m.updateChosenListEntry(msg)
+
+		case tea.KeyEnter:
+			scrollToBottom = true
+			cmds = m.submit(msg, cmds)
+
+		case tea.KeyRunes, tea.KeyBackspace:
+			scrollToBottom = true
+			cmds = m.updateKeypress(msg, cmds)
+		}
+
+	case errMsg:
+		m.err = msg
+	}
+	return cmds, scrollToBottom
+}
+
 func (m *Model) finalizeExecutor(executorModel tea.Model) {
 	textValue := m.textInput.Value()
 	executorValue := executorModel.View()
@@ -105,7 +116,7 @@ func (m *Model) finalizeExecutor(executorModel tea.Model) {
 	// However note that we don't include all of textinput.View() because we don't want to include the cursor
 	commandResult := lipgloss.JoinVertical(lipgloss.Left, m.textInput.Prompt+textValue, executorValue)
 	m.previousCommands = append(m.previousCommands, commandResult)
-	m.executorModel = nil
+	m.updateExecutor(nil)
 	// Reset text after executor finished
 	m.textInput.SetValue("")
 }
@@ -147,6 +158,15 @@ func (m *Model) updateChosenListEntry(msg tea.KeyMsg) {
 	m.textInput.SetCursor(len(m.textInput.Value()))
 }
 
+func (m *Model) updateExecutor(executor *tea.Model) {
+	m.executorModel = executor
+	if m.executorModel == nil {
+		m.modelState = completing
+	} else {
+		m.modelState = executing
+	}
+}
+
 func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	var curSuggestion *Suggestion
 	if m.listPosition > -1 {
@@ -165,7 +185,7 @@ func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	if stringModel, ok := executorModel.(StringModel); ok {
 		m.finalizeExecutor(stringModel)
 	} else {
-		m.executorModel = &executorModel
+		m.updateExecutor(&executorModel)
 		cmds = append(cmds, executorModel.Init())
 	}
 
@@ -185,7 +205,8 @@ func (m Model) render() string {
 	lines := m.previousCommands
 	suggestionLength := len(m.completer.suggestions)
 
-	if m.executorModel != nil {
+	switch m.modelState {
+	case executing:
 		// Executor is running, render next executor view
 		// We're not going to render suggestions here, so set the length to 0 to apply the appropriate padding below the output
 		suggestionLength = 0
@@ -195,7 +216,7 @@ func (m Model) render() string {
 		// Add a newline to ensure the text gets pushed up
 		// this ensures the text doesn't jump if the completer takes a while to finish
 		lines = append(lines, executorModel.View()+"\n")
-	} else {
+	case completing:
 		textView := m.textInput.View() + m.Formatters.Placeholder.format(m.placeholderValue)
 		lines = append(lines, textView)
 
