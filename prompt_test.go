@@ -14,6 +14,13 @@ type model struct {
 	prompt Model
 }
 
+type testData struct {
+	suggestions  Suggestions
+	tester       tuitest.Tester
+	initialLines []string
+	model        model
+}
+
 func (m model) Init() tea.Cmd {
 	return m.prompt.Init()
 }
@@ -36,7 +43,7 @@ func executor(input string, selected *Suggestion, suggestions Suggestions) tea.M
 	return NewStringModel("result is " + input)
 }
 
-func setup() (Suggestions, tuitest.Tester) {
+func setup(t *testing.T) testData {
 	suggestions := Suggestions{
 		{Name: "first option", Description: "test desc", Placeholder: "[test placeholder]"},
 		{Name: "second option", Description: "test desc2"},
@@ -47,15 +54,15 @@ func setup() (Suggestions, tuitest.Tester) {
 
 	completerModel := completerModel{suggestions: suggestions}
 
-	m := model{prompt: New(
+	model := model{prompt: New(
 		completerModel.completer,
 		executor,
 	)}
-	m.prompt.ready = true
-	m.prompt.viewport = viewport.New(80, 30)
+	model.prompt.ready = true
+	model.prompt.viewport = viewport.New(80, 30)
 
 	program := func(tester *tuitest.Tester) {
-		if err := tea.NewProgram(m, tea.WithInput(tester), tea.WithOutput(tester)).Start(); err != nil {
+		if err := tea.NewProgram(model, tea.WithInput(tester), tea.WithOutput(tester)).Start(); err != nil {
 			panic(err)
 		}
 	}
@@ -63,61 +70,74 @@ func setup() (Suggestions, tuitest.Tester) {
 	tester := tuitest.New(program)
 	tester.TrimOutput = true
 	tester.RemoveAnsi = true
-	return suggestions, tester
-}
 
-func waitFor(t *testing.T, tester tuitest.Tester, condition func(out string, outputLines []string) bool) []string {
-	_, lines, err := tester.WaitFor(condition)
-	testza.AssertNoError(t, err)
-	return lines
-}
-
-func TestBasicCompleter(t *testing.T) {
-	suggestions, tester := setup()
-
-	lines := waitFor(t, tester, func(out string, outputLines []string) bool {
+	// Wait for prompt to initialize
+	_, initialLines, err := tester.WaitFor(func(out string, outputLines []string) bool {
 		return len(outputLines) > 1
 	})
+	testza.AssertNoError(t, err)
 
-	for i := 1; i < len(suggestions); i++ {
-		testza.AssertContains(t, lines[i], suggestions[i-1].Name)
-		testza.AssertContains(t, lines[i], suggestions[i-1].Description)
-	}
+	return testData{suggestions, tester, initialLines, model}
+}
 
+func teardown(t *testing.T, tester tuitest.Tester) {
 	tester.SendByte(tuitest.KeyCtrlC)
-
 	testza.AssertNoError(t, tester.WaitForTermination())
 }
 
-func TestFilter(t *testing.T) {
-	suggestions, tester := setup()
+func TestBasicCompleter(t *testing.T) {
+	testData := setup(t)
 
-	tester.SendString("fi")
-	lines := waitFor(t, tester, func(out string, outputLines []string) bool {
-		return len(outputLines) > 1
+	// Check that all prompts show up
+	for i := 1; i < len(testData.suggestions); i++ {
+		testza.AssertContains(t, testData.initialLines[i], testData.suggestions[i-1].Name)
+		testza.AssertContains(t, testData.initialLines[i], testData.suggestions[i-1].Description)
+	}
+
+	teardown(t, testData.tester)
+}
+
+func TestFilter(t *testing.T) {
+	testData := setup(t)
+
+	testData.tester.SendString("fi")
+	// Check that typed input shows up
+	_, lines, err := testData.tester.WaitFor(func(out string, outputLines []string) bool {
+		return strings.Contains(outputLines[0], "fi")
 	})
+	testza.AssertNoError(t, err)
+
+	// Check that suggestions filter properly
 	testza.AssertEqual(t, 3, len(lines))
-	testza.AssertContains(t, lines[0], "fi")
-	testza.AssertContains(t, lines[1], suggestions[0].Name)
-	testza.AssertContains(t, lines[1], suggestions[0].Description)
-	testza.AssertContains(t, lines[2], suggestions[4].Name)
-	testza.AssertContains(t, lines[2], suggestions[4].Description)
+	testza.AssertContains(t, lines[1], testData.suggestions[0].Name)
+	testza.AssertContains(t, lines[1], testData.suggestions[0].Description)
+	testza.AssertContains(t, lines[2], testData.suggestions[4].Name)
+	testza.AssertContains(t, lines[2], testData.suggestions[4].Description)
+
+	teardown(t, testData.tester)
 }
 
 func testExecutor(t *testing.T, in *string, expectedOut string) {
-	_, tester := setup()
+	testData := setup(t)
 
 	if in != nil {
-		tester.SendString("fi")
+		testData.tester.SendString(*in)
+		// Wait for typed input to render
+		_, _, err := testData.tester.WaitFor(func(out string, outputLines []string) bool {
+			return strings.Contains(outputLines[0], *in)
+		})
+		testza.AssertNoError(t, err)
 	}
 
-	_ = waitFor(t, tester, func(out string, outputLines []string) bool {
-		return len(outputLines) > 1
-	})
-	tester.SendByte(tuitest.KeyEnter)
-	_ = waitFor(t, tester, func(out string, outputLines []string) bool {
+	testData.tester.SendByte(tuitest.KeyEnter)
+
+	// Check that executor output displays
+	_, _, err := testData.tester.WaitFor(func(out string, outputLines []string) bool {
 		return len(outputLines) > 1 && strings.Contains(outputLines[1], expectedOut)
 	})
+	testza.AssertNoError(t, err)
+
+	teardown(t, testData.tester)
 }
 
 func TestExecutorNoInput(t *testing.T) {
@@ -127,4 +147,29 @@ func TestExecutorNoInput(t *testing.T) {
 func TestExecutorWithInput(t *testing.T) {
 	in := "fi"
 	testExecutor(t, &in, "result is fi")
+}
+
+func TestChoosePrompt(t *testing.T) {
+	testData := setup(t)
+	testData.tester.RemoveAnsi = false
+
+	_, _, err := testData.tester.WaitFor(func(out string, outputLines []string) bool {
+		return len(outputLines) > 1
+	})
+	testza.AssertNoError(t, err)
+
+	testData.tester.SendString(tuitest.KeyDown)
+	// Wait for first prompt to be selected
+	_, lines, err := testData.tester.WaitFor(func(out string, outputLines []string) bool {
+		return strings.Contains(outputLines[0], testData.suggestions[0].Name)
+	})
+	testza.AssertNoError(t, err)
+	// Check that proper styles are applied
+	testza.AssertContains(t, lines[0], testData.model.prompt.Formatters.Placeholder.format(testData.suggestions[0].Placeholder))
+	maxNameLen := len("second option")
+	testza.AssertContains(t, lines[1], testData.model.prompt.Formatters.Name.format(testData.suggestions[0].Name, maxNameLen, true))
+	maxDescLen := len("test desc1")
+	testza.AssertContains(t, lines[1], testData.model.prompt.Formatters.Description.format(testData.suggestions[0].Description, maxDescLen, true))
+
+	teardown(t, testData.tester)
 }
