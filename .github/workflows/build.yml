@@ -13,5 +13,5 @@ jobs:
           go-version: 1.17.x
 
       - name: test
-        # Set TERM variable to force coloe ourpur
+        # Set TERM variable to force color output
         run: go build && TERM=xterm-256color script -q -e -c "go test -v"
