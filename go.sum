@@ -5,10 +5,8 @@ github.com/MarvinJWendt/testza v0.2.10/go.mod h1:pd+VWsoGUiFtq+hRKSU1Bktnn+DMCSr
 github.com/MarvinJWendt/testza v0.2.12/go.mod h1:JOIegYyV7rX+7VZ9r77L/eH6CfJHHzXjB69adAhzZkI=
 github.com/MarvinJWendt/testza v0.2.15 h1:suR1fQ/folIjEJw4GTbIBahhmZ16zatr9JghbSU+LV0=
 github.com/MarvinJWendt/testza v0.2.15/go.mod h1:eFcL4I0idjtIx8P9C6KkAuLgATNKpX4/2oUqKc6bF2c=
-github.com/aschey/tui-tester v0.0.0-20220220230255-b0ab929369b2 h1:A4wW+chxr6q3lHPIsjA9O3MSqx10Z+mLTF5HqR2DW/Q=
-github.com/aschey/tui-tester v0.0.0-20220220230255-b0ab929369b2/go.mod h1:rQl6d4M2P7v4SwOwEic/MEyb4gu/SzStaORf0Y/Fh6E=
-github.com/aschey/tui-tester v0.0.0-20220220234939-604d6da890a5 h1:fcWBa+vUn9g083cAPxA6d/pIuCqZ38CKY7sQv5blg3U=
-github.com/aschey/tui-tester v0.0.0-20220220234939-604d6da890a5/go.mod h1:rQl6d4M2P7v4SwOwEic/MEyb4gu/SzStaORf0Y/Fh6E=
+github.com/aschey/tui-tester v0.0.0-20220221001311-ddb1467c656e h1:4F/Ey0zAUhORxgq6ag/PprIF/6hWH+RwblYQI8a/rRs=
+github.com/aschey/tui-tester v0.0.0-20220221001311-ddb1467c656e/go.mod h1:rQl6d4M2P7v4SwOwEic/MEyb4gu/SzStaORf0Y/Fh6E=
 github.com/atomicgo/cursor v0.0.1 h1:xdogsqa6YYlLfM+GyClC/Lchf7aiMerFiZQn7soTOoU=
 github.com/atomicgo/cursor v0.0.1/go.mod h1:cBON2QmmrysudxNBFthvMtN32r3jxVRIvzkUiF/RuIk=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=

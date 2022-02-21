@@ -1,7 +1,6 @@
 package prompt
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/MarvinJWendt/testza"
@@ -36,8 +35,8 @@ func executor(input string, selected *Suggestion, suggestions Suggestions) tea.M
 	return NewStringModel("result")
 }
 
-func TestBasicCompleter(t *testing.T) {
-	suggestions := []Suggestion{
+func setup() (Suggestions, tuitest.Tester) {
+	suggestions := Suggestions{
 		{Name: "first option", Description: "test desc", Placeholder: "[test placeholder]"},
 		{Name: "second option", Description: "test desc2"},
 		{Name: "third option", Description: "test desc3"},
@@ -61,11 +60,23 @@ func TestBasicCompleter(t *testing.T) {
 	}
 
 	tester := tuitest.New(program)
+	tester.TrimOutput = true
+	tester.RemoveAnsi = true
+	return suggestions, tester
+}
 
-	_, lines, err := tester.WaitFor(func(out string, outputLines []string) bool {
-		return len(outputLines) > 1 && strings.Contains(outputLines[1], suggestions[0].Name)
-	})
+func waitFor(t *testing.T, tester tuitest.Tester, condition func(out string, outputLines []string) bool) []string {
+	_, lines, err := tester.WaitFor(condition)
 	testza.AssertNoError(t, err)
+	return lines
+}
+
+func TestBasicCompleter(t *testing.T) {
+	suggestions, tester := setup()
+
+	lines := waitFor(t, tester, func(out string, outputLines []string) bool {
+		return len(outputLines) > 1
+	})
 
 	for i := 1; i < len(suggestions); i++ {
 		testza.AssertContains(t, lines[i], suggestions[i-1].Name)
@@ -75,4 +86,20 @@ func TestBasicCompleter(t *testing.T) {
 	tester.SendByte(tuitest.KeyCtrlC)
 
 	testza.AssertNoError(t, tester.WaitForTermination())
+}
+
+func TestFilter(t *testing.T) {
+	suggestions, tester := setup()
+
+	tester.SendString("fi")
+	lines := waitFor(t, tester, func(out string, outputLines []string) bool {
+		return len(outputLines) > 1
+	})
+	testza.AssertEqual(t, 3, len(lines))
+	testza.AssertContains(t, lines[0], "fi")
+	testza.AssertContains(t, lines[1], suggestions[0].Name)
+	testza.AssertContains(t, lines[1], suggestions[0].Description)
+	testza.AssertContains(t, lines[2], suggestions[4].Name)
+	testza.AssertContains(t, lines[2], suggestions[4].Description)
+
 }
