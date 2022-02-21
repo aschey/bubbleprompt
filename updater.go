@@ -2,7 +2,6 @@ package prompt
 
 import (
 	"reflect"
-	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/viewport"
@@ -199,49 +198,4 @@ func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	cmds = append(cmds, m.completer.updateCompletions(m.textInput.Value()))
 
 	return cmds
-}
-
-func (m Model) render() string {
-	lines := m.previousCommands
-	suggestionLength := len(m.completer.suggestions)
-
-	switch m.modelState {
-	case executing:
-		// Executor is running, render next executor view
-		// We're not going to render suggestions here, so set the length to 0 to apply the appropriate padding below the output
-		suggestionLength = 0
-		textView := m.textInput.Prompt + m.textInput.Value() + m.Formatters.Placeholder.format(m.placeholderValue)
-		lines = append(lines, textView)
-		executorModel := *m.executorModel
-		// Add a newline to ensure the text gets pushed up
-		// this ensures the text doesn't jump if the completer takes a while to finish
-		lines = append(lines, executorModel.View()+"\n")
-	case completing:
-		textView := m.textInput.View() + m.Formatters.Placeholder.format(m.placeholderValue)
-		// If an item is selected, parse out the text portion and apply formatting
-		if m.listPosition > -1 {
-			prompt := m.textInput.Prompt
-			value := m.textInput.Value()
-			formattedSuggestion := m.Formatters.SelectedSuggestion.format(value)
-			remainder := textView[len(prompt)+len(value):]
-			textView = prompt + formattedSuggestion + remainder
-		}
-
-		lines = append(lines, textView)
-
-		// Calculate left offset for suggestions
-		paddingSize := len(m.textInput.Prompt + m.typedText)
-		prompts := m.completer.suggestions.render(paddingSize, m.listPosition, m.Formatters)
-		lines = append(lines, prompts...)
-	}
-
-	// Reserve height for prompts that were filtered out
-	extraHeight := 5 - suggestionLength - 1
-	if extraHeight > 0 {
-		extraLines := strings.Repeat("\n", extraHeight)
-		lines = append(lines, extraLines)
-	}
-
-	ret := lipgloss.JoinVertical(lipgloss.Left, lines...)
-	return ret
 }
