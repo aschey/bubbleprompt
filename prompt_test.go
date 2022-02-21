@@ -1,6 +1,7 @@
 package prompt
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/MarvinJWendt/testza"
@@ -32,7 +33,7 @@ func (m completerModel) completer(input string) Suggestions {
 }
 
 func executor(input string, selected *Suggestion, suggestions Suggestions) tea.Model {
-	return NewStringModel("result")
+	return NewStringModel("result is " + input)
 }
 
 func setup() (Suggestions, tuitest.Tester) {
@@ -101,5 +102,29 @@ func TestFilter(t *testing.T) {
 	testza.AssertContains(t, lines[1], suggestions[0].Description)
 	testza.AssertContains(t, lines[2], suggestions[4].Name)
 	testza.AssertContains(t, lines[2], suggestions[4].Description)
+}
 
+func testExecutor(t *testing.T, in *string, expectedOut string) {
+	_, tester := setup()
+
+	if in != nil {
+		tester.SendString("fi")
+	}
+
+	_ = waitFor(t, tester, func(out string, outputLines []string) bool {
+		return len(outputLines) > 1
+	})
+	tester.SendByte(tuitest.KeyEnter)
+	_ = waitFor(t, tester, func(out string, outputLines []string) bool {
+		return len(outputLines) > 1 && strings.Contains(outputLines[1], expectedOut)
+	})
+}
+
+func TestExecutorNoInput(t *testing.T) {
+	testExecutor(t, nil, "result is")
+}
+
+func TestExecutorWithInput(t *testing.T) {
+	in := "fi"
+	testExecutor(t, &in, "result is fi")
 }
