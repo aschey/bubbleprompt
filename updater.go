@@ -85,7 +85,6 @@ func (m *Model) updateCompleting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) 
 		m.updateWindowSizeMsg(msg)
 
 	case tea.KeyMsg:
-		m.placeholderValue = ""
 		switch msg.Type {
 
 		// Select next/previous list entry
@@ -146,7 +145,6 @@ func (m *Model) updateChosenListEntry(msg tea.KeyMsg) {
 	if m.listPosition > -1 {
 		// Set the input to the suggestion's selected text
 		curSuggestion := m.completer.suggestions[m.listPosition]
-		m.placeholderValue = curSuggestion.Placeholder
 		m.textInput.SetValue(curSuggestion.Name)
 	} else {
 		// If no selection, set the text back to the last thing the user typed

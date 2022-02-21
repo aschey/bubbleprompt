@@ -37,7 +37,6 @@ type Model struct {
 	modelState       modelState
 	typedText        string
 	listPosition     int
-	placeholderValue string
 	ready            bool
 	err              error
 }

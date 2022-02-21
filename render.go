@@ -6,8 +6,16 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+func (m Model) getPlaceholder() string {
+	if m.listPosition == -1 {
+		return ""
+	}
+	placeholderText := m.completer.suggestions[m.listPosition].Placeholder
+	return m.Formatters.Placeholder.format(placeholderText)
+}
+
 func (m Model) renderExecuting(lines []string) []string {
-	textView := m.textInput.Prompt + m.textInput.Value() + m.Formatters.Placeholder.format(m.placeholderValue)
+	textView := m.textInput.Prompt + m.textInput.Value() + m.getPlaceholder()
 	lines = append(lines, textView)
 	executorModel := *m.executorModel
 	// Add a newline to ensure the text gets pushed up
@@ -18,7 +26,7 @@ func (m Model) renderExecuting(lines []string) []string {
 }
 
 func (m Model) renderCompleting(lines []string) []string {
-	textView := m.textInput.View() + m.Formatters.Placeholder.format(m.placeholderValue)
+	textView := m.textInput.View() + m.getPlaceholder()
 	// If an item is selected, parse out the text portion and apply formatting
 	if m.listPosition > -1 {
 		prompt := m.textInput.Prompt
