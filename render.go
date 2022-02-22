@@ -7,7 +7,7 @@ import (
 )
 
 func (m Model) getPlaceholder() string {
-	if m.listPosition == -1 {
+	if !m.isSuggestionSelected() {
 		return ""
 	}
 	placeholderText := m.completer.suggestions[m.listPosition].Placeholder
@@ -35,7 +35,7 @@ func (m Model) renderExecuting(lines []string) []string {
 
 func (m Model) renderCompleting(lines []string) []string {
 	// If an item is selected, parse out the text portion and apply formatting
-	if m.listPosition > -1 {
+	if m.isSuggestionSelected() {
 		m.textInput.TextStyle = m.Formatters.SelectedSuggestion
 	} else {
 		m.textInput.TextStyle = lipgloss.NewStyle()
@@ -44,7 +44,9 @@ func (m Model) renderCompleting(lines []string) []string {
 	lines = append(lines, textView)
 
 	// Calculate left offset for suggestions
-	paddingSize := len(m.textInput.Prompt + m.typedText)
+	// Choosing a prompt via arrow keys or tab shouldn't change the prompt position
+	// so we use the last typed cursor position instead of the current position
+	paddingSize := len(m.textInput.Prompt) + m.lastTypedCursorPosition
 	prompts := m.completer.suggestions.render(paddingSize, m.listPosition, m.Formatters)
 	lines = append(lines, prompts...)
 

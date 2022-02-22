@@ -28,18 +28,19 @@ const (
 type Executor func(input string, selected *Suggestion, suggestions Suggestions) tea.Model
 
 type Model struct {
-	completer        completerModel
-	executor         Executor
-	textInput        textinput.Model
-	viewport         viewport.Model
-	Formatters       Formatters
-	previousCommands []string
-	executorModel    *tea.Model
-	modelState       modelState
-	typedText        string
-	listPosition     int
-	ready            bool
-	err              error
+	completer               completerModel
+	executor                Executor
+	textInput               textinput.Model
+	viewport                viewport.Model
+	Formatters              Formatters
+	previousCommands        []string
+	executorModel           *tea.Model
+	modelState              modelState
+	lastTypedCursorPosition int
+	typedText               string
+	listPosition            int
+	ready                   bool
+	err                     error
 }
 
 func New(completer Completer, executor Executor, opts ...Option) Model {
@@ -107,4 +108,19 @@ func (m Model) View() string {
 		return "\n  Initializing..."
 	}
 	return m.viewport.View()
+}
+
+func (m *Model) unselectSuggestion() {
+	m.listPosition = -1
+}
+
+func (m Model) isSuggestionSelected() bool {
+	return m.listPosition > -1
+}
+
+func (m Model) getSelectedSuggestion() *Suggestion {
+	if m.isSuggestionSelected() {
+		return &m.completer.suggestions[m.listPosition]
+	}
+	return nil
 }

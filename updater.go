@@ -95,7 +95,7 @@ func (m *Model) updateCompleting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) 
 			scrollToBottom = true
 			cmds = m.submit(msg, cmds)
 
-		case tea.KeyRunes, tea.KeyBackspace:
+		case tea.KeyRunes, tea.KeyBackspace, tea.KeyLeft, tea.KeyRight:
 			scrollToBottom = true
 			cmds = m.updateKeypress(msg, cmds)
 		}
@@ -133,26 +133,31 @@ func (m *Model) updateWindowSizeMsg(msg tea.WindowSizeMsg) {
 }
 
 func (m *Model) updateChosenListEntry(msg tea.KeyMsg) {
-	if msg.Type == tea.KeyUp && m.listPosition > -1 {
+	if !m.isSuggestionSelected() {
+		// No suggestion currently suggested, store the last cursor position before selecting
+		// so we can restore it later
+		m.lastTypedCursorPosition = m.textInput.Cursor()
+	}
+
+	if msg.Type == tea.KeyUp && m.isSuggestionSelected() {
 		m.listPosition--
 	} else if (msg.Type == tea.KeyDown || msg.Type == tea.KeyTab) && m.listPosition < len(m.completer.suggestions)-1 {
 		m.listPosition++
 	} else {
-		// -1 means no item selected
-		m.listPosition = -1
+		m.unselectSuggestion()
 	}
 
-	if m.listPosition > -1 {
+	if m.isSuggestionSelected() {
 		// Set the input to the suggestion's selected text
-		curSuggestion := m.completer.suggestions[m.listPosition]
+		curSuggestion := m.getSelectedSuggestion()
 		m.textInput.SetValue(curSuggestion.Name)
+		// Move cursor to the end of the line
+		m.textInput.SetCursor(len(m.textInput.Value()))
 	} else {
 		// If no selection, set the text back to the last thing the user typed
 		m.textInput.SetValue(m.typedText)
+		m.textInput.SetCursor(m.lastTypedCursorPosition)
 	}
-
-	// Move cursor to the end of the line
-	m.textInput.SetCursor(len(m.textInput.Value()))
 }
 
 func (m *Model) updateExecutor(executor *tea.Model) {
@@ -165,15 +170,13 @@ func (m *Model) updateExecutor(executor *tea.Model) {
 }
 
 func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
-	var curSuggestion *Suggestion
-	if m.listPosition > -1 {
-		curSuggestion = &m.completer.suggestions[m.listPosition]
-	}
+	curSuggestion := m.getSelectedSuggestion()
 	textValue := m.textInput.Value()
 	// Reset all text and selection state
 	// We'll reset the text input after the executor finished so we can capture the final output
 	m.typedText = ""
-	m.listPosition = -1
+	m.lastTypedCursorPosition = 0
+	m.unselectSuggestion()
 
 	executorModel := m.executor(textValue, curSuggestion, m.completer.suggestions)
 	// Performance optimization: if this is a string model, we don't need to go through the whole update cycle
@@ -191,9 +194,11 @@ func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 
 func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	m.typedText = m.textInput.Value()
+	m.lastTypedCursorPosition = m.textInput.Cursor()
 	// Unselect selected item since user has changed the input
 	m.listPosition = -1
-	cmds = append(cmds, m.completer.updateCompletions(m.textInput.Value()))
+	textBeforeCursor := m.textInput.Value()[:m.textInput.Cursor()]
+	cmds = append(cmds, m.completer.updateCompletions(textBeforeCursor))
 
 	return cmds
 }
