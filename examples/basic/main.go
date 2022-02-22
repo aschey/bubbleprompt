@@ -7,7 +7,6 @@ import (
 
 	prompt "github.com/aschey/bubbleprompt"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 type model struct {
@@ -55,38 +54,10 @@ func main() {
 
 	completerModel := completerModel{suggestions: suggestions}
 
-	defaultStyle := lipgloss.
-		NewStyle().
-		PaddingLeft(1)
-
 	m := model{prompt: prompt.New(
 		completerModel.completer,
 		executor,
-		prompt.OptionPrompt(">>> "),
-		prompt.OptionNameFormatter(func(name string, columnWidth int, selected bool) string {
-			foreground := ""
-			if selected {
-				foreground = "240"
-			}
-			return defaultStyle.
-				Copy().
-				PaddingRight(columnWidth - len(name) + 1).
-				Foreground(lipgloss.Color(foreground)).
-				Background(lipgloss.Color("14")).
-				Render(name)
-		}),
-		prompt.OptionDescriptionFormatter(func(description string, columnWidth int, selected bool) string {
-			foreground := ""
-			if selected {
-				foreground = "240"
-			}
-			return defaultStyle.
-				Copy().
-				PaddingRight(columnWidth - len(description) + 1).
-				Foreground(lipgloss.Color(foreground)).
-				Background(lipgloss.Color("37")).
-				Render(description)
-		}),
+		prompt.WithPrompt(">>> "),
 	)}
 
 	if err := tea.NewProgram(m).Start(); err != nil {

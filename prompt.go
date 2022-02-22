@@ -6,6 +6,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type errMsg error
@@ -14,7 +15,7 @@ type Formatters struct {
 	Name               SuggestionText
 	Description        SuggestionText
 	Placeholder        Text
-	SelectedSuggestion Text
+	SelectedSuggestion lipgloss.Style
 }
 
 type modelState int
@@ -51,21 +52,23 @@ func New(completer Completer, executor Executor, opts ...Option) Model {
 		textInput: textInput,
 		Formatters: Formatters{
 			Name: SuggestionText{
-				SelectedForegroundColor: "240",
-				BackgroundColor:         "14",
-				SelectedBackgroundColor: "14",
+				SelectedStyle: lipgloss.
+					NewStyle().
+					Foreground(lipgloss.Color("240")).
+					Background(lipgloss.Color("14")),
+				Style: lipgloss.NewStyle().Background(lipgloss.Color("14")),
 			},
 			Description: SuggestionText{
-				SelectedForegroundColor: "240",
-				BackgroundColor:         "37",
-				SelectedBackgroundColor: "37",
+				SelectedStyle: lipgloss.
+					NewStyle().
+					Foreground(lipgloss.Color("240")).
+					Background(lipgloss.Color("37")),
+				Style: lipgloss.NewStyle().Background(lipgloss.Color("37")),
 			},
 			Placeholder: Text{
-				ForegroundColor: "6",
+				Style: lipgloss.NewStyle().Foreground(lipgloss.Color("6")),
 			},
-			SelectedSuggestion: Text{
-				ForegroundColor: "10",
-			},
+			SelectedSuggestion: lipgloss.NewStyle().Foreground(lipgloss.Color("10")),
 		},
 		listPosition: -1,
 	}

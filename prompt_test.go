@@ -160,7 +160,7 @@ func TestChoosePrompt(t *testing.T) {
 	})
 	testza.AssertNoError(t, err)
 	// Check that proper styles are applied
-	testza.AssertContains(t, lines[0], testData.model.prompt.Formatters.SelectedSuggestion.format(testData.suggestions[0].Name))
+	testza.AssertContains(t, lines[0], testData.model.prompt.Formatters.SelectedSuggestion.Render(testData.suggestions[0].Name))
 	testza.AssertContains(t, lines[0], testData.model.prompt.Formatters.Placeholder.format(testData.suggestions[0].Placeholder))
 	maxNameLen := len("second option")
 	testza.AssertContains(t, lines[1], testData.model.prompt.Formatters.Name.format(testData.suggestions[0].Name, maxNameLen, true))
@@ -198,7 +198,7 @@ func TestTypeAfterCompleting(t *testing.T) {
 	// Check that prompts were filtered
 	testza.AssertEqual(t, 1, len(lines))
 	// Check that selected text formatting was removed
-	testza.AssertNotContains(t, lines[0], testData.model.prompt.Formatters.SelectedSuggestion.format(testData.suggestions[0].Name+"a"))
+	testza.AssertNotContains(t, lines[0], testData.model.prompt.Formatters.SelectedSuggestion.Render(testData.suggestions[0].Name+"a"))
 
 	teardown(t, testData.tester)
 }

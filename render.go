@@ -11,6 +11,14 @@ func (m Model) getPlaceholder() string {
 		return ""
 	}
 	placeholderText := m.completer.suggestions[m.listPosition].Placeholder
+
+	if len(placeholderText) == 0 {
+		return placeholderText
+	}
+	// Need to add an extra space between the placeholder and the value if the curor isn't at the end
+	if m.textInput.Cursor() < len(m.textInput.Value()) {
+		placeholderText = " " + placeholderText
+	}
 	return m.Formatters.Placeholder.format(placeholderText)
 }
 
@@ -26,16 +34,13 @@ func (m Model) renderExecuting(lines []string) []string {
 }
 
 func (m Model) renderCompleting(lines []string) []string {
-	textView := m.textInput.View() + m.getPlaceholder()
 	// If an item is selected, parse out the text portion and apply formatting
 	if m.listPosition > -1 {
-		prompt := m.textInput.Prompt
-		value := m.textInput.Value()
-		formattedSuggestion := m.Formatters.SelectedSuggestion.format(value)
-		remainder := textView[len(prompt)+len(value):]
-		textView = prompt + formattedSuggestion + remainder
+		m.textInput.TextStyle = m.Formatters.SelectedSuggestion
+	} else {
+		m.textInput.TextStyle = lipgloss.NewStyle()
 	}
-
+	textView := m.textInput.View() + m.getPlaceholder()
 	lines = append(lines, textView)
 
 	// Calculate left offset for suggestions

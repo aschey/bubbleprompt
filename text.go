@@ -5,52 +5,40 @@ import "github.com/charmbracelet/lipgloss"
 type Formatter func(name string, columnWidth int, selected bool) string
 
 type Text struct {
-	ForegroundColor string
-	BackgroundColor string
-	Formatter       func(text string) string
+	Style     lipgloss.Style
+	Formatter func(text string) string
 }
 
 func (p Text) format(text string) string {
 	if p.Formatter == nil {
-		return lipgloss.
-			NewStyle().
-			Foreground(lipgloss.Color(p.ForegroundColor)).
-			Background(lipgloss.Color(p.BackgroundColor)).
-			Render(text)
+		return p.Style.Render(text)
 	}
 	return p.Formatter(text)
 }
 
 type SuggestionText struct {
-	ForegroundColor         string
-	SelectedForegroundColor string
-	BackgroundColor         string
-	SelectedBackgroundColor string
-	Formatter               Formatter
+	Style         lipgloss.Style
+	SelectedStyle lipgloss.Style
+	Formatter     Formatter
 }
 
 func (t SuggestionText) format(text string, maxLen int, selected bool) string {
-	defaultStyle := lipgloss.
-		NewStyle().
-		PaddingLeft(1)
 
-	foregroundColor := t.ForegroundColor
-	backgroundColor := t.BackgroundColor
-	if selected {
-		foregroundColor = t.SelectedForegroundColor
-		backgroundColor = t.SelectedBackgroundColor
-	}
-	var formattedText string
 	if t.Formatter == nil {
-		formattedText = defaultStyle.
+		style := t.Style
+		if selected {
+			style = t.SelectedStyle
+		}
+		// Add left and right padding between each text section
+		formattedText := style.
 			Copy().
-			Foreground(lipgloss.Color(foregroundColor)).
-			Background(lipgloss.Color(backgroundColor)).
+			PaddingLeft(1).
 			PaddingRight(maxLen - len(text) + 1).
 			Render(text)
+		return formattedText
 	} else {
-		formattedText = t.Formatter(text, maxLen, selected)
+		formattedText := t.Formatter(text, maxLen, selected)
+		return formattedText
 	}
 
-	return formattedText
 }

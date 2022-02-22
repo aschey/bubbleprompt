@@ -1,122 +1,75 @@
 package prompt
 
+import "github.com/charmbracelet/lipgloss"
+
 type Option func(model *Model) error
 
-func OptionPrompt(prompt string) Option {
+func WithPrompt(prompt string) Option {
 	return func(model *Model) error {
 		model.SetPrompt(prompt)
 		return nil
 	}
 }
 
-func OptionNameForegroundColor(color string) Option {
+func WithNameStyle(style lipgloss.Style) Option {
 	return func(model *Model) error {
-		model.Formatters.Name.ForegroundColor = color
+		model.Formatters.Name.Style = style
 		return nil
 	}
 }
 
-func OptionSelectedNameForegroundColor(color string) Option {
+func WithSelectedNameStyle(style lipgloss.Style) Option {
 	return func(model *Model) error {
-		model.Formatters.Name.SelectedForegroundColor = color
+		model.Formatters.Name.SelectedStyle = style
 		return nil
 	}
 }
 
-func OptionNameBackgroundColor(color string) Option {
-	return func(model *Model) error {
-		model.Formatters.Name.BackgroundColor = color
-		return nil
-	}
-}
-
-func OptionSelectedNameBackgroundColor(color string) Option {
-	return func(model *Model) error {
-		model.Formatters.Name.SelectedBackgroundColor = color
-		return nil
-	}
-}
-
-func OptionNameFormatter(nameFormatter Formatter) Option {
+func WithNameFormatter(nameFormatter Formatter) Option {
 	return func(model *Model) error {
 		model.Formatters.Name.Formatter = nameFormatter
 		return nil
 	}
 }
 
-func OptionDescriptionForegroundColor(color string) Option {
+func WithDescriptionStyle(style lipgloss.Style) Option {
 	return func(model *Model) error {
-		model.Formatters.Description.BackgroundColor = color
+		model.Formatters.Description.Style = style
 		return nil
 	}
 }
 
-func OptionSelectedDescriptionForegroundColor(color string) Option {
+func WithSelectedDescriptionStyle(style lipgloss.Style) Option {
 	return func(model *Model) error {
-		model.Formatters.Description.SelectedBackgroundColor = color
+		model.Formatters.Description.SelectedStyle = style
 		return nil
 	}
 }
 
-func OptionDescriptionBackgroundColor(color string) Option {
-	return func(model *Model) error {
-		model.Formatters.Description.BackgroundColor = color
-		return nil
-	}
-}
-
-func OptionSelectedDescriptionBackgroundColor(color string) Option {
-	return func(model *Model) error {
-		model.Formatters.Description.SelectedBackgroundColor = color
-		return nil
-	}
-}
-
-func OptionDescriptionFormatter(descriptionFormatter Formatter) Option {
+func WithDescriptionFormatter(descriptionFormatter Formatter) Option {
 	return func(model *Model) error {
 		model.Formatters.Description.Formatter = descriptionFormatter
 		return nil
 	}
 }
 
-func OptionPlaceholderForegroundColor(color string) Option {
+func WithPlaceholderStyle(style lipgloss.Style) Option {
 	return func(model *Model) error {
-		model.Formatters.Placeholder.ForegroundColor = color
+		model.Formatters.Placeholder.Style = style
 		return nil
 	}
 }
 
-func OptionPlaceholderBackgroundColor(color string) Option {
-	return func(model *Model) error {
-		model.Formatters.Placeholder.BackgroundColor = color
-		return nil
-	}
-}
-
-func OptionPlaceholderFormatter(formatter func(text string) string) Option {
+func WithPlaceholderFormatter(formatter func(text string) string) Option {
 	return func(model *Model) error {
 		model.Formatters.Placeholder.Formatter = formatter
 		return nil
 	}
 }
 
-func OptionSelectedSuggestionForegroundColor(color string) Option {
+func WithSelectedSuggestionStyle(style lipgloss.Style) Option {
 	return func(model *Model) error {
-		model.Formatters.SelectedSuggestion.ForegroundColor = color
-		return nil
-	}
-}
-
-func OptionSelectedSuggestionBackgroundColor(color string) Option {
-	return func(model *Model) error {
-		model.Formatters.SelectedSuggestion.BackgroundColor = color
-		return nil
-	}
-}
-
-func OptionSelectedSuggestionFormatter(formatter func(text string) string) Option {
-	return func(model *Model) error {
-		model.Formatters.SelectedSuggestion.Formatter = formatter
+		model.Formatters.SelectedSuggestion = style
 		return nil
 	}
 }
