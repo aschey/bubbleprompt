@@ -35,8 +35,8 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
-func (m completerModel) completer(input string) Suggestions {
-	return FilterHasPrefix(input, m.suggestions)
+func (m completerModel) completer(document Document) Suggestions {
+	return FilterHasPrefix(document.InputBeforeCursor, m.suggestions)
 }
 
 func executor(input string, selected *Suggestion, suggestions Suggestions) tea.Model {

@@ -189,16 +189,15 @@ func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 		cmds = append(cmds, executorModel.Init())
 	}
 
-	return append(cmds, m.completer.updateCompletions(""))
+	return append(cmds, m.completer.updateCompletions(*m))
 }
 
 func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	m.typedText = m.textInput.Value()
 	m.lastTypedCursorPosition = m.textInput.Cursor()
 	// Unselect selected item since user has changed the input
-	m.listPosition = -1
-	textBeforeCursor := m.textInput.Value()[:m.textInput.Cursor()]
-	cmds = append(cmds, m.completer.updateCompletions(textBeforeCursor))
+	m.unselectSuggestion()
+	cmds = append(cmds, m.completer.updateCompletions(*m))
 
 	return cmds
 }

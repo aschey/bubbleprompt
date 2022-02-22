@@ -31,9 +31,9 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
-func (m completerModel) completer(input string) prompt.Suggestions {
+func (m completerModel) completer(document prompt.Document) prompt.Suggestions {
 	time.Sleep(100 * time.Millisecond)
-	return prompt.FilterHasPrefix(input, m.suggestions)
+	return prompt.FilterHasPrefix(document.InputBeforeCursor, m.suggestions)
 }
 
 func executor(input string, selected *prompt.Suggestion, suggestions prompt.Suggestions) tea.Model {

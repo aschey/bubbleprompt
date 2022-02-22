@@ -9,7 +9,13 @@ const (
 	running
 )
 
-type Completer func(input string) Suggestions
+type Document struct {
+	InputBeforeCursor string
+	Input             string
+	CursorPosition    int
+}
+
+type Completer func(document Document) Suggestions
 
 type completionMsg Suggestions
 
@@ -30,7 +36,7 @@ func newCompleterModel(completerFunc Completer) completerModel {
 
 func (c completerModel) Init() tea.Cmd {
 	// Since the user hasn't typed anything on init, call the completer with empty text
-	return c.updateCompletions("")
+	return c.updateCompletions(Model{})
 }
 
 func (c completerModel) Update(msg tea.Msg) (completerModel, tea.Cmd) {
@@ -42,17 +48,22 @@ func (c completerModel) Update(msg tea.Msg) (completerModel, tea.Cmd) {
 	return c, nil
 }
 
-func (c *completerModel) updateCompletions(text string) tea.Cmd {
+func (c *completerModel) updateCompletions(m Model) tea.Cmd {
 	// If completer is already running or the text input hasn't changed, don't run the completer again
-	if c.state == running || text == c.prevText {
+	textBeforeCursor := m.textInput.Value()[:m.textInput.Cursor()]
+	if c.state == running || textBeforeCursor == c.prevText {
 		return nil
 	}
 
 	c.state = running
-	c.prevText = text
+	c.prevText = textBeforeCursor
 
 	return func() tea.Msg {
-		filtered := c.completerFunc(text)
+		filtered := c.completerFunc(Document{
+			Input:             m.textInput.Value(),
+			InputBeforeCursor: textBeforeCursor,
+			CursorPosition:    m.textInput.Cursor(),
+		})
 		return completionMsg(filtered)
 	}
 }
