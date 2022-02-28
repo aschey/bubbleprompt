@@ -31,19 +31,10 @@ func (m Model) viewInput() string {
 	pos := textModel.Cursor()
 	v := styleText(value[:pos])
 
-	if pos < len(value) {
-		v += m.renderWithCursor(value, pos, textModel.TextStyle)
-		if strings.HasPrefix(textModel.Placeholder, value) {
-			v += textModel.PlaceholderStyle.Render(textModel.Placeholder[len(value):])
-		}
-	} else if pos < len(textModel.Placeholder) && strings.HasPrefix(textModel.Placeholder, value) {
-		v += m.renderWithCursor(textModel.Placeholder, pos, m.textInput.PlaceholderStyle)
-	} else if len(args) == 0 {
-		v += m.cursorView(" ", textModel.TextStyle)
-	}
-
+	argLen := len(args)
+	numWords := 0
+	argView := ""
 	if len(args) > 0 {
-		numWords := 0
 		r := csv.NewReader(strings.NewReader(textModel.Value()))
 		r.Comma = ' '
 		r.LazyQuotes = true
@@ -53,20 +44,33 @@ func (m Model) viewInput() string {
 				numWords++
 			}
 		}
-		if numWords == 0 {
-			numWords = 1
+		argStart := numWords - 1
+		if argStart < 0 {
+			argStart = 0
+		} else if argStart > argLen {
+			argStart = argLen
 		}
-
-		argView := strings.Join(args[numWords-1:], " ")
+		argView = strings.Join(args[argStart:], " ")
 		if !strings.HasSuffix(value, " ") {
 			argView = " " + argView
 		}
+	}
 
-		if pos == len(value) && (!strings.HasPrefix(textModel.Placeholder, value) || pos == len(textModel.Placeholder)) {
-			v += m.renderWithCursor(argView, 0, argStyle)
-		} else {
-			v += argStyle.Render(argView)
+	if pos < len(value) {
+		v += m.renderWithCursor(value, pos, textModel.TextStyle)
+		if strings.HasPrefix(textModel.Placeholder, value) {
+			v += textModel.PlaceholderStyle.Render(textModel.Placeholder[len(value):])
 		}
+	} else if pos < len(textModel.Placeholder) && strings.HasPrefix(textModel.Placeholder, value) {
+		v += m.renderWithCursor(textModel.Placeholder, pos, m.textInput.PlaceholderStyle)
+	} else if argLen == 0 || (numWords > argLen && value[len(value)-1] == ' ') {
+		v += m.cursorView(" ", textModel.TextStyle)
+	}
+
+	if len(argView) > 0 && pos == len(value) && (!strings.HasPrefix(textModel.Placeholder, value) || pos == len(textModel.Placeholder)) {
+		v += m.renderWithCursor(argView, 0, argStyle)
+	} else {
+		v += argStyle.Render(argView)
 	}
 
 	return textModel.PromptStyle.Render(textModel.Prompt) + v
