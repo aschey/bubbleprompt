@@ -62,14 +62,8 @@ func (m Model) viewInput() string {
 			argView = " " + argView
 		}
 
-		if pos == len(value) {
-			if len(argView) > 0 && !strings.HasPrefix(textModel.Placeholder, value) {
-				v += m.renderWithCursor(argView, 0, argStyle)
-			} else if pos == len(textModel.Placeholder) {
-				v += m.renderWithCursor(argView, 0, argStyle)
-			} else {
-				v += argStyle.Render(argView)
-			}
+		if pos == len(value) && (!strings.HasPrefix(textModel.Placeholder, value) || pos == len(textModel.Placeholder)) {
+			v += m.renderWithCursor(argView, 0, argStyle)
 		} else {
 			v += argStyle.Render(argView)
 		}
