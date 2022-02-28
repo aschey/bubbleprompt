@@ -45,11 +45,15 @@ func executor(input string, selected *prompt.Suggestion, suggestions prompt.Sugg
 
 func main() {
 	suggestions := []prompt.Suggestion{
-		{Name: "first option", Description: "test desc", Placeholder: "[hh]"},
-		{Name: "second option", Description: "test desc2"},
-		{Name: "third option", Description: "test desc2"},
-		{Name: "fourth option", Description: "test desc2"},
-		{Name: "fifth option", Description: "test desc2"},
+		{Name: "first-option", Description: "test desc",
+			PositionalArgs: []prompt.PositionalArg{
+				{Placeholder: "test1"},
+				{Placeholder: "test2"},
+			}},
+		{Name: "second-option", Description: "test desc2"},
+		{Name: "third-option", Description: "test desc2"},
+		{Name: "fourth-option", Description: "test desc2"},
+		{Name: "fifth-option", Description: "test desc2"},
 	}
 
 	completerModel := completerModel{suggestions: suggestions}

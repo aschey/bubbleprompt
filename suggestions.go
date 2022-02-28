@@ -2,10 +2,35 @@ package prompt
 
 import "github.com/charmbracelet/lipgloss"
 
+type Datatype int
+
+const (
+	Bool Datatype = iota
+	String
+	Int
+	Float
+)
+
+type PositionalArg struct {
+	Name             string
+	Placeholder      string
+	Datatype         Datatype
+	PlaceholderStyle *Text
+}
+
+type Flag struct {
+	Short            string
+	Long             string
+	Placeholder      string
+	Datatype         Datatype
+	PlaceholderStyle *Text
+}
+
 type Suggestion struct {
-	Name        string
-	Description string
-	Placeholder string
+	Name           string
+	Description    string
+	PositionalArgs []PositionalArg
+	Flags          []Flag
 }
 
 func (s Suggestion) render(selected bool, leftPadding string, maxNameLen int, maxDescLen int, formatters Formatters) string {

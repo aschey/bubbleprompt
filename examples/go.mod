@@ -25,3 +25,5 @@ require (
 )
 
 replace github.com/aschey/bubbleprompt => ../
+
+replace github.com/charmbracelet/bubbles => ../../bubbles

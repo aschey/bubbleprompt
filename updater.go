@@ -195,8 +195,11 @@ func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	m.typedText = m.textInput.Value()
 	m.lastTypedCursorPosition = m.textInput.Cursor()
-	// Unselect selected item since user has changed the input
-	m.unselectSuggestion()
+	if m.lastTypedCursorPosition < len(m.typedText) || msg.String() != " " {
+		// Unselect selected item since user has changed the input
+		m.unselectSuggestion()
+	}
+
 	cmds = append(cmds, m.completer.updateCompletions(*m))
 
 	return cmds

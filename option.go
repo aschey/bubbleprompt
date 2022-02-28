@@ -53,16 +53,16 @@ func WithDescriptionFormatter(descriptionFormatter Formatter) Option {
 	}
 }
 
-func WithPlaceholderStyle(style lipgloss.Style) Option {
+func WithDefaultPlaceholderStyle(style lipgloss.Style) Option {
 	return func(model *Model) error {
-		model.Formatters.Placeholder.Style = style
+		model.Formatters.DefaultPlaceholder.Style = style
 		return nil
 	}
 }
 
-func WithPlaceholderFormatter(formatter func(text string) string) Option {
+func WithDefaultPlaceholderFormatter(formatter func(text string) string) Option {
 	return func(model *Model) error {
-		model.Formatters.Placeholder.Formatter = formatter
+		model.Formatters.DefaultPlaceholder.Formatter = formatter
 		return nil
 	}
 }

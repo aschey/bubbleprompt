@@ -14,7 +14,7 @@ type errMsg error
 type Formatters struct {
 	Name               SuggestionText
 	Description        SuggestionText
-	Placeholder        Text
+	DefaultPlaceholder Text
 	SelectedSuggestion lipgloss.Style
 }
 
@@ -45,6 +45,7 @@ type Model struct {
 
 func New(completer Completer, executor Executor, opts ...Option) Model {
 	textInput := textinput.New()
+	textInput.Placeholder = "first-option"
 	textInput.Focus()
 
 	model := Model{
@@ -66,7 +67,7 @@ func New(completer Completer, executor Executor, opts ...Option) Model {
 					Background(lipgloss.Color("37")),
 				Style: lipgloss.NewStyle().Background(lipgloss.Color("37")),
 			},
-			Placeholder: Text{
+			DefaultPlaceholder: Text{
 				Style: lipgloss.NewStyle().Foreground(lipgloss.Color("6")),
 			},
 			SelectedSuggestion: lipgloss.NewStyle().Foreground(lipgloss.Color("10")),

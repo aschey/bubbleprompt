@@ -1,6 +1,10 @@
 package prompt
 
-import tea "github.com/charmbracelet/bubbletea"
+import (
+	"strings"
+
+	tea "github.com/charmbracelet/bubbletea"
+)
 
 type completerState int
 
@@ -50,7 +54,13 @@ func (c completerModel) Update(msg tea.Msg) (completerModel, tea.Cmd) {
 
 func (c *completerModel) updateCompletions(m Model) tea.Cmd {
 	// If completer is already running or the text input hasn't changed, don't run the completer again
-	textBeforeCursor := m.textInput.Value()[:m.textInput.Cursor()]
+	textTrimmed := strings.TrimSpace(m.textInput.Value())
+	cursorPos := m.textInput.Cursor()
+	textBeforeCursor := textTrimmed
+	if cursorPos < len(textTrimmed) {
+		textBeforeCursor = textTrimmed[:cursorPos]
+	}
+
 	if c.state == running || textBeforeCursor == c.prevText {
 		return nil
 	}
