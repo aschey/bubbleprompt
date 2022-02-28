@@ -14,6 +14,12 @@ func (m Model) cursorView(v string, s lipgloss.Style) string {
 	return m.textInput.CursorStyle.Inline(true).Reverse(true).Render(v)
 }
 
+func (m Model) renderWithCursor(text string, pos int, s lipgloss.Style) string {
+	v := m.cursorView(string(text[pos]), s)
+	v += s.Render(text[pos+1:])
+	return v
+}
+
 func (m Model) viewInput() string {
 	args := []string{"testArg1", "testArg2"}
 	argStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
@@ -26,14 +32,12 @@ func (m Model) viewInput() string {
 	v := styleText(value[:pos])
 
 	if pos < len(value) {
-		v += m.cursorView(string(value[pos]), textModel.TextStyle) // cursor and text under it
-		v += styleText(value[pos+1:])                              // text after cursor
+		v += m.renderWithCursor(value, pos, textModel.TextStyle)
 		if strings.HasPrefix(textModel.Placeholder, value) {
 			v += textModel.PlaceholderStyle.Render(textModel.Placeholder[len(value):])
 		}
 	} else if pos < len(textModel.Placeholder) && strings.HasPrefix(textModel.Placeholder, value) {
-		v += m.cursorView(string(textModel.Placeholder[pos]), m.textInput.PlaceholderStyle)
-		v += textModel.PlaceholderStyle.Render(textModel.Placeholder[pos+1:])
+		v += m.renderWithCursor(textModel.Placeholder, pos, m.textInput.PlaceholderStyle)
 	} else if len(args) == 0 {
 		v += m.cursorView(" ", textModel.TextStyle)
 	}
@@ -54,18 +58,16 @@ func (m Model) viewInput() string {
 		}
 
 		argView := strings.Join(args[numWords-1:], " ")
-		if !strings.HasSuffix(value, " ") && (pos < len(value) || value != textModel.Placeholder) {
+		if !strings.HasSuffix(value, " ") {
 			argView = " " + argView
 		}
 
 		if pos == len(value) {
 			if len(argView) > 0 && !strings.HasPrefix(textModel.Placeholder, value) {
-				v += m.cursorView(string(argView[0]), argStyle)
-				v += argStyle.Render(argView[1:])
+				v += m.renderWithCursor(argView, 0, argStyle)
+			} else if pos == len(textModel.Placeholder) {
+				v += m.renderWithCursor(argView, 0, argStyle)
 			} else {
-				if !(pos < len(textModel.Placeholder) && strings.HasPrefix(textModel.Placeholder, textModel.Value())) {
-					v += m.cursorView(" ", textModel.TextStyle)
-				}
 				v += argStyle.Render(argView)
 			}
 		} else {
