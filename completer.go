@@ -3,6 +3,7 @@ package prompt
 import (
 	"strings"
 
+	"github.com/aschey/bubbleprompt/commandinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -40,7 +41,7 @@ func newCompleterModel(completerFunc Completer) completerModel {
 
 func (c completerModel) Init() tea.Cmd {
 	// Since the user hasn't typed anything on init, call the completer with empty text
-	return c.updateCompletions(Model{})
+	return c.resetCompletions()
 }
 
 func (c completerModel) Update(msg tea.Msg) (completerModel, tea.Cmd) {
@@ -52,13 +53,12 @@ func (c completerModel) Update(msg tea.Msg) (completerModel, tea.Cmd) {
 	return c, nil
 }
 
-func (c *completerModel) updateCompletions(m Model) tea.Cmd {
+func (c *completerModel) updateCompletionsInternal(text string, cursorPos int) tea.Cmd {
 	// If completer is already running or the text input hasn't changed, don't run the completer again
-	textTrimmed := strings.TrimSpace(m.textInput.Value())
-	cursorPos := m.textInput.Cursor()
-	textBeforeCursor := textTrimmed
+	textTrimmed := strings.TrimSpace(text)
+	textBeforeCursor := text
 	if cursorPos < len(textTrimmed) {
-		textBeforeCursor = textTrimmed[:cursorPos]
+		textBeforeCursor = text[:cursorPos]
 	}
 
 	if c.state == running || textBeforeCursor == c.prevText {
@@ -70,10 +70,21 @@ func (c *completerModel) updateCompletions(m Model) tea.Cmd {
 
 	return func() tea.Msg {
 		filtered := c.completerFunc(Document{
-			Input:             m.textInput.Value(),
+			Input:             text,
 			InputBeforeCursor: textBeforeCursor,
-			CursorPosition:    m.textInput.Cursor(),
+			CursorPosition:    cursorPos,
 		})
 		return completionMsg(filtered)
 	}
+}
+
+func (c *completerModel) updateCompletions(input commandinput.Model) tea.Cmd {
+	// If completer is already running or the text input hasn't changed, don't run the completer again
+	text := input.Value()
+	cursorPos := input.Cursor()
+	return c.updateCompletionsInternal(text, cursorPos)
+}
+
+func (c *completerModel) resetCompletions() tea.Cmd {
+	return c.updateCompletionsInternal("", 0)
 }

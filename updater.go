@@ -187,7 +187,7 @@ func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 		cmds = append(cmds, executorModel.Init())
 	}
 
-	return append(cmds, m.completer.updateCompletions(*m))
+	return append(cmds, m.completer.resetCompletions())
 }
 
 func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
@@ -198,7 +198,7 @@ func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 		m.unselectSuggestion()
 	}
 
-	cmds = append(cmds, m.completer.updateCompletions(*m))
+	cmds = append(cmds, m.completer.updateCompletions(m.textInput))
 
 	return cmds
 }

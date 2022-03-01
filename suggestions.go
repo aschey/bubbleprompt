@@ -26,6 +26,8 @@ type Flag struct {
 	PlaceholderStyle *Text
 }
 
+type Suggestions []Suggestion
+
 type Suggestion struct {
 	Name           string
 	Description    string
@@ -40,8 +42,6 @@ func (s Suggestion) render(selected bool, leftPadding string, maxNameLen int, ma
 	line := lipgloss.JoinHorizontal(lipgloss.Bottom, leftPadding, name, description)
 	return line
 }
-
-type Suggestions []Suggestion
 
 func (s Suggestions) render(paddingSize int, listPosition int, formatters Formatters) []string {
 	maxNameLen := 0

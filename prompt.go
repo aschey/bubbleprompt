@@ -86,10 +86,10 @@ func New(completer Completer, executor Executor, opts ...Option) Model {
 }
 
 func FilterHasPrefix(search string, suggestions Suggestions) Suggestions {
-	lowerSearch := strings.ToLower(search)
+	cleanedSearch := strings.TrimSpace(strings.ToLower(search))
 	filtered := []Suggestion{}
 	for _, s := range suggestions {
-		if strings.HasPrefix(strings.ToLower(s.Name), lowerSearch) {
+		if strings.HasPrefix(strings.ToLower(s.Name), cleanedSearch) {
 			filtered = append(filtered, s)
 		}
 	}
