@@ -3,6 +3,7 @@ package prompt
 import (
 	"strings"
 
+	"github.com/aschey/bubbleprompt/commandinput"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -30,7 +31,7 @@ type Executor func(input string, selected *Suggestion, suggestions Suggestions) 
 type Model struct {
 	completer               completerModel
 	executor                Executor
-	textInput               textinput.Model
+	textInput               commandinput.Model
 	viewport                viewport.Model
 	Formatters              Formatters
 	previousCommands        []string
@@ -44,7 +45,7 @@ type Model struct {
 }
 
 func New(completer Completer, executor Executor, opts ...Option) Model {
-	textInput := textinput.New()
+	textInput := commandinput.New()
 	textInput.Placeholder = "first-option"
 	textInput.Focus()
 
@@ -109,19 +110,4 @@ func (m Model) View() string {
 		return "\n  Initializing..."
 	}
 	return m.viewport.View()
-}
-
-func (m *Model) unselectSuggestion() {
-	m.listPosition = -1
-}
-
-func (m Model) isSuggestionSelected() bool {
-	return m.listPosition > -1
-}
-
-func (m Model) getSelectedSuggestion() *Suggestion {
-	if m.isSuggestionSelected() {
-		return &m.completer.suggestions[m.listPosition]
-	}
-	return nil
 }

@@ -139,12 +139,10 @@ func (m *Model) updateChosenListEntry(msg tea.KeyMsg) {
 		m.lastTypedCursorPosition = m.textInput.Cursor()
 	}
 
-	if msg.Type == tea.KeyUp && m.isSuggestionSelected() {
-		m.listPosition--
-	} else if (msg.Type == tea.KeyDown || msg.Type == tea.KeyTab) && m.listPosition < len(m.completer.suggestions)-1 {
-		m.listPosition++
+	if msg.Type == tea.KeyUp {
+		m.previousSuggestion()
 	} else {
-		m.unselectSuggestion()
+		m.nextSuggestion()
 	}
 
 	if m.isSuggestionSelected() {

@@ -1,83 +1,13 @@
 package prompt
 
 import (
-	"encoding/csv"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 )
 
-func (m Model) cursorView(v string, s lipgloss.Style) string {
-	if m.textInput.Blink() {
-		return s.Render(v)
-	}
-	return m.textInput.CursorStyle.Inline(true).Reverse(true).Render(v)
-}
-
-func (m Model) renderWithCursor(text string, pos int, s lipgloss.Style) string {
-	v := m.cursorView(string(text[pos]), s)
-	v += s.Render(text[pos+1:])
-	return v
-}
-
-func (m Model) viewInput() string {
-	args := []string{"testArg1", "testArg2"}
-	argStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
-	textModel := m.textInput
-	styleText := textModel.TextStyle.Render
-
-	value := textModel.Value()
-
-	pos := textModel.Cursor()
-	v := styleText(value[:pos])
-
-	argLen := len(args)
-	numWords := 0
-	argView := ""
-	if len(args) > 0 {
-		r := csv.NewReader(strings.NewReader(textModel.Value()))
-		r.Comma = ' '
-		r.LazyQuotes = true
-		record, _ := r.Read()
-		for _, w := range record {
-			if len(w) > 0 {
-				numWords++
-			}
-		}
-		argStart := numWords - 1
-		if argStart < 0 {
-			argStart = 0
-		} else if argStart > argLen {
-			argStart = argLen
-		}
-		argView = strings.Join(args[argStart:], " ")
-		if !strings.HasSuffix(value, " ") {
-			argView = " " + argView
-		}
-	}
-
-	if pos < len(value) {
-		v += m.renderWithCursor(value, pos, textModel.TextStyle)
-		if strings.HasPrefix(textModel.Placeholder, value) {
-			v += textModel.PlaceholderStyle.Render(textModel.Placeholder[len(value):])
-		}
-	} else if pos < len(textModel.Placeholder) && strings.HasPrefix(textModel.Placeholder, value) {
-		v += m.renderWithCursor(textModel.Placeholder, pos, m.textInput.PlaceholderStyle)
-	} else if argLen == 0 || (numWords > argLen && value[len(value)-1] == ' ') {
-		v += m.cursorView(" ", textModel.TextStyle)
-	}
-
-	if len(argView) > 0 && pos == len(value) && (!strings.HasPrefix(textModel.Placeholder, value) || pos == len(textModel.Placeholder)) {
-		v += m.renderWithCursor(argView, 0, argStyle)
-	} else {
-		v += argStyle.Render(argView)
-	}
-
-	return textModel.PromptStyle.Render(textModel.Prompt) + v
-}
-
 func (m Model) renderExecuting(lines []string) []string {
-	textView := m.textInput.Prompt + m.textInput.Value()
+	textView := m.textInput.View()
 	lines = append(lines, textView)
 	executorModel := *m.executorModel
 	// Add a newline to ensure the text gets pushed up
@@ -94,7 +24,7 @@ func (m Model) renderCompleting(lines []string) []string {
 	} else {
 		m.textInput.TextStyle = lipgloss.NewStyle()
 	}
-	textView := m.viewInput()
+	textView := m.textInput.View()
 	lines = append(lines, textView)
 
 	// Calculate left offset for suggestions
