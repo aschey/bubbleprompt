@@ -31,7 +31,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	m.textInput, cmd = m.textInput.Update(msg)
 	cmds = append(cmds, cmd)
 
-	m.completer, cmd = m.completer.Update(msg)
+	m.completer, cmd = m.completer.Update(msg, m.textInput)
 	cmds = append(cmds, cmd)
 
 	// Scroll to bottom if the user typed something
@@ -44,6 +44,8 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		cmds, scrollToBottom = m.updateCompleting(msg, cmds)
 	}
 
+	m.updatePlaceholders()
+
 	m.viewport.SetContent(m.render())
 	if scrollToBottom {
 		m.viewport.GotoBottom()
@@ -53,11 +55,6 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 }
 
 func (m *Model) updateExecuting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) {
-	// Don't process text input while executor is running
-	if m.textInput.Focused() {
-		m.textInput.Blur()
-	}
-
 	executorModel, cmd := (*m.executorModel).Update(msg)
 	m.executorModel = &executorModel
 
@@ -67,18 +64,19 @@ func (m *Model) updateExecuting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) {
 	// to use reflection to check that the address is equal to tea.Quit's address
 	if cmd != nil && reflect.ValueOf(cmd).Pointer() == reflect.ValueOf(tea.Quit).Pointer() {
 		m.finalizeExecutor(executorModel)
-		return cmds, true
+		// Re-focus input when finished
+		return append(cmds, m.textInput.Focus()), true
 	} else {
+		// Don't process text input while executor is running
+		if m.textInput.Focused() {
+			m.textInput.Blur()
+		}
 		return append(cmds, cmd), true
 	}
 }
 
 func (m *Model) updateCompleting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) {
 	scrollToBottom := false
-	// Ensure text input is processing while executor is not running
-	if !m.textInput.Focused() {
-		cmds = append(cmds, m.textInput.Focus())
-	}
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -103,7 +101,30 @@ func (m *Model) updateCompleting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) 
 	case errMsg:
 		m.err = msg
 	}
+
 	return cmds, scrollToBottom
+}
+
+func (m *Model) updatePlaceholders() {
+	m.textInput.Args = []string{}
+	suggestion := m.getSelectedSuggestion()
+	if suggestion == nil {
+		// Nothing selected, default to the first matching suggestion
+		filteredSuggestions := FilterHasPrefix(m.textInput.Value(), m.completer.suggestions)
+		if len(filteredSuggestions) > 0 {
+			suggestion = &filteredSuggestions[0]
+		}
+	}
+
+	if suggestion == nil {
+		// Didn't find any matching suggestions, reset
+		m.textInput.Placeholder = ""
+	} else {
+		m.textInput.Placeholder = suggestion.Name
+		for _, arg := range suggestion.PositionalArgs {
+			m.textInput.Args = append(m.textInput.Args, arg.Placeholder)
+		}
+	}
 }
 
 func (m *Model) finalizeExecutor(executorModel tea.Model) {

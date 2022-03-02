@@ -53,7 +53,10 @@ func main() {
 		{Name: "second-option", Description: "test description2"},
 		{Name: "third-option", Description: "test description3"},
 		{Name: "fourth-option", Description: "test description4"},
-		{Name: "fifth-option", Description: "test description5"},
+		{Name: "fifth-option", Description: "test description5",
+			PositionalArgs: []prompt.PositionalArg{
+				{Placeholder: "abc"},
+			}},
 	}
 
 	completerModel := completerModel{suggestions: suggestions}

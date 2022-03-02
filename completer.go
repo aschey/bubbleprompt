@@ -29,6 +29,7 @@ type completerModel struct {
 	state         completerState
 	suggestions   Suggestions
 	prevText      string
+	queueNext     bool
 }
 
 func newCompleterModel(completerFunc Completer) completerModel {
@@ -44,11 +45,16 @@ func (c completerModel) Init() tea.Cmd {
 	return c.resetCompletions()
 }
 
-func (c completerModel) Update(msg tea.Msg) (completerModel, tea.Cmd) {
+func (c completerModel) Update(msg tea.Msg, input commandinput.Model) (completerModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case completionMsg:
 		c.state = idle
 		c.suggestions = Suggestions(msg)
+		if c.queueNext {
+			// Start another update if it was requested while running
+			c.queueNext = false
+			return c, c.updateCompletions(input)
+		}
 	}
 	return c, nil
 }
@@ -61,7 +67,15 @@ func (c *completerModel) updateCompletionsInternal(text string, cursorPos int) t
 		textBeforeCursor = text[:cursorPos]
 	}
 
-	if c.state == running || textBeforeCursor == c.prevText {
+	// No need to queue another update if the text hasn't changed
+	if textBeforeCursor == c.prevText {
+		return nil
+	}
+
+	// Text has changed, but the completer is already running
+	// Run again once the current iteration has finished
+	if c.state == running {
+		c.queueNext = true
 		return nil
 	}
 
