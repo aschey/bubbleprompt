@@ -30,7 +30,7 @@ type completerModel struct {
 	suggestions   Suggestions
 	prevText      string
 	queueNext     bool
-	ignore        bool
+	ignoreCount   int
 }
 
 func newCompleterModel(completerFunc Completer) completerModel {
@@ -49,25 +49,26 @@ func (c completerModel) Init() tea.Cmd {
 func (c completerModel) Update(msg tea.Msg, input commandinput.Model) (completerModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case completionMsg:
-		c.state = idle
-		if c.ignore {
+		if c.ignoreCount > 0 {
 			// Request was in progress when resetCompletions was called, don't update suggestions
-			c.ignore = false
+			c.ignoreCount--
 		} else {
+			c.state = idle
 			c.suggestions = Suggestions(msg)
-		}
-
-		if c.queueNext {
-			// Start another update if it was requested while running
-			c.queueNext = false
-			return c, c.updateCompletions(input)
+			if c.queueNext {
+				// Start another update if it was requested while running
+				c.queueNext = false
+				return c, c.updateCompletions(input)
+			}
 		}
 	}
 	return c, nil
 }
 
-func (c *completerModel) updateCompletionsInternal(text string, cursorPos int) tea.Cmd {
-	// If completer is already running or the text input hasn't changed, don't run the completer again
+func (c *completerModel) updateCompletions(input commandinput.Model) tea.Cmd {
+	text := input.Value()
+	cursorPos := input.Cursor()
+
 	textTrimmed := strings.TrimSpace(text)
 	textBeforeCursor := text
 	if cursorPos < len(textTrimmed) {
@@ -99,20 +100,22 @@ func (c *completerModel) updateCompletionsInternal(text string, cursorPos int) t
 	}
 }
 
-func (c *completerModel) updateCompletions(input commandinput.Model) tea.Cmd {
-	// If completer is already running or the text input hasn't changed, don't run the completer again
-	text := input.Value()
-	cursorPos := input.Cursor()
-	return c.updateCompletionsInternal(text, cursorPos)
-}
-
 func (c *completerModel) resetCompletions() tea.Cmd {
 	if c.state == running {
 		// If completion is currently running, ignore the next value and trigger another update
 		// This helps speed up getting the next valid result for slow completers
-		c.state = idle
-		c.ignore = true
+		c.ignoreCount++
 	}
 
-	return c.updateCompletionsInternal("", 0)
+	c.state = running
+	c.prevText = ""
+
+	return func() tea.Msg {
+		filtered := c.completerFunc(Document{
+			Input:             "",
+			InputBeforeCursor: "",
+			CursorPosition:    0,
+		})
+		return completionMsg(filtered)
+	}
 }
