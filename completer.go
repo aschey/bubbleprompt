@@ -30,6 +30,7 @@ type completerModel struct {
 	suggestions   Suggestions
 	prevText      string
 	queueNext     bool
+	ignore        bool
 }
 
 func newCompleterModel(completerFunc Completer) completerModel {
@@ -49,7 +50,13 @@ func (c completerModel) Update(msg tea.Msg, input commandinput.Model) (completer
 	switch msg := msg.(type) {
 	case completionMsg:
 		c.state = idle
-		c.suggestions = Suggestions(msg)
+		if c.ignore {
+			// Request was in progress when resetCompletions was called, don't update suggestions
+			c.ignore = false
+		} else {
+			c.suggestions = Suggestions(msg)
+		}
+
 		if c.queueNext {
 			// Start another update if it was requested while running
 			c.queueNext = false
@@ -100,5 +107,12 @@ func (c *completerModel) updateCompletions(input commandinput.Model) tea.Cmd {
 }
 
 func (c *completerModel) resetCompletions() tea.Cmd {
+	if c.state == running {
+		// If completion is currently running, ignore the next value and trigger another update
+		// This helps speed up getting the next valid result for slow completers
+		c.state = idle
+		c.ignore = true
+	}
+
 	return c.updateCompletionsInternal("", 0)
 }
