@@ -15,7 +15,7 @@ type PositionalArg struct {
 	Name             string
 	Placeholder      string
 	Datatype         Datatype
-	PlaceholderStyle *Text
+	PlaceholderStyle Text
 }
 
 type Flag struct {
@@ -23,7 +23,7 @@ type Flag struct {
 	Long             string
 	Placeholder      string
 	Datatype         Datatype
-	PlaceholderStyle *Text
+	PlaceholderStyle Text
 }
 
 type Suggestions []Suggestion
@@ -41,6 +41,11 @@ func (s Suggestion) render(selected bool, leftPadding string, maxNameLen int, ma
 
 	line := lipgloss.JoinHorizontal(lipgloss.Bottom, leftPadding, name, description)
 	return line
+}
+
+func (s Suggestion) key() *string {
+	key := s.Name + s.Description
+	return &key
 }
 
 func (s Suggestions) render(paddingSize int, listPosition int, formatters Formatters) []string {

@@ -2,7 +2,9 @@ package prompt
 
 import (
 	"reflect"
+	"strings"
 
+	"github.com/aschey/bubbleprompt/commandinput"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -106,11 +108,16 @@ func (m *Model) updateCompleting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) 
 }
 
 func (m *Model) updatePlaceholders() {
-	m.textInput.Args = []string{}
-	suggestion := m.getSelectedSuggestion()
+	m.textInput.Args = []commandinput.Arg{}
+	suggestion := m.completer.getSelectedSuggestion()
 	if suggestion == nil {
 		// Nothing selected, default to the first matching suggestion
-		filteredSuggestions := FilterHasPrefix(m.textInput.Value(), m.completer.suggestions)
+		wordsFull := strings.Split(m.textInput.Value(), " ")
+		words := strings.Split(m.textInput.Value()[:m.textInput.Cursor()], " ")
+		if len(m.completer.suggestions) == 1 && wordsFull[0] == m.completer.suggestions[0].Name {
+			m.completer.selectedKey = m.completer.suggestions[0].key()
+		}
+		filteredSuggestions := FilterHasPrefix(words[0], m.completer.suggestions)
 		if len(filteredSuggestions) > 0 {
 			suggestion = &filteredSuggestions[0]
 		}
@@ -122,7 +129,7 @@ func (m *Model) updatePlaceholders() {
 	} else {
 		m.textInput.Placeholder = suggestion.Name
 		for _, arg := range suggestion.PositionalArgs {
-			m.textInput.Args = append(m.textInput.Args, arg.Placeholder)
+			m.textInput.Args = append(m.textInput.Args, commandinput.Arg{Text: arg.Placeholder, Style: arg.PlaceholderStyle.Style})
 		}
 	}
 }
@@ -130,7 +137,7 @@ func (m *Model) updatePlaceholders() {
 func (m *Model) finalizeExecutor(executorModel tea.Model) {
 	textValue := m.textInput.Value()
 	executorValue := executorModel.View()
-
+	m.completer.unselectSuggestion()
 	// Store the whole user input including the prompt state and the executor result
 	// However note that we don't include all of textinput.View() because we don't want to include the cursor
 	commandResult := lipgloss.JoinVertical(lipgloss.Left, m.textInput.Prompt+textValue, executorValue)
@@ -154,21 +161,21 @@ func (m *Model) updateWindowSizeMsg(msg tea.WindowSizeMsg) {
 }
 
 func (m *Model) updateChosenListEntry(msg tea.KeyMsg) {
-	if !m.isSuggestionSelected() {
+	if !m.completer.isSuggestionSelected() {
 		// No suggestion currently suggested, store the last cursor position before selecting
 		// so we can restore it later
 		m.lastTypedCursorPosition = m.textInput.Cursor()
 	}
 
 	if msg.Type == tea.KeyUp {
-		m.previousSuggestion()
+		m.completer.previousSuggestion()
 	} else {
-		m.nextSuggestion()
+		m.completer.nextSuggestion()
 	}
 
-	if m.isSuggestionSelected() {
+	if m.completer.isSuggestionSelected() {
 		// Set the input to the suggestion's selected text
-		curSuggestion := m.getSelectedSuggestion()
+		curSuggestion := m.completer.getSelectedSuggestion()
 		m.textInput.SetValue(curSuggestion.Name)
 		// Move cursor to the end of the line
 		m.textInput.SetCursor(len(m.textInput.Value()))
@@ -189,13 +196,13 @@ func (m *Model) updateExecutor(executor *tea.Model) {
 }
 
 func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
-	curSuggestion := m.getSelectedSuggestion()
+	curSuggestion := m.completer.getSelectedSuggestion()
 	textValue := m.textInput.Value()
 	// Reset all text and selection state
 	// We'll reset the text input after the executor finished so we can capture the final output
 	m.typedText = ""
 	m.lastTypedCursorPosition = 0
-	m.unselectSuggestion()
+	m.completer.unselectSuggestion()
 
 	executorModel := m.executor(textValue, curSuggestion, m.completer.suggestions)
 	// Performance optimization: if this is a string model, we don't need to go through the whole update cycle
@@ -212,11 +219,14 @@ func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 }
 
 func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
+	words := strings.Split(m.textInput.Value()[:m.textInput.Cursor()], " ")
+	typedWords := strings.Split(m.typedText, " ")
 	m.typedText = m.textInput.Value()
 	m.lastTypedCursorPosition = m.textInput.Cursor()
-	if m.lastTypedCursorPosition < len(m.typedText) || msg.String() != " " {
+
+	if msg.String() != " " && (msg.Type == tea.KeyRunes || msg.Type == tea.KeyBackspace) && (m.lastTypedCursorPosition < len(m.typedText) || words[0] != typedWords[0]) {
 		// Unselect selected item since user has changed the input
-		m.unselectSuggestion()
+		m.completer.unselectSuggestion()
 	}
 
 	cmds = append(cmds, m.completer.updateCompletions(m.textInput))

@@ -9,14 +9,21 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+type Arg struct {
+	Text      string
+	Style     lipgloss.Style
+	Formatter func(arg string) string
+}
+
 type Model struct {
 	textinput        textinput.Model
 	Placeholder      string
 	Prompt           string
-	Args             []string
+	Args             []Arg
 	TextStyle        lipgloss.Style
 	CursorStyle      lipgloss.Style
 	PlaceholderStyle lipgloss.Style
+	//DefaultArgStyle  lipgloss.Style
 }
 
 func New() Model {
@@ -68,18 +75,22 @@ func (m *Model) Blur() {
 }
 
 func (m Model) View() string {
-	argStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
 	textModel := m.textinput
-	styleText := m.TextStyle.Render
 
 	value := m.Value()
 
 	pos := m.Cursor()
-	v := styleText(value[:pos])
+	words := strings.SplitN(value[:pos], " ", 2)
+	wordsFull := strings.SplitN(value, " ", 2)
+	v := m.TextStyle.Render(words[0])
+	if len(words) > 1 {
+		v += " " + words[1]
+	}
 
 	argLen := len(m.Args)
 	numWords := 0
-	argView := ""
+	argStart := 0
+	startPadding := ""
 	if argLen > 0 {
 		r := csv.NewReader(strings.NewReader(value))
 		r.Comma = ' '
@@ -90,33 +101,50 @@ func (m Model) View() string {
 				numWords++
 			}
 		}
-		argStart := numWords - 1
+		argStart = numWords - 1
 		if argStart < 0 {
 			argStart = 0
 		} else if argStart > argLen {
 			argStart = argLen
 		}
-		argView = strings.Join(m.Args[argStart:], " ")
+
 		if !strings.HasSuffix(value, " ") {
-			argView = " " + argView
+			startPadding = " "
 		}
 	}
 
-	if pos < len(value) {
-		v += m.renderWithCursor(value, pos, m.TextStyle)
+	if pos < len(wordsFull[0]) {
+		v += m.renderWithCursor(wordsFull[0], pos, m.TextStyle)
+		if len(wordsFull) > 1 {
+			v += " " + wordsFull[1]
+		}
+
+		if strings.HasPrefix(m.Placeholder, value) {
+			v += m.PlaceholderStyle.Render(m.Placeholder[len(value):])
+		}
+	} else if pos < len(value) {
+		v += m.renderWithCursor(value, pos, lipgloss.NewStyle())
 		if strings.HasPrefix(m.Placeholder, value) {
 			v += m.PlaceholderStyle.Render(m.Placeholder[len(value):])
 		}
 	} else if pos < len(m.Placeholder) && strings.HasPrefix(m.Placeholder, value) {
 		v += m.renderWithCursor(m.Placeholder, pos, m.PlaceholderStyle)
-	} else if argLen == 0 || (numWords > argLen && value[len(value)-1] == ' ') {
+	} else if argStart == argLen || (numWords > argLen && value[len(value)-1] == ' ') {
 		v += m.cursorView(" ", m.TextStyle)
 	}
 
-	if len(argView) > 0 && pos == len(value) && (!strings.HasPrefix(m.Placeholder, value) || pos == len(m.Placeholder)) {
-		v += m.renderWithCursor(argView, 0, argStyle)
-	} else {
-		v += argStyle.Render(argView)
+	if argLen > 0 && argStart < argLen {
+		if pos == len(value) && (!strings.HasPrefix(m.Placeholder, value) || pos == len(m.Placeholder)) {
+			v += m.renderWithCursor(startPadding+m.Args[argStart].Text, 0, m.Args[argStart].Style)
+
+		} else {
+			v += m.Args[argStart].Style.Render(startPadding + m.Args[argStart].Text)
+		}
+		if argStart < argLen {
+			for _, arg := range m.Args[argStart+1:] {
+				v += " " + arg.Style.Render(arg.Text)
+			}
+		}
 	}
 
 	return textModel.PromptStyle.Render(m.Prompt) + v

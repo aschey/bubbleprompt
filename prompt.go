@@ -39,7 +39,6 @@ type Model struct {
 	modelState              modelState
 	lastTypedCursorPosition int
 	typedText               string
-	listPosition            int
 	ready                   bool
 	err                     error
 }
@@ -73,7 +72,6 @@ func New(completer Completer, executor Executor, opts ...Option) Model {
 			},
 			SelectedSuggestion: lipgloss.NewStyle().Foreground(lipgloss.Color("10")),
 		},
-		listPosition: -1,
 	}
 
 	for _, opt := range opts {

@@ -28,6 +28,7 @@ type completerModel struct {
 	completerFunc Completer
 	state         completerState
 	suggestions   Suggestions
+	selectedKey   *string
 	prevText      string
 	queueNext     bool
 	ignoreCount   int
@@ -55,6 +56,9 @@ func (c completerModel) Update(msg tea.Msg, input commandinput.Model) (completer
 		} else {
 			c.state = idle
 			c.suggestions = Suggestions(msg)
+			if c.getSelectedSuggestion() == nil {
+				c.unselectSuggestion()
+			}
 			if c.queueNext {
 				// Start another update if it was requested while running
 				c.queueNext = false
@@ -66,7 +70,7 @@ func (c completerModel) Update(msg tea.Msg, input commandinput.Model) (completer
 }
 
 func (c *completerModel) updateCompletions(input commandinput.Model) tea.Cmd {
-	text := input.Value()
+	text := strings.Split(input.Value()[:input.Cursor()], " ")[0]
 	cursorPos := input.Cursor()
 
 	textTrimmed := strings.TrimSpace(text)
@@ -118,4 +122,59 @@ func (c *completerModel) resetCompletions() tea.Cmd {
 		})
 		return completionMsg(filtered)
 	}
+}
+
+func (c *completerModel) unselectSuggestion() {
+	c.selectedKey = nil
+}
+
+func (c *completerModel) isSuggestionSelected() bool {
+	return c.selectedKey != nil
+}
+
+func (c *completerModel) nextSuggestion() {
+	if len(c.suggestions) == 0 {
+		return
+	}
+	index := c.getSelectedIndex()
+	if index < len(c.suggestions)-1 {
+		c.selectedKey = c.suggestions[index+1].key()
+	} else {
+		c.unselectSuggestion()
+	}
+}
+
+func (c *completerModel) previousSuggestion() {
+	if len(c.suggestions) == 0 {
+		return
+	}
+
+	index := c.getSelectedIndex()
+	if index > 0 {
+		c.selectedKey = c.suggestions[index-1].key()
+	} else {
+		c.unselectSuggestion()
+	}
+}
+
+func (c *completerModel) getSelectedIndex() int {
+	if c.isSuggestionSelected() {
+		for i, suggestion := range c.suggestions {
+			if *suggestion.key() == *c.selectedKey {
+				return i
+			}
+		}
+	}
+	return -1
+}
+
+func (c *completerModel) getSelectedSuggestion() *Suggestion {
+	if c.isSuggestionSelected() {
+		for _, suggestion := range c.suggestions {
+			if *suggestion.key() == *c.selectedKey {
+				return &suggestion
+			}
+		}
+	}
+	return nil
 }

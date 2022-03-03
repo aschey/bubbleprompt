@@ -7,6 +7,7 @@ import (
 
 	prompt "github.com/aschey/bubbleprompt"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type model struct {
@@ -44,18 +45,19 @@ func executor(input string, selected *prompt.Suggestion, suggestions prompt.Sugg
 }
 
 func main() {
+	placeholderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
 	suggestions := []prompt.Suggestion{
 		{Name: "first-option", Description: "test description",
 			PositionalArgs: []prompt.PositionalArg{
-				{Placeholder: "test1"},
-				{Placeholder: "test2"},
+				{Placeholder: "test1", PlaceholderStyle: prompt.Text{Style: placeholderStyle}},
+				{Placeholder: "test2", PlaceholderStyle: prompt.Text{Style: placeholderStyle}},
 			}},
 		{Name: "second-option", Description: "test description2"},
 		{Name: "third-option", Description: "test description3"},
 		{Name: "fourth-option", Description: "test description4"},
 		{Name: "fifth-option", Description: "test description5",
 			PositionalArgs: []prompt.PositionalArg{
-				{Placeholder: "abc"},
+				{Placeholder: "abc", PlaceholderStyle: prompt.Text{Style: placeholderStyle}},
 			}},
 	}
 

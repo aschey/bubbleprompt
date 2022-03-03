@@ -19,7 +19,7 @@ func (m Model) renderExecuting(lines []string) []string {
 
 func (m Model) renderCompleting(lines []string) []string {
 	// If an item is selected, parse out the text portion and apply formatting
-	if m.isSuggestionSelected() {
+	if m.completer.isSuggestionSelected() {
 		m.textInput.TextStyle = m.Formatters.SelectedSuggestion
 	} else {
 		m.textInput.TextStyle = lipgloss.NewStyle()
@@ -31,7 +31,7 @@ func (m Model) renderCompleting(lines []string) []string {
 	// Choosing a prompt via arrow keys or tab shouldn't change the prompt position
 	// so we use the last typed cursor position instead of the current position
 	paddingSize := len(m.textInput.Prompt) + m.lastTypedCursorPosition
-	prompts := m.completer.suggestions.render(paddingSize, m.listPosition, m.Formatters)
+	prompts := m.completer.suggestions.render(paddingSize, m.completer.getSelectedIndex(), m.Formatters)
 	lines = append(lines, prompts...)
 
 	return lines
