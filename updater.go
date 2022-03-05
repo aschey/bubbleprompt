@@ -129,7 +129,7 @@ func (m *Model) updatePlaceholders() {
 	} else {
 		m.textInput.Placeholder = suggestion.Name
 		for _, arg := range suggestion.PositionalArgs {
-			m.textInput.Args = append(m.textInput.Args, commandinput.Arg{Text: arg.Placeholder, Style: arg.PlaceholderStyle.Style})
+			m.textInput.Args = append(m.textInput.Args, commandinput.Arg{Text: arg.Placeholder, PlaceholderStyle: arg.PlaceholderStyle.Style})
 		}
 	}
 }

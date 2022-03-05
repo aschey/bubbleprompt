@@ -10,9 +10,10 @@ import (
 )
 
 type Arg struct {
-	Text      string
-	Style     lipgloss.Style
-	Formatter func(arg string) string
+	Text             string
+	PlaceholderStyle lipgloss.Style
+	ArgStyle         lipgloss.Style
+	Formatter        func(arg string) string
 }
 
 type Model struct {
@@ -20,10 +21,10 @@ type Model struct {
 	Placeholder      string
 	Prompt           string
 	Args             []Arg
+	PromptStyle      lipgloss.Style
 	TextStyle        lipgloss.Style
 	CursorStyle      lipgloss.Style
 	PlaceholderStyle lipgloss.Style
-	//DefaultArgStyle  lipgloss.Style
 }
 
 func New() Model {
@@ -75,84 +76,124 @@ func (m *Model) Blur() {
 }
 
 func (m Model) View() string {
-	textModel := m.textinput
-
-	value := m.Value()
-
-	pos := m.Cursor()
-	words := strings.SplitN(value[:pos], " ", 2)
-	wordsFull := strings.SplitN(value, " ", 2)
-	v := m.TextStyle.Render(words[0])
-	if len(words) > 1 {
-		v += " " + words[1]
+	view := m.getViewBeforeCursor()
+	view += m.getPlaceholder()
+	argPlaceholders := m.getArgPlaceholders()
+	if argPlaceholders == "" && m.Cursor() == len(m.Value()) {
+		view += m.cursorView(" ", m.TextStyle)
 	}
+	view += argPlaceholders
 
-	argLen := len(m.Args)
-	numWords := 0
-	argStart := 0
-	startPadding := ""
-	if argLen > 0 {
-		r := csv.NewReader(strings.NewReader(value))
-		r.Comma = ' '
-		r.LazyQuotes = true
-		record, _ := r.Read()
-		for _, w := range record {
-			if len(w) > 0 {
-				numWords++
-			}
-		}
-		argStart = numWords - 1
-		if argStart < 0 {
-			argStart = 0
-		} else if argStart > argLen {
-			argStart = argLen
-		}
-
-		if !strings.HasSuffix(value, " ") {
-			startPadding = " "
-		}
-	}
-
-	if pos < len(wordsFull[0]) {
-		v += m.renderWithCursor(wordsFull[0], pos, m.TextStyle)
-		if len(wordsFull) > 1 {
-			v += " " + wordsFull[1]
-		}
-
-		if strings.HasPrefix(m.Placeholder, value) {
-			v += m.PlaceholderStyle.Render(m.Placeholder[len(value):])
-		}
-	} else if pos < len(value) {
-		v += m.renderWithCursor(value, pos, lipgloss.NewStyle())
-		if strings.HasPrefix(m.Placeholder, value) {
-			v += m.PlaceholderStyle.Render(m.Placeholder[len(value):])
-		}
-	} else if pos < len(m.Placeholder) && strings.HasPrefix(m.Placeholder, value) {
-		v += m.renderWithCursor(m.Placeholder, pos, m.PlaceholderStyle)
-	} else if argStart == argLen || (numWords > argLen && value[len(value)-1] == ' ') {
-		v += m.cursorView(" ", m.TextStyle)
-	}
-
-	if argLen > 0 && argStart < argLen {
-		if pos == len(value) && (!strings.HasPrefix(m.Placeholder, value) || pos == len(m.Placeholder)) {
-			v += m.renderWithCursor(startPadding+m.Args[argStart].Text, 0, m.Args[argStart].Style)
-
-		} else {
-			v += m.Args[argStart].Style.Render(startPadding + m.Args[argStart].Text)
-		}
-		if argStart < argLen {
-			for _, arg := range m.Args[argStart+1:] {
-				v += " " + arg.Style.Render(arg.Text)
-			}
-		}
-	}
-
-	return textModel.PromptStyle.Render(m.Prompt) + v
+	return m.PromptStyle.Render(m.Prompt) + view
 }
 
-func (m Model) renderWithCursor(text string, pos int, s lipgloss.Style) string {
-	v := m.cursorView(string(text[pos]), s)
-	v += s.Render(text[pos+1:])
+func (m Model) formatArgs(text string) string {
+	words := strings.Split(text, " ")
+	view := ""
+	if len(words) < 2 {
+		return view
+	}
+	for i, arg := range words[1:] {
+		view += " "
+		if i < len(m.Args) {
+			view += m.Args[i].ArgStyle.Render(arg)
+		} else {
+			view += arg
+		}
+	}
+
+	return view
+}
+
+func (m Model) getViewBeforeCursor() string {
+	words := strings.Split(m.Value()[:m.Cursor()], " ")
+	view := m.TextStyle.Render(words[0])
+	view += m.formatArgs(m.Value()[:m.Cursor()])
+
+	return view
+}
+
+func (m Model) getPlaceholder() string {
+	view := ""
+	cursorPos := m.Cursor()
+	value := m.Value()
+	allText := strings.SplitN(value, " ", 2)
+	command := allText[0]
+
+	if cursorPos < len(command) {
+		view += m.renderWithPlaceholder(command, m.formatArgs(value), m.TextStyle)
+	} else if cursorPos < len(value) {
+		view += m.renderWithPlaceholder(value, "", lipgloss.NewStyle())
+	} else if cursorPos < len(m.Placeholder) && strings.HasPrefix(m.Placeholder, value) {
+		view += m.renderWithCursor(m.Placeholder, cursorPos, m.PlaceholderStyle)
+	}
+
+	return view
+}
+
+func (m Model) renderWithPlaceholder(text string, args string, style lipgloss.Style) string {
+	value := m.Value()
+	view := m.renderWithCursor(text, m.Cursor(), style) + args
+	if strings.HasPrefix(m.Placeholder, value) {
+		view += m.PlaceholderStyle.Render(m.Placeholder[len(value):])
+	}
+
+	return view
+}
+
+func (m Model) getArgPlaceholders() string {
+	argLen := len(m.Args)
+	placeholderStart := m.getPlaceholderStart()
+
+	if placeholderStart < 0 {
+		placeholderStart = 0
+	} else if placeholderStart > argLen {
+		placeholderStart = argLen
+	}
+
+	if placeholderStart >= argLen {
+		return ""
+	}
+
+	startPadding := ""
+	value := m.Value()
+	if !strings.HasSuffix(value, " ") {
+		startPadding = " "
+	}
+
+	argView := ""
+	cursorPos := m.Cursor()
+	if cursorPos == len(value) && (!strings.HasPrefix(m.Placeholder, value) || cursorPos == len(m.Placeholder)) {
+		argView += m.renderWithCursor(startPadding+m.Args[placeholderStart].Text, 0, m.Args[placeholderStart].PlaceholderStyle)
+	} else {
+		argView += m.Args[placeholderStart].PlaceholderStyle.Render(startPadding + m.Args[placeholderStart].Text)
+	}
+
+	for _, arg := range m.Args[placeholderStart+1:] {
+		argView += " " + arg.PlaceholderStyle.Render(arg.Text)
+	}
+
+	return argView
+}
+
+func (m Model) getPlaceholderStart() int {
+	numWords := 0
+	reader := csv.NewReader(strings.NewReader(m.Value()))
+	reader.Comma = ' '
+	reader.LazyQuotes = true
+	record, _ := reader.Read()
+	for _, w := range record {
+		if len(w) > 0 {
+			numWords++
+		}
+	}
+
+	return numWords - 1
+}
+
+func (m Model) renderWithCursor(text string, cursorPos int, s lipgloss.Style) string {
+	v := m.cursorView(string(text[cursorPos]), s)
+	v += s.Render(text[cursorPos+1:])
 	return v
 }
 
