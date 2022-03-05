@@ -112,9 +112,8 @@ func (m *Model) updatePlaceholders() {
 	suggestion := m.completer.getSelectedSuggestion()
 	if suggestion == nil {
 		// Nothing selected, default to the first matching suggestion
-		wordsFull := strings.Split(m.textInput.Value(), " ")
 		words := strings.Split(m.textInput.Value()[:m.textInput.Cursor()], " ")
-		if len(m.completer.suggestions) == 1 && wordsFull[0] == m.completer.suggestions[0].Name {
+		if len(m.completer.suggestions) == 1 && words[0] == m.completer.suggestions[0].Name {
 			m.completer.selectedKey = m.completer.suggestions[0].key()
 		}
 		filteredSuggestions := FilterHasPrefix(words[0], m.completer.suggestions)
