@@ -43,6 +43,13 @@ func (m Model) Init() tea.Cmd {
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	var cmd tea.Cmd
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		cursorPos := m.Cursor()
+		if m.shouldSkipUpdate(msg, cursorPos) || m.shouldSkipUpdate(msg, cursorPos-1) {
+			return m, nil
+		}
+	}
 	m.textinput, cmd = m.textinput.Update(msg)
 	return m, cmd
 }
@@ -100,6 +107,12 @@ func (m Model) formatArgs(text string) string {
 	}
 
 	return view
+}
+
+func (m Model) shouldSkipUpdate(msg tea.KeyMsg, pos int) bool {
+	text := m.Value()
+	// Don't allow consecutive spaces because this interferes with rendering arguments
+	return pos < len(text) && msg.String() == " " && text[pos] == ' '
 }
 
 func (m Model) getViewBeforeCursor() string {
