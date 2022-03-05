@@ -46,11 +46,13 @@ func executor(input string, selected *prompt.Suggestion, suggestions prompt.Sugg
 
 func main() {
 	placeholderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
+	argStyle1 := lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
+	argStyle2 := lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
 	suggestions := []prompt.Suggestion{
 		{Name: "first-option", Description: "test description",
 			PositionalArgs: []prompt.PositionalArg{
-				{Placeholder: "test1", PlaceholderStyle: prompt.Text{Style: placeholderStyle}},
-				{Placeholder: "test2", PlaceholderStyle: prompt.Text{Style: placeholderStyle}},
+				{Placeholder: "test1", PlaceholderStyle: prompt.Text{Style: placeholderStyle}, ArgStyle: prompt.Text{Style: argStyle1}},
+				{Placeholder: "test2", PlaceholderStyle: prompt.Text{Style: placeholderStyle}, ArgStyle: prompt.Text{Style: argStyle2}},
 			}},
 		{Name: "second-option", Description: "test description2"},
 		{Name: "third-option", Description: "test description3"},

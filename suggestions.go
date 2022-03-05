@@ -16,6 +16,7 @@ type PositionalArg struct {
 	Placeholder      string
 	Datatype         Datatype
 	PlaceholderStyle Text
+	ArgStyle         Text
 }
 
 type Flag struct {

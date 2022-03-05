@@ -90,10 +90,7 @@ func (m Model) View() string {
 func (m Model) formatArgs(text string) string {
 	words := strings.Split(text, " ")
 	view := ""
-	if len(words) < 2 {
-		return view
-	}
-	for i, arg := range words[1:] {
+	for i, arg := range words {
 		view += " "
 		if i < len(m.Args) {
 			view += m.Args[i].ArgStyle.Render(arg)
@@ -106,9 +103,11 @@ func (m Model) formatArgs(text string) string {
 }
 
 func (m Model) getViewBeforeCursor() string {
-	words := strings.Split(m.Value()[:m.Cursor()], " ")
+	words := strings.SplitN(m.Value()[:m.Cursor()], " ", 2)
 	view := m.TextStyle.Render(words[0])
-	view += m.formatArgs(m.Value()[:m.Cursor()])
+	if len(words) > 1 {
+		view += m.formatArgs(words[1])
+	}
 
 	return view
 }
@@ -121,9 +120,57 @@ func (m Model) getPlaceholder() string {
 	command := allText[0]
 
 	if cursorPos < len(command) {
-		view += m.renderWithPlaceholder(command, m.formatArgs(value), m.TextStyle)
+		args := ""
+		if len(allText) > 1 {
+			args = m.formatArgs(allText[1])
+		}
+		view += m.renderWithPlaceholder(command, args, m.TextStyle)
 	} else if cursorPos < len(value) {
-		view += m.renderWithPlaceholder(value, "", lipgloss.NewStyle())
+		cursorPos := m.Cursor()
+		before := strings.Split(value[:cursorPos], " ")
+		isInWord := value[cursorPos] != ' '
+		isMiddleOfWord := isInWord && value[cursorPos-1] != ' '
+		wordsBeforeCursor := []string{}
+		for _, w := range before {
+			if len(w) > 0 {
+				wordsBeforeCursor = append(wordsBeforeCursor, w)
+			}
+		}
+		skipArgs := len(wordsBeforeCursor) - 1
+		if isMiddleOfWord {
+			skipArgs--
+		}
+		after := strings.Split(value[cursorPos:], " ")
+		wordsAfterCursor := []string{}
+		for _, w := range after {
+			if len(w) > 0 {
+				wordsAfterCursor = append(wordsAfterCursor, w)
+			}
+		}
+
+		for i, arg := range wordsAfterCursor {
+			if i > 0 || !isInWord {
+				if cursorPos == len(m.Value()[:cursorPos]+view) {
+					view += m.cursorView(" ", lipgloss.NewStyle())
+				} else {
+					view += " "
+				}
+			}
+
+			idx := i + skipArgs
+			style := lipgloss.NewStyle()
+			if idx >= 0 && idx < len(m.Args) {
+				style = m.Args[idx].ArgStyle
+			}
+
+			lenBefore := len(m.Value()[:cursorPos] + view)
+			if cursorPos >= lenBefore && cursorPos < lenBefore+len(arg) {
+				view += m.renderWithCursor(arg, cursorPos-lenBefore, style)
+			} else {
+				view += style.Render(arg)
+			}
+		}
+
 	} else if cursorPos < len(m.Placeholder) && strings.HasPrefix(m.Placeholder, value) {
 		view += m.renderWithCursor(m.Placeholder, cursorPos, m.PlaceholderStyle)
 	}
