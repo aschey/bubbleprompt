@@ -14,12 +14,6 @@ const (
 	running
 )
 
-type Document struct {
-	InputBeforeCursor string
-	Input             string
-	CursorPosition    int
-}
-
 type Completer func(document Document) Suggestions
 
 type completionMsg Suggestions
@@ -70,7 +64,7 @@ func (c completerModel) Update(msg tea.Msg, input commandinput.Model) (completer
 }
 
 func (c *completerModel) updateCompletions(input commandinput.Model) tea.Cmd {
-	text := strings.Split(input.Value()[:input.Cursor()], " ")[0]
+	text := input.Value()
 	cursorPos := input.Cursor()
 
 	textTrimmed := strings.TrimSpace(text)
@@ -93,12 +87,14 @@ func (c *completerModel) updateCompletions(input commandinput.Model) tea.Cmd {
 
 	c.state = running
 	c.prevText = textBeforeCursor
+	in := input.Value()
+	parsed := input.ParsedValue()
 
 	return func() tea.Msg {
 		filtered := c.completerFunc(Document{
-			Input:             text,
-			InputBeforeCursor: textBeforeCursor,
-			CursorPosition:    cursorPos,
+			Text:           in,
+			ParsedInput:    parsed,
+			CursorPosition: cursorPos,
 		})
 		return completionMsg(filtered)
 	}
@@ -116,9 +112,9 @@ func (c *completerModel) resetCompletions() tea.Cmd {
 
 	return func() tea.Msg {
 		filtered := c.completerFunc(Document{
-			Input:             "",
-			InputBeforeCursor: "",
-			CursorPosition:    0,
+			Text:           "",
+			ParsedInput:    commandinput.Statement{},
+			CursorPosition: 0,
 		})
 		return completionMsg(filtered)
 	}

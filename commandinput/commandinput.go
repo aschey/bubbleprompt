@@ -28,7 +28,7 @@ type Model struct {
 	CursorStyle      lipgloss.Style
 	PlaceholderStyle lipgloss.Style
 	parser           *participle.Parser
-	parsedText       *statement
+	parsedText       *Statement
 }
 
 func New() Model {
@@ -38,7 +38,7 @@ func New() Model {
 		{Name: `String`, Pattern: `[^\s]+`},
 		{Name: "whitespace", Pattern: `\s+`},
 	})
-	parser := participle.MustBuild(&statement{}, participle.Lexer(lexer))
+	parser := participle.MustBuild(&Statement{}, participle.Lexer(lexer))
 	return Model{
 		textinput:        textinput,
 		Placeholder:      "",
@@ -52,7 +52,7 @@ func (m Model) Init() tea.Cmd {
 	return textinput.Blink
 }
 
-type statement struct {
+type Statement struct {
 	Pos     lexer.Position
 	Command ident `parser:"@@?"`
 	Args    args  `parser:"@@"`
@@ -72,7 +72,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	var cmd tea.Cmd
 	m.textinput, cmd = m.textinput.Update(msg)
 
-	expr := &statement{}
+	expr := &Statement{}
 	err := m.parser.ParseString("", m.Value(), expr)
 	if err != nil {
 		fmt.Println(err)
@@ -91,9 +91,13 @@ func (m Model) Value() string {
 	return m.textinput.Value()
 }
 
+func (m Model) ParsedValue() Statement {
+	return *m.parsedText
+}
+
 func (m *Model) SetValue(s string) {
 	m.textinput.SetValue(s)
-	expr := &statement{}
+	expr := &Statement{}
 	err := m.parser.ParseString("", m.Value(), expr)
 	if err != nil {
 		fmt.Println(err)

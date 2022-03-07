@@ -112,30 +112,16 @@ func (m *Model) updateArgs() {
 	suggestion := m.completer.getSelectedSuggestion()
 	if suggestion == nil {
 		// Nothing selected, default to the first matching suggestion
-		words := strings.Split(m.textInput.Value(), " ")
+		words := strings.Split(m.textInput.Value()[:m.textInput.Cursor()], " ")
 		if len(m.completer.suggestions) == 1 && words[0] == m.completer.suggestions[0].Name {
 			m.completer.selectedKey = m.completer.suggestions[0].key()
 		}
-		if len(words) == 1 {
-			// Only one word typed, filter based on cursor position
-			words := strings.Split(m.textInput.Value()[:m.textInput.Cursor()], " ")
-			filteredSuggestions := FilterHasPrefix(words[0], m.completer.suggestions)
-			if len(filteredSuggestions) > 0 {
-				suggestion = &filteredSuggestions[0]
-			}
-		} else {
-			// User already typed args, make sure the entire command matches instead of the prefix
-			filteredSuggestions := []Suggestion{}
-			for _, suggestion := range m.completer.suggestions {
-				if suggestion.Name == words[0] {
-					filteredSuggestions = append(filteredSuggestions, suggestion)
-				}
-			}
-			if len(filteredSuggestions) > 0 {
-				suggestion = &filteredSuggestions[0]
-			}
-		}
 
+		words = strings.Split(m.typedText, " ")
+		filteredSuggestions := FilterHasPrefix(words[0], m.completer.suggestions)
+		if len(filteredSuggestions) > 0 {
+			suggestion = &filteredSuggestions[0]
+		}
 	}
 
 	if suggestion == nil {
