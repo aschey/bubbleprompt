@@ -9,6 +9,7 @@ require (
 )
 
 require (
+	github.com/alecthomas/participle/v2 v2.0.0-alpha7 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/containerd/console v1.0.2 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect

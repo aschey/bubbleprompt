@@ -9,6 +9,7 @@ require (
 )
 
 require (
+	github.com/alecthomas/participle/v2 v2.0.0-alpha7 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/charmbracelet/bubbles v0.10.4-0.20220301123521-e349920524a2 // indirect
 	github.com/containerd/console v1.0.2 // indirect
