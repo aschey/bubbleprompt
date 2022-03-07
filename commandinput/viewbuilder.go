@@ -3,8 +3,8 @@ package commandinput
 import "github.com/charmbracelet/lipgloss"
 
 type viewBuilder struct {
-	viewLen int
 	view    string
+	rawView string
 	model   Model
 }
 
@@ -12,22 +12,31 @@ func newViewBuilder(model Model) *viewBuilder {
 	return &viewBuilder{model: model}
 }
 
-func (v *viewBuilder) getView() string {
-	if v.model.Cursor() == v.viewLen {
+func (v viewBuilder) getView() string {
+	if v.model.Cursor() == v.viewLen() {
 		return v.view + v.cursorView(" ", lipgloss.NewStyle())
 	}
 	return v.view
 }
 
+func (v viewBuilder) viewLen() int {
+	return len(v.rawView)
+}
+
 func (v *viewBuilder) render(newText string, style lipgloss.Style) {
 	cursorPos := v.model.Cursor()
 
-	if cursorPos >= v.viewLen && cursorPos < v.viewLen+len(newText) {
-		v.view += v.renderAllWithCursor(newText, cursorPos-v.viewLen, style)
+	viewLen := v.viewLen()
+	if cursorPos >= viewLen && cursorPos < viewLen+len(newText) {
+		v.view += v.renderAllWithCursor(newText, cursorPos-viewLen, style)
 	} else {
 		v.view += style.Render(newText)
 	}
-	v.viewLen += len(newText)
+	v.rawView += newText
+}
+
+func (v viewBuilder) last() byte {
+	return v.rawView[v.viewLen()-1]
 }
 
 func (v viewBuilder) renderWithCursor(text string, cursorPos int, s lipgloss.Style) string {

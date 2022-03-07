@@ -124,20 +124,21 @@ func (m Model) View() string {
 	leadingSpace := strings.Repeat(" ", m.parsedText.Command.Pos.Offset)
 	viewBuilder.render(leadingSpace, lipgloss.NewStyle())
 
-	viewBuilder.render(m.parsedText.Command.Value, m.TextStyle)
+	command := m.parsedText.Command.Value
+	viewBuilder.render(command, m.TextStyle)
 
-	if strings.HasPrefix(m.Placeholder, m.Value()) && m.Placeholder != m.parsedText.Command.Value {
-		viewBuilder.render(m.Placeholder[len(m.parsedText.Command.Value):], m.PlaceholderStyle)
+	if strings.HasPrefix(m.Placeholder, m.Value()) && m.Placeholder != command {
+		viewBuilder.render(m.Placeholder[len(command):], m.PlaceholderStyle)
 	}
 
-	spaceCount := m.parsedText.Args.Pos.Offset - viewBuilder.viewLen
+	spaceCount := m.parsedText.Args.Pos.Offset - viewBuilder.viewLen()
 	if spaceCount > 0 {
-		spaceBeforeArgs := strings.Repeat(" ", m.parsedText.Args.Pos.Offset-viewBuilder.viewLen)
+		spaceBeforeArgs := strings.Repeat(" ", m.parsedText.Args.Pos.Offset-viewBuilder.viewLen())
 		viewBuilder.render(spaceBeforeArgs, lipgloss.NewStyle())
 	}
 
 	for i, arg := range m.parsedText.Args.Value {
-		w := arg.Pos.Offset - viewBuilder.viewLen
+		w := arg.Pos.Offset - viewBuilder.viewLen()
 		space := strings.Repeat(" ", w)
 		viewBuilder.render(space, lipgloss.NewStyle())
 
@@ -147,6 +148,18 @@ func (m Model) View() string {
 		}
 		viewBuilder.render(arg.Value, argStyle)
 	}
+
+	startPlaceholder := len(m.parsedText.Args.Value)
+	if startPlaceholder < len(m.Args) {
+		for _, arg := range m.Args[startPlaceholder:] {
+			if viewBuilder.last() != ' ' {
+				viewBuilder.render(" ", lipgloss.NewStyle())
+			}
+
+			viewBuilder.render(arg.Text, arg.PlaceholderStyle)
+		}
+	}
+
 	textWithoutSpace := strings.TrimRight(m.Value(), " ")
 	extraSpace := m.Value()[len(textWithoutSpace):]
 
