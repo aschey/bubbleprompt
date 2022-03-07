@@ -46,7 +46,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		cmds, scrollToBottom = m.updateCompleting(msg, cmds)
 	}
 
-	m.updatePlaceholders()
+	m.updateArgs()
 
 	m.viewport.SetContent(m.render())
 	if scrollToBottom {
@@ -95,7 +95,7 @@ func (m *Model) updateCompleting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) 
 			scrollToBottom = true
 			cmds = m.submit(msg, cmds)
 
-		case tea.KeyRunes, tea.KeyBackspace, tea.KeyLeft, tea.KeyRight:
+		case tea.KeyRunes, tea.KeyBackspace, tea.KeyDelete, tea.KeyLeft, tea.KeyRight:
 			scrollToBottom = true
 			cmds = m.updateKeypress(msg, cmds)
 		}
@@ -107,19 +107,35 @@ func (m *Model) updateCompleting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) 
 	return cmds, scrollToBottom
 }
 
-func (m *Model) updatePlaceholders() {
+func (m *Model) updateArgs() {
 	m.textInput.Args = []commandinput.Arg{}
 	suggestion := m.completer.getSelectedSuggestion()
 	if suggestion == nil {
 		// Nothing selected, default to the first matching suggestion
-		words := strings.Split(m.textInput.Value()[:m.textInput.Cursor()], " ")
+		words := strings.Split(m.textInput.Value(), " ")
 		if len(m.completer.suggestions) == 1 && words[0] == m.completer.suggestions[0].Name {
 			m.completer.selectedKey = m.completer.suggestions[0].key()
 		}
-		filteredSuggestions := FilterHasPrefix(words[0], m.completer.suggestions)
-		if len(filteredSuggestions) > 0 {
-			suggestion = &filteredSuggestions[0]
+		if len(words) == 1 {
+			// Only one word typed, filter based on cursor position
+			words := strings.Split(m.textInput.Value()[:m.textInput.Cursor()], " ")
+			filteredSuggestions := FilterHasPrefix(words[0], m.completer.suggestions)
+			if len(filteredSuggestions) > 0 {
+				suggestion = &filteredSuggestions[0]
+			}
+		} else {
+			// User already typed args, make sure the entire command matches instead of the prefix
+			filteredSuggestions := []Suggestion{}
+			for _, suggestion := range m.completer.suggestions {
+				if suggestion.Name == words[0] {
+					filteredSuggestions = append(filteredSuggestions, suggestion)
+				}
+			}
+			if len(filteredSuggestions) > 0 {
+				suggestion = &filteredSuggestions[0]
+			}
 		}
+
 	}
 
 	if suggestion == nil {
@@ -226,7 +242,7 @@ func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	m.typedText = m.textInput.Value()
 	m.lastTypedCursorPosition = m.textInput.Cursor()
 
-	if msg.String() != " " && (msg.Type == tea.KeyRunes || msg.Type == tea.KeyBackspace) && (m.lastTypedCursorPosition < len(m.typedText) || words[0] != typedWords[0]) {
+	if msg.String() != " " && (msg.Type == tea.KeyRunes || msg.Type == tea.KeyBackspace || msg.Type == tea.KeyDelete) && (m.lastTypedCursorPosition < len(m.typedText) || words[0] != typedWords[0]) {
 		// Unselect selected item since user has changed the input
 		m.completer.unselectSuggestion()
 	}
