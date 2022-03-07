@@ -12,9 +12,7 @@ const (
 )
 
 type PositionalArg struct {
-	Name             string
 	Placeholder      string
-	Datatype         Datatype
 	PlaceholderStyle Text
 	ArgStyle         Text
 }
