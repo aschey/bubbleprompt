@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	prompt "github.com/aschey/bubbleprompt"
@@ -14,7 +15,8 @@ type model struct {
 }
 
 type completerModel struct {
-	suggestions []prompt.Suggestion
+	suggestions       []prompt.Suggestion
+	filepathCompleter prompt.FilePathCompleter
 }
 
 func (m model) Init() tea.Cmd {
@@ -32,6 +34,9 @@ func (m model) View() string {
 }
 
 func (m completerModel) completer(document prompt.Document) prompt.Suggestions {
+	if document.CommandCompleted() {
+		return m.filepathCompleter.Complete(strings.SplitN(document.Text, " ", 2)[1])
+	}
 	return prompt.FilterHasPrefix(document.TextBeforeCursor(), m.suggestions)
 }
 
@@ -58,6 +63,7 @@ func main() {
 		executor,
 		prompt.WithPrompt(">>> "),
 	)}
+	m.prompt.Separators = []string{" ", "/"}
 
 	if err := tea.NewProgram(m).Start(); err != nil {
 		fmt.Printf("Could not start program :(\n%v\n", err)

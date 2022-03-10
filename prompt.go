@@ -34,6 +34,7 @@ type Model struct {
 	textInput               commandinput.Model
 	viewport                viewport.Model
 	Formatters              Formatters
+	Separators              []string
 	previousCommands        []string
 	executorModel           *tea.Model
 	modelState              modelState

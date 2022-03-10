@@ -1,6 +1,8 @@
 package prompt
 
-import "github.com/aschey/bubbleprompt/commandinput"
+import (
+	"github.com/aschey/bubbleprompt/commandinput"
+)
 
 type Document struct {
 	Text           string
@@ -13,6 +15,10 @@ func (d Document) TextBeforeCursor() string {
 		return d.Text
 	}
 	return d.Text[:d.CursorPosition]
+}
+
+func (d Document) CommandCompleted() bool {
+	return d.CursorPosition > len(d.ParsedInput.Command.Value)
 }
 
 func (d Document) CommandBeforeCursor() string {

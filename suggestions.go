@@ -30,6 +30,7 @@ type Suggestions []Suggestion
 type Suggestion struct {
 	Name           string
 	Description    string
+	Metadata       interface{}
 	PositionalArgs []PositionalArg
 	Flags          []Flag
 }

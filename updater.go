@@ -95,9 +95,13 @@ func (m *Model) updateCompleting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) 
 			scrollToBottom = true
 			cmds = m.submit(msg, cmds)
 
-		case tea.KeyRunes, tea.KeyBackspace, tea.KeyDelete, tea.KeyLeft, tea.KeyRight:
+		case tea.KeyRunes, tea.KeyBackspace, tea.KeyDelete:
 			scrollToBottom = true
 			cmds = m.updateKeypress(msg, cmds)
+
+		case tea.KeyLeft, tea.KeyRight:
+			scrollToBottom = true
+			cmds = m.updatePosition(msg, cmds)
 		}
 
 	case errMsg:
@@ -180,7 +184,20 @@ func (m *Model) updateChosenListEntry(msg tea.KeyMsg) {
 	if m.completer.isSuggestionSelected() {
 		// Set the input to the suggestion's selected text
 		curSuggestion := m.completer.getSelectedSuggestion()
-		m.textInput.SetValue(curSuggestion.Name)
+		lastSepIndex := -1
+		text := m.textInput.Value()
+		for _, sep := range m.Separators {
+			curIndex := strings.LastIndex(text, sep)
+			if curIndex > lastSepIndex {
+				lastSepIndex = curIndex
+			}
+		}
+		if lastSepIndex > -1 {
+			m.textInput.SetValue(text[:lastSepIndex+1] + curSuggestion.Name)
+		} else {
+			m.textInput.SetValue(curSuggestion.Name)
+		}
+
 		// Move cursor to the end of the line
 		m.textInput.SetCursor(len(m.textInput.Value()))
 	} else {
@@ -226,12 +243,20 @@ func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	words := strings.Split(m.textInput.Value()[:m.textInput.Cursor()], " ")
 	typedWords := strings.Split(m.typedText, " ")
 	m.typedText = m.textInput.Value()
-	m.lastTypedCursorPosition = m.textInput.Cursor()
+	cmds = m.updatePosition(msg, cmds)
 
-	if msg.String() != " " && (msg.Type == tea.KeyRunes || msg.Type == tea.KeyBackspace || msg.Type == tea.KeyDelete) && (m.lastTypedCursorPosition < len(m.typedText) || words[0] != typedWords[0]) {
+	if msg.String() != " " && (m.lastTypedCursorPosition < len(m.typedText) || words[0] != typedWords[0]) {
 		// Unselect selected item since user has changed the input
 		m.completer.unselectSuggestion()
 	}
+
+	cmds = append(cmds, m.completer.updateCompletions(m.textInput))
+
+	return cmds
+}
+
+func (m *Model) updatePosition(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
+	m.lastTypedCursorPosition = m.textInput.Cursor()
 
 	cmds = append(cmds, m.completer.updateCompletions(m.textInput))
 
