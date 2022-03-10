@@ -248,8 +248,6 @@ func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 		m.completer.unselectSuggestion()
 	}
 
-	cmds = append(cmds, m.completer.updateCompletions(m.textInput))
-
 	return cmds
 }
 
