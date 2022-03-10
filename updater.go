@@ -85,6 +85,7 @@ func (m *Model) updateCompleting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) 
 		m.updateWindowSizeMsg(msg)
 
 	case tea.KeyMsg:
+		scrollToBottom = true
 		switch msg.Type {
 
 		// Select next/previous list entry
@@ -92,15 +93,12 @@ func (m *Model) updateCompleting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) 
 			m.updateChosenListEntry(msg)
 
 		case tea.KeyEnter:
-			scrollToBottom = true
 			cmds = m.submit(msg, cmds)
 
 		case tea.KeyRunes, tea.KeyBackspace, tea.KeyDelete:
-			scrollToBottom = true
 			cmds = m.updateKeypress(msg, cmds)
 
 		case tea.KeyLeft, tea.KeyRight:
-			scrollToBottom = true
 			cmds = m.updatePosition(msg, cmds)
 		}
 
