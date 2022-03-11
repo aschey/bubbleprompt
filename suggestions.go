@@ -37,7 +37,10 @@ type Suggestion struct {
 
 func (s Suggestion) render(selected bool, leftPadding string, maxNameLen int, maxDescLen int, formatters Formatters) string {
 	name := formatters.Name.format(s.Name, maxNameLen, selected)
-	description := formatters.Description.format(s.Description, maxDescLen, selected)
+	description := ""
+	if len(s.Description) > 0 {
+		description = formatters.Description.format(s.Description, maxDescLen, selected)
+	}
 
 	line := lipgloss.JoinHorizontal(lipgloss.Bottom, leftPadding, name, description)
 	return line
