@@ -22,6 +22,7 @@ type Model struct {
 	textinput        textinput.Model
 	Placeholder      string
 	Prompt           string
+	delimiterRegex   string
 	Args             []Arg
 	PromptStyle      lipgloss.Style
 	TextStyle        lipgloss.Style
@@ -33,23 +34,38 @@ type Model struct {
 
 func New() Model {
 	textinput := textinput.New()
-	lexer := lexer.MustSimple([]lexer.Rule{
-		{Name: "QuotedString", Pattern: `"[^"]*"`},
-		{Name: `String`, Pattern: `[^\s]+`},
-		{Name: "whitespace", Pattern: `\s+`},
-	})
-	parser := participle.MustBuild(&Statement{}, participle.Lexer(lexer))
-	return Model{
+
+	m := Model{
 		textinput:        textinput,
 		Placeholder:      "",
 		Prompt:           "> ",
 		PlaceholderStyle: textinput.PlaceholderStyle,
-		parser:           parser,
 	}
+	m.buildParser()
+	return m
+}
+
+func (m *Model) buildParser() {
+	delimiterRegex := m.delimiterRegex
+	if delimiterRegex == "" {
+		delimiterRegex = `\s+`
+	}
+	lexer := lexer.MustSimple([]lexer.Rule{
+		{Name: "QuotedString", Pattern: `"[^"]*"`},
+		{Name: `String`, Pattern: `[^\s]+`},
+		{Name: "whitespace", Pattern: delimiterRegex},
+	})
+	parser := participle.MustBuild(&Statement{}, participle.Lexer(lexer))
+	m.parser = parser
 }
 
 func (m Model) Init() tea.Cmd {
 	return textinput.Blink
+}
+
+func (m *Model) SetDelimiterRegex(delimiterRegex string) {
+	m.delimiterRegex = delimiterRegex
+	m.buildParser()
 }
 
 type Statement struct {
@@ -116,6 +132,21 @@ func (m *Model) SetCursor(pos int) {
 
 func (m Model) Focused() bool {
 	return m.textinput.Focused()
+}
+
+func (m Model) LastArg() *ident {
+	parsed := *m.parsedText
+	if len(parsed.Args.Value) == 0 {
+		return nil
+	}
+	return &parsed.Args.Value[len(parsed.Args.Value)-1]
+}
+
+func (m Model) CommandCompleted() bool {
+	if m.parsedText == nil {
+		return false
+	}
+	return m.Cursor() > len(m.parsedText.Command.Value)
 }
 
 func (m *Model) Blur() {

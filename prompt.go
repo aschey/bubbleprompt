@@ -34,7 +34,6 @@ type Model struct {
 	textInput               commandinput.Model
 	viewport                viewport.Model
 	Formatters              Formatters
-	Separators              []string
 	previousCommands        []string
 	executorModel           *tea.Model
 	modelState              modelState
@@ -46,7 +45,6 @@ type Model struct {
 
 func New(completer Completer, executor Executor, opts ...Option) Model {
 	textInput := commandinput.New()
-	textInput.Placeholder = "first-option"
 	textInput.Focus()
 
 	model := Model{
@@ -109,6 +107,10 @@ func filterHasPrefix(search string, suggestions Suggestions,
 
 func (m *Model) SetPrompt(prompt string) {
 	m.textInput.Prompt = prompt
+}
+
+func (m Model) CommandCompleted() bool {
+	return m.textInput.CommandCompleted()
 }
 
 func (m Model) Init() tea.Cmd {

@@ -14,7 +14,7 @@ const (
 	running
 )
 
-type Completer func(document Document) Suggestions
+type Completer func(document Document, prompt Model) Suggestions
 
 type completionMsg Suggestions
 
@@ -38,10 +38,10 @@ func newCompleterModel(completerFunc Completer) completerModel {
 
 func (c completerModel) Init() tea.Cmd {
 	// Since the user hasn't typed anything on init, call the completer with empty text
-	return c.resetCompletions()
+	return c.resetCompletions(Model{})
 }
 
-func (c completerModel) Update(msg tea.Msg, input commandinput.Model) (completerModel, tea.Cmd) {
+func (c completerModel) Update(msg tea.Msg, prompt Model) (completerModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case completionMsg:
 		if c.ignoreCount > 0 {
@@ -56,14 +56,15 @@ func (c completerModel) Update(msg tea.Msg, input commandinput.Model) (completer
 			if c.queueNext {
 				// Start another update if it was requested while running
 				c.queueNext = false
-				return c, c.updateCompletions(input)
+				return c, c.updateCompletions(prompt)
 			}
 		}
 	}
 	return c, nil
 }
 
-func (c *completerModel) updateCompletions(input commandinput.Model) tea.Cmd {
+func (c *completerModel) updateCompletions(prompt Model) tea.Cmd {
+	input := prompt.textInput
 	text := input.Value()
 	cursorPos := input.Cursor()
 
@@ -95,12 +96,12 @@ func (c *completerModel) updateCompletions(input commandinput.Model) tea.Cmd {
 			Text:           in,
 			ParsedInput:    parsed,
 			CursorPosition: cursorPos,
-		})
+		}, prompt)
 		return completionMsg(filtered)
 	}
 }
 
-func (c *completerModel) resetCompletions() tea.Cmd {
+func (c *completerModel) resetCompletions(prompt Model) tea.Cmd {
 	if c.state == running {
 		// If completion is currently running, ignore the next value and trigger another update
 		// This helps speed up getting the next valid result for slow completers
@@ -115,7 +116,7 @@ func (c *completerModel) resetCompletions() tea.Cmd {
 			Text:           "",
 			ParsedInput:    commandinput.Statement{},
 			CursorPosition: 0,
-		})
+		}, prompt)
 		return completionMsg(filtered)
 	}
 }

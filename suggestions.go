@@ -32,6 +32,7 @@ type Suggestion struct {
 	CompletionText string
 	Description    string
 	Metadata       interface{}
+	CursorOffset   int
 	PositionalArgs []PositionalArg
 	Flags          []Flag
 }

@@ -17,10 +17,6 @@ func (d Document) TextBeforeCursor() string {
 	return d.Text[:d.CursorPosition]
 }
 
-func (d Document) CommandCompleted() bool {
-	return d.CursorPosition > len(d.ParsedInput.Command.Value)
-}
-
 func (d Document) CommandBeforeCursor() string {
 	if d.CursorPosition >= len(d.ParsedInput.Command.Value) {
 		return d.ParsedInput.Command.Value

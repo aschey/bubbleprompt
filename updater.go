@@ -33,7 +33,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	m.textInput, cmd = m.textInput.Update(msg)
 	cmds = append(cmds, cmd)
 
-	m.completer, cmd = m.completer.Update(msg, m.textInput)
+	m.completer, cmd = m.completer.Update(msg, m)
 	cmds = append(cmds, cmd)
 
 	// Scroll to bottom if the user typed something
@@ -145,7 +145,7 @@ func (m *Model) finalizeExecutor(executorModel tea.Model) {
 	executorValue := executorModel.View()
 	m.completer.unselectSuggestion()
 	// Store the whole user input including the prompt state and the executor result
-	// However note that we don't include all of textinput.View() because we don't want to include the cursor
+	// However note that we don't include all of textInput.View() because we don't want to include the cursor
 	commandResult := lipgloss.JoinVertical(lipgloss.Left, m.textInput.Prompt+textValue, executorValue)
 	m.previousCommands = append(m.previousCommands, commandResult)
 	m.updateExecutor(nil)
@@ -182,22 +182,24 @@ func (m *Model) updateChosenListEntry(msg tea.KeyMsg) {
 	if m.completer.isSuggestionSelected() {
 		// Set the input to the suggestion's selected text
 		curSuggestion := m.completer.getSelectedSuggestion()
+
 		lastSepIndex := -1
-		text := m.textInput.Value()
-		for _, sep := range m.Separators {
-			curIndex := strings.LastIndex(text, sep)
-			if curIndex > lastSepIndex {
-				lastSepIndex = curIndex
-			}
+		lastArg := m.textInput.LastArg()
+		if lastArg != nil {
+			lastSepIndex = lastArg.Pos.Offset
+		} else if m.CommandCompleted() {
+			lastSepIndex = m.textInput.Cursor()
 		}
+
+		text := m.textInput.Value()
 		if lastSepIndex > -1 {
-			m.textInput.SetValue(text[:lastSepIndex+1] + curSuggestion.Text)
+			m.textInput.SetValue(text[:lastSepIndex] + curSuggestion.Text)
 		} else {
 			m.textInput.SetValue(curSuggestion.Text)
 		}
 
 		// Move cursor to the end of the line
-		m.textInput.SetCursor(len(m.textInput.Value()))
+		m.textInput.SetCursor(len(m.textInput.Value()) - curSuggestion.CursorOffset)
 	} else {
 		// If no selection, set the text back to the last thing the user typed
 		m.textInput.SetValue(m.typedText)
@@ -234,7 +236,7 @@ func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 		cmds = append(cmds, executorModel.Init())
 	}
 
-	return append(cmds, m.completer.resetCompletions())
+	return append(cmds, m.completer.resetCompletions(*m))
 }
 
 func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
@@ -254,7 +256,7 @@ func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 func (m *Model) updatePosition(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	m.lastTypedCursorPosition = m.textInput.Cursor()
 
-	cmds = append(cmds, m.completer.updateCompletions(m.textInput))
+	cmds = append(cmds, m.completer.updateCompletions(*m))
 
 	return cmds
 }

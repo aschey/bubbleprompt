@@ -32,7 +32,7 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
-func (m completerModel) completer(document prompt.Document) prompt.Suggestions {
+func (m completerModel) completer(document prompt.Document, promptModel prompt.Model) prompt.Suggestions {
 	time.Sleep(100 * time.Millisecond)
 	return prompt.FilterHasPrefix(document.CommandBeforeCursor(), m.suggestions)
 }

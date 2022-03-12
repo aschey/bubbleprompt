@@ -32,8 +32,8 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
-func (m completerModel) completer(document prompt.Document) prompt.Suggestions {
-	if document.CommandCompleted() {
+func (m completerModel) completer(document prompt.Document, promptModel prompt.Model) prompt.Suggestions {
+	if promptModel.CommandCompleted() {
 		filepath := ""
 		if len(document.ParsedInput.Args.Value) > 0 {
 			filepath = document.ParsedInput.Args.Value[0].Value
@@ -66,7 +66,6 @@ func main() {
 		executor,
 		prompt.WithPrompt(">>> "),
 	)}
-	m.prompt.Separators = []string{" "}
 
 	if err := tea.NewProgram(m).Start(); err != nil {
 		fmt.Printf("Could not start program :(\n%v\n", err)

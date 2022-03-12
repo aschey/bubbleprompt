@@ -68,6 +68,7 @@ func (c *FilePathCompleter) adjustCompletions(completions []Suggestion, sub stri
 }
 
 func (c *FilePathCompleter) Complete(path string) []Suggestion {
+	path = strings.ReplaceAll(path, "\"", "")
 	if c.fileListCache == nil {
 		c.fileListCache = make(map[string][]Suggestion, 4)
 	}
@@ -112,12 +113,15 @@ func (c *FilePathCompleter) Complete(path string) []Suggestion {
 				fmt.Println("Error getting rel path", err)
 			}
 		}
+		cursorOffset := 0
 		if strings.Contains(full, " ") {
 			full = fmt.Sprintf("\"%s\"", full)
+			cursorOffset = 1
 		}
 		suggests = append(suggests, Suggestion{
 			Text:           full,
 			CompletionText: f.Name(),
+			CursorOffset:   cursorOffset,
 		})
 	}
 	c.fileListCache[dir] = suggests
