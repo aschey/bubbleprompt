@@ -33,8 +33,12 @@ func (m model) View() string {
 }
 
 func (m completerModel) completer(document prompt.Document) prompt.Suggestions {
-	if document.CommandCompleted() && len(document.ParsedInput.Args.Value) > 0 {
-		return m.filepathCompleter.Complete(document.ParsedInput.Args.Value[0].Value)
+	if document.CommandCompleted() {
+		filepath := ""
+		if len(document.ParsedInput.Args.Value) > 0 {
+			filepath = document.ParsedInput.Args.Value[0].Value
+		}
+		return m.filepathCompleter.Complete(filepath)
 	}
 	return prompt.FilterHasPrefix(document.TextBeforeCursor(), m.suggestions)
 }

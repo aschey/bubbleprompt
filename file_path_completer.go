@@ -15,7 +15,7 @@ type FilePathCompleter struct {
 	fileListCache map[string][]Suggestion
 }
 
-func cleanFilePath(path string) (dir, base string, err error) {
+func cleanFilePath(path string) (dir string, base string, err error) {
 	if path == "" {
 		return ".", "", nil
 	}
@@ -81,9 +81,17 @@ func (c *FilePathCompleter) Complete(path string) []Suggestion {
 	if cached, ok := c.fileListCache[dir]; ok {
 		return c.adjustCompletions(cached, base)
 	}
+	isAbs := filepath.IsAbs(path) || strings.HasPrefix(path, "~")
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		fmt.Println("Error getting cwd", err)
+		return nil
+	}
 
 	files, err := os.ReadDir(dir)
 	if err != nil {
+		fmt.Println("Error getting path", err)
 		return nil
 	}
 	filePath, err := filepath.Abs(dir)
@@ -98,6 +106,15 @@ func (c *FilePathCompleter) Complete(path string) []Suggestion {
 			continue
 		}
 		full := filepath.Join(filePath, f.Name())
+		if !isAbs {
+			full, err = filepath.Rel(cwd, full)
+			if err != nil {
+				fmt.Println("Error getting rel path", err)
+			}
+		}
+		if strings.Contains(full, " ") {
+			full = fmt.Sprintf("\"%s\"", full)
+		}
 		suggests = append(suggests, Suggestion{
 			Text:           full,
 			CompletionText: f.Name(),
