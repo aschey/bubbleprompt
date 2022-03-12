@@ -45,11 +45,11 @@ func executor(input string, selected *Suggestion, suggestions Suggestions) tea.M
 
 func setup(t *testing.T) testData {
 	suggestions := Suggestions{
-		{Name: "first-option", Description: "test desc", PositionalArgs: []PositionalArg{{Placeholder: "[test placeholder]"}}},
-		{Name: "second-option", Description: "test desc2"},
-		{Name: "third-option", Description: "test desc3"},
-		{Name: "fourth-option", Description: "test desc4"},
-		{Name: "fifth-option", Description: "test desc5"},
+		{Text: "first-option", Description: "test desc", PositionalArgs: []PositionalArg{{Placeholder: "[test placeholder]"}}},
+		{Text: "second-option", Description: "test desc2"},
+		{Text: "third-option", Description: "test desc3"},
+		{Text: "fourth-option", Description: "test desc4"},
+		{Text: "fifth-option", Description: "test desc5"},
 	}
 
 	completerModel := completerModel{suggestions: suggestions}
@@ -90,7 +90,7 @@ func TestBasicCompleter(t *testing.T) {
 
 	// Check that all prompts show up
 	for i := 1; i < len(testData.suggestions); i++ {
-		testza.AssertContains(t, testData.initialLines[i], testData.suggestions[i-1].Name)
+		testza.AssertContains(t, testData.initialLines[i], testData.suggestions[i-1].Text)
 		testza.AssertContains(t, testData.initialLines[i], testData.suggestions[i-1].Description)
 	}
 
@@ -109,9 +109,9 @@ func TestFilter(t *testing.T) {
 
 	// Check that suggestions filter properly
 	testza.AssertEqual(t, 3, len(lines))
-	testza.AssertContains(t, lines[1], testData.suggestions[0].Name)
+	testza.AssertContains(t, lines[1], testData.suggestions[0].Text)
 	testza.AssertContains(t, lines[1], testData.suggestions[0].Description)
-	testza.AssertContains(t, lines[2], testData.suggestions[4].Name)
+	testza.AssertContains(t, lines[2], testData.suggestions[4].Text)
 	testza.AssertContains(t, lines[2], testData.suggestions[4].Description)
 
 	teardown(t, testData.tester)
@@ -155,14 +155,14 @@ func TestChoosePrompt(t *testing.T) {
 	testData.tester.SendString(tuitest.KeyDown)
 	// Wait for first prompt to be selected
 	_, lines, err := testData.tester.WaitFor(func(out string, outputLines []string) bool {
-		return strings.Contains(outputLines[0], testData.suggestions[0].Name)
+		return strings.Contains(outputLines[0], testData.suggestions[0].Text)
 	})
 	testza.AssertNoError(t, err)
 	// Check that proper styles are applied
-	testza.AssertContains(t, lines[0], testData.model.prompt.Formatters.SelectedSuggestion.Render(testData.suggestions[0].Name))
+	testza.AssertContains(t, lines[0], testData.model.prompt.Formatters.SelectedSuggestion.Render(testData.suggestions[0].Text))
 	testza.AssertContains(t, lines[0], testData.suggestions[0].PositionalArgs[0].PlaceholderStyle.format(testData.suggestions[0].PositionalArgs[0].Placeholder))
 	maxNameLen := len("second-option")
-	testza.AssertContains(t, lines[1], testData.model.prompt.Formatters.Name.format(testData.suggestions[0].Name, maxNameLen, true))
+	testza.AssertContains(t, lines[1], testData.model.prompt.Formatters.Name.format(testData.suggestions[0].Text, maxNameLen, true))
 	maxDescLen := len("test desc1")
 	testza.AssertContains(t, lines[1], testData.model.prompt.Formatters.Description.format(testData.suggestions[0].Description, maxDescLen, true))
 
@@ -170,7 +170,7 @@ func TestChoosePrompt(t *testing.T) {
 	testData.tester.SendByte(tuitest.KeyEnter)
 	_, _, err = testData.tester.WaitFor(func(out string, outputLines []string) bool {
 		return len(outputLines) > 1 &&
-			strings.Contains(outputLines[1], "result is "+testData.suggestions[0].Name) &&
+			strings.Contains(outputLines[1], "result is "+testData.suggestions[0].Text) &&
 			!strings.Contains(outputLines[1], testData.suggestions[0].PositionalArgs[0].Placeholder)
 	})
 	testza.AssertNoError(t, err)
@@ -184,20 +184,20 @@ func TestTypeAfterCompleting(t *testing.T) {
 	testData.tester.SendString(tuitest.KeyDown)
 	// Wait for first prompt to be selected
 	_, _, err := testData.tester.WaitFor(func(out string, outputLines []string) bool {
-		return strings.Contains(outputLines[0], testData.suggestions[0].Name)
+		return strings.Contains(outputLines[0], testData.suggestions[0].Text)
 	})
 	testza.AssertNoError(t, err)
 
 	testData.tester.SendString("a")
 	// Check that text updates
 	_, lines, err := testData.tester.WaitFor(func(out string, outputLines []string) bool {
-		return strings.Contains(outputLines[0], testData.suggestions[0].Name+"a")
+		return strings.Contains(outputLines[0], testData.suggestions[0].Text+"a")
 	})
 	testza.AssertNoError(t, err)
 	// Check that prompts were filtered
 	testza.AssertEqual(t, 1, len(lines))
 	// Check that selected text formatting was removed
-	testza.AssertNotContains(t, lines[0], testData.model.prompt.Formatters.SelectedSuggestion.Render(testData.suggestions[0].Name+"a"))
+	testza.AssertNotContains(t, lines[0], testData.model.prompt.Formatters.SelectedSuggestion.Render(testData.suggestions[0].Text+"a"))
 
 	teardown(t, testData.tester)
 }

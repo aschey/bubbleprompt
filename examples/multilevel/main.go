@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	prompt "github.com/aschey/bubbleprompt"
@@ -34,8 +33,8 @@ func (m model) View() string {
 }
 
 func (m completerModel) completer(document prompt.Document) prompt.Suggestions {
-	if document.CommandCompleted() {
-		return m.filepathCompleter.Complete(strings.SplitN(document.Text, " ", 2)[1])
+	if document.CommandCompleted() && len(document.ParsedInput.Args.Value) > 0 {
+		return m.filepathCompleter.Complete(document.ParsedInput.Args.Value[0].Value)
 	}
 	return prompt.FilterHasPrefix(document.TextBeforeCursor(), m.suggestions)
 }
@@ -49,11 +48,11 @@ func executor(input string, selected *prompt.Suggestion, suggestions prompt.Sugg
 
 func main() {
 	suggestions := []prompt.Suggestion{
-		{Name: "first-option", Description: "test description"},
-		{Name: "second-option", Description: "test description2"},
-		{Name: "third-option", Description: "test description3"},
-		{Name: "fourth-option", Description: "test description4"},
-		{Name: "fifth-option", Description: "test description5"},
+		{Text: "first-option", Description: "test description"},
+		{Text: "second-option", Description: "test description2"},
+		{Text: "third-option", Description: "test description3"},
+		{Text: "fourth-option", Description: "test description4"},
+		{Text: "fifth-option", Description: "test description5"},
 	}
 
 	completerModel := completerModel{suggestions: suggestions}
@@ -63,7 +62,7 @@ func main() {
 		executor,
 		prompt.WithPrompt(">>> "),
 	)}
-	m.prompt.Separators = []string{" ", "/"}
+	m.prompt.Separators = []string{" "}
 
 	if err := tea.NewProgram(m).Start(); err != nil {
 		fmt.Printf("Could not start program :(\n%v\n", err)

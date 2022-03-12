@@ -49,15 +49,15 @@ func main() {
 	argStyle1 := lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
 	argStyle2 := lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
 	suggestions := []prompt.Suggestion{
-		{Name: "first-option", Description: "test description",
+		{Text: "first-option", Description: "test description",
 			PositionalArgs: []prompt.PositionalArg{
 				{Placeholder: "test1", PlaceholderStyle: prompt.Text{Style: placeholderStyle}, ArgStyle: prompt.Text{Style: argStyle1}},
 				{Placeholder: "test2", PlaceholderStyle: prompt.Text{Style: placeholderStyle}, ArgStyle: prompt.Text{Style: argStyle2}},
 			}},
-		{Name: "second-option", Description: "test description2"},
-		{Name: "third-option", Description: "test description3"},
-		{Name: "fourth-option", Description: "test description4"},
-		{Name: "fifth-option", Description: "test description5",
+		{Text: "second-option", Description: "test description2"},
+		{Text: "third-option", Description: "test description3"},
+		{Text: "fourth-option", Description: "test description4"},
+		{Text: "fifth-option", Description: "test description5",
 			PositionalArgs: []prompt.PositionalArg{
 				{Placeholder: "abc", PlaceholderStyle: prompt.Text{Style: placeholderStyle}},
 			}},

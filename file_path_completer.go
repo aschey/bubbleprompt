@@ -15,7 +15,7 @@ type FilePathCompleter struct {
 	fileListCache map[string][]Suggestion
 }
 
-func CleanFilePath(path string) (dir, base string, err error) {
+func cleanFilePath(path string) (dir, base string, err error) {
 	if path == "" {
 		return ".", "", nil
 	}
@@ -52,18 +52,18 @@ func equalsSeparator(check byte) bool {
 }
 
 func (c *FilePathCompleter) adjustCompletions(completions []Suggestion, sub string) []Suggestion {
-	tokens := strings.Split(sub, " ")
-	filteredCompletions := FilterHasPrefix(sub, completions)
-	if len(tokens) > 1 {
-		allExceptLast := strings.Join(tokens[0:len(tokens)-1], " ")
-		newCompletions := []Suggestion{}
-		for _, completion := range filteredCompletions {
-			completion.Name = completion.Name[len(allExceptLast)+1:]
-			newCompletions = append(newCompletions, completion)
-		}
+	//tokens := strings.Split(sub, " ")
+	filteredCompletions := FilterCompletionTextHasPrefix(sub, completions)
+	// if len(tokens) > 1 {
+	// 	allExceptLast := strings.Join(tokens[0:len(tokens)-1], " ")
+	// 	newCompletions := []Suggestion{}
+	// 	for _, completion := range filteredCompletions {
+	// 		completion.Text = completion.Text[len(allExceptLast)+1:]
+	// 		newCompletions = append(newCompletions, completion)
+	// 	}
 
-		return newCompletions
-	}
+	// 	return newCompletions
+	// }
 	return filteredCompletions
 }
 
@@ -72,7 +72,7 @@ func (c *FilePathCompleter) Complete(path string) []Suggestion {
 		c.fileListCache = make(map[string][]Suggestion, 4)
 	}
 
-	dir, base, err := CleanFilePath(path)
+	dir, base, err := cleanFilePath(path)
 	if err != nil {
 		fmt.Println("completer: cannot get current user:" + err.Error())
 		return nil
@@ -97,7 +97,11 @@ func (c *FilePathCompleter) Complete(path string) []Suggestion {
 		if c.Filter != nil && !c.Filter(f) {
 			continue
 		}
-		suggests = append(suggests, Suggestion{Name: f.Name(), Metadata: filepath.Join(filePath, f.Name())})
+		full := filepath.Join(filePath, f.Name())
+		suggests = append(suggests, Suggestion{
+			Text:           full,
+			CompletionText: f.Name(),
+		})
 	}
 	c.fileListCache[dir] = suggests
 	return c.adjustCompletions(suggests, base)

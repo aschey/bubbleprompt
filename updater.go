@@ -115,7 +115,7 @@ func (m *Model) updateArgs() {
 	if suggestion == nil {
 		// Nothing selected, default to the first matching suggestion
 		words := strings.Split(m.textInput.Value()[:m.textInput.Cursor()], " ")
-		if len(m.completer.suggestions) == 1 && words[0] == m.completer.suggestions[0].Name {
+		if len(m.completer.suggestions) == 1 && words[0] == m.completer.suggestions[0].Text {
 			m.completer.selectedKey = m.completer.suggestions[0].key()
 		}
 
@@ -130,7 +130,7 @@ func (m *Model) updateArgs() {
 		// Didn't find any matching suggestions, reset
 		m.textInput.Placeholder = ""
 	} else {
-		m.textInput.Placeholder = suggestion.Name
+		m.textInput.Placeholder = suggestion.Text
 		for _, arg := range suggestion.PositionalArgs {
 			m.textInput.Args = append(m.textInput.Args, commandinput.Arg{
 				Text:             arg.Placeholder,
@@ -191,9 +191,9 @@ func (m *Model) updateChosenListEntry(msg tea.KeyMsg) {
 			}
 		}
 		if lastSepIndex > -1 {
-			m.textInput.SetValue(text[:lastSepIndex+1] + curSuggestion.Name)
+			m.textInput.SetValue(text[:lastSepIndex+1] + curSuggestion.Text)
 		} else {
-			m.textInput.SetValue(curSuggestion.Name)
+			m.textInput.SetValue(curSuggestion.Text)
 		}
 
 		// Move cursor to the end of the line

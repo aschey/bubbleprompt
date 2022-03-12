@@ -28,7 +28,8 @@ type Flag struct {
 type Suggestions []Suggestion
 
 type Suggestion struct {
-	Name           string
+	Text           string
+	CompletionText string
 	Description    string
 	Metadata       interface{}
 	PositionalArgs []PositionalArg
@@ -36,7 +37,11 @@ type Suggestion struct {
 }
 
 func (s Suggestion) render(selected bool, leftPadding string, maxNameLen int, maxDescLen int, formatters Formatters) string {
-	name := formatters.Name.format(s.Name, maxNameLen, selected)
+	completionText := s.CompletionText
+	if completionText == "" {
+		completionText = s.Text
+	}
+	name := formatters.Name.format(completionText, maxNameLen, selected)
 	description := ""
 	if len(s.Description) > 0 {
 		description = formatters.Description.format(s.Description, maxDescLen, selected)
@@ -47,7 +52,7 @@ func (s Suggestion) render(selected bool, leftPadding string, maxNameLen int, ma
 }
 
 func (s Suggestion) key() *string {
-	key := s.Name + s.Description
+	key := s.Text + s.Description
 	return &key
 }
 
@@ -57,8 +62,8 @@ func (s Suggestions) render(paddingSize int, listPosition int, formatters Format
 
 	// Determine longest name and description to calculate padding
 	for _, cur := range s {
-		if len(cur.Name) > maxNameLen {
-			maxNameLen = len(cur.Name)
+		if len(cur.Text) > maxNameLen {
+			maxNameLen = len(cur.Text)
 		}
 		if len(cur.Description) > maxDescLen {
 			maxDescLen = len(cur.Description)
