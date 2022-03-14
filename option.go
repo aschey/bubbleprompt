@@ -73,3 +73,15 @@ func WithSelectedSuggestionStyle(style lipgloss.Style) Option {
 		return nil
 	}
 }
+
+func WithDelimiterRegex(delimiterRegex string) Option {
+	return func(model *Model) error {
+		return model.SetDelimiterRegex(delimiterRegex)
+	}
+}
+
+func WithStringRegex(stringRegex string) Option {
+	return func(model *Model) error {
+		return model.SetStringRegex(stringRegex)
+	}
+}

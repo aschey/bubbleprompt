@@ -1,6 +1,7 @@
 package prompt
 
 import (
+	"regexp"
 	"strings"
 
 	"github.com/aschey/bubbleprompt/commandinput"
@@ -37,6 +38,7 @@ type Model struct {
 	previousCommands        []string
 	executorModel           *tea.Model
 	modelState              modelState
+	delimiterRegex          *regexp.Regexp
 	lastTypedCursorPosition int
 	typedText               string
 	ready                   bool
@@ -48,9 +50,10 @@ func New(completer Completer, executor Executor, opts ...Option) Model {
 	textInput.Focus()
 
 	model := Model{
-		completer: newCompleterModel(completer),
-		executor:  executor,
-		textInput: textInput,
+		completer:      newCompleterModel(completer),
+		executor:       executor,
+		textInput:      textInput,
+		delimiterRegex: regexp.MustCompile(`\s+`),
 		Formatters: Formatters{
 			Name: SuggestionText{
 				SelectedStyle: lipgloss.
@@ -107,6 +110,21 @@ func filterHasPrefix(search string, suggestions Suggestions,
 
 func (m *Model) SetPrompt(prompt string) {
 	m.textInput.Prompt = prompt
+}
+
+func (m *Model) SetDelimiterRegex(delimiterRegex string) error {
+	regex, err := regexp.Compile(delimiterRegex)
+	if err != nil {
+		return err
+	}
+	m.delimiterRegex = regex
+	m.textInput.SetDelimiterRegex(delimiterRegex)
+	return nil
+}
+
+func (m *Model) SetStringRegex(stringRegex string) error {
+	m.textInput.SetStringRegex(stringRegex)
+	return nil
 }
 
 func (m Model) CommandCompleted() bool {

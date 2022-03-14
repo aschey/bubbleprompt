@@ -23,6 +23,7 @@ type Model struct {
 	Placeholder      string
 	Prompt           string
 	delimiterRegex   string
+	stringRegex      string
 	Args             []Arg
 	PromptStyle      lipgloss.Style
 	TextStyle        lipgloss.Style
@@ -47,12 +48,16 @@ func New() Model {
 
 func (m *Model) buildParser() {
 	delimiterRegex := m.delimiterRegex
+	stringRegex := m.stringRegex
 	if delimiterRegex == "" {
 		delimiterRegex = `\s+`
 	}
+	if stringRegex == "" {
+		stringRegex = `[^\s]+`
+	}
 	lexer := lexer.MustSimple([]lexer.Rule{
 		{Name: "QuotedString", Pattern: `"[^"]*"`},
-		{Name: `String`, Pattern: `[^\s]+`},
+		{Name: `String`, Pattern: stringRegex},
 		{Name: "whitespace", Pattern: delimiterRegex},
 	})
 	parser := participle.MustBuild(&Statement{}, participle.Lexer(lexer))
@@ -65,6 +70,11 @@ func (m Model) Init() tea.Cmd {
 
 func (m *Model) SetDelimiterRegex(delimiterRegex string) {
 	m.delimiterRegex = delimiterRegex
+	m.buildParser()
+}
+
+func (m *Model) SetStringRegex(stringRegex string) {
+	m.stringRegex = stringRegex
 	m.buildParser()
 }
 
@@ -155,8 +165,8 @@ func (m *Model) Blur() {
 
 func (m Model) View() string {
 	viewBuilder := newViewBuilder(m)
-
-	leadingSpace := strings.Repeat(" ", m.parsedText.Command.Pos.Offset)
+	text := m.Value()
+	leadingSpace := text[:m.parsedText.Command.Pos.Offset]
 	viewBuilder.render(leadingSpace, lipgloss.NewStyle())
 
 	command := m.parsedText.Command.Value
@@ -168,13 +178,12 @@ func (m Model) View() string {
 
 	spaceCount := m.parsedText.Args.Pos.Offset - viewBuilder.viewLen()
 	if spaceCount > 0 {
-		spaceBeforeArgs := strings.Repeat(" ", m.parsedText.Args.Pos.Offset-viewBuilder.viewLen())
+		spaceBeforeArgs := text[viewBuilder.viewLen():m.parsedText.Args.Pos.Offset]
 		viewBuilder.render(spaceBeforeArgs, lipgloss.NewStyle())
 	}
 
 	for i, arg := range m.parsedText.Args.Value {
-		w := arg.Pos.Offset - viewBuilder.viewLen()
-		space := strings.Repeat(" ", w)
+		space := text[viewBuilder.viewLen():arg.Pos.Offset]
 		viewBuilder.render(space, lipgloss.NewStyle())
 
 		argStyle := lipgloss.NewStyle()

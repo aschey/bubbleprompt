@@ -2,7 +2,6 @@ package prompt
 
 import (
 	"reflect"
-	"strings"
 
 	"github.com/aschey/bubbleprompt/commandinput"
 	"github.com/charmbracelet/bubbles/key"
@@ -114,12 +113,12 @@ func (m *Model) updateArgs() {
 	suggestion := m.completer.getSelectedSuggestion()
 	if suggestion == nil {
 		// Nothing selected, default to the first matching suggestion
-		words := strings.Split(m.textInput.Value()[:m.textInput.Cursor()], " ")
+		words := m.delimiterRegex.Split(m.textInput.Value()[:m.textInput.Cursor()], 2)
 		if len(m.completer.suggestions) == 1 && words[0] == m.completer.suggestions[0].Text {
 			m.completer.selectedKey = m.completer.suggestions[0].key()
 		}
 
-		words = strings.Split(m.typedText, " ")
+		words = m.delimiterRegex.Split(m.typedText, 2)
 		filteredSuggestions := FilterHasPrefix(words[0], m.completer.suggestions)
 		if len(filteredSuggestions) > 0 {
 			suggestion = &filteredSuggestions[0]
@@ -240,8 +239,8 @@ func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 }
 
 func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
-	words := strings.Split(m.textInput.Value()[:m.textInput.Cursor()], " ")
-	typedWords := strings.Split(m.typedText, " ")
+	words := m.delimiterRegex.Split(m.textInput.Value()[:m.textInput.Cursor()], 2)
+	typedWords := m.delimiterRegex.Split(m.typedText, 2)
 	m.typedText = m.textInput.Value()
 	cmds = m.updatePosition(msg, cmds)
 
