@@ -1,6 +1,6 @@
 module github.com/aschey/bubbleprompt
 
-go 1.17
+go 1.18
 
 require (
 	github.com/MarvinJWendt/testza v0.2.15
