@@ -109,7 +109,6 @@ func (m *Model) updateCompleting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) 
 }
 
 func (m *Model) finishUpdate(msg tea.Msg) tea.Cmd {
-	// m.textInput.Args = []commandinput.Arg{}
 	suggestion := m.completer.getSelectedSuggestion()
 	if suggestion == nil {
 		// Nothing selected, default to the first matching suggestion
