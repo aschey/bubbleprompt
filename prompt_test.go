@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/MarvinJWendt/testza"
+	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/input/commandinput"
 	tuitest "github.com/aschey/tui-tester"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -15,7 +17,7 @@ type model struct {
 }
 
 type testData struct {
-	suggestions  Suggestions
+	suggestions  input.Suggestions
 	tester       tuitest.Tester
 	initialLines []string
 	model        model
@@ -35,17 +37,17 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
-func (m completerModel) completer(document Document, promptModel Model) Suggestions {
+func (m completerModel) completer(document Document, promptModel Model) input.Suggestions {
 	return FilterHasPrefix(document.TextBeforeCursor(), m.suggestions)
 }
 
-func executor(input string, selected *Suggestion, suggestions Suggestions) tea.Model {
+func executor(input string, selected *input.Suggestion, suggestions input.Suggestions) tea.Model {
 	return NewStringModel("result is " + input)
 }
 
 func setup(t *testing.T) testData {
-	suggestions := Suggestions{
-		{Text: "first-option", Description: "test desc", PositionalArgs: []PositionalArg{{Placeholder: "[test placeholder]"}}},
+	suggestions := input.Suggestions{
+		{Text: "first-option", Description: "test desc", PositionalArgs: []input.PositionalArg{{Placeholder: "[test placeholder]"}}},
 		{Text: "second-option", Description: "test desc2"},
 		{Text: "third-option", Description: "test desc3"},
 		{Text: "fourth-option", Description: "test desc4"},
@@ -54,9 +56,11 @@ func setup(t *testing.T) testData {
 
 	completerModel := completerModel{suggestions: suggestions}
 
+	textInput := commandinput.New()
 	model := model{prompt: New(
 		completerModel.completer,
 		executor,
+		textInput,
 	)}
 	model.prompt.ready = true
 	model.prompt.viewport = viewport.New(80, 30)
@@ -160,11 +164,11 @@ func TestChoosePrompt(t *testing.T) {
 	testza.AssertNoError(t, err)
 	// Check that proper styles are applied
 	testza.AssertContains(t, lines[0], testData.model.prompt.Formatters.SelectedSuggestion.Render(testData.suggestions[0].Text))
-	testza.AssertContains(t, lines[0], testData.suggestions[0].PositionalArgs[0].PlaceholderStyle.format(testData.suggestions[0].PositionalArgs[0].Placeholder))
+	testza.AssertContains(t, lines[0], testData.suggestions[0].PositionalArgs[0].PlaceholderStyle.Format(testData.suggestions[0].PositionalArgs[0].Placeholder))
 	maxNameLen := len("second-option")
-	testza.AssertContains(t, lines[1], testData.model.prompt.Formatters.Name.format(testData.suggestions[0].Text, maxNameLen, true))
+	testza.AssertContains(t, lines[1], testData.model.prompt.Formatters.Name.Format(testData.suggestions[0].Text, maxNameLen, true))
 	maxDescLen := len("test desc1")
-	testza.AssertContains(t, lines[1], testData.model.prompt.Formatters.Description.format(testData.suggestions[0].Description, maxDescLen, true))
+	testza.AssertContains(t, lines[1], testData.model.prompt.Formatters.Description.Format(testData.suggestions[0].Description, maxDescLen, true))
 
 	// Check that the selected text gets sent to the executor without the placeholder
 	testData.tester.SendByte(tuitest.KeyEnter)

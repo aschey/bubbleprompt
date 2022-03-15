@@ -1,4 +1,4 @@
-package prompt
+package input
 
 import "github.com/charmbracelet/lipgloss"
 
@@ -42,22 +42,22 @@ func (s Suggestion) render(selected bool, leftPadding string, maxNameLen int, ma
 	if completionText == "" {
 		completionText = s.Text
 	}
-	name := formatters.Name.format(completionText, maxNameLen, selected)
+	name := formatters.Name.Format(completionText, maxNameLen, selected)
 	description := ""
 	if len(s.Description) > 0 {
-		description = formatters.Description.format(s.Description, maxDescLen, selected)
+		description = formatters.Description.Format(s.Description, maxDescLen, selected)
 	}
 
 	line := lipgloss.JoinHorizontal(lipgloss.Bottom, leftPadding, name, description)
 	return line
 }
 
-func (s Suggestion) key() *string {
+func (s Suggestion) Key() *string {
 	key := s.Text + s.Description
 	return &key
 }
 
-func (s Suggestions) render(paddingSize int, listPosition int, formatters Formatters) []string {
+func (s Suggestions) Render(paddingSize int, listPosition int, formatters Formatters) []string {
 	maxNameLen := 0
 	maxDescLen := 0
 

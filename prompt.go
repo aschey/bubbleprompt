@@ -1,10 +1,9 @@
 package prompt
 
 import (
-	"regexp"
 	"strings"
 
-	"github.com/aschey/bubbleprompt/commandinput"
+	"github.com/aschey/bubbleprompt/input"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -13,13 +12,6 @@ import (
 
 type errMsg error
 
-type Formatters struct {
-	Name               SuggestionText
-	Description        SuggestionText
-	DefaultPlaceholder Text
-	SelectedSuggestion lipgloss.Style
-}
-
 type modelState int
 
 const (
@@ -27,49 +19,44 @@ const (
 	executing
 )
 
-type Executor func(input string, selected *Suggestion, suggestions Suggestions) tea.Model
+type Executor func(input string, selected *input.Suggestion, suggestions input.Suggestions) tea.Model
 
 type Model struct {
 	completer               completerModel
 	executor                Executor
-	textInput               commandinput.Model
+	textInput               input.Input
 	viewport                viewport.Model
-	Formatters              Formatters
+	Formatters              input.Formatters
 	previousCommands        []string
 	executorModel           *tea.Model
 	modelState              modelState
-	delimiterRegex          *regexp.Regexp
 	lastTypedCursorPosition int
 	typedText               string
 	ready                   bool
 	err                     error
 }
 
-func New(completer Completer, executor Executor, opts ...Option) Model {
-	textInput := commandinput.New()
-	textInput.Focus()
-
+func New(completer Completer, executor Executor, textInput input.Input, opts ...Option) Model {
 	model := Model{
-		completer:      newCompleterModel(completer),
-		executor:       executor,
-		textInput:      textInput,
-		delimiterRegex: regexp.MustCompile(`\s+`),
-		Formatters: Formatters{
-			Name: SuggestionText{
+		completer: newCompleterModel(completer),
+		executor:  executor,
+		textInput: textInput,
+		Formatters: input.Formatters{
+			Name: input.SuggestionText{
 				SelectedStyle: lipgloss.
 					NewStyle().
 					Foreground(lipgloss.Color("240")).
 					Background(lipgloss.Color("14")),
 				Style: lipgloss.NewStyle().Background(lipgloss.Color("14")),
 			},
-			Description: SuggestionText{
+			Description: input.SuggestionText{
 				SelectedStyle: lipgloss.
 					NewStyle().
 					Foreground(lipgloss.Color("240")).
 					Background(lipgloss.Color("37")),
 				Style: lipgloss.NewStyle().Background(lipgloss.Color("37")),
 			},
-			DefaultPlaceholder: Text{
+			DefaultPlaceholder: input.Text{
 				Style: lipgloss.NewStyle().Foreground(lipgloss.Color("6")),
 			},
 			SelectedSuggestion: lipgloss.NewStyle().Foreground(lipgloss.Color("10")),
@@ -85,20 +72,20 @@ func New(completer Completer, executor Executor, opts ...Option) Model {
 	return model
 }
 
-func FilterHasPrefix(search string, suggestions Suggestions) Suggestions {
+func FilterHasPrefix(search string, suggestions input.Suggestions) input.Suggestions {
 	return filterHasPrefix(search, suggestions,
-		func(s Suggestion) string { return s.Text })
+		func(s input.Suggestion) string { return s.Text })
 }
 
-func FilterCompletionTextHasPrefix(search string, suggestions Suggestions) Suggestions {
+func FilterCompletionTextHasPrefix(search string, suggestions input.Suggestions) input.Suggestions {
 	return filterHasPrefix(search, suggestions,
-		func(s Suggestion) string { return s.CompletionText })
+		func(s input.Suggestion) string { return s.CompletionText })
 }
 
-func filterHasPrefix(search string, suggestions Suggestions,
-	textFunc func(s Suggestion) string) Suggestions {
+func filterHasPrefix(search string, suggestions input.Suggestions,
+	textFunc func(s input.Suggestion) string) input.Suggestions {
 	cleanedSearch := strings.TrimSpace(strings.ToLower(search))
-	filtered := []Suggestion{}
+	filtered := input.Suggestions{}
 	for _, s := range suggestions {
 		if strings.HasPrefix(strings.ToLower(textFunc(s)), cleanedSearch) {
 			filtered = append(filtered, s)
@@ -106,29 +93,6 @@ func filterHasPrefix(search string, suggestions Suggestions,
 	}
 
 	return filtered
-}
-
-func (m *Model) SetPrompt(prompt string) {
-	m.textInput.Prompt = prompt
-}
-
-func (m *Model) SetDelimiterRegex(delimiterRegex string) error {
-	regex, err := regexp.Compile(delimiterRegex)
-	if err != nil {
-		return err
-	}
-	m.delimiterRegex = regex
-	m.textInput.SetDelimiterRegex(delimiterRegex)
-	return nil
-}
-
-func (m *Model) SetStringRegex(stringRegex string) error {
-	m.textInput.SetStringRegex(stringRegex)
-	return nil
-}
-
-func (m Model) CommandCompleted() bool {
-	return m.textInput.CommandCompleted()
 }
 
 func (m Model) Init() tea.Cmd {

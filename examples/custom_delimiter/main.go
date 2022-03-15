@@ -3,9 +3,12 @@ package main
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"time"
 
 	prompt "github.com/aschey/bubbleprompt"
+	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/input/commandinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -14,8 +17,8 @@ type model struct {
 }
 
 type completerModel struct {
-	suggestions       []prompt.Suggestion
-	filepathCompleter prompt.FilePathCompleter
+	suggestions input.Suggestions
+	textInput   *commandinput.Model
 }
 
 func (m model) Init() tea.Cmd {
@@ -32,22 +35,22 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
-func (m completerModel) completer(document prompt.Document, promptModel prompt.Model) prompt.Suggestions {
-	if promptModel.CommandCompleted() {
-		suggestions := prompt.Suggestions{
+func (m completerModel) completer(document prompt.Document, promptModel prompt.Model) input.Suggestions {
+	if m.textInput.CommandCompleted() {
+		suggestions := input.Suggestions{
 			{Text: "abc"},
 			{Text: "def"},
 		}
 		argText := ""
-		if len(document.ParsedInput.Args.Value) > 0 {
-			argText = document.ParsedInput.Args.Value[0].Value
+		if len(m.textInput.ParsedValue().Args.Value) > 0 {
+			argText = m.textInput.ParsedValue().Args.Value[0].Value
 		}
 		return prompt.FilterHasPrefix(argText, suggestions)
 	}
 	return prompt.FilterHasPrefix(document.TextBeforeCursor(), m.suggestions)
 }
 
-func executor(input string, selected *prompt.Suggestion, suggestions prompt.Suggestions) tea.Model {
+func executor(input string, selected *input.Suggestion, suggestions input.Suggestions) tea.Model {
 	return prompt.NewAsyncStringModel(func() string {
 		time.Sleep(100 * time.Millisecond)
 		return "test"
@@ -55,7 +58,7 @@ func executor(input string, selected *prompt.Suggestion, suggestions prompt.Sugg
 }
 
 func main() {
-	suggestions := []prompt.Suggestion{
+	suggestions := input.Suggestions{
 		{Text: "first-option", Description: "test description"},
 		{Text: "second-option", Description: "test description2"},
 		{Text: "third-option", Description: "test description3"},
@@ -63,14 +66,15 @@ func main() {
 		{Text: "fifth-option", Description: "test description5"},
 	}
 
-	completerModel := completerModel{suggestions: suggestions}
+	textInput := commandinput.New(commandinput.WithPrompt(">>> "),
+		commandinput.WithDelimiterRegex(regexp.MustCompile(`[\s\.]+`)),
+		commandinput.WithStringRegex(regexp.MustCompile(`[^\s\.]+`)))
+	completerModel := completerModel{suggestions: suggestions, textInput: textInput}
 
 	m := model{prompt: prompt.New(
 		completerModel.completer,
 		executor,
-		prompt.WithPrompt(">>> "),
-		prompt.WithDelimiterRegex(`[\s\.]+`),
-		prompt.WithStringRegex(`[^\s\.]+`),
+		textInput,
 	)}
 
 	if err := tea.NewProgram(m).Start(); err != nil {

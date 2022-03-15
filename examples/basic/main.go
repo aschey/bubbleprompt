@@ -6,6 +6,8 @@ import (
 	"time"
 
 	prompt "github.com/aschey/bubbleprompt"
+	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/input/commandinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -15,7 +17,8 @@ type model struct {
 }
 
 type completerModel struct {
-	suggestions []prompt.Suggestion
+	suggestions input.Suggestions
+	textInput   *commandinput.Model
 }
 
 func (m model) Init() tea.Cmd {
@@ -32,12 +35,12 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
-func (m completerModel) completer(document prompt.Document, promptModel prompt.Model) prompt.Suggestions {
+func (m completerModel) completer(document prompt.Document, promptModel prompt.Model) input.Suggestions {
 	time.Sleep(100 * time.Millisecond)
-	return prompt.FilterHasPrefix(document.CommandBeforeCursor(), m.suggestions)
+	return prompt.FilterHasPrefix(m.textInput.CommandBeforeCursor(), m.suggestions)
 }
 
-func executor(input string, selected *prompt.Suggestion, suggestions prompt.Suggestions) tea.Model {
+func executor(input string, selected *input.Suggestion, suggestions input.Suggestions) tea.Model {
 	return prompt.NewAsyncStringModel(func() string {
 		time.Sleep(100 * time.Millisecond)
 		return "test"
@@ -48,27 +51,28 @@ func main() {
 	placeholderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
 	argStyle1 := lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
 	argStyle2 := lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
-	suggestions := []prompt.Suggestion{
+	suggestions := input.Suggestions{
 		{Text: "first-option", Description: "test description",
-			PositionalArgs: []prompt.PositionalArg{
-				{Placeholder: "test1", PlaceholderStyle: prompt.Text{Style: placeholderStyle}, ArgStyle: prompt.Text{Style: argStyle1}},
-				{Placeholder: "test2", PlaceholderStyle: prompt.Text{Style: placeholderStyle}, ArgStyle: prompt.Text{Style: argStyle2}},
+			PositionalArgs: []input.PositionalArg{
+				{Placeholder: "test1", PlaceholderStyle: input.Text{Style: placeholderStyle}, ArgStyle: input.Text{Style: argStyle1}},
+				{Placeholder: "test2", PlaceholderStyle: input.Text{Style: placeholderStyle}, ArgStyle: input.Text{Style: argStyle2}},
 			}},
 		{Text: "second-option", Description: "test description2"},
 		{Text: "third-option", Description: "test description3"},
 		{Text: "fourth-option", Description: "test description4"},
 		{Text: "fifth-option", Description: "test description5",
-			PositionalArgs: []prompt.PositionalArg{
-				{Placeholder: "abc", PlaceholderStyle: prompt.Text{Style: placeholderStyle}},
+			PositionalArgs: []input.PositionalArg{
+				{Placeholder: "abc", PlaceholderStyle: input.Text{Style: placeholderStyle}},
 			}},
 	}
 
-	completerModel := completerModel{suggestions: suggestions}
+	textInput := commandinput.New(commandinput.WithPrompt(">>> "))
+	completerModel := completerModel{suggestions: suggestions, textInput: textInput}
 
 	m := model{prompt: prompt.New(
 		completerModel.completer,
 		executor,
-		prompt.WithPrompt(">>> "),
+		textInput,
 	)}
 
 	if err := tea.NewProgram(m).Start(); err != nil {

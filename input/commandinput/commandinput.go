@@ -2,10 +2,12 @@ package commandinput
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
+	"github.com/aschey/bubbleprompt/input"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -21,9 +23,9 @@ type Arg struct {
 type Model struct {
 	textinput        textinput.Model
 	Placeholder      string
-	Prompt           string
-	delimiterRegex   string
-	stringRegex      string
+	prompt           string
+	delimiterRegex   *regexp.Regexp
+	stringRegex      *regexp.Regexp
 	Args             []Arg
 	PromptStyle      lipgloss.Style
 	TextStyle        lipgloss.Style
@@ -33,47 +35,48 @@ type Model struct {
 	parsedText       *Statement
 }
 
-func New() Model {
+func New(opts ...Option) *Model {
 	textinput := textinput.New()
-
-	m := Model{
+	textinput.Focus()
+	model := &Model{
 		textinput:        textinput,
 		Placeholder:      "",
-		Prompt:           "> ",
+		prompt:           "> ",
 		PlaceholderStyle: textinput.PlaceholderStyle,
+		parsedText:       &Statement{},
+		delimiterRegex:   regexp.MustCompile(`\s+`),
+		stringRegex:      regexp.MustCompile(`[^\s]+`),
 	}
-	m.buildParser()
-	return m
+	for _, opt := range opts {
+		if err := opt(model); err != nil {
+			panic(err)
+		}
+	}
+
+	model.buildParser()
+	return model
 }
 
 func (m *Model) buildParser() {
-	delimiterRegex := m.delimiterRegex
-	stringRegex := m.stringRegex
-	if delimiterRegex == "" {
-		delimiterRegex = `\s+`
-	}
-	if stringRegex == "" {
-		stringRegex = `[^\s]+`
-	}
 	lexer := lexer.MustSimple([]lexer.Rule{
 		{Name: "QuotedString", Pattern: `"[^"]*"`},
-		{Name: `String`, Pattern: stringRegex},
-		{Name: "whitespace", Pattern: delimiterRegex},
+		{Name: `String`, Pattern: m.stringRegex.String()},
+		{Name: "whitespace", Pattern: m.delimiterRegex.String()},
 	})
 	parser := participle.MustBuild(&Statement{}, participle.Lexer(lexer))
 	m.parser = parser
 }
 
-func (m Model) Init() tea.Cmd {
+func (m *Model) Init() tea.Cmd {
 	return textinput.Blink
 }
 
-func (m *Model) SetDelimiterRegex(delimiterRegex string) {
+func (m *Model) SetDelimiterRegex(delimiterRegex *regexp.Regexp) {
 	m.delimiterRegex = delimiterRegex
 	m.buildParser()
 }
 
-func (m *Model) SetStringRegex(stringRegex string) {
+func (m *Model) SetStringRegex(stringRegex *regexp.Regexp) {
 	m.stringRegex = stringRegex
 	m.buildParser()
 }
@@ -94,7 +97,7 @@ type ident struct {
 	Value string `parser:"@QuotedString | @String"`
 }
 
-func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
+func (m *Model) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
 	m.textinput, cmd = m.textinput.Update(msg)
 
@@ -106,19 +109,65 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 	m.parsedText = expr
 
-	return m, cmd
+	return cmd
+}
+
+func (m *Model) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion) tea.Cmd {
+	m.Args = []Arg{}
+
+	if suggestion == nil {
+		// Didn't find any matching suggestions, reset
+		m.Placeholder = ""
+	} else {
+		m.Placeholder = suggestion.Text
+		for _, arg := range suggestion.PositionalArgs {
+			m.Args = append(m.Args, Arg{
+				Text:             arg.Placeholder,
+				PlaceholderStyle: arg.PlaceholderStyle.Style,
+				ArgStyle:         arg.ArgStyle.Style})
+		}
+	}
+
+	return nil
+}
+
+func (m *Model) OnSuggestionChanged(suggestion input.Suggestion) {
+	tokenOffset := m.TokenOffset()
+
+	text := m.Value()
+	if tokenOffset > -1 {
+		m.SetValue(text[:tokenOffset] + suggestion.Text)
+	} else {
+		m.SetValue(suggestion.Text)
+	}
+}
+
+func (m *Model) CompletionText(text string) string {
+	return m.delimiterRegex.Split(text, 2)[0]
 }
 
 func (m *Model) Focus() tea.Cmd {
 	return m.textinput.Focus()
 }
 
-func (m Model) Value() string {
+func (m *Model) Value() string {
 	return m.textinput.Value()
 }
 
-func (m Model) ParsedValue() Statement {
+func (m *Model) ParsedValue() Statement {
 	return *m.parsedText
+}
+
+func (m *Model) CommandBeforeCursor() string {
+	parsed := m.ParsedValue()
+	if m.Cursor() >= len(parsed.Command.Value) {
+		return parsed.Command.Value
+	}
+	return parsed.Command.Value[:m.Cursor()]
+}
+
+func (m *Model) SetTextStyle(style lipgloss.Style) {
+	m.TextStyle = style
 }
 
 func (m *Model) SetValue(s string) {
@@ -144,6 +193,30 @@ func (m Model) Focused() bool {
 	return m.textinput.Focused()
 }
 
+func (m *Model) Prompt() string {
+	return m.prompt
+}
+
+func (m *Model) SetPrompt(prompt string) {
+	m.prompt = prompt
+}
+
+func (m Model) TokenOffset() int {
+	cursor := m.Cursor()
+	args := m.parsedText.Args.Value
+	for i := len(m.parsedText.Args.Value) - 1; i >= 0; i-- {
+		if cursor >= args[i].Pos.Offset {
+			return m.parsedText.Args.Value[i].Pos.Offset
+		}
+	}
+
+	if m.CommandCompleted() {
+		return cursor
+	} else {
+		return -1
+	}
+}
+
 func (m Model) LastArg() *ident {
 	parsed := *m.parsedText
 	if len(parsed.Args.Value) == 0 {
@@ -156,7 +229,7 @@ func (m Model) CommandCompleted() bool {
 	if m.parsedText == nil {
 		return false
 	}
-	return m.Cursor() > len(m.parsedText.Command.Value)
+	return m.Cursor() > m.parsedText.Command.Pos.Offset+len(m.parsedText.Command.Value)
 }
 
 func (m *Model) Blur() {
@@ -209,5 +282,5 @@ func (m Model) View() string {
 
 	viewBuilder.render(extraSpace, lipgloss.NewStyle())
 
-	return m.PromptStyle.Render(m.Prompt) + viewBuilder.getView()
+	return m.PromptStyle.Render(m.prompt) + viewBuilder.getView()
 }

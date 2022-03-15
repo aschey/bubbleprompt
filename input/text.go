@@ -1,4 +1,4 @@
-package prompt
+package input
 
 import "github.com/charmbracelet/lipgloss"
 
@@ -9,7 +9,7 @@ type Text struct {
 	Formatter func(text string) string
 }
 
-func (p Text) format(text string) string {
+func (p Text) Format(text string) string {
 	if p.Formatter == nil {
 		return p.Style.Render(text)
 	}
@@ -22,7 +22,7 @@ type SuggestionText struct {
 	Formatter     Formatter
 }
 
-func (t SuggestionText) format(text string, maxLen int, selected bool) string {
+func (t SuggestionText) Format(text string, maxLen int, selected bool) string {
 
 	if t.Formatter == nil {
 		style := t.Style

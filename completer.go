@@ -3,7 +3,7 @@ package prompt
 import (
 	"strings"
 
-	"github.com/aschey/bubbleprompt/commandinput"
+	"github.com/aschey/bubbleprompt/input"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -14,14 +14,14 @@ const (
 	running
 )
 
-type Completer func(document Document, prompt Model) Suggestions
+type Completer func(document Document, prompt Model) input.Suggestions
 
-type completionMsg Suggestions
+type completionMsg input.Suggestions
 
 type completerModel struct {
 	completerFunc Completer
 	state         completerState
-	suggestions   Suggestions
+	suggestions   input.Suggestions
 	selectedKey   *string
 	prevText      string
 	queueNext     bool
@@ -49,7 +49,7 @@ func (c completerModel) Update(msg tea.Msg, prompt Model) (completerModel, tea.C
 			c.ignoreCount--
 		} else {
 			c.state = idle
-			c.suggestions = Suggestions(msg)
+			c.suggestions = input.Suggestions(msg)
 			if c.getSelectedSuggestion() == nil {
 				c.unselectSuggestion()
 			}
@@ -89,12 +89,10 @@ func (c *completerModel) updateCompletions(prompt Model) tea.Cmd {
 	c.state = running
 	c.prevText = textBeforeCursor
 	in := input.Value()
-	parsed := input.ParsedValue()
 
 	return func() tea.Msg {
 		filtered := c.completerFunc(Document{
 			Text:           in,
-			ParsedInput:    parsed,
 			CursorPosition: cursorPos,
 		}, prompt)
 		return completionMsg(filtered)
@@ -114,7 +112,6 @@ func (c *completerModel) resetCompletions(prompt Model) tea.Cmd {
 	return func() tea.Msg {
 		filtered := c.completerFunc(Document{
 			Text:           "",
-			ParsedInput:    commandinput.Statement{},
 			CursorPosition: 0,
 		}, prompt)
 		return completionMsg(filtered)
@@ -135,7 +132,7 @@ func (c *completerModel) nextSuggestion() {
 	}
 	index := c.getSelectedIndex()
 	if index < len(c.suggestions)-1 {
-		c.selectedKey = c.suggestions[index+1].key()
+		c.selectedKey = c.suggestions[index+1].Key()
 	} else {
 		c.unselectSuggestion()
 	}
@@ -148,7 +145,7 @@ func (c *completerModel) previousSuggestion() {
 
 	index := c.getSelectedIndex()
 	if index > 0 {
-		c.selectedKey = c.suggestions[index-1].key()
+		c.selectedKey = c.suggestions[index-1].Key()
 	} else {
 		c.unselectSuggestion()
 	}
@@ -157,7 +154,7 @@ func (c *completerModel) previousSuggestion() {
 func (c *completerModel) getSelectedIndex() int {
 	if c.isSuggestionSelected() {
 		for i, suggestion := range c.suggestions {
-			if *suggestion.key() == *c.selectedKey {
+			if *suggestion.Key() == *c.selectedKey {
 				return i
 			}
 		}
@@ -165,10 +162,10 @@ func (c *completerModel) getSelectedIndex() int {
 	return -1
 }
 
-func (c *completerModel) getSelectedSuggestion() *Suggestion {
+func (c *completerModel) getSelectedSuggestion() *input.Suggestion {
 	if c.isSuggestionSelected() {
 		for _, suggestion := range c.suggestions {
-			if *suggestion.key() == *c.selectedKey {
+			if *suggestion.Key() == *c.selectedKey {
 				return &suggestion
 			}
 		}

@@ -1,15 +1,11 @@
 package prompt
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"github.com/aschey/bubbleprompt/input"
+	"github.com/charmbracelet/lipgloss"
+)
 
 type Option func(model *Model) error
-
-func WithPrompt(prompt string) Option {
-	return func(model *Model) error {
-		model.SetPrompt(prompt)
-		return nil
-	}
-}
 
 func WithNameStyle(style lipgloss.Style) Option {
 	return func(model *Model) error {
@@ -25,7 +21,7 @@ func WithSelectedNameStyle(style lipgloss.Style) Option {
 	}
 }
 
-func WithNameFormatter(nameFormatter Formatter) Option {
+func WithNameFormatter(nameFormatter input.Formatter) Option {
 	return func(model *Model) error {
 		model.Formatters.Name.Formatter = nameFormatter
 		return nil
@@ -46,7 +42,7 @@ func WithSelectedDescriptionStyle(style lipgloss.Style) Option {
 	}
 }
 
-func WithDescriptionFormatter(descriptionFormatter Formatter) Option {
+func WithDescriptionFormatter(descriptionFormatter input.Formatter) Option {
 	return func(model *Model) error {
 		model.Formatters.Description.Formatter = descriptionFormatter
 		return nil
@@ -71,17 +67,5 @@ func WithSelectedSuggestionStyle(style lipgloss.Style) Option {
 	return func(model *Model) error {
 		model.Formatters.SelectedSuggestion = style
 		return nil
-	}
-}
-
-func WithDelimiterRegex(delimiterRegex string) Option {
-	return func(model *Model) error {
-		return model.SetDelimiterRegex(delimiterRegex)
-	}
-}
-
-func WithStringRegex(stringRegex string) Option {
-	return func(model *Model) error {
-		return model.SetStringRegex(stringRegex)
 	}
 }
