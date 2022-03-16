@@ -40,7 +40,7 @@ func (m completerModel) completer(document prompt.Document, promptModel prompt.M
 		filepath := ""
 		parsed := m.textInput.ParsedValue()
 		if len(parsed.Args.Value) > 0 {
-			filepath = parsed.Args.Value[0].Value
+			filepath = m.textInput.CurrentTokenBeforeCursor()
 		}
 		return m.filepathCompleter.Complete(filepath)
 	}

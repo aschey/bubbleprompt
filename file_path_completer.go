@@ -38,9 +38,21 @@ func cleanFilePath(path string) (dir string, base string, err error) {
 		}
 		path = filepath.Join(me.HomeDir, path[1:])
 	}
+	stripLast := false
+	if strings.HasSuffix(path, ".") {
+		// filepath functions treat "." as current directory
+		// Need to add something to the end to treat the "." as a normal character
+		path += "!"
+		stripLast = true
+	}
+
 	path = filepath.Clean(os.ExpandEnv(path))
 	dir = filepath.Dir(path)
 	base = filepath.Base(path)
+	if stripLast {
+		base = base[:len(base)-1]
+		path = path[:len(path)-1]
+	}
 
 	if endsWithSeparator {
 		dir = path + string(os.PathSeparator) // Append slash(in POSIX) if path ends with slash.
@@ -88,18 +100,15 @@ func (c *FilePathCompleter) Complete(path string) []input.Suggestion {
 
 	cwd, err := os.Getwd()
 	if err != nil {
-		fmt.Println("Error getting cwd", err)
 		return nil
 	}
 
 	files, err := os.ReadDir(dir)
 	if err != nil {
-		fmt.Println("Error getting path", err)
 		return nil
 	}
 	filePath, err := filepath.Abs(dir)
 	if err != nil {
-		fmt.Println("Error getting path", err)
 		return nil
 	}
 

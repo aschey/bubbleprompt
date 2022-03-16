@@ -217,6 +217,22 @@ func (m Model) TokenOffset() int {
 	}
 }
 
+func (m Model) CurrentTokenBeforeCursor() string {
+	cursor := m.Cursor()
+	args := m.parsedText.Args.Value
+	for i := len(m.parsedText.Args.Value) - 1; i >= 0; i-- {
+		if cursor >= args[i].Pos.Offset {
+			end := cursor - args[i].Pos.Offset
+			if end < len(args[i].Value) {
+				return args[i].Value[:end]
+			}
+			return args[i].Value
+		}
+	}
+
+	return m.parsedText.Command.Value[:cursor]
+}
+
 func (m Model) LastArg() *ident {
 	parsed := *m.parsedText
 	if len(parsed.Args.Value) == 0 {
