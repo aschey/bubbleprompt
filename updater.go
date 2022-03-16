@@ -6,7 +6,6 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
@@ -127,16 +126,11 @@ func (m *Model) finishUpdate(msg tea.Msg) tea.Cmd {
 }
 
 func (m *Model) finalizeExecutor(executorModel tea.Model) {
-	textValue := m.textInput.Value()
 	executorValue := executorModel.View()
 	m.completer.unselectSuggestion()
-	// Store the whole user input including the prompt state and the executor result
-	// However note that we don't include all of textInput.View() because we don't want to include the cursor
-	commandResult := lipgloss.JoinVertical(lipgloss.Left, m.textInput.Prompt()+textValue, executorValue)
-	m.previousCommands = append(m.previousCommands, commandResult)
+	// Store the final executor view in the history
+	m.previousCommands = append(m.previousCommands, executorValue)
 	m.updateExecutor(nil)
-	// Reset text after executor finished
-	m.textInput.SetValue("")
 }
 
 func (m *Model) updateWindowSizeMsg(msg tea.WindowSizeMsg) {
@@ -193,10 +187,14 @@ func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	curSuggestion := m.completer.getSelectedSuggestion()
 	textValue := m.textInput.Value()
 	// Reset all text and selection state
-	// We'll reset the text input after the executor finished so we can capture the final output
 	m.typedText = ""
 	m.lastTypedCursorPosition = 0
 	m.completer.unselectSuggestion()
+
+	// Store the whole user input including the prompt state and the executor result
+	// However note that we don't include all of textInput.View() because we don't want to include the cursor
+	m.previousCommands = append(m.previousCommands, m.textInput.Prompt()+textValue)
+	m.textInput.SetValue("")
 
 	executorModel := m.executor(textValue, curSuggestion, m.completer.suggestions)
 	// Performance optimization: if this is a string model, we don't need to go through the whole update cycle

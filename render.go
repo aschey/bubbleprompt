@@ -7,8 +7,6 @@ import (
 )
 
 func (m Model) renderExecuting(lines []string) []string {
-	textView := m.textInput.View()
-	lines = append(lines, textView)
 	executorModel := *m.executorModel
 	// Add a newline to ensure the text gets pushed up
 	// this ensures the text doesn't jump if the completer takes a while to finish
