@@ -69,3 +69,10 @@ func WithSelectedSuggestionStyle(style lipgloss.Style) Option {
 		return nil
 	}
 }
+
+func WithMaxSuggestions(maxSuggestions int) Option {
+	return func(model *Model) error {
+		model.MaxSuggestions = maxSuggestions
+		return nil
+	}
+}

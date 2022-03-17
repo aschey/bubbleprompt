@@ -51,7 +51,7 @@ func (m Model) render() string {
 	}
 
 	// Reserve height for prompts that were filtered out
-	extraHeight := 5 - suggestionLength - 1
+	extraHeight := m.MaxSuggestions - suggestionLength - 1
 	if extraHeight > 0 {
 		extraLines := strings.Repeat("\n", extraHeight)
 		lines = append(lines, extraLines)

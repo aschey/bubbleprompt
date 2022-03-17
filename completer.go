@@ -22,6 +22,8 @@ type completerModel struct {
 	completerFunc Completer
 	state         completerState
 	suggestions   input.Suggestions
+	scroll        int
+	prevScroll    int
 	selectedKey   *string
 	prevText      string
 	queueNext     bool

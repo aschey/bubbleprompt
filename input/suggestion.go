@@ -47,8 +47,12 @@ func (s Suggestion) render(selected bool, leftPadding string, maxNameLen int, ma
 	if len(s.Description) > 0 {
 		description = formatters.Description.Format(s.Description, maxDescLen, selected)
 	}
-
-	line := lipgloss.JoinHorizontal(lipgloss.Bottom, leftPadding, name, description)
+	scrollbar := formatters.Scrollbar.Format(" ")
+	if selected {
+		// TODO do actual scrollbar calculation
+		scrollbar = formatters.ScrollbarThumb.Format(" ")
+	}
+	line := lipgloss.JoinHorizontal(lipgloss.Bottom, leftPadding, name, description, scrollbar)
 	return line
 }
 

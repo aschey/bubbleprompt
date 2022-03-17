@@ -28,6 +28,7 @@ type Model struct {
 	viewport                viewport.Model
 	Formatters              input.Formatters
 	previousCommands        []string
+	MaxSuggestions          int
 	executorModel           *tea.Model
 	modelState              modelState
 	lastTypedCursorPosition int
@@ -38,9 +39,10 @@ type Model struct {
 
 func New(completer Completer, executor Executor, textInput input.Input, opts ...Option) Model {
 	model := Model{
-		completer: newCompleterModel(completer),
-		executor:  executor,
-		textInput: textInput,
+		completer:      newCompleterModel(completer),
+		executor:       executor,
+		textInput:      textInput,
+		MaxSuggestions: 6,
 		Formatters: input.Formatters{
 			Name: input.SuggestionText{
 				SelectedStyle: lipgloss.
@@ -60,6 +62,12 @@ func New(completer Completer, executor Executor, textInput input.Input, opts ...
 				Style: lipgloss.NewStyle().Foreground(lipgloss.Color("6")),
 			},
 			SelectedSuggestion: lipgloss.NewStyle().Foreground(lipgloss.Color("10")),
+			Scrollbar: input.Text{
+				Style: lipgloss.NewStyle().Background(lipgloss.Color("14")),
+			},
+			ScrollbarThumb: input.Text{
+				Style: lipgloss.NewStyle().Background(lipgloss.Color("240")),
+			},
 		},
 	}
 
