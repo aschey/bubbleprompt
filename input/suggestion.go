@@ -37,7 +37,7 @@ type Suggestion struct {
 	Flags          []Flag
 }
 
-func (s Suggestion) render(selected bool, leftPadding string, maxNameLen int, maxDescLen int, formatters Formatters) string {
+func (s Suggestion) render(selected bool, leftPadding string, maxNameLen int, maxDescLen int, formatters Formatters, scrollbar string) string {
 	completionText := s.CompletionText
 	if completionText == "" {
 		completionText = s.Text
@@ -47,11 +47,7 @@ func (s Suggestion) render(selected bool, leftPadding string, maxNameLen int, ma
 	if len(s.Description) > 0 {
 		description = formatters.Description.Format(s.Description, maxDescLen, selected)
 	}
-	scrollbar := formatters.Scrollbar.Format(" ")
-	if selected {
-		// TODO do actual scrollbar calculation
-		scrollbar = formatters.ScrollbarThumb.Format(" ")
-	}
+
 	line := lipgloss.JoinHorizontal(lipgloss.Bottom, leftPadding, name, description, scrollbar)
 	return line
 }
@@ -61,7 +57,7 @@ func (s Suggestion) Key() *string {
 	return &key
 }
 
-func (s Suggestions) Render(paddingSize int, listPosition int, formatters Formatters) []string {
+func (s Suggestions) Render(paddingSize int, listPosition int, formatters Formatters, scrollbar string, scrollbarThumb string) []string {
 	maxNameLen := 0
 	maxDescLen := 0
 
@@ -84,7 +80,12 @@ func (s Suggestions) Render(paddingSize int, listPosition int, formatters Format
 	prompts := []string{}
 	for i, cur := range s {
 		selected := i == listPosition
-		line := cur.render(selected, leftPadding, maxNameLen, maxDescLen, formatters)
+		scrollbarView := scrollbar
+		if selected {
+			// TODO do actual scrollbar calculation
+			scrollbarView = scrollbarThumb
+		}
+		line := cur.render(selected, leftPadding, maxNameLen, maxDescLen, formatters, scrollbarView)
 		prompts = append(prompts, line)
 	}
 	return prompts

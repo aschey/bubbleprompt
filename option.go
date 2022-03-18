@@ -70,6 +70,20 @@ func WithSelectedSuggestionStyle(style lipgloss.Style) Option {
 	}
 }
 
+func WithScrollbar(color lipgloss.TerminalColor) Option {
+	return func(model *Model) error {
+		model.SetScrollbarColor(color)
+		return nil
+	}
+}
+
+func WithScrollbarThumb(color lipgloss.TerminalColor) Option {
+	return func(model *Model) error {
+		model.SetScrollbarThumbColor(color)
+		return nil
+	}
+}
+
 func WithMaxSuggestions(maxSuggestions int) Option {
 	return func(model *Model) error {
 		model.MaxSuggestions = maxSuggestions

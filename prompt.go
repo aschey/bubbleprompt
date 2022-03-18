@@ -31,6 +31,8 @@ type Model struct {
 	MaxSuggestions          int
 	executorModel           *tea.Model
 	modelState              modelState
+	scrollbar               string
+	scrollbarThumb          string
 	lastTypedCursorPosition int
 	typedText               string
 	ready                   bool
@@ -62,15 +64,10 @@ func New(completer Completer, executor Executor, textInput input.Input, opts ...
 				Style: lipgloss.NewStyle().Foreground(lipgloss.Color("6")),
 			},
 			SelectedSuggestion: lipgloss.NewStyle().Foreground(lipgloss.Color("10")),
-			Scrollbar: input.Text{
-				Style: lipgloss.NewStyle().Background(lipgloss.Color("14")),
-			},
-			ScrollbarThumb: input.Text{
-				Style: lipgloss.NewStyle().Background(lipgloss.Color("240")),
-			},
 		},
 	}
-
+	model.SetScrollbarColor(lipgloss.Color("14"))
+	model.SetScrollbarThumbColor(lipgloss.Color("240"))
 	for _, opt := range opts {
 		if err := opt(&model); err != nil {
 			panic(err)
@@ -78,6 +75,14 @@ func New(completer Completer, executor Executor, textInput input.Input, opts ...
 	}
 
 	return model
+}
+
+func (m *Model) SetScrollbarColor(color lipgloss.TerminalColor) {
+	m.scrollbar = lipgloss.NewStyle().Background(color).Render(" ")
+}
+
+func (m *Model) SetScrollbarThumbColor(color lipgloss.TerminalColor) {
+	m.scrollbarThumb = lipgloss.NewStyle().Background(color).Render(" ")
 }
 
 func FilterHasPrefix(search string, suggestions input.Suggestions) input.Suggestions {
