@@ -19,7 +19,7 @@ const (
 	executing
 )
 
-type Executor func(input string, selected *input.Suggestion, suggestions []input.Suggestion) tea.Model
+type Executor func(input string, selected *input.Suggestion, suggestions []input.Suggestion) (tea.Model, error)
 
 type Model struct {
 	completer               completerModel
@@ -28,7 +28,7 @@ type Model struct {
 	viewport                viewport.Model
 	Formatters              input.Formatters
 	previousCommands        []string
-	executorModel           *tea.Model
+	executorModel           *executorModel
 	modelState              modelState
 	scrollbar               string
 	scrollbarThumb          string
@@ -40,29 +40,10 @@ type Model struct {
 
 func New(completer Completer, executor Executor, textInput input.Input, opts ...Option) Model {
 	model := Model{
-		completer: newCompleterModel(completer, 6),
-		executor:  executor,
-		textInput: textInput,
-		Formatters: input.Formatters{
-			Name: input.SuggestionText{
-				SelectedStyle: lipgloss.
-					NewStyle().
-					Foreground(lipgloss.Color("240")).
-					Background(lipgloss.Color("14")),
-				Style: lipgloss.NewStyle().Background(lipgloss.Color("14")),
-			},
-			Description: input.SuggestionText{
-				SelectedStyle: lipgloss.
-					NewStyle().
-					Foreground(lipgloss.Color("240")).
-					Background(lipgloss.Color("37")),
-				Style: lipgloss.NewStyle().Background(lipgloss.Color("37")),
-			},
-			DefaultPlaceholder: input.Text{
-				Style: lipgloss.NewStyle().Foreground(lipgloss.Color("6")),
-			},
-			SelectedSuggestion: lipgloss.NewStyle().Foreground(lipgloss.Color("10")),
-		},
+		completer:  newCompleterModel(completer, 6),
+		executor:   executor,
+		textInput:  textInput,
+		Formatters: input.DefaultFormatters(),
 	}
 	model.SetScrollbarColor(lipgloss.Color("14"))
 	model.SetScrollbarThumbColor(lipgloss.Color("240"))

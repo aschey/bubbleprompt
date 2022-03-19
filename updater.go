@@ -63,7 +63,7 @@ func (m *Model) updateExecuting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) {
 	// The only way to do this reliably without actually invoking the function is
 	// to use reflection to check that the address is equal to tea.Quit's address
 	if cmd != nil && reflect.ValueOf(cmd).Pointer() == reflect.ValueOf(tea.Quit).Pointer() {
-		m.finalizeExecutor(executorModel)
+		m.finalizeExecutor(m.executorModel)
 		// Re-focus input when finished
 		return append(cmds, m.textInput.Focus()), true
 	} else {
@@ -125,12 +125,11 @@ func (m *Model) finishUpdate(msg tea.Msg) tea.Cmd {
 	return m.textInput.OnUpdateFinish(msg, suggestion)
 }
 
-func (m *Model) finalizeExecutor(executorModel tea.Model) {
-	executorValue := executorModel.View()
+func (m *Model) finalizeExecutor(executorModel *executorModel) {
 	m.completer.unselectSuggestion()
 	// Store the final executor view in the history
-	m.previousCommands = append(m.previousCommands, executorValue)
-	m.updateExecutor(nil)
+	m.previousCommands = append(m.previousCommands, executorModel.View())
+	m.updateExecutor(nil, nil)
 }
 
 func (m *Model) updateWindowSizeMsg(msg tea.WindowSizeMsg) {
@@ -178,11 +177,12 @@ func (m *Model) updateChosenListEntry(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd 
 	}
 }
 
-func (m *Model) updateExecutor(executor *tea.Model) {
-	m.executorModel = executor
-	if m.executorModel == nil {
+func (m *Model) updateExecutor(executor *tea.Model, err error) {
+	if executor == nil {
+		m.executorModel = nil
 		m.modelState = completing
 	} else {
+		m.executorModel = newExecutor(*executor, m.Formatters.ErrorText, err)
 		m.modelState = executing
 	}
 }
@@ -200,14 +200,15 @@ func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	m.previousCommands = append(m.previousCommands, m.textInput.Prompt()+textValue)
 	m.textInput.SetValue("")
 
-	executorModel := m.executor(textValue, curSuggestion, m.completer.suggestions)
+	executorModel, err := m.executor(textValue, curSuggestion, m.completer.suggestions)
+
 	// Performance optimization: if this is a string model, we don't need to go through the whole update cycle
 	// Just call the view method once and finalize the result
 	// This makes the output a little cleaner if the completer function is slow
 	if stringModel, ok := executorModel.(StringModel); ok {
-		m.finalizeExecutor(stringModel)
+		m.finalizeExecutor(newExecutor(stringModel, m.Formatters.ErrorText, err))
 	} else {
-		m.updateExecutor(&executorModel)
+		m.updateExecutor(&executorModel, err)
 		cmds = append(cmds, executorModel.Init())
 	}
 

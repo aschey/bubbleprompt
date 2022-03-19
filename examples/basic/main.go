@@ -40,11 +40,11 @@ func (m completerModel) completer(document prompt.Document, promptModel prompt.M
 	return prompt.FilterHasPrefix(m.textInput.CommandBeforeCursor(), m.suggestions)
 }
 
-func executor(input string, selected *input.Suggestion, suggestions []input.Suggestion) tea.Model {
+func executor(input string, selected *input.Suggestion, suggestions []input.Suggestion) (tea.Model, error) {
 	return prompt.NewAsyncStringModel(func() string {
 		time.Sleep(100 * time.Millisecond)
 		return "test"
-	})
+	}), nil
 }
 
 func main() {

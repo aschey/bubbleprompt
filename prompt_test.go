@@ -41,8 +41,8 @@ func (m completerModel) completer(document Document, promptModel Model) []input.
 	return FilterHasPrefix(document.TextBeforeCursor(), m.suggestions)
 }
 
-func executor(input string, selected *input.Suggestion, suggestions []input.Suggestion) tea.Model {
-	return NewStringModel("result is " + input)
+func executor(input string, selected *input.Suggestion, suggestions []input.Suggestion) (tea.Model, error) {
+	return NewStringModel("result is " + input), nil
 }
 
 func setup(t *testing.T) testData {
