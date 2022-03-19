@@ -88,7 +88,7 @@ func (m *Model) updateCompleting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) 
 
 		// Select next/previous list entry
 		case tea.KeyUp, tea.KeyDown, tea.KeyTab:
-			m.updateChosenListEntry(msg)
+			cmds = m.updateChosenListEntry(msg, cmds)
 
 		case tea.KeyEnter:
 			cmds = m.submit(msg, cmds)
@@ -146,7 +146,7 @@ func (m *Model) updateWindowSizeMsg(msg tea.WindowSizeMsg) {
 	}
 }
 
-func (m *Model) updateChosenListEntry(msg tea.KeyMsg) {
+func (m *Model) updateChosenListEntry(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	if !m.completer.isSuggestionSelected() {
 		// No suggestion currently suggested, store the last cursor position before selecting
 		// so we can restore it later
@@ -167,10 +167,14 @@ func (m *Model) updateChosenListEntry(msg tea.KeyMsg) {
 
 		// Move cursor to the end of the line
 		m.textInput.SetCursor(len(m.textInput.Value()) - curSuggestion.CursorOffset)
+		return nil
 	} else {
 		// If no selection, set the text back to the last thing the user typed
 		m.textInput.SetValue(m.typedText)
+		m.lastTypedCursorPosition = len(m.typedText)
 		m.textInput.SetCursor(m.lastTypedCursorPosition)
+		// Need to update completions since we changed the text and the cursor position
+		return append(cmds, m.completer.updateCompletions(*m))
 	}
 }
 

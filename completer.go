@@ -56,6 +56,9 @@ func (c completerModel) Update(msg tea.Msg, prompt Model) (completerModel, tea.C
 		} else {
 			c.state = idle
 			c.suggestions = msg
+			if c.scroll > len(c.suggestions)-1 {
+				c.unselectSuggestion()
+			}
 			if c.getSelectedSuggestion() == nil {
 				c.unselectSuggestion()
 			}
