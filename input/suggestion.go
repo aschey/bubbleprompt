@@ -37,7 +37,7 @@ type Suggestion struct {
 	Flags          []Flag
 }
 
-func (s Suggestion) render(selected bool, leftPadding string, maxNameLen int, maxDescLen int, formatters Formatters, scrollbar string) string {
+func (s Suggestion) Render(selected bool, leftPadding string, maxNameLen int, maxDescLen int, formatters Formatters, scrollbar string) string {
 	completionText := s.CompletionText
 	if completionText == "" {
 		completionText = s.Text
@@ -55,38 +55,4 @@ func (s Suggestion) render(selected bool, leftPadding string, maxNameLen int, ma
 func (s Suggestion) Key() *string {
 	key := s.Text + s.Description
 	return &key
-}
-
-func (s Suggestions) Render(paddingSize int, listPosition int, formatters Formatters, scrollbar string, scrollbarThumb string) []string {
-	maxNameLen := 0
-	maxDescLen := 0
-
-	// Determine longest name and description to calculate padding
-	for _, cur := range s {
-		if len(cur.Text) > maxNameLen {
-			maxNameLen = len(cur.Text)
-		}
-		if len(cur.Description) > maxDescLen {
-			maxDescLen = len(cur.Description)
-		}
-	}
-
-	// Add left offset
-	leftPadding := lipgloss.
-		NewStyle().
-		PaddingLeft(paddingSize).
-		Render("")
-
-	prompts := []string{}
-	for i, cur := range s {
-		selected := i == listPosition
-		scrollbarView := scrollbar
-		if selected {
-			// TODO do actual scrollbar calculation
-			scrollbarView = scrollbarThumb
-		}
-		line := cur.render(selected, leftPadding, maxNameLen, maxDescLen, formatters, scrollbarView)
-		prompts = append(prompts, line)
-	}
-	return prompts
 }

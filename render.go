@@ -29,7 +29,7 @@ func (m Model) renderCompleting(lines []string) []string {
 	// Choosing a prompt via arrow keys or tab shouldn't change the prompt position
 	// so we use the last typed cursor position instead of the current position
 	paddingSize := len(m.textInput.Prompt()) + m.lastTypedCursorPosition
-	prompts := m.completer.suggestions.Render(paddingSize, m.completer.getSelectedIndex(), m.Formatters, m.scrollbar, m.scrollbarThumb)
+	prompts := m.completer.Render(paddingSize, m.Formatters, m.scrollbar, m.scrollbarThumb)
 	lines = append(lines, prompts...)
 
 	return lines
@@ -51,7 +51,7 @@ func (m Model) render() string {
 	}
 
 	// Reserve height for prompts that were filtered out
-	extraHeight := m.MaxSuggestions - suggestionLength - 1
+	extraHeight := m.completer.maxSuggestions - suggestionLength - 1
 	if extraHeight > 0 {
 		extraLines := strings.Repeat("\n", extraHeight)
 		lines = append(lines, extraLines)

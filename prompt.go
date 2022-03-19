@@ -28,7 +28,6 @@ type Model struct {
 	viewport                viewport.Model
 	Formatters              input.Formatters
 	previousCommands        []string
-	MaxSuggestions          int
 	executorModel           *tea.Model
 	modelState              modelState
 	scrollbar               string
@@ -41,10 +40,9 @@ type Model struct {
 
 func New(completer Completer, executor Executor, textInput input.Input, opts ...Option) Model {
 	model := Model{
-		completer:      newCompleterModel(completer),
-		executor:       executor,
-		textInput:      textInput,
-		MaxSuggestions: 6,
+		completer: newCompleterModel(completer, 6),
+		executor:  executor,
+		textInput: textInput,
 		Formatters: input.Formatters{
 			Name: input.SuggestionText{
 				SelectedStyle: lipgloss.
@@ -83,6 +81,10 @@ func (m *Model) SetScrollbarColor(color lipgloss.TerminalColor) {
 
 func (m *Model) SetScrollbarThumbColor(color lipgloss.TerminalColor) {
 	m.scrollbarThumb = lipgloss.NewStyle().Background(color).Render(" ")
+}
+
+func (m *Model) SetMaxSuggestions(maxSuggestions int) {
+	m.completer.maxSuggestions = maxSuggestions
 }
 
 func FilterHasPrefix(search string, suggestions input.Suggestions) input.Suggestions {

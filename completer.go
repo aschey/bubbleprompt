@@ -1,10 +1,12 @@
 package prompt
 
 import (
+	"math"
 	"strings"
 
 	"github.com/aschey/bubbleprompt/input"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type completerState int
@@ -19,22 +21,24 @@ type Completer func(document Document, prompt Model) input.Suggestions
 type completionMsg input.Suggestions
 
 type completerModel struct {
-	completerFunc Completer
-	state         completerState
-	suggestions   input.Suggestions
-	scroll        int
-	prevScroll    int
-	selectedKey   *string
-	prevText      string
-	queueNext     bool
-	ignoreCount   int
+	completerFunc  Completer
+	state          completerState
+	suggestions    input.Suggestions
+	maxSuggestions int
+	scroll         int
+	prevScroll     int
+	selectedKey    *string
+	prevText       string
+	queueNext      bool
+	ignoreCount    int
 }
 
-func newCompleterModel(completerFunc Completer) completerModel {
+func newCompleterModel(completerFunc Completer, maxSuggestions int) completerModel {
 	return completerModel{
-		completerFunc: completerFunc,
-		state:         idle,
-		prevText:      " ", // Need to set the previous text to something in order to force the initial render
+		completerFunc:  completerFunc,
+		state:          idle,
+		maxSuggestions: maxSuggestions,
+		prevText:       " ", // Need to set the previous text to something in order to force the initial render
 	}
 }
 
@@ -63,6 +67,67 @@ func (c completerModel) Update(msg tea.Msg, prompt Model) (completerModel, tea.C
 		}
 	}
 	return c, nil
+}
+
+func (c completerModel) scrollbarBounds(windowHeight int) (int, int) {
+	contentHeight := len(c.suggestions)
+	// The zero-based index of the first element that will be shown when the content is scrolled to the bottom
+	lastSegmentStart := contentHeight - windowHeight
+	scrollbarHeight := int(math.Max(float64(windowHeight-lastSegmentStart), 1))
+	scrollbarPos := float64(c.scroll) * (float64(windowHeight-scrollbarHeight) / float64(lastSegmentStart))
+
+	// If scrolling up, use ceiling operation to ensure the scrollbar is only at the top when the first row is shown
+	// otherwise use floor operation
+	var scrollbarTop int
+	if c.prevScroll > c.scroll {
+		scrollbarTop = int(math.Ceil(scrollbarPos))
+	} else {
+		scrollbarTop = int(math.Floor(scrollbarPos))
+	}
+
+	return scrollbarTop, scrollbarTop + scrollbarHeight
+}
+
+func (c completerModel) Render(paddingSize int, formatters input.Formatters,
+	scrollbar string, scrollbarThumb string) []string {
+	maxNameLen := 0
+	maxDescLen := 0
+
+	// Determine longest name and description to calculate padding
+	for _, cur := range c.suggestions {
+		if len(cur.Text) > maxNameLen {
+			maxNameLen = len(cur.Text)
+		}
+		if len(cur.Description) > maxDescLen {
+			maxDescLen = len(cur.Description)
+		}
+	}
+	windowHeight := len(c.suggestions)
+	if windowHeight > c.maxSuggestions {
+		windowHeight = c.maxSuggestions
+	}
+	visibleSuggestions := c.suggestions[c.scroll : c.scroll+windowHeight]
+	scrollbarStart, scrollbarEnd := c.scrollbarBounds(windowHeight)
+
+	// Add left offset
+	leftPadding := lipgloss.
+		NewStyle().
+		PaddingLeft(paddingSize).
+		Render("")
+
+	prompts := []string{}
+	listPosition := c.getSelectedIndex() - c.scroll
+	for i, cur := range visibleSuggestions {
+		selected := i == listPosition
+		scrollbarView := scrollbar
+		if scrollbarStart <= i && i < scrollbarEnd {
+			scrollbarView = scrollbarThumb
+		}
+		line := cur.Render(selected, leftPadding, maxNameLen, maxDescLen, formatters, scrollbarView)
+		prompts = append(prompts, line)
+	}
+
+	return prompts
 }
 
 func (c *completerModel) updateCompletions(prompt Model) tea.Cmd {
@@ -122,6 +187,8 @@ func (c *completerModel) resetCompletions(prompt Model) tea.Cmd {
 
 func (c *completerModel) unselectSuggestion() {
 	c.selectedKey = nil
+	c.scroll = 0
+	c.prevScroll = 0
 }
 
 func (c *completerModel) isSuggestionSelected() bool {
@@ -134,7 +201,12 @@ func (c *completerModel) nextSuggestion() {
 	}
 	index := c.getSelectedIndex()
 	if index < len(c.suggestions)-1 {
+		c.prevScroll = c.scroll
 		c.selectedKey = c.suggestions[index+1].Key()
+		if index+1 >= c.scroll+c.maxSuggestions {
+			c.scroll++
+		}
+
 	} else {
 		c.unselectSuggestion()
 	}
@@ -147,7 +219,11 @@ func (c *completerModel) previousSuggestion() {
 
 	index := c.getSelectedIndex()
 	if index > 0 {
+		c.prevScroll = c.scroll
 		c.selectedKey = c.suggestions[index-1].Key()
+		if index-1 < c.scroll {
+			c.scroll--
+		}
 	} else {
 		c.unselectSuggestion()
 	}

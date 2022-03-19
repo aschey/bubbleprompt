@@ -86,7 +86,7 @@ func WithScrollbarThumb(color lipgloss.TerminalColor) Option {
 
 func WithMaxSuggestions(maxSuggestions int) Option {
 	return func(model *Model) error {
-		model.MaxSuggestions = maxSuggestions
+		model.SetMaxSuggestions(maxSuggestions)
 		return nil
 	}
 }
