@@ -1,4 +1,4 @@
-package prompt
+package executor
 
 import tea "github.com/charmbracelet/bubbletea"
 

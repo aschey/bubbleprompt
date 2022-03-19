@@ -6,6 +6,8 @@ import (
 	"time"
 
 	prompt "github.com/aschey/bubbleprompt"
+	completers "github.com/aschey/bubbleprompt/completer"
+	executors "github.com/aschey/bubbleprompt/executor"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/commandinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -37,11 +39,11 @@ func (m model) View() string {
 
 func (m completerModel) completer(document prompt.Document, promptModel prompt.Model) []input.Suggestion {
 	time.Sleep(100 * time.Millisecond)
-	return prompt.FilterHasPrefix(m.textInput.CommandBeforeCursor(), m.suggestions)
+	return completers.FilterHasPrefix(m.textInput.CommandBeforeCursor(), m.suggestions)
 }
 
 func executor(input string, selected *input.Suggestion, suggestions []input.Suggestion) (tea.Model, error) {
-	return prompt.NewAsyncStringModel(func() string {
+	return executors.NewAsyncStringModel(func() string {
 		time.Sleep(100 * time.Millisecond)
 		return "test"
 	}), nil

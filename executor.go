@@ -11,12 +11,16 @@ type executorModel struct {
 	err       error
 }
 
-func newExecutor(inner tea.Model, errorText input.Text, err error) *executorModel {
+func newExecutorModel(inner tea.Model, errorText input.Text, err error) *executorModel {
 	return &executorModel{
 		inner:     inner,
 		errorText: errorText,
 		err:       err,
 	}
+}
+
+func (m executorModel) Init() tea.Cmd {
+	return m.inner.Init()
 }
 
 func (m executorModel) Update(msg tea.Msg) (executorModel, tea.Cmd) {

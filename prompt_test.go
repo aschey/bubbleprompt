@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/MarvinJWendt/testza"
+	completers "github.com/aschey/bubbleprompt/completer"
+	executors "github.com/aschey/bubbleprompt/executor"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/commandinput"
 	tuitest "github.com/aschey/tui-tester"
@@ -15,6 +17,12 @@ import (
 type model struct {
 	prompt Model
 }
+
+type testCompleterModel struct {
+	suggestions []input.Suggestion
+}
+
+type testExecutorModel struct{}
 
 type testData struct {
 	suggestions  []input.Suggestion
@@ -37,12 +45,12 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
-func (m completerModel) completer(document Document, promptModel Model) []input.Suggestion {
-	return FilterHasPrefix(document.TextBeforeCursor(), m.suggestions)
+func (m testCompleterModel) completer(document Document, promptModel Model) []input.Suggestion {
+	return completers.FilterHasPrefix(document.TextBeforeCursor(), m.suggestions)
 }
 
-func executor(input string, selected *input.Suggestion, suggestions []input.Suggestion) (tea.Model, error) {
-	return NewStringModel("result is " + input), nil
+func (m testExecutorModel) executor(input string, selected *input.Suggestion, suggestions []input.Suggestion) (tea.Model, error) {
+	return executors.NewStringModel("result is " + input), nil
 }
 
 func setup(t *testing.T) testData {
@@ -54,12 +62,13 @@ func setup(t *testing.T) testData {
 		{Text: "fifth-option", Description: "test desc5"},
 	}
 
-	completerModel := completerModel{suggestions: suggestions}
+	completerModel := testCompleterModel{suggestions: suggestions}
+	executorModel := testExecutorModel{}
 
 	textInput := commandinput.New()
 	model := model{prompt: New(
 		completerModel.completer,
-		executor,
+		executorModel.executor,
 		textInput,
 	)}
 	model.prompt.ready = true

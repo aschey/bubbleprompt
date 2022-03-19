@@ -3,6 +3,8 @@ package prompt
 import (
 	"reflect"
 
+	"github.com/aschey/bubbleprompt/completer"
+	"github.com/aschey/bubbleprompt/executor"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -117,7 +119,7 @@ func (m *Model) finishUpdate(msg tea.Msg) tea.Cmd {
 		}
 
 		typedCompletionText := m.textInput.CompletionText(m.typedText)
-		filteredSuggestions := FilterHasPrefix(typedCompletionText, m.completer.suggestions)
+		filteredSuggestions := completer.FilterHasPrefix(typedCompletionText, m.completer.suggestions)
 		if len(filteredSuggestions) > 0 {
 			suggestion = &filteredSuggestions[0]
 		}
@@ -177,12 +179,11 @@ func (m *Model) updateChosenListEntry(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd 
 	}
 }
 
-func (m *Model) updateExecutor(executor *tea.Model, err error) {
-	if executor == nil {
-		m.executorModel = nil
+func (m *Model) updateExecutor(executor *executorModel, err error) {
+	m.executorModel = executor
+	if m.executorModel == nil {
 		m.modelState = completing
 	} else {
-		m.executorModel = newExecutor(*executor, m.Formatters.ErrorText, err)
 		m.modelState = executing
 	}
 }
@@ -200,15 +201,16 @@ func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	m.previousCommands = append(m.previousCommands, m.textInput.Prompt()+textValue)
 	m.textInput.SetValue("")
 
-	executorModel, err := m.executor(textValue, curSuggestion, m.completer.suggestions)
+	innerExecutor, err := m.executor(textValue, curSuggestion, m.completer.suggestions)
+	executorModel := newExecutorModel(innerExecutor, m.Formatters.ErrorText, err)
 
 	// Performance optimization: if this is a string model, we don't need to go through the whole update cycle
 	// Just call the view method once and finalize the result
 	// This makes the output a little cleaner if the completer function is slow
-	if stringModel, ok := executorModel.(StringModel); ok {
-		m.finalizeExecutor(newExecutor(stringModel, m.Formatters.ErrorText, err))
+	if _, ok := innerExecutor.(executor.StringModel); ok {
+		m.finalizeExecutor(executorModel)
 	} else {
-		m.updateExecutor(&executorModel, err)
+		m.updateExecutor(executorModel, err)
 		cmds = append(cmds, executorModel.Init())
 	}
 
