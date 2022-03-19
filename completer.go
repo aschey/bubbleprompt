@@ -16,14 +16,14 @@ const (
 	running
 )
 
-type Completer func(document Document, prompt Model) input.Suggestions
+type Completer func(document Document, prompt Model) []input.Suggestion
 
-type completionMsg input.Suggestions
+type completionMsg []input.Suggestion
 
 type completerModel struct {
 	completerFunc  Completer
 	state          completerState
-	suggestions    input.Suggestions
+	suggestions    []input.Suggestion
 	maxSuggestions int
 	scroll         int
 	prevScroll     int
@@ -55,7 +55,7 @@ func (c completerModel) Update(msg tea.Msg, prompt Model) (completerModel, tea.C
 			c.ignoreCount--
 		} else {
 			c.state = idle
-			c.suggestions = input.Suggestions(msg)
+			c.suggestions = msg
 			if c.getSelectedSuggestion() == nil {
 				c.unselectSuggestion()
 			}

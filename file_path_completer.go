@@ -14,7 +14,7 @@ import (
 type FilePathCompleter struct {
 	Filter        func(de fs.DirEntry) bool
 	IgnoreCase    bool
-	fileListCache map[string]input.Suggestions
+	fileListCache map[string][]input.Suggestion
 }
 
 func cleanFilePath(path string) (dir string, base string, err error) {
@@ -65,7 +65,7 @@ func equalsSeparator(check byte) bool {
 	return strings.ContainsAny(string(check), "/\\")
 }
 
-func (c *FilePathCompleter) adjustCompletions(completions input.Suggestions, sub string) input.Suggestions {
+func (c *FilePathCompleter) adjustCompletions(completions []input.Suggestion, sub string) []input.Suggestion {
 	//tokens := strings.Split(sub, " ")
 	filteredCompletions := FilterCompletionTextHasPrefix(sub, completions)
 	// if len(tokens) > 1 {
@@ -84,7 +84,7 @@ func (c *FilePathCompleter) adjustCompletions(completions input.Suggestions, sub
 func (c *FilePathCompleter) Complete(path string) []input.Suggestion {
 	path = strings.ReplaceAll(path, "\"", "")
 	if c.fileListCache == nil {
-		c.fileListCache = make(map[string]input.Suggestions, 4)
+		c.fileListCache = make(map[string][]input.Suggestion, 4)
 	}
 
 	dir, base, err := cleanFilePath(path)
@@ -112,7 +112,7 @@ func (c *FilePathCompleter) Complete(path string) []input.Suggestion {
 		return nil
 	}
 
-	suggests := make(input.Suggestions, 0, len(files))
+	suggests := make([]input.Suggestion, 0, len(files))
 	for _, f := range files {
 		if c.Filter != nil && !c.Filter(f) {
 			continue

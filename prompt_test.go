@@ -17,7 +17,7 @@ type model struct {
 }
 
 type testData struct {
-	suggestions  input.Suggestions
+	suggestions  []input.Suggestion
 	tester       tuitest.Tester
 	initialLines []string
 	model        model
@@ -37,16 +37,16 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
-func (m completerModel) completer(document Document, promptModel Model) input.Suggestions {
+func (m completerModel) completer(document Document, promptModel Model) []input.Suggestion {
 	return FilterHasPrefix(document.TextBeforeCursor(), m.suggestions)
 }
 
-func executor(input string, selected *input.Suggestion, suggestions input.Suggestions) tea.Model {
+func executor(input string, selected *input.Suggestion, suggestions []input.Suggestion) tea.Model {
 	return NewStringModel("result is " + input)
 }
 
 func setup(t *testing.T) testData {
-	suggestions := input.Suggestions{
+	suggestions := []input.Suggestion{
 		{Text: "first-option", Description: "test desc", PositionalArgs: []input.PositionalArg{{Placeholder: "[test placeholder]"}}},
 		{Text: "second-option", Description: "test desc2"},
 		{Text: "third-option", Description: "test desc3"},

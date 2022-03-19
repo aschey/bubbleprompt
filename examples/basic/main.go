@@ -17,7 +17,7 @@ type model struct {
 }
 
 type completerModel struct {
-	suggestions input.Suggestions
+	suggestions []input.Suggestion
 	textInput   *commandinput.Model
 }
 
@@ -35,12 +35,12 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
-func (m completerModel) completer(document prompt.Document, promptModel prompt.Model) input.Suggestions {
+func (m completerModel) completer(document prompt.Document, promptModel prompt.Model) []input.Suggestion {
 	time.Sleep(100 * time.Millisecond)
 	return prompt.FilterHasPrefix(m.textInput.CommandBeforeCursor(), m.suggestions)
 }
 
-func executor(input string, selected *input.Suggestion, suggestions input.Suggestions) tea.Model {
+func executor(input string, selected *input.Suggestion, suggestions []input.Suggestion) tea.Model {
 	return prompt.NewAsyncStringModel(func() string {
 		time.Sleep(100 * time.Millisecond)
 		return "test"
@@ -51,7 +51,7 @@ func main() {
 	placeholderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
 	argStyle1 := lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
 	argStyle2 := lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
-	suggestions := input.Suggestions{
+	suggestions := []input.Suggestion{
 		{Text: "first-option", Description: "test description",
 			PositionalArgs: []input.PositionalArg{
 				{Placeholder: "test1", PlaceholderStyle: input.Text{Style: placeholderStyle}, ArgStyle: input.Text{Style: argStyle1}},

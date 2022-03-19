@@ -17,7 +17,7 @@ type model struct {
 }
 
 type completerModel struct {
-	suggestions input.Suggestions
+	suggestions []input.Suggestion
 	textInput   *commandinput.Model
 }
 
@@ -35,9 +35,9 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
-func (m completerModel) completer(document prompt.Document, promptModel prompt.Model) input.Suggestions {
+func (m completerModel) completer(document prompt.Document, promptModel prompt.Model) []input.Suggestion {
 	if m.textInput.CommandCompleted() {
-		suggestions := input.Suggestions{
+		suggestions := []input.Suggestion{
 			{Text: "abc"},
 			{Text: "def"},
 		}
@@ -50,7 +50,7 @@ func (m completerModel) completer(document prompt.Document, promptModel prompt.M
 	return prompt.FilterHasPrefix(document.TextBeforeCursor(), m.suggestions)
 }
 
-func executor(input string, selected *input.Suggestion, suggestions input.Suggestions) tea.Model {
+func executor(input string, selected *input.Suggestion, suggestions []input.Suggestion) tea.Model {
 	return prompt.NewAsyncStringModel(func() string {
 		time.Sleep(100 * time.Millisecond)
 		return "test"
@@ -58,7 +58,7 @@ func executor(input string, selected *input.Suggestion, suggestions input.Sugges
 }
 
 func main() {
-	suggestions := input.Suggestions{
+	suggestions := []input.Suggestion{
 		{Text: "first-option", Description: "test description"},
 		{Text: "second-option", Description: "test description2"},
 		{Text: "third-option", Description: "test description3"},

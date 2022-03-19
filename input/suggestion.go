@@ -25,8 +25,6 @@ type Flag struct {
 	PlaceholderStyle Text
 }
 
-type Suggestions []Suggestion
-
 type Suggestion struct {
 	Text           string
 	CompletionText string
