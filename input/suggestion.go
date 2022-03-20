@@ -17,6 +17,16 @@ type PositionalArg struct {
 	ArgStyle         Text
 }
 
+func NewPositionalArg(placeholder string) PositionalArg {
+	placeholderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
+	return PositionalArg{
+		Placeholder: placeholder,
+		PlaceholderStyle: Text{
+			Style: placeholderStyle,
+		},
+	}
+}
+
 type Flag struct {
 	Short            string
 	Long             string
