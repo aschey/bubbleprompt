@@ -56,15 +56,15 @@ func main() {
 	suggestions := []input.Suggestion{
 		{Text: "first-option", Description: "test description",
 			PositionalArgs: []input.PositionalArg{
-				{Placeholder: "test1", PlaceholderStyle: input.Text{Style: placeholderStyle}, ArgStyle: input.Text{Style: argStyle1}},
-				{Placeholder: "test2", PlaceholderStyle: input.Text{Style: placeholderStyle}, ArgStyle: input.Text{Style: argStyle2}},
+				{Placeholder: "<test1>", PlaceholderStyle: input.Text{Style: placeholderStyle}, ArgStyle: input.Text{Style: argStyle1}},
+				{Placeholder: "<test2>", PlaceholderStyle: input.Text{Style: placeholderStyle}, ArgStyle: input.Text{Style: argStyle2}},
 			}},
 		{Text: "second-option", Description: "test description2"},
 		{Text: "third-option", Description: "test description3"},
 		{Text: "fourth-option", Description: "test description4"},
 		{Text: "fifth-option", Description: "test description5",
 			PositionalArgs: []input.PositionalArg{
-				{Placeholder: "abc", PlaceholderStyle: input.Text{Style: placeholderStyle}},
+				{Placeholder: "<abc>", PlaceholderStyle: input.Text{Style: placeholderStyle}},
 			}},
 	}
 

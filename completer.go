@@ -105,7 +105,8 @@ func (c completerModel) Render(paddingSize int, formatters input.Formatters,
 			maxDescLen = len(cur.Description)
 		}
 	}
-	windowHeight := len(c.suggestions)
+	numSuggestions := len(c.suggestions)
+	windowHeight := numSuggestions
 	if windowHeight > c.maxSuggestions {
 		windowHeight = c.maxSuggestions
 	}
@@ -122,10 +123,15 @@ func (c completerModel) Render(paddingSize int, formatters input.Formatters,
 	listPosition := c.getSelectedIndex() - c.scroll
 	for i, cur := range visibleSuggestions {
 		selected := i == listPosition
-		scrollbarView := scrollbar
-		if scrollbarStart <= i && i < scrollbarEnd {
-			scrollbarView = scrollbarThumb
+		scrollbarView := ""
+		if numSuggestions > c.maxSuggestions {
+			if scrollbarStart <= i && i < scrollbarEnd {
+				scrollbarView = scrollbarThumb
+			} else {
+				scrollbarView = scrollbar
+			}
 		}
+
 		line := cur.Render(selected, leftPadding, maxNameLen, maxDescLen, formatters, scrollbarView)
 		prompts = append(prompts, line)
 	}

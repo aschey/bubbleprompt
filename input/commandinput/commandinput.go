@@ -218,34 +218,30 @@ func (m *Model) SetPrompt(prompt string) {
 
 func (m Model) TokenOffset() int {
 	cursor := m.Cursor()
-	args := m.parsedText.Args.Value
-	for i := len(m.parsedText.Args.Value) - 1; i >= 0; i-- {
-		if cursor >= args[i].Pos.Offset {
-			return m.parsedText.Args.Value[i].Pos.Offset
+	tokens := m.AllTokens()
+	for i := len(tokens) - 1; i >= 0; i-- {
+		if cursor >= tokens[i].Pos.Offset {
+			return tokens[i].Pos.Offset
 		}
 	}
 
-	if m.CommandCompleted() {
-		return cursor
-	} else {
-		return -1
-	}
+	return -1
 }
 
 func (m Model) CurrentTokenBeforeCursor() string {
 	cursor := m.Cursor()
-	args := m.parsedText.Args.Value
-	for i := len(m.parsedText.Args.Value) - 1; i >= 0; i-- {
-		if cursor >= args[i].Pos.Offset {
-			end := cursor - args[i].Pos.Offset
-			if end < len(args[i].Value) {
-				return args[i].Value[:end]
+	tokens := m.AllTokens()
+	for i := len(tokens) - 1; i >= 0; i-- {
+		if cursor >= tokens[i].Pos.Offset && cursor <= tokens[i].Pos.Offset+len(tokens[i].Value) {
+			end := cursor - tokens[i].Pos.Offset
+			if end < len(tokens[i].Value) {
+				return tokens[i].Value[:end]
 			}
-			return args[i].Value
+			return tokens[i].Value
 		}
 	}
 
-	return m.parsedText.Command.Value[:cursor]
+	return ""
 }
 
 func (m Model) LastArg() *ident {
