@@ -191,6 +191,7 @@ func (m *Model) updateExecutor(executor *executorModel, err error) {
 func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	curSuggestion := m.completer.getSelectedSuggestion()
 	textValue := m.textInput.Value()
+	innerExecutor, err := m.executor(textValue, curSuggestion, m.completer.suggestions)
 	// Reset all text and selection state
 	m.typedText = ""
 	m.lastTypedCursorPosition = 0
@@ -201,7 +202,6 @@ func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	m.previousCommands = append(m.previousCommands, m.textInput.Prompt()+textValue)
 	m.textInput.SetValue("")
 
-	innerExecutor, err := m.executor(textValue, curSuggestion, m.completer.suggestions)
 	executorModel := newExecutorModel(innerExecutor, m.Formatters.ErrorText, err)
 
 	// Performance optimization: if this is a string model, we don't need to go through the whole update cycle

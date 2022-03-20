@@ -181,6 +181,21 @@ func (m *Model) SetValue(s string) {
 	m.parsedText = expr
 }
 
+func (m Model) AllTokens() []ident {
+	tokens := []ident{m.parsedText.Command}
+	tokens = append(tokens, m.ParsedValue().Args.Value...)
+	return tokens
+}
+
+func (m Model) AllValues() []string {
+	tokens := m.AllTokens()
+	values := []string{}
+	for _, t := range tokens {
+		values = append(values, t.Value)
+	}
+	return values
+}
+
 func (m Model) Cursor() int {
 	return m.textinput.Cursor()
 }
