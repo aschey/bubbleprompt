@@ -130,7 +130,9 @@ func (m *Model) finishUpdate(msg tea.Msg) tea.Cmd {
 func (m *Model) finalizeExecutor(executorModel *executorModel) {
 	m.completer.unselectSuggestion()
 	// Store the final executor view in the history
-	m.previousCommands = append(m.previousCommands, executorModel.View())
+	// Need to store previous lines in a string instead of a []string in order to handle newlines from the tea.Model's View value properly
+	// When executing a tea.Model standalone, the output must end in a newline and if we use a []string to track newlines, we'll get a double newline here
+	m.previousCommands += executorModel.View()
 	m.updateExecutor(nil, nil)
 }
 
@@ -199,7 +201,7 @@ func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 
 	// Store the whole user input including the prompt state and the executor result
 	// However note that we don't include all of textInput.View() because we don't want to include the cursor
-	m.previousCommands = append(m.previousCommands, m.textInput.Prompt()+textValue)
+	m.previousCommands += m.textInput.Prompt() + textValue + "\n"
 	m.textInput.SetValue("")
 
 	executorModel := newExecutorModel(innerExecutor, m.Formatters.ErrorText, err)

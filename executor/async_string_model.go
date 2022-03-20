@@ -15,7 +15,7 @@ func NewAsyncStringModel(outputFunc func() string) AsyncStringModel {
 
 func (m AsyncStringModel) Init() tea.Cmd {
 	return func() tea.Msg {
-		return outputMsg(m.outputFunc())
+		return outputMsg(m.outputFunc() + "\n")
 	}
 }
 

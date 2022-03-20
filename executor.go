@@ -31,7 +31,7 @@ func (m executorModel) Update(msg tea.Msg) (executorModel, tea.Cmd) {
 
 func (m executorModel) View() string {
 	if m.err != nil {
-		return m.errorText.Format(m.err.Error())
+		return m.errorText.Format(m.err.Error()) + "\n"
 	} else {
 		return m.inner.View()
 	}

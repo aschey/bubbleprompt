@@ -6,16 +6,16 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func (m Model) renderExecuting(lines []string) []string {
+func (m Model) renderExecuting(lines string) string {
 	executorModel := *m.executorModel
 	// Add a newline to ensure the text gets pushed up
 	// this ensures the text doesn't jump if the completer takes a while to finish
-	lines = append(lines, executorModel.View()+"\n")
+	lines += executorModel.View() + "\n"
 
 	return lines
 }
 
-func (m Model) renderCompleting(lines []string) []string {
+func (m Model) renderCompleting(lines string) string {
 	// If an item is selected, parse out the text portion and apply formatting
 	if m.completer.isSuggestionSelected() {
 		m.textInput.SetTextStyle(m.Formatters.SelectedSuggestion)
@@ -23,14 +23,14 @@ func (m Model) renderCompleting(lines []string) []string {
 		m.textInput.SetTextStyle(lipgloss.NewStyle())
 	}
 	textView := m.textInput.View()
-	lines = append(lines, textView)
+	lines += textView + "\n"
 
 	// Calculate left offset for suggestions
 	// Choosing a prompt via arrow keys or tab shouldn't change the prompt position
 	// so we use the last typed cursor position instead of the current position
 	paddingSize := len(m.textInput.Prompt()) + m.lastTypedCursorPosition
 	prompts := m.completer.Render(paddingSize, m.Formatters, m.scrollbar, m.scrollbarThumb)
-	lines = append(lines, prompts...)
+	lines += strings.Join(prompts, "\n")
 
 	return lines
 }
@@ -54,9 +54,9 @@ func (m Model) render() string {
 	extraHeight := m.completer.maxSuggestions - suggestionLength - 1
 	if extraHeight > 0 {
 		extraLines := strings.Repeat("\n", extraHeight)
-		lines = append(lines, extraLines)
+		lines += extraLines
 	}
 
-	ret := lipgloss.JoinVertical(lipgloss.Left, lines...)
+	ret := lipgloss.JoinVertical(lipgloss.Left, lines)
 	return ret
 }

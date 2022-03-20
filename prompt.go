@@ -25,7 +25,7 @@ type Model struct {
 	textInput               input.Input
 	viewport                viewport.Model
 	Formatters              input.Formatters
-	previousCommands        []string
+	previousCommands        string
 	executorModel           *executorModel
 	modelState              modelState
 	scrollbar               string
