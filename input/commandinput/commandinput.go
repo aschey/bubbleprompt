@@ -143,7 +143,7 @@ func (m *Model) OnSuggestionChanged(suggestion input.Suggestion) {
 }
 
 func (m *Model) CompletionText(text string) string {
-	return m.delimiterRegex.Split(text, 2)[0]
+	return m.CurrentTokenBeforeCursor()
 }
 
 func (m *Model) Focus() tea.Cmd {
@@ -216,11 +216,24 @@ func (m *Model) SetPrompt(prompt string) {
 	m.prompt = prompt
 }
 
+func (m Model) cursorInToken(tokens []ident, pos int) bool {
+	cursor := m.Cursor()
+	return cursor >= tokens[pos].Pos.Offset && cursor <= tokens[pos].Pos.Offset+len(tokens[pos].Value)
+}
+
 func (m Model) TokenOffset() int {
 	cursor := m.Cursor()
 	tokens := m.AllTokens()
+	if len(tokens) > 0 {
+		// Check if cursor is at the end
+		last := tokens[len(tokens)-1]
+		if cursor > last.Pos.Offset+len(last.Value) {
+			return cursor
+		}
+	}
+
 	for i := len(tokens) - 1; i >= 0; i-- {
-		if cursor >= tokens[i].Pos.Offset {
+		if m.cursorInToken(tokens, i) {
 			return tokens[i].Pos.Offset
 		}
 	}
@@ -232,7 +245,7 @@ func (m Model) CurrentTokenBeforeCursor() string {
 	cursor := m.Cursor()
 	tokens := m.AllTokens()
 	for i := len(tokens) - 1; i >= 0; i-- {
-		if cursor >= tokens[i].Pos.Offset && cursor <= tokens[i].Pos.Offset+len(tokens[i].Value) {
+		if m.cursorInToken(tokens, i) {
 			end := cursor - tokens[i].Pos.Offset
 			if end < len(tokens[i].Value) {
 				return tokens[i].Value[:end]
