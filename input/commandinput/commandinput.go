@@ -132,14 +132,19 @@ func (m *Model) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion) tea.Cm
 }
 
 func (m *Model) OnSuggestionChanged(suggestion input.Suggestion) {
-	tokenOffset := m.TokenOffset()
-
+	tokenStart, tokenEnd := m.CurrentTokenPos()
 	text := m.Value()
-	if tokenOffset > -1 {
-		m.SetValue(text[:tokenOffset] + suggestion.Text)
+	if tokenStart > -1 {
+		m.SetValue(text[:tokenStart] + suggestion.Text + text[tokenEnd:])
+		// Sometimes SetValue moves the cursor to the end of the line so we need to move it back to the current token
+		m.SetCursor(tokenStart)
 	} else {
 		m.SetValue(suggestion.Text)
 	}
+	// Recalculate token end position after setting the value to the new suggestion
+	_, tokenEnd = m.CurrentTokenPos()
+	// Move cursor to the end of the token
+	m.SetCursor(tokenEnd - suggestion.CursorOffset)
 }
 
 func (m *Model) CompletionText(text string) string {
@@ -221,24 +226,24 @@ func (m Model) cursorInToken(tokens []ident, pos int) bool {
 	return cursor >= tokens[pos].Pos.Offset && cursor <= tokens[pos].Pos.Offset+len(tokens[pos].Value)
 }
 
-func (m Model) TokenOffset() int {
+func (m Model) CurrentTokenPos() (int, int) {
 	cursor := m.Cursor()
 	tokens := m.AllTokens()
 	if len(tokens) > 0 {
 		// Check if cursor is at the end
 		last := tokens[len(tokens)-1]
 		if cursor > last.Pos.Offset+len(last.Value) {
-			return cursor
+			return cursor, cursor
 		}
 	}
 
 	for i := len(tokens) - 1; i >= 0; i-- {
 		if m.cursorInToken(tokens, i) {
-			return tokens[i].Pos.Offset
+			return tokens[i].Pos.Offset, tokens[i].Pos.Offset + len(tokens[i].Value)
 		}
 	}
 
-	return -1
+	return -1, -1
 }
 
 func (m Model) CurrentTokenBeforeCursor() string {

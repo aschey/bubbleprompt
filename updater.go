@@ -165,16 +165,12 @@ func (m *Model) updateChosenListEntry(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd 
 	if m.completer.isSuggestionSelected() {
 		// Set the input to the suggestion's selected text
 		curSuggestion := m.completer.getSelectedSuggestion()
+		m.textInput.OnSuggestionChanged(*curSuggestion)
 
-		m.textInput.OnSuggestionChanged(*m.completer.getSelectedSuggestion())
-
-		// Move cursor to the end of the line
-		m.textInput.SetCursor(len(m.textInput.Value()) - curSuggestion.CursorOffset)
 		return nil
 	} else {
 		// If no selection, set the text back to the last thing the user typed
 		m.textInput.SetValue(m.typedText)
-		m.lastTypedCursorPosition = len(m.typedText)
 		m.textInput.SetCursor(m.lastTypedCursorPosition)
 		// Need to update completions since we changed the text and the cursor position
 		return append(cmds, m.completer.updateCompletions(*m))
@@ -222,7 +218,6 @@ func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	completionTextBeforeCursor := m.textInput.CompletionText(m.textInput.Value()[:m.textInput.Cursor()])
 	typedCompletionText := m.textInput.CompletionText(m.typedText)
-	m.typedText = m.textInput.Value()
 	cmds = m.updatePosition(msg, cmds)
 
 	if msg.String() != " " && (m.lastTypedCursorPosition < len(m.typedText) || completionTextBeforeCursor != typedCompletionText) {
@@ -235,7 +230,7 @@ func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 
 func (m *Model) updatePosition(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	m.lastTypedCursorPosition = m.textInput.Cursor()
-
+	m.typedText = m.textInput.Value()
 	cmds = append(cmds, m.completer.updateCompletions(*m))
 
 	return cmds
