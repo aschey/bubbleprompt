@@ -148,7 +148,10 @@ func (m *Model) OnSuggestionChanged(suggestion input.Suggestion) {
 }
 
 func (m *Model) CompletionText(text string) string {
-	return m.CurrentTokenBeforeCursor()
+	expr := &Statement{}
+	_ = m.parser.ParseString("", text, expr)
+	tokens := m.allTokens(expr)
+	return m.currentToken(tokens)
 }
 
 func (m *Model) Focus() tea.Cmd {
@@ -186,9 +189,17 @@ func (m *Model) SetValue(s string) {
 	m.parsedText = expr
 }
 
+func (m *Model) IsDelimiter(s string) bool {
+	return m.delimiterRegex.MatchString(s)
+}
+
 func (m Model) AllTokens() []ident {
-	tokens := []ident{m.parsedText.Command}
-	tokens = append(tokens, m.ParsedValue().Args.Value...)
+	return m.allTokens(m.parsedText)
+}
+
+func (m Model) allTokens(statement *Statement) []ident {
+	tokens := []ident{statement.Command}
+	tokens = append(tokens, statement.Args.Value...)
 	return tokens
 }
 
@@ -247,14 +258,36 @@ func (m Model) CurrentTokenPos() (int, int) {
 }
 
 func (m Model) CurrentTokenBeforeCursor() string {
-	cursor := m.Cursor()
 	tokens := m.AllTokens()
+	return m.currentTokenBeforeCursor(tokens)
+}
+
+func (m Model) HasArgs() bool {
+	return len(m.parsedText.Args.Value) > 0
+}
+
+func (m Model) currentTokenBeforeCursor(tokens []ident) string {
+	cursor := m.Cursor()
 	for i := len(tokens) - 1; i >= 0; i-- {
 		if m.cursorInToken(tokens, i) {
 			end := cursor - tokens[i].Pos.Offset
 			if end < len(tokens[i].Value) {
 				return tokens[i].Value[:end]
 			}
+			return tokens[i].Value
+		}
+	}
+
+	return ""
+}
+
+func (m Model) CurrentToken() string {
+	return m.currentToken(m.AllTokens())
+}
+
+func (m Model) currentToken(tokens []ident) string {
+	for i := len(tokens) - 1; i >= 0; i-- {
+		if m.cursorInToken(tokens, i) {
 			return tokens[i].Value
 		}
 	}
@@ -314,18 +347,30 @@ func (m Model) View() string {
 	startPlaceholder := len(m.parsedText.Args.Value)
 	if startPlaceholder < len(m.Args) {
 		for _, arg := range m.Args[startPlaceholder:] {
-			if viewBuilder.last() != ' ' {
+			last := viewBuilder.last()
+			if last == nil || *last != ' ' {
 				viewBuilder.render(" ", lipgloss.NewStyle())
 			}
-
 			viewBuilder.render(arg.Text, arg.PlaceholderStyle)
 		}
 	}
 
-	textWithoutSpace := strings.TrimRight(m.Value(), " ")
-	extraSpace := m.Value()[len(textWithoutSpace):]
-
-	viewBuilder.render(extraSpace, lipgloss.NewStyle())
+	// Render trailing delimiters
+	// Don't need to do this if there's no args because the trailing space before args gets rendered above
+	if m.HasArgs() {
+		value := m.Value()
+		delimMatches := m.delimiterRegex.FindAllStringIndex(value, -1)
+		if len(delimMatches) > 0 {
+			lastMatch := delimMatches[len(delimMatches)-1]
+			if lastMatch[1] == len(value) {
+				// Text ends with delimiter, get the length without trailing delimiters
+				textLength := len(value[:lastMatch[0]])
+				// Render the trailing delimiters
+				extraSpace := m.Value()[textLength:]
+				viewBuilder.render(extraSpace, lipgloss.NewStyle())
+			}
+		}
+	}
 
 	return m.PromptStyle.Render(m.prompt) + viewBuilder.getView()
 }

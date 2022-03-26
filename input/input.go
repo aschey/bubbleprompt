@@ -22,4 +22,5 @@ type Input interface {
 	CompletionText(string) string
 	OnUpdateFinish(msg tea.Msg, suggestion *Suggestion) tea.Cmd
 	OnSuggestionChanged(suggestion Suggestion)
+	IsDelimiter(string) bool
 }

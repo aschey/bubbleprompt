@@ -35,8 +35,13 @@ func (v *viewBuilder) render(newText string, style lipgloss.Style) {
 	v.rawView += newText
 }
 
-func (v viewBuilder) last() byte {
-	return v.rawView[v.viewLen()-1]
+func (v viewBuilder) last() *byte {
+	viewLen := v.viewLen()
+	if viewLen == 0 {
+		return nil
+	}
+	last := v.rawView[v.viewLen()-1]
+	return &last
 }
 
 func (v viewBuilder) renderWithCursor(text string, cursorPos int, s lipgloss.Style) string {

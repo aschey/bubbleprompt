@@ -109,17 +109,24 @@ func (m *Model) updateCompleting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) 
 	return cmds, scrollToBottom
 }
 
+func (m *Model) selectSingle(text string) {
+	// Programatically select the suggestion if it's the only one and the text matches the suggestion
+	completionText := m.textInput.CompletionText(text)
+	if len(m.completer.suggestions) == 1 && completionText == m.completer.suggestions[0].Text {
+		m.completer.selectedKey = m.completer.suggestions[0].Key()
+	}
+}
+
 func (m *Model) finishUpdate(msg tea.Msg) tea.Cmd {
 	suggestion := m.completer.getSelectedSuggestion()
 	if suggestion == nil {
-		// Nothing selected, default to the first matching suggestion
-		completionTextBeforeCursor := m.textInput.CompletionText(m.textInput.Value()[:m.textInput.Cursor()])
-		if len(m.completer.suggestions) == 1 && completionTextBeforeCursor == m.completer.suggestions[0].Text {
-			m.completer.selectedKey = m.completer.suggestions[0].Key()
-		}
+		// Nothing selected
+		// Select the first suggestion if it matches
+		m.selectSingle(m.textInput.Value()[:m.textInput.Cursor()])
 
-		typedCompletionText := m.textInput.CompletionText(m.typedText)
+		typedCompletionText := m.textInput.CompletionText(m.typedText[:m.textInput.Cursor()])
 		filteredSuggestions := completer.FilterHasPrefix(typedCompletionText, m.completer.suggestions)
+		// Show placeholders for the first matching suggestion, but don't actually select it
 		if len(filteredSuggestions) > 0 {
 			suggestion = &filteredSuggestions[0]
 		}
@@ -216,14 +223,13 @@ func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 }
 
 func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
-	completionTextBeforeCursor := m.textInput.CompletionText(m.textInput.Value()[:m.textInput.Cursor()])
-	typedCompletionText := m.textInput.CompletionText(m.typedText)
 	cmds = m.updatePosition(msg, cmds)
 
-	if msg.String() != " " && (m.lastTypedCursorPosition < len(m.typedText) || completionTextBeforeCursor != typedCompletionText) {
+	if !m.textInput.IsDelimiter(msg.String()) {
 		// Unselect selected item since user has changed the input
 		m.completer.unselectSuggestion()
 	}
+	m.selectSingle(m.textInput.Value())
 
 	return cmds
 }
