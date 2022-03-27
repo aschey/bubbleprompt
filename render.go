@@ -17,11 +17,6 @@ func (m Model) renderExecuting(lines string) string {
 
 func (m Model) renderCompleting(lines string) string {
 	// If an item is selected, parse out the text portion and apply formatting
-	if m.completer.isSuggestionSelected() {
-		m.textInput.SetTextStyle(m.Formatters.SelectedSuggestion)
-	} else {
-		m.textInput.SetTextStyle(lipgloss.NewStyle())
-	}
 	textView := m.textInput.View()
 	lines += textView + "\n"
 

@@ -29,6 +29,7 @@ type testData struct {
 	tester       tuitest.Tester
 	initialLines []string
 	model        model
+	textInput    *commandinput.Model
 }
 
 func (m model) Init() tea.Cmd {
@@ -66,11 +67,13 @@ func setup(t *testing.T) testData {
 	executorModel := testExecutorModel{}
 
 	textInput := commandinput.New()
-	model := model{prompt: New(
-		completerModel.completer,
-		executorModel.executor,
-		textInput,
-	)}
+	model := model{
+		prompt: New(
+			completerModel.completer,
+			executorModel.executor,
+			textInput,
+		),
+	}
 	model.prompt.ready = true
 	model.prompt.viewport = viewport.New(80, 30)
 
@@ -90,7 +93,7 @@ func setup(t *testing.T) testData {
 	})
 	testza.AssertNoError(t, err)
 
-	return testData{suggestions, tester, initialLines, model}
+	return testData{suggestions, tester, initialLines, model, textInput}
 }
 
 func teardown(t *testing.T, tester tuitest.Tester) {
@@ -172,7 +175,7 @@ func TestChoosePrompt(t *testing.T) {
 	})
 	testza.AssertNoError(t, err)
 	// Check that proper styles are applied
-	testza.AssertContains(t, lines[0], testData.model.prompt.Formatters.SelectedSuggestion.Render(testData.suggestions[0].Text))
+	testza.AssertContains(t, lines[0], testData.textInput.SelectedTextStyle.Render(testData.suggestions[0].Text))
 	testza.AssertContains(t, lines[0], testData.suggestions[0].PositionalArgs[0].PlaceholderStyle.Format(testData.suggestions[0].PositionalArgs[0].Placeholder))
 	maxNameLen := len("second-option")
 	testza.AssertContains(t, lines[1], testData.model.prompt.Formatters.Name.Format(testData.suggestions[0].Text, maxNameLen, true))
@@ -210,7 +213,7 @@ func TestTypeAfterCompleting(t *testing.T) {
 	// Check that prompts were filtered
 	testza.AssertEqual(t, 1, len(lines))
 	// Check that selected text formatting was removed
-	testza.AssertNotContains(t, lines[0], testData.model.prompt.Formatters.SelectedSuggestion.Render(testData.suggestions[0].Text+"a"))
+	testza.AssertNotContains(t, lines[0], testData.textInput.SelectedTextStyle.Render(testData.suggestions[0].Text+"a"))
 
 	teardown(t, testData.tester)
 }

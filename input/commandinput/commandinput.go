@@ -21,31 +21,34 @@ type Arg struct {
 }
 
 type Model struct {
-	textinput        textinput.Model
-	Placeholder      string
-	prompt           string
-	delimiterRegex   *regexp.Regexp
-	stringRegex      *regexp.Regexp
-	Args             []Arg
-	PromptStyle      lipgloss.Style
-	TextStyle        lipgloss.Style
-	CursorStyle      lipgloss.Style
-	PlaceholderStyle lipgloss.Style
-	parser           *participle.Parser
-	parsedText       *Statement
+	textinput         textinput.Model
+	Placeholder       string
+	prompt            string
+	delimiterRegex    *regexp.Regexp
+	stringRegex       *regexp.Regexp
+	args              []Arg
+	selectedCommand   *input.Suggestion
+	PromptStyle       lipgloss.Style
+	TextStyle         lipgloss.Style
+	SelectedTextStyle lipgloss.Style
+	CursorStyle       lipgloss.Style
+	PlaceholderStyle  lipgloss.Style
+	parser            *participle.Parser
+	parsedText        *Statement
 }
 
 func New(opts ...Option) *Model {
 	textinput := textinput.New()
 	textinput.Focus()
 	model := &Model{
-		textinput:        textinput,
-		Placeholder:      "",
-		prompt:           "> ",
-		PlaceholderStyle: textinput.PlaceholderStyle,
-		parsedText:       &Statement{},
-		delimiterRegex:   regexp.MustCompile(`\s+`),
-		stringRegex:      regexp.MustCompile(`[^\s]+`),
+		textinput:         textinput,
+		Placeholder:       "",
+		prompt:            "> ",
+		PlaceholderStyle:  textinput.PlaceholderStyle,
+		SelectedTextStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("10")),
+		parsedText:        &Statement{},
+		delimiterRegex:    regexp.MustCompile(`\s+`),
+		stringRegex:       regexp.MustCompile(`[^\s]+`),
 	}
 	for _, opt := range opts {
 		if err := opt(model); err != nil {
@@ -113,7 +116,12 @@ func (m *Model) OnUpdateStart(msg tea.Msg) tea.Cmd {
 }
 
 func (m *Model) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion) tea.Cmd {
-	m.Args = []Arg{}
+	pos := m.CurrentTokenPos()
+	if pos.Index > 0 {
+		// Don't reset args if we're not changing the command
+		return nil
+	}
+	m.args = []Arg{}
 
 	if suggestion == nil {
 		// Didn't find any matching suggestions, reset
@@ -121,7 +129,7 @@ func (m *Model) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion) tea.Cm
 	} else {
 		m.Placeholder = suggestion.Text
 		for _, arg := range suggestion.PositionalArgs {
-			m.Args = append(m.Args, Arg{
+			m.args = append(m.args, Arg{
 				Text:             arg.Placeholder,
 				PlaceholderStyle: arg.PlaceholderStyle.Style,
 				ArgStyle:         arg.ArgStyle.Style})
@@ -132,19 +140,29 @@ func (m *Model) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion) tea.Cm
 }
 
 func (m *Model) OnSuggestionChanged(suggestion input.Suggestion) {
-	tokenStart, tokenEnd := m.CurrentTokenPos()
+	tokenPos := m.CurrentTokenPos()
+	if tokenPos.Index == 0 {
+		m.selectedCommand = &suggestion
+	}
+
 	text := m.Value()
-	if tokenStart > -1 {
-		m.SetValue(text[:tokenStart] + suggestion.Text + text[tokenEnd:])
+	if tokenPos.Start > -1 {
+		m.SetValue(text[:tokenPos.Start] + suggestion.Text + text[tokenPos.End:])
 		// Sometimes SetValue moves the cursor to the end of the line so we need to move it back to the current token
-		m.SetCursor(tokenStart)
+		m.SetCursor(tokenPos.Start)
 	} else {
 		m.SetValue(suggestion.Text)
 	}
 	// Recalculate token end position after setting the value to the new suggestion
-	_, tokenEnd = m.CurrentTokenPos()
+	tokenPos = m.CurrentTokenPos()
 	// Move cursor to the end of the token
-	m.SetCursor(tokenEnd - suggestion.CursorOffset)
+	m.SetCursor(tokenPos.End - suggestion.CursorOffset)
+}
+
+func (m *Model) OnSuggestionUnselected() {
+	if !m.CommandCompleted() {
+		m.selectedCommand = nil
+	}
 }
 
 func (m *Model) CompletionText(text string) string {
@@ -172,10 +190,6 @@ func (m *Model) CommandBeforeCursor() string {
 		return parsed.Command.Value
 	}
 	return parsed.Command.Value[:m.Cursor()]
-}
-
-func (m *Model) SetTextStyle(style lipgloss.Style) {
-	m.TextStyle = style
 }
 
 func (m *Model) SetValue(s string) {
@@ -237,24 +251,42 @@ func (m Model) cursorInToken(tokens []ident, pos int) bool {
 	return cursor >= tokens[pos].Pos.Offset && cursor <= tokens[pos].Pos.Offset+len(tokens[pos].Value)
 }
 
-func (m Model) CurrentTokenPos() (int, int) {
+type TokenPos struct {
+	Start int
+	End   int
+	Index int
+}
+
+func (m Model) CurrentTokenPos() TokenPos {
 	cursor := m.Cursor()
 	tokens := m.AllTokens()
 	if len(tokens) > 0 {
 		// Check if cursor is at the end
 		last := tokens[len(tokens)-1]
 		if cursor > last.Pos.Offset+len(last.Value) {
-			return cursor, cursor
+			return TokenPos{
+				Start: cursor,
+				End:   cursor,
+				Index: len(tokens) - 1,
+			}
 		}
 	}
 
 	for i := len(tokens) - 1; i >= 0; i-- {
 		if m.cursorInToken(tokens, i) {
-			return tokens[i].Pos.Offset, tokens[i].Pos.Offset + len(tokens[i].Value)
+			return TokenPos{
+				Start: tokens[i].Pos.Offset,
+				End:   tokens[i].Pos.Offset + len(tokens[i].Value),
+				Index: i,
+			}
 		}
 	}
 
-	return -1, -1
+	return TokenPos{
+		Start: -1,
+		End:   -1,
+		Index: -1,
+	}
 }
 
 func (m Model) CurrentTokenBeforeCursor() string {
@@ -321,7 +353,11 @@ func (m Model) View() string {
 	viewBuilder.render(leadingSpace, lipgloss.NewStyle())
 
 	command := m.parsedText.Command.Value
-	viewBuilder.render(command, m.TextStyle)
+	if m.selectedCommand == nil {
+		viewBuilder.render(command, m.TextStyle)
+	} else {
+		viewBuilder.render(command, m.SelectedTextStyle)
+	}
 
 	if strings.HasPrefix(m.Placeholder, m.Value()) && m.Placeholder != command {
 		viewBuilder.render(m.Placeholder[len(command):], m.PlaceholderStyle)
@@ -338,15 +374,15 @@ func (m Model) View() string {
 		viewBuilder.render(space, lipgloss.NewStyle())
 
 		argStyle := lipgloss.NewStyle()
-		if i < len(m.Args) {
-			argStyle = m.Args[i].ArgStyle
+		if i < len(m.args) {
+			argStyle = m.args[i].ArgStyle
 		}
 		viewBuilder.render(arg.Value, argStyle)
 	}
 
 	startPlaceholder := len(m.parsedText.Args.Value)
-	if startPlaceholder < len(m.Args) {
-		for _, arg := range m.Args[startPlaceholder:] {
+	if startPlaceholder < len(m.args) {
+		for _, arg := range m.args[startPlaceholder:] {
 			last := viewBuilder.last()
 			if last == nil || *last != ' ' {
 				viewBuilder.render(" ", lipgloss.NewStyle())

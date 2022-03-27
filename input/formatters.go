@@ -7,7 +7,6 @@ type Formatters struct {
 	Description        SuggestionText
 	DefaultPlaceholder Text
 	ErrorText          Text
-	SelectedSuggestion lipgloss.Style
 }
 
 func DefaultFormatters() Formatters {
@@ -32,6 +31,5 @@ func DefaultFormatters() Formatters {
 		ErrorText: Text{
 			Style: lipgloss.NewStyle().PaddingLeft(1).PaddingRight(1).Background(lipgloss.Color("#ff0000")),
 		},
-		SelectedSuggestion: lipgloss.NewStyle().Foreground(lipgloss.Color("10")),
 	}
 }

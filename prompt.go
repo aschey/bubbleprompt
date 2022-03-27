@@ -38,7 +38,7 @@ type Model struct {
 
 func New(completer Completer, executor Executor, textInput input.Input, opts ...Option) Model {
 	model := Model{
-		completer:  newCompleterModel(completer, 6),
+		completer:  newCompleterModel(completer, textInput, 6),
 		executor:   executor,
 		textInput:  textInput,
 		Formatters: input.DefaultFormatters(),

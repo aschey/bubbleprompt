@@ -29,6 +29,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	m.viewport, cmd = m.viewport.Update(msg)
 	cmds = append(cmds, cmd)
 
+	prevText := m.textInput.Value()
 	cmd = m.textInput.OnUpdateStart(msg)
 	cmds = append(cmds, cmd)
 
@@ -42,7 +43,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	case executing:
 		cmds, scrollToBottom = m.updateExecuting(msg, cmds)
 	case completing:
-		cmds, scrollToBottom = m.updateCompleting(msg, cmds)
+		cmds, scrollToBottom = m.updateCompleting(msg, cmds, prevText)
 	}
 
 	cmd = m.finishUpdate(msg)
@@ -77,7 +78,7 @@ func (m *Model) updateExecuting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) {
 	}
 }
 
-func (m *Model) updateCompleting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) {
+func (m *Model) updateCompleting(msg tea.Msg, cmds []tea.Cmd, prevText string) ([]tea.Cmd, bool) {
 	scrollToBottom := false
 
 	switch msg := msg.(type) {
@@ -95,8 +96,11 @@ func (m *Model) updateCompleting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) 
 		case tea.KeyEnter:
 			cmds = m.submit(msg, cmds)
 
-		case tea.KeyRunes, tea.KeyBackspace, tea.KeyDelete:
-			cmds = m.updateKeypress(msg, cmds)
+		case tea.KeyRunes:
+			cmds = m.updateRunes(msg, cmds)
+
+		case tea.KeyBackspace, tea.KeyDelete:
+			cmds = m.updateBackspace(msg, cmds, prevText)
 
 		case tea.KeyLeft, tea.KeyRight:
 			cmds = m.updatePosition(msg, cmds)
@@ -109,11 +113,11 @@ func (m *Model) updateCompleting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) 
 	return cmds, scrollToBottom
 }
 
-func (m *Model) selectSingle(text string) {
-	// Programatically select the suggestion if it's the only one and the text matches the suggestion
-	completionText := m.textInput.CompletionText(text)
+func (m *Model) selectSingle() {
+	// Programatically select the suggestion if it's the only one and the input matches the suggestion
+	completionText := m.textInput.CompletionText(m.textInput.Value()[:m.textInput.Cursor()])
 	if len(m.completer.suggestions) == 1 && completionText == m.completer.suggestions[0].Text {
-		m.completer.selectedKey = m.completer.suggestions[0].Key()
+		m.completer.selectSuggestion(m.completer.suggestions[0])
 	}
 }
 
@@ -122,7 +126,7 @@ func (m *Model) finishUpdate(msg tea.Msg) tea.Cmd {
 	if suggestion == nil {
 		// Nothing selected
 		// Select the first suggestion if it matches
-		m.selectSingle(m.textInput.Value()[:m.textInput.Cursor()])
+		m.selectSingle()
 
 		typedCompletionText := m.textInput.CompletionText(m.typedText[:m.textInput.Cursor()])
 		filteredSuggestions := completer.FilterHasPrefix(typedCompletionText, m.completer.suggestions)
@@ -171,9 +175,6 @@ func (m *Model) updateChosenListEntry(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd 
 
 	if m.completer.isSuggestionSelected() {
 		// Set the input to the suggestion's selected text
-		curSuggestion := m.completer.getSelectedSuggestion()
-		m.textInput.OnSuggestionChanged(*curSuggestion)
-
 		return nil
 	} else {
 		// If no selection, set the text back to the last thing the user typed
@@ -222,16 +223,26 @@ func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	return append(cmds, m.completer.resetCompletions(*m))
 }
 
-func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
+func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd, unselect bool) []tea.Cmd {
 	cmds = m.updatePosition(msg, cmds)
-
-	if !m.textInput.IsDelimiter(msg.String()) {
+	if unselect {
 		// Unselect selected item since user has changed the input
 		m.completer.unselectSuggestion()
 	}
-	m.selectSingle(m.textInput.Value())
+	m.selectSingle()
 
 	return cmds
+}
+
+func (m *Model) updateRunes(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
+	return m.updateKeypress(msg, cmds, !m.textInput.IsDelimiter(msg.String()))
+}
+
+func (m *Model) updateBackspace(msg tea.KeyMsg, cmds []tea.Cmd, prevText string) []tea.Cmd {
+	pos := m.textInput.Cursor()
+	unselectSuggestion := pos < len(prevText) && !m.textInput.IsDelimiter(string(prevText[pos]))
+	return m.updateKeypress(msg, cmds, unselectSuggestion)
+
 }
 
 func (m *Model) updatePosition(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {

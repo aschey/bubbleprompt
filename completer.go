@@ -23,6 +23,7 @@ type completionMsg []input.Suggestion
 type completerModel struct {
 	completerFunc  Completer
 	state          completerState
+	textInput      input.Input
 	suggestions    []input.Suggestion
 	maxSuggestions int
 	scroll         int
@@ -33,8 +34,9 @@ type completerModel struct {
 	ignoreCount    int
 }
 
-func newCompleterModel(completerFunc Completer, maxSuggestions int) completerModel {
+func newCompleterModel(completerFunc Completer, textInput input.Input, maxSuggestions int) completerModel {
 	return completerModel{
+		textInput:      textInput,
 		completerFunc:  completerFunc,
 		state:          idle,
 		maxSuggestions: maxSuggestions,
@@ -56,12 +58,11 @@ func (c completerModel) Update(msg tea.Msg, prompt Model) (completerModel, tea.C
 		} else {
 			c.state = idle
 			c.suggestions = msg
-			if c.scroll > len(c.suggestions)-1 {
+			// Selection is out of range of the current view or the key is no longer present
+			if c.scroll > len(c.suggestions)-1 || c.getSelectedSuggestion() == nil {
 				c.unselectSuggestion()
 			}
-			if c.getSelectedSuggestion() == nil {
-				c.unselectSuggestion()
-			}
+
 			if c.queueNext {
 				// Start another update if it was requested while running
 				c.queueNext = false
@@ -198,6 +199,12 @@ func (c *completerModel) unselectSuggestion() {
 	c.selectedKey = nil
 	c.scroll = 0
 	c.prevScroll = 0
+	c.textInput.OnSuggestionUnselected()
+}
+
+func (c *completerModel) selectSuggestion(suggestion input.Suggestion) {
+	c.selectedKey = suggestion.Key()
+	c.textInput.OnSuggestionChanged(suggestion)
 }
 
 func (c *completerModel) isSuggestionSelected() bool {
@@ -211,7 +218,7 @@ func (c *completerModel) nextSuggestion() {
 	index := c.getSelectedIndex()
 	if index < len(c.suggestions)-1 {
 		c.prevScroll = c.scroll
-		c.selectedKey = c.suggestions[index+1].Key()
+		c.selectSuggestion(c.suggestions[index+1])
 		if index+1 >= c.scroll+c.maxSuggestions {
 			c.scroll++
 		}
@@ -229,7 +236,7 @@ func (c *completerModel) previousSuggestion() {
 	index := c.getSelectedIndex()
 	if index > 0 {
 		c.prevScroll = c.scroll
-		c.selectedKey = c.suggestions[index-1].Key()
+		c.selectSuggestion(c.suggestions[index-1])
 		if index-1 < c.scroll {
 			c.scroll--
 		}
