@@ -116,13 +116,12 @@ func (m *Model) OnUpdateStart(msg tea.Msg) tea.Cmd {
 }
 
 func (m *Model) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion) tea.Cmd {
-	pos := m.CurrentTokenPos()
-	if pos.Index > 0 {
+	if m.CommandCompleted() {
 		// Don't reset args if we're not changing the command
 		return nil
 	}
-	m.args = []Arg{}
 
+	m.args = []Arg{}
 	if suggestion == nil {
 		// Didn't find any matching suggestions, reset
 		m.Placeholder = ""
