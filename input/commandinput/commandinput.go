@@ -418,8 +418,10 @@ func (m Model) View() string {
 	currentArg := len(m.parsedText.Args.Value) - 1
 	if currentArg >= 0 && currentArg < len(m.args) {
 		arg := m.args[currentArg]
-		if arg.persist && strings.HasPrefix(arg.text, m.parsedText.Args.Value[currentArg].Value) {
-			tokenPos := len(m.parsedText.Args.Value[currentArg].Value)
+		argVal := m.parsedText.Args.Value[currentArg].Value
+		// Render the rest of the arg placeholder only if the prefix matches
+		if arg.persist && strings.HasPrefix(arg.text, argVal) {
+			tokenPos := len(argVal)
 			viewBuilder.render(arg.text[tokenPos:], arg.placeholderStyle)
 		}
 	}
