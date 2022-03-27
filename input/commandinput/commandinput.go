@@ -13,11 +13,11 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type Arg struct {
-	Text             string
-	PlaceholderStyle lipgloss.Style
-	ArgStyle         lipgloss.Style
-	Formatter        func(arg string) string
+type arg struct {
+	text             string
+	placeholderStyle lipgloss.Style
+	argStyle         lipgloss.Style
+	persist          bool
 }
 
 type Model struct {
@@ -26,7 +26,8 @@ type Model struct {
 	prompt            string
 	delimiterRegex    *regexp.Regexp
 	stringRegex       *regexp.Regexp
-	args              []Arg
+	args              []arg
+	originalArgs      []arg
 	selectedCommand   *input.Suggestion
 	PromptStyle       lipgloss.Style
 	TextStyle         lipgloss.Style
@@ -117,21 +118,44 @@ func (m *Model) OnUpdateStart(msg tea.Msg) tea.Cmd {
 
 func (m *Model) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion) tea.Cmd {
 	if m.CommandCompleted() {
-		// Don't reset args if we're not changing the command
-		return nil
-	}
+		// If no suggestions, leave args alone
+		if suggestion == nil {
+			return nil
+		}
 
-	m.args = []Arg{}
-	if suggestion == nil {
-		// Didn't find any matching suggestions, reset
-		m.Placeholder = ""
+		m.args = []arg{}
+		m.args = append(m.args, m.originalArgs...)
+		// Subtract 1 to get arg position because index 0 is the command itself
+		index := m.CurrentTokenPos().Index - 1
+		if index < len(m.args) {
+			// Replace current arg with the suggestion
+			m.args[index] = arg{
+				text:             suggestion.Text,
+				placeholderStyle: m.PlaceholderStyle,
+				argStyle:         m.originalArgs[index].argStyle,
+				persist:          true,
+			}
+		}
+
 	} else {
-		m.Placeholder = suggestion.Text
-		for _, arg := range suggestion.PositionalArgs {
-			m.args = append(m.args, Arg{
-				Text:             arg.Placeholder,
-				PlaceholderStyle: arg.PlaceholderStyle.Style,
-				ArgStyle:         arg.ArgStyle.Style})
+		m.args = []arg{}
+		// Keep original args so we can reset to this state later
+		m.originalArgs = []arg{}
+		if suggestion == nil {
+			// Didn't find any matching suggestions, reset
+			m.Placeholder = ""
+		} else {
+			m.Placeholder = suggestion.Text
+			for _, posArg := range suggestion.PositionalArgs {
+				newArg := arg{
+					text:             posArg.Placeholder,
+					placeholderStyle: posArg.PlaceholderStyle.Style,
+					argStyle:         posArg.ArgStyle.Style,
+					persist:          false,
+				}
+				m.args = append(m.args, newArg)
+				m.originalArgs = append(m.originalArgs, newArg)
+			}
 		}
 	}
 
@@ -153,9 +177,9 @@ func (m *Model) OnSuggestionChanged(suggestion input.Suggestion) {
 		m.SetValue(suggestion.Text)
 	}
 	// Recalculate token end position after setting the value to the new suggestion
-	tokenPos = m.CurrentTokenPos()
+	newEnd := m.CurrentTokenPos().End
 	// Move cursor to the end of the token
-	m.SetCursor(tokenPos.End - suggestion.CursorOffset)
+	m.SetCursor(newEnd - suggestion.CursorOffset)
 }
 
 func (m *Model) OnSuggestionUnselected() {
@@ -262,11 +286,18 @@ func (m Model) CurrentTokenPos() TokenPos {
 	if len(tokens) > 0 {
 		// Check if cursor is at the end
 		last := tokens[len(tokens)-1]
+		index := len(tokens) - 1
+		value := m.Value()
+		if cursor > 0 && m.IsDelimiter(string(value[cursor-1])) {
+			// Haven't started a new token yet, but we have added a delimiter
+			// so we'll consider the current token finished
+			index++
+		}
 		if cursor > last.Pos.Offset+len(last.Value) {
 			return TokenPos{
 				Start: cursor,
 				End:   cursor,
-				Index: len(tokens) - 1,
+				Index: index,
 			}
 		}
 	}
@@ -351,6 +382,7 @@ func (m Model) View() string {
 	leadingSpace := text[:m.parsedText.Command.Pos.Offset]
 	viewBuilder.render(leadingSpace, lipgloss.NewStyle())
 
+	// Render command
 	command := m.parsedText.Command.Value
 	if m.selectedCommand == nil {
 		viewBuilder.render(command, m.TextStyle)
@@ -358,27 +390,41 @@ func (m Model) View() string {
 		viewBuilder.render(command, m.SelectedTextStyle)
 	}
 
+	// Render prefix
 	if strings.HasPrefix(m.Placeholder, m.Value()) && m.Placeholder != command {
 		viewBuilder.render(m.Placeholder[len(command):], m.PlaceholderStyle)
 	}
 
+	// Render space before args
 	spaceCount := m.parsedText.Args.Pos.Offset - viewBuilder.viewLen()
 	if spaceCount > 0 {
 		spaceBeforeArgs := text[viewBuilder.viewLen():m.parsedText.Args.Pos.Offset]
 		viewBuilder.render(spaceBeforeArgs, lipgloss.NewStyle())
 	}
 
+	// Render args
 	for i, arg := range m.parsedText.Args.Value {
 		space := text[viewBuilder.viewLen():arg.Pos.Offset]
 		viewBuilder.render(space, lipgloss.NewStyle())
 
 		argStyle := lipgloss.NewStyle()
 		if i < len(m.args) {
-			argStyle = m.args[i].ArgStyle
+			argStyle = m.args[i].argStyle
 		}
 		viewBuilder.render(arg.Value, argStyle)
 	}
 
+	// Render current arg if persist == true
+	currentArg := len(m.parsedText.Args.Value) - 1
+	if currentArg >= 0 && currentArg < len(m.args) {
+		arg := m.args[currentArg]
+		if arg.persist && strings.HasPrefix(arg.text, m.parsedText.Args.Value[currentArg].Value) {
+			tokenPos := len(m.parsedText.Args.Value[currentArg].Value)
+			viewBuilder.render(arg.text[tokenPos:], arg.placeholderStyle)
+		}
+	}
+
+	// Render arg placeholders
 	startPlaceholder := len(m.parsedText.Args.Value)
 	if startPlaceholder < len(m.args) {
 		for _, arg := range m.args[startPlaceholder:] {
@@ -386,7 +432,7 @@ func (m Model) View() string {
 			if last == nil || *last != ' ' {
 				viewBuilder.render(" ", lipgloss.NewStyle())
 			}
-			viewBuilder.render(arg.Text, arg.PlaceholderStyle)
+			viewBuilder.render(arg.text, arg.placeholderStyle)
 		}
 	}
 
