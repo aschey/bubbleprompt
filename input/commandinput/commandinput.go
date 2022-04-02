@@ -38,6 +38,19 @@ type Model struct {
 	parsedText        *Statement
 }
 
+type TokenPos struct {
+	Start int
+	End   int
+	Index int
+}
+
+type RoundingBehavior int
+
+const (
+	RoundUp RoundingBehavior = iota
+	RoundDown
+)
+
 func New(opts ...Option) *Model {
 	textinput := textinput.New()
 	textinput.Focus()
@@ -101,6 +114,16 @@ type ident struct {
 	Value string `parser:"@QuotedString | @String"`
 }
 
+func (m *Model) ShouldUnselectSuggestion(prevText string, msg tea.KeyMsg) bool {
+	pos := m.Cursor()
+	switch msg.Type {
+	case tea.KeyBackspace, tea.KeyDelete:
+		return pos < len(prevText) && !m.IsDelimiter(string(prevText[pos]))
+	default:
+		return true
+	}
+}
+
 func (m *Model) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
 	m.textinput, cmd = m.textinput.Update(msg)
@@ -126,8 +149,8 @@ func (m *Model) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion) tea.Cm
 		m.args = []arg{}
 		m.args = append(m.args, m.originalArgs...)
 		// Subtract 1 to get arg position because index 0 is the command itself
-		index := m.CurrentTokenPos().Index - 1
-		if index < len(m.args) {
+		index := m.CurrentTokenPos(RoundUp).Index - 1
+		if index >= 0 && index < len(m.args) {
 			// Replace current arg with the suggestion
 			m.args[index] = arg{
 				text:             suggestion.Text,
@@ -163,7 +186,7 @@ func (m *Model) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion) tea.Cm
 }
 
 func (m *Model) OnSuggestionChanged(suggestion input.Suggestion) {
-	tokenPos := m.CurrentTokenPos()
+	tokenPos := m.CurrentTokenPos(RoundUp)
 	if tokenPos.Index == 0 {
 		m.selectedCommand = &suggestion
 	}
@@ -172,14 +195,10 @@ func (m *Model) OnSuggestionChanged(suggestion input.Suggestion) {
 	if tokenPos.Start > -1 {
 		m.SetValue(text[:tokenPos.Start] + suggestion.Text + text[tokenPos.End:])
 		// Sometimes SetValue moves the cursor to the end of the line so we need to move it back to the current token
-		m.SetCursor(tokenPos.Start)
+		m.SetCursor(len(text[:tokenPos.Start]+suggestion.Text) - suggestion.CursorOffset)
 	} else {
 		m.SetValue(suggestion.Text)
 	}
-	// Recalculate token end position after setting the value to the new suggestion
-	newEnd := m.CurrentTokenPos().End
-	// Move cursor to the end of the token
-	m.SetCursor(newEnd - suggestion.CursorOffset)
 }
 
 func (m *Model) OnSuggestionUnselected() {
@@ -192,7 +211,9 @@ func (m *Model) CompletionText(text string) string {
 	expr := &Statement{}
 	_ = m.parser.ParseString("", text, expr)
 	tokens := m.allTokens(expr)
-	return m.currentToken(tokens)
+	token := m.currentToken(tokens, RoundUp)
+
+	return token
 }
 
 func (m *Model) Focus() tea.Cmd {
@@ -269,30 +290,42 @@ func (m *Model) SetPrompt(prompt string) {
 	m.prompt = prompt
 }
 
-func (m Model) cursorInToken(tokens []ident, pos int) bool {
+func (m Model) cursorInToken(tokens []ident, pos int, roundingBehavior RoundingBehavior) bool {
 	cursor := m.Cursor()
-	return cursor >= tokens[pos].Pos.Offset && cursor <= tokens[pos].Pos.Offset+len(tokens[pos].Value)
+	isInToken := cursor >= tokens[pos].Pos.Offset && cursor <= tokens[pos].Pos.Offset+len(tokens[pos].Value)
+	if isInToken {
+		return true
+	}
+	if roundingBehavior == RoundDown {
+		if pos == len(tokens)-1 {
+			return false
+		}
+		return cursor < tokens[pos+1].Pos.Offset
+	} else {
+		if pos == 0 {
+			return false
+		}
+		return cursor > tokens[pos-1].Pos.Offset+len(tokens[pos-1].Value) && cursor < tokens[pos].Pos.Offset
+	}
+
 }
 
-type TokenPos struct {
-	Start int
-	End   int
-	Index int
+func (m Model) CurrentTokenPos(roundingBehavior RoundingBehavior) TokenPos {
+	return m.currentTokenPos(m.AllTokens(), roundingBehavior)
 }
 
-func (m Model) CurrentTokenPos() TokenPos {
+func (m Model) currentTokenPos(tokens []ident, roundingBehavior RoundingBehavior) TokenPos {
 	cursor := m.Cursor()
-	tokens := m.AllTokens()
 	if len(tokens) > 0 {
-		// Check if cursor is at the end
 		last := tokens[len(tokens)-1]
 		index := len(tokens) - 1
 		value := m.Value()
-		if cursor > 0 && m.IsDelimiter(string(value[cursor-1])) {
+		if roundingBehavior == RoundUp && cursor > 0 && m.IsDelimiter(string(value[cursor-1])) {
 			// Haven't started a new token yet, but we have added a delimiter
 			// so we'll consider the current token finished
 			index++
 		}
+		// Check if cursor is at the end
 		if cursor > last.Pos.Offset+len(last.Value) {
 			return TokenPos{
 				Start: cursor,
@@ -301,9 +334,8 @@ func (m Model) CurrentTokenPos() TokenPos {
 			}
 		}
 	}
-
-	for i := len(tokens) - 1; i >= 0; i-- {
-		if m.cursorInToken(tokens, i) {
+	for i := 0; i < len(tokens); i++ {
+		if m.cursorInToken(tokens, i, roundingBehavior) {
 			return TokenPos{
 				Start: tokens[i].Pos.Offset,
 				End:   tokens[i].Pos.Offset + len(tokens[i].Value),
@@ -319,42 +351,27 @@ func (m Model) CurrentTokenPos() TokenPos {
 	}
 }
 
-func (m Model) CurrentTokenBeforeCursor() string {
-	tokens := m.AllTokens()
-	return m.currentTokenBeforeCursor(tokens)
+func (m Model) CurrentTokenBeforeCursor(roundingBehavior RoundingBehavior) string {
+	start := m.CurrentTokenPos(roundingBehavior).Start
+	cursor := m.Cursor()
+	if start > cursor {
+		return ""
+	}
+	val := m.Value()[start:cursor]
+	return val
 }
 
 func (m Model) HasArgs() bool {
 	return len(m.parsedText.Args.Value) > 0
 }
 
-func (m Model) currentTokenBeforeCursor(tokens []ident) string {
-	cursor := m.Cursor()
-	for i := len(tokens) - 1; i >= 0; i-- {
-		if m.cursorInToken(tokens, i) {
-			end := cursor - tokens[i].Pos.Offset
-			if end < len(tokens[i].Value) {
-				return tokens[i].Value[:end]
-			}
-			return tokens[i].Value
-		}
-	}
-
-	return ""
+func (m Model) CurrentToken(roundingBehavior RoundingBehavior) string {
+	return m.currentToken(m.AllTokens(), roundingBehavior)
 }
 
-func (m Model) CurrentToken() string {
-	return m.currentToken(m.AllTokens())
-}
-
-func (m Model) currentToken(tokens []ident) string {
-	for i := len(tokens) - 1; i >= 0; i-- {
-		if m.cursorInToken(tokens, i) {
-			return tokens[i].Value
-		}
-	}
-
-	return ""
+func (m Model) currentToken(tokens []ident, roundingBehavior RoundingBehavior) string {
+	pos := m.currentTokenPos(tokens, roundingBehavior)
+	return m.Value()[pos.Start:pos.End]
 }
 
 func (m Model) LastArg() *ident {
@@ -429,7 +446,12 @@ func (m Model) View() string {
 	// Render arg placeholders
 	startPlaceholder := len(m.parsedText.Args.Value)
 	if startPlaceholder < len(m.args) {
-		for _, arg := range m.args[startPlaceholder:] {
+		for i, arg := range m.args[startPlaceholder:] {
+			if i == 0 && viewBuilder.viewLen() < len(text) {
+				space := text[viewBuilder.viewLen():]
+				viewBuilder.render(space, lipgloss.NewStyle())
+			}
+
 			last := viewBuilder.last()
 			if last == nil || *last != ' ' {
 				viewBuilder.render(" ", lipgloss.NewStyle())
@@ -449,7 +471,7 @@ func (m Model) View() string {
 				// Text ends with delimiter, get the length without trailing delimiters
 				textLength := len(value[:lastMatch[0]])
 				// Render the trailing delimiters
-				extraSpace := m.Value()[textLength:]
+				extraSpace := text[textLength:]
 				viewBuilder.render(extraSpace, lipgloss.NewStyle())
 			}
 		}

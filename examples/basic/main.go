@@ -39,7 +39,7 @@ func (m model) View() string {
 
 func (m completerModel) completer(document prompt.Document, promptModel prompt.Model) []input.Suggestion {
 	time.Sleep(100 * time.Millisecond)
-	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions)
+	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp), m.suggestions)
 }
 
 func executor(input string, selected *input.Suggestion, suggestions []input.Suggestion) (tea.Model, error) {

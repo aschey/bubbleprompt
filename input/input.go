@@ -11,15 +11,16 @@ type Input interface {
 	Focus() tea.Cmd
 	Focused() bool
 	Value() string
-	SetValue(string)
+	SetValue(value string)
 	Blur()
 	Cursor() int
-	SetCursor(int)
+	SetCursor(cursor int)
 	Prompt() string
-	SetPrompt(string)
-	CompletionText(string) string
+	SetPrompt(prompt string)
+	CompletionText(text string) string
 	OnUpdateFinish(msg tea.Msg, suggestion *Suggestion) tea.Cmd
 	OnSuggestionChanged(suggestion Suggestion)
-	IsDelimiter(string) bool
+	IsDelimiter(text string) bool
 	OnSuggestionUnselected()
+	ShouldUnselectSuggestion(prevText string, msg tea.KeyMsg) bool
 }

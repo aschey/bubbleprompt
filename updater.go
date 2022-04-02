@@ -96,11 +96,8 @@ func (m *Model) updateCompleting(msg tea.Msg, cmds []tea.Cmd, prevText string) (
 		case tea.KeyEnter:
 			cmds = m.submit(msg, cmds)
 
-		case tea.KeyRunes:
-			cmds = m.updateRunes(msg, cmds)
-
-		case tea.KeyBackspace, tea.KeyDelete:
-			cmds = m.updateBackspace(msg, cmds, prevText)
+		case tea.KeyBackspace, tea.KeyDelete, tea.KeyRunes:
+			cmds = m.updateKeypress(msg, cmds, prevText)
 
 		case tea.KeyLeft, tea.KeyRight:
 			cmds = m.updatePosition(msg, cmds)
@@ -135,6 +132,7 @@ func (m *Model) finishUpdate(msg tea.Msg) tea.Cmd {
 			suggestion = &filteredSuggestions[0]
 		}
 	}
+
 	return m.textInput.OnUpdateFinish(msg, suggestion)
 }
 
@@ -223,26 +221,15 @@ func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	return append(cmds, m.completer.resetCompletions(*m))
 }
 
-func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd, unselect bool) []tea.Cmd {
+func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd, prevText string) []tea.Cmd {
 	cmds = m.updatePosition(msg, cmds)
-	if unselect {
+	if m.textInput.ShouldUnselectSuggestion(prevText, msg) {
 		// Unselect selected item since user has changed the input
 		m.completer.unselectSuggestion()
 	}
 	m.selectSingle()
 
 	return cmds
-}
-
-func (m *Model) updateRunes(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
-	return m.updateKeypress(msg, cmds, !m.textInput.IsDelimiter(msg.String()))
-}
-
-func (m *Model) updateBackspace(msg tea.KeyMsg, cmds []tea.Cmd, prevText string) []tea.Cmd {
-	pos := m.textInput.Cursor()
-	unselectSuggestion := pos < len(prevText) && !m.textInput.IsDelimiter(string(prevText[pos]))
-	return m.updateKeypress(msg, cmds, unselectSuggestion)
-
 }
 
 func (m *Model) updatePosition(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
