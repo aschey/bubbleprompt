@@ -6,7 +6,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func (m Model) renderExecuting(lines string) string {
+func (m Model[I]) renderExecuting(lines string) string {
 	executorModel := *m.executorModel
 	// Add a newline to ensure the text gets pushed up
 	// this ensures the text doesn't jump if the completer takes a while to finish
@@ -15,7 +15,7 @@ func (m Model) renderExecuting(lines string) string {
 	return lines
 }
 
-func (m Model) renderCompleting(lines string) string {
+func (m Model[I]) renderCompleting(lines string) string {
 	// If an item is selected, parse out the text portion and apply formatting
 	textView := m.textInput.View()
 	lines += textView + "\n"
@@ -30,7 +30,7 @@ func (m Model) renderCompleting(lines string) string {
 	return lines
 }
 
-func (m Model) render() string {
+func (m Model[I]) render() string {
 	lines := m.previousCommands
 	suggestionLength := len(m.completer.suggestions)
 

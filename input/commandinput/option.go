@@ -2,24 +2,24 @@ package commandinput
 
 import "regexp"
 
-type Option func(model *Model) error
+type Option[T CmdMetadataAccessor] func(model *Model[T]) error
 
-func WithPrompt(prompt string) Option {
-	return func(model *Model) error {
+func WithPrompt[T CmdMetadataAccessor](prompt string) Option[T] {
+	return func(model *Model[T]) error {
 		model.SetPrompt(prompt)
 		return nil
 	}
 }
 
-func WithDelimiterRegex(delimiterRegex *regexp.Regexp) Option {
-	return func(model *Model) error {
+func WithDelimiterRegex[T CmdMetadataAccessor](delimiterRegex *regexp.Regexp) Option[T] {
+	return func(model *Model[T]) error {
 		model.SetDelimiterRegex(delimiterRegex)
 		return nil
 	}
 }
 
-func WithStringRegex(stringRegex *regexp.Regexp) Option {
-	return func(model *Model) error {
+func WithStringRegex[T CmdMetadataAccessor](stringRegex *regexp.Regexp) Option[T] {
+	return func(model *Model[T]) error {
 		model.SetStringRegex(stringRegex)
 		return nil
 	}

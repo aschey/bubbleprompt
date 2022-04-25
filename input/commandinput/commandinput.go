@@ -20,15 +20,69 @@ type arg struct {
 	persist          bool
 }
 
-type Model struct {
+type PositionalArg struct {
+	Placeholder      string
+	PlaceholderStyle input.Text
+	ArgStyle         input.Text
+}
+
+type Placeholder struct {
+	Text  string
+	Style input.Text
+}
+
+type Flag struct {
+	Short            string
+	Long             string
+	Placeholder      string
+	Description      string
+	RequiresArg      bool
+	PlaceholderStyle input.Text
+}
+
+func NewPositionalArg(placeholder string) PositionalArg {
+	placeholderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
+	return PositionalArg{
+		Placeholder: placeholder,
+		PlaceholderStyle: input.Text{
+			Style: placeholderStyle,
+		},
+	}
+}
+
+type CmdMetadataAccessor interface {
+	PositionalArgs() []PositionalArg
+	FlagPlaceholder() Placeholder
+}
+
+type CmdMetadata struct {
+	positionalArgs  []PositionalArg
+	flagPlaceholder Placeholder
+}
+
+func NewCmdMetadata(positionalArgs []PositionalArg, flagPlaceholder Placeholder) CmdMetadata {
+	return CmdMetadata{
+		positionalArgs, flagPlaceholder,
+	}
+}
+
+func (m CmdMetadata) PositionalArgs() []PositionalArg {
+	return m.positionalArgs
+}
+
+func (m CmdMetadata) FlagPlaceholder() Placeholder {
+	return m.flagPlaceholder
+}
+
+type Model[T CmdMetadataAccessor] struct {
 	textinput         textinput.Model
 	Placeholder       string
 	prompt            string
 	delimiterRegex    *regexp.Regexp
 	stringRegex       *regexp.Regexp
 	args              []arg
-	originalArgs      []arg
-	selectedCommand   *input.Suggestion
+	selectedCommand   *input.Suggestion[T]
+	currentFlag       *input.Suggestion[T]
 	PromptStyle       lipgloss.Style
 	TextStyle         lipgloss.Style
 	SelectedTextStyle lipgloss.Style
@@ -51,10 +105,10 @@ const (
 	RoundDown
 )
 
-func New(opts ...Option) *Model {
+func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T] {
 	textinput := textinput.New()
 	textinput.Focus()
-	model := &Model{
+	model := &Model[T]{
 		textinput:         textinput,
 		Placeholder:       "",
 		prompt:            "> ",
@@ -62,7 +116,7 @@ func New(opts ...Option) *Model {
 		SelectedTextStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("10")),
 		parsedText:        &Statement{},
 		delimiterRegex:    regexp.MustCompile(`\s+`),
-		stringRegex:       regexp.MustCompile(`[^\s]+`),
+		stringRegex:       regexp.MustCompile(`[^\-\s][^\s]*`),
 	}
 	for _, opt := range opts {
 		if err := opt(model); err != nil {
@@ -74,8 +128,11 @@ func New(opts ...Option) *Model {
 	return model
 }
 
-func (m *Model) buildParser() {
+func (m *Model[T]) buildParser() {
 	lexer := lexer.MustSimple([]lexer.Rule{
+		{Name: "LongFlag", Pattern: `\-\-[^\s=\-]*`},
+		{Name: "ShortFlag", Pattern: `\-[^\s=\-]*`},
+		{Name: "Eq", Pattern: "="},
 		{Name: "QuotedString", Pattern: `"[^"]*"`},
 		{Name: `String`, Pattern: m.stringRegex.String()},
 		{Name: "whitespace", Pattern: m.delimiterRegex.String()},
@@ -84,16 +141,16 @@ func (m *Model) buildParser() {
 	m.parser = parser
 }
 
-func (m *Model) Init() tea.Cmd {
+func (m *Model[T]) Init() tea.Cmd {
 	return textinput.Blink
 }
 
-func (m *Model) SetDelimiterRegex(delimiterRegex *regexp.Regexp) {
+func (m *Model[T]) SetDelimiterRegex(delimiterRegex *regexp.Regexp) {
 	m.delimiterRegex = delimiterRegex
 	m.buildParser()
 }
 
-func (m *Model) SetStringRegex(stringRegex *regexp.Regexp) {
+func (m *Model[T]) SetStringRegex(stringRegex *regexp.Regexp) {
 	m.stringRegex = stringRegex
 	m.buildParser()
 }
@@ -102,6 +159,7 @@ type Statement struct {
 	Pos     lexer.Position
 	Command ident `parser:"@@?"`
 	Args    args  `parser:"@@"`
+	Flags   flags `parser:"@@"`
 }
 
 type args struct {
@@ -109,12 +167,24 @@ type args struct {
 	Value []ident `parser:"@@*"`
 }
 
-type ident struct {
+type flags struct {
 	Pos   lexer.Position
-	Value string `parser:"@QuotedString | @String"`
+	Value []flag `parser:"@@*"`
 }
 
-func (m *Model) ShouldUnselectSuggestion(prevText string, msg tea.KeyMsg) bool {
+type flag struct {
+	Pos   lexer.Position
+	Name  string  `parser:"( @ShortFlag | @LongFlag )"`
+	Delim *string `parser:"@Eq?"`
+	Value *ident  `parser:"@@?"`
+}
+
+type ident struct {
+	Pos   lexer.Position
+	Value string `parser:"( @QuotedString | @String )"`
+}
+
+func (m *Model[T]) ShouldUnselectSuggestion(prevText string, msg tea.KeyMsg) bool {
 	pos := m.Cursor()
 	switch msg.Type {
 	case tea.KeyBackspace, tea.KeyDelete:
@@ -124,52 +194,109 @@ func (m *Model) ShouldUnselectSuggestion(prevText string, msg tea.KeyMsg) bool {
 	}
 }
 
-func (m *Model) OnUpdateStart(msg tea.Msg) tea.Cmd {
+func (m *Model[T]) ShouldClearSuggestions(prevText string, msg tea.KeyMsg) bool {
+	return m.IsDelimiter(msg.String())
+}
+
+func (m *Model[T]) SelectedCommand() *input.Suggestion[T] {
+	return m.selectedCommand
+}
+
+func (m *Model[T]) ArgsBeforeCursor() []string {
+	args := []string{}
+	textBeforeCursor := m.Value()[:m.Cursor()]
+	expr := &Statement{}
+	_ = m.parser.ParseString("", textBeforeCursor, expr)
+
+	for _, arg := range expr.Args.Value {
+		args = append(args, arg.Value)
+	}
+	return args
+}
+
+func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
 	m.textinput, cmd = m.textinput.Update(msg)
 
 	expr := &Statement{}
 	err := m.parser.ParseString("", m.Value(), expr)
-	if err != nil {
-		fmt.Println(err)
+	if err == nil {
+		m.parsedText = expr
 	}
-
-	m.parsedText = expr
 
 	return cmd
 }
 
-func (m *Model) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion) tea.Cmd {
+func (m *Model[T]) FlagSuggestions(inputStr string, flags []Flag, suggestionFunc func(CmdMetadata, Flag) T) []input.Suggestion[T] {
+	suggestions := []input.Suggestion[T]{}
+	isLong := strings.HasPrefix(inputStr, "--")
+	isMulti := !isLong && strings.HasPrefix(inputStr, "-") && len(inputStr) > 2
+	tokenIndex := m.CurrentTokenPos(RoundUp).Index
+	prevToken := m.AllTokens()[tokenIndex-1].Value
+	curFlagText := ""
+	if isMulti {
+		curFlagText = string(inputStr[len(inputStr)-1])
+	}
+	for _, flag := range flags {
+		if ((isMulti && flag.Short == curFlagText) || prevToken == "-"+flag.Short) && flag.RequiresArg {
+			return []input.Suggestion[T]{}
+		}
+
+		long := "--" + flag.Long
+		short := "-" + flag.Short
+		if ((isLong || flag.Short == "") && strings.HasPrefix(long, inputStr)) || strings.HasPrefix(short, inputStr) || (isMulti && !flag.RequiresArg) {
+			suggestion := input.Suggestion[T]{
+				Description: flag.Description,
+			}
+			if isLong {
+				suggestion.Text = long
+			} else if isMulti {
+				suggestion.Text = flag.Short
+			} else {
+				suggestion.Text = short
+			}
+			metadata := CmdMetadata{}
+			suggestion.Metadata = suggestionFunc(metadata, flag)
+			suggestions = append(suggestions, suggestion)
+		}
+	}
+
+	return suggestions
+}
+
+func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T]) tea.Cmd {
 	if m.CommandCompleted() {
 		// If no suggestions, leave args alone
 		if suggestion == nil {
+			m.currentFlag = nil
 			return nil
 		}
 
-		m.args = []arg{}
-		m.args = append(m.args, m.originalArgs...)
-		// Subtract 1 to get arg position because index 0 is the command itself
+		if strings.HasPrefix(suggestion.Text, "-") { //&& strings.HasPrefix(m.CurrentToken(RoundUp), "-") {
+			m.currentFlag = suggestion
+		} else {
+			m.currentFlag = nil
+		}
+
 		index := m.CurrentTokenPos(RoundUp).Index - 1
 		if index >= 0 && index < len(m.args) {
 			// Replace current arg with the suggestion
 			m.args[index] = arg{
 				text:             suggestion.Text,
 				placeholderStyle: m.PlaceholderStyle,
-				argStyle:         m.originalArgs[index].argStyle,
+				argStyle:         m.args[index].argStyle,
 				persist:          true,
 			}
 		}
-
 	} else {
 		m.args = []arg{}
-		// Keep original args so we can reset to this state later
-		m.originalArgs = []arg{}
+
 		if suggestion == nil {
 			// Didn't find any matching suggestions, reset
 			m.Placeholder = ""
 		} else {
 			m.Placeholder = suggestion.Text
-			for _, posArg := range suggestion.PositionalArgs {
+			for _, posArg := range suggestion.Metadata.PositionalArgs() {
 				newArg := arg{
 					text:             posArg.Placeholder,
 					placeholderStyle: posArg.PlaceholderStyle.Style,
@@ -177,7 +304,6 @@ func (m *Model) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion) tea.Cm
 					persist:          false,
 				}
 				m.args = append(m.args, newArg)
-				m.originalArgs = append(m.originalArgs, newArg)
 			}
 		}
 	}
@@ -185,7 +311,7 @@ func (m *Model) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion) tea.Cm
 	return nil
 }
 
-func (m *Model) OnSuggestionChanged(suggestion input.Suggestion) {
+func (m *Model[T]) OnSuggestionChanged(suggestion input.Suggestion[T]) {
 	tokenPos := m.CurrentTokenPos(RoundUp)
 	if tokenPos.Index == 0 {
 		m.selectedCommand = &suggestion
@@ -201,13 +327,13 @@ func (m *Model) OnSuggestionChanged(suggestion input.Suggestion) {
 	}
 }
 
-func (m *Model) OnSuggestionUnselected() {
+func (m *Model[T]) OnSuggestionUnselected() {
 	if !m.CommandCompleted() {
 		m.selectedCommand = nil
 	}
 }
 
-func (m *Model) CompletionText(text string) string {
+func (m *Model[T]) CompletionText(text string) string {
 	expr := &Statement{}
 	_ = m.parser.ParseString("", text, expr)
 	tokens := m.allTokens(expr)
@@ -216,19 +342,19 @@ func (m *Model) CompletionText(text string) string {
 	return token
 }
 
-func (m *Model) Focus() tea.Cmd {
+func (m *Model[T]) Focus() tea.Cmd {
 	return m.textinput.Focus()
 }
 
-func (m *Model) Value() string {
+func (m *Model[T]) Value() string {
 	return m.textinput.Value()
 }
 
-func (m *Model) ParsedValue() Statement {
+func (m *Model[T]) ParsedValue() Statement {
 	return *m.parsedText
 }
 
-func (m *Model) CommandBeforeCursor() string {
+func (m *Model[T]) CommandBeforeCursor() string {
 	parsed := m.ParsedValue()
 	if m.Cursor() >= len(parsed.Command.Value) {
 		return parsed.Command.Value
@@ -236,7 +362,7 @@ func (m *Model) CommandBeforeCursor() string {
 	return parsed.Command.Value[:m.Cursor()]
 }
 
-func (m *Model) SetValue(s string) {
+func (m *Model[T]) SetValue(s string) {
 	m.textinput.SetValue(s)
 	expr := &Statement{}
 	err := m.parser.ParseString("", m.Value(), expr)
@@ -247,21 +373,27 @@ func (m *Model) SetValue(s string) {
 	m.parsedText = expr
 }
 
-func (m *Model) IsDelimiter(s string) bool {
+func (m *Model[T]) IsDelimiter(s string) bool {
 	return m.delimiterRegex.MatchString(s)
 }
 
-func (m Model) AllTokens() []ident {
+func (m Model[T]) AllTokens() []ident {
 	return m.allTokens(m.parsedText)
 }
 
-func (m Model) allTokens(statement *Statement) []ident {
+func (m Model[T]) allTokens(statement *Statement) []ident {
 	tokens := []ident{statement.Command}
 	tokens = append(tokens, statement.Args.Value...)
+	for _, flag := range statement.Flags.Value {
+		tokens = append(tokens, ident{Pos: flag.Pos, Value: flag.Name})
+		if flag.Value != nil {
+			tokens = append(tokens, *flag.Value)
+		}
+	}
 	return tokens
 }
 
-func (m Model) AllValues() []string {
+func (m Model[T]) AllValues() []string {
 	tokens := m.AllTokens()
 	values := []string{}
 	for _, t := range tokens {
@@ -270,27 +402,27 @@ func (m Model) AllValues() []string {
 	return values
 }
 
-func (m Model) Cursor() int {
+func (m Model[T]) Cursor() int {
 	return m.textinput.Cursor()
 }
 
-func (m *Model) SetCursor(pos int) {
+func (m *Model[T]) SetCursor(pos int) {
 	m.textinput.SetCursor(pos)
 }
 
-func (m Model) Focused() bool {
+func (m Model[T]) Focused() bool {
 	return m.textinput.Focused()
 }
 
-func (m *Model) Prompt() string {
+func (m *Model[T]) Prompt() string {
 	return m.prompt
 }
 
-func (m *Model) SetPrompt(prompt string) {
+func (m *Model[T]) SetPrompt(prompt string) {
 	m.prompt = prompt
 }
 
-func (m Model) cursorInToken(tokens []ident, pos int, roundingBehavior RoundingBehavior) bool {
+func (m Model[T]) cursorInToken(tokens []ident, pos int, roundingBehavior RoundingBehavior) bool {
 	cursor := m.Cursor()
 	isInToken := cursor >= tokens[pos].Pos.Offset && cursor <= tokens[pos].Pos.Offset+len(tokens[pos].Value)
 	if isInToken {
@@ -298,7 +430,7 @@ func (m Model) cursorInToken(tokens []ident, pos int, roundingBehavior RoundingB
 	}
 	if roundingBehavior == RoundDown {
 		if pos == len(tokens)-1 {
-			return false
+			return true
 		}
 		return cursor < tokens[pos+1].Pos.Offset
 	} else {
@@ -310,11 +442,11 @@ func (m Model) cursorInToken(tokens []ident, pos int, roundingBehavior RoundingB
 
 }
 
-func (m Model) CurrentTokenPos(roundingBehavior RoundingBehavior) TokenPos {
+func (m Model[T]) CurrentTokenPos(roundingBehavior RoundingBehavior) TokenPos {
 	return m.currentTokenPos(m.AllTokens(), roundingBehavior)
 }
 
-func (m Model) currentTokenPos(tokens []ident, roundingBehavior RoundingBehavior) TokenPos {
+func (m Model[T]) currentTokenPos(tokens []ident, roundingBehavior RoundingBehavior) TokenPos {
 	cursor := m.Cursor()
 	if len(tokens) > 0 {
 		last := tokens[len(tokens)-1]
@@ -351,7 +483,7 @@ func (m Model) currentTokenPos(tokens []ident, roundingBehavior RoundingBehavior
 	}
 }
 
-func (m Model) CurrentTokenBeforeCursor(roundingBehavior RoundingBehavior) string {
+func (m Model[T]) CurrentTokenBeforeCursor(roundingBehavior RoundingBehavior) string {
 	start := m.CurrentTokenPos(roundingBehavior).Start
 	cursor := m.Cursor()
 	if start > cursor {
@@ -361,20 +493,20 @@ func (m Model) CurrentTokenBeforeCursor(roundingBehavior RoundingBehavior) strin
 	return val
 }
 
-func (m Model) HasArgs() bool {
+func (m Model[T]) HasArgs() bool {
 	return len(m.parsedText.Args.Value) > 0
 }
 
-func (m Model) CurrentToken(roundingBehavior RoundingBehavior) string {
+func (m Model[T]) CurrentToken(roundingBehavior RoundingBehavior) string {
 	return m.currentToken(m.AllTokens(), roundingBehavior)
 }
 
-func (m Model) currentToken(tokens []ident, roundingBehavior RoundingBehavior) string {
+func (m Model[T]) currentToken(tokens []ident, roundingBehavior RoundingBehavior) string {
 	pos := m.currentTokenPos(tokens, roundingBehavior)
 	return m.Value()[pos.Start:pos.End]
 }
 
-func (m Model) LastArg() *ident {
+func (m Model[T]) LastArg() *ident {
 	parsed := *m.parsedText
 	if len(parsed.Args.Value) == 0 {
 		return nil
@@ -382,18 +514,18 @@ func (m Model) LastArg() *ident {
 	return &parsed.Args.Value[len(parsed.Args.Value)-1]
 }
 
-func (m Model) CommandCompleted() bool {
+func (m Model[T]) CommandCompleted() bool {
 	if m.parsedText == nil {
 		return false
 	}
 	return m.Cursor() > m.parsedText.Command.Pos.Offset+len(m.parsedText.Command.Value)
 }
 
-func (m *Model) Blur() {
+func (m *Model[T]) Blur() {
 	m.textinput.Blur()
 }
 
-func (m Model) View() string {
+func (m Model[T]) View() string {
 	viewBuilder := newViewBuilder(m)
 	text := m.Value()
 	leadingSpace := text[:m.parsedText.Command.Pos.Offset]
@@ -443,8 +575,52 @@ func (m Model) View() string {
 		}
 	}
 
+	// Render flags
+	for i, flag := range m.parsedText.Flags.Value {
+		space := text[viewBuilder.viewLen():flag.Pos.Offset]
+		viewBuilder.render(space, lipgloss.NewStyle())
+		viewBuilder.render(flag.Name, lipgloss.NewStyle())
+		if len(flag.Name) > 1 {
+			delim := " "
+			if flag.Delim != nil {
+				delim = *flag.Delim
+			}
+			viewBuilder.render(delim, lipgloss.NewStyle())
+		}
+
+		if flag.Value != nil && len(flag.Value.Value) > 0 {
+			viewBuilder.render(flag.Value.Value, lipgloss.NewStyle())
+		} else if i == len(m.parsedText.Flags.Value)-1 && m.CurrentTokenPos(RoundUp).Index == len(m.AllTokens())-1 {
+			if m.currentFlag != nil && len(m.currentFlag.Metadata.FlagPlaceholder().Text) > 0 && flag.Name[len(flag.Name)-1] != '-' {
+				viewBuilder.render(m.currentFlag.Metadata.FlagPlaceholder().Text, m.currentFlag.Metadata.FlagPlaceholder().Style.Style)
+			}
+		}
+	}
+
+	// Render current flag
+	if m.currentFlag != nil {
+		argVal := ""
+		if len(m.parsedText.Flags.Value) > 0 {
+			argVal = m.parsedText.Flags.Value[len(m.parsedText.Flags.Value)-1].Name
+
+		} else {
+			viewBuilder.render(" ", lipgloss.NewStyle())
+		}
+
+		// Render the rest of the arg placeholder only if the prefix matches
+		if strings.HasPrefix(m.currentFlag.Text, argVal) {
+			tokenPos := len(argVal)
+
+			viewBuilder.render(m.currentFlag.Text[tokenPos:], m.args[0].placeholderStyle)
+		}
+	}
+
+	if len(m.parsedText.Flags.Value) == 0 {
+		m.args = append(m.args, arg{text: "[flags]", placeholderStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("14"))})
+	}
+
 	// Render arg placeholders
-	startPlaceholder := len(m.parsedText.Args.Value)
+	startPlaceholder := len(m.parsedText.Args.Value) + len(m.parsedText.Flags.Value)
 	if startPlaceholder < len(m.args) {
 		for i, arg := range m.args[startPlaceholder:] {
 			if i == 0 && viewBuilder.viewLen() < len(text) {
@@ -456,6 +632,7 @@ func (m Model) View() string {
 			if last == nil || *last != ' ' {
 				viewBuilder.render(" ", lipgloss.NewStyle())
 			}
+
 			viewBuilder.render(arg.text, arg.placeholderStyle)
 		}
 	}

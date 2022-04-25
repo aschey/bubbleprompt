@@ -14,22 +14,24 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+type cmdMetadata = commandinput.CmdMetadata
+
 type model struct {
-	prompt Model
+	prompt Model[cmdMetadata]
 }
 
 type testCompleterModel struct {
-	suggestions []input.Suggestion
+	suggestions []input.Suggestion[cmdMetadata]
 }
 
 type testExecutorModel struct{}
 
 type testData struct {
-	suggestions  []input.Suggestion
+	suggestions  []input.Suggestion[cmdMetadata]
 	tester       tuitest.Tester
 	initialLines []string
 	model        model
-	textInput    *commandinput.Model
+	textInput    *commandinput.Model[cmdMetadata]
 }
 
 func (m model) Init() tea.Cmd {
@@ -46,17 +48,17 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
-func (m testCompleterModel) completer(document Document, promptModel Model) []input.Suggestion {
+func (m testCompleterModel) completer(document Document, promptModel Model[cmdMetadata]) []input.Suggestion[cmdMetadata] {
 	return completers.FilterHasPrefix(document.TextBeforeCursor(), m.suggestions)
 }
 
-func (m testExecutorModel) executor(input string, selected *input.Suggestion, suggestions []input.Suggestion) (tea.Model, error) {
+func (m testExecutorModel) executor(input string) (tea.Model, error) {
 	return executors.NewStringModel("result is " + input), nil
 }
 
 func setup(t *testing.T) testData {
-	suggestions := []input.Suggestion{
-		{Text: "first-option", Description: "test desc", PositionalArgs: []input.PositionalArg{{Placeholder: "[test placeholder]"}}},
+	suggestions := []input.Suggestion[cmdMetadata]{
+		{Text: "first-option", Description: "test desc", Metadata: commandinput.NewCmdMetadata([]commandinput.PositionalArg{{Placeholder: "[test placeholder]"}}, commandinput.Placeholder{})},
 		{Text: "second-option", Description: "test desc2"},
 		{Text: "third-option", Description: "test desc3"},
 		{Text: "fourth-option", Description: "test desc4"},
@@ -66,7 +68,7 @@ func setup(t *testing.T) testData {
 	completerModel := testCompleterModel{suggestions: suggestions}
 	executorModel := testExecutorModel{}
 
-	textInput := commandinput.New()
+	var textInput input.Input[cmdMetadata] = commandinput.New[cmdMetadata]()
 	model := model{
 		prompt: New(
 			completerModel.completer,
@@ -93,7 +95,7 @@ func setup(t *testing.T) testData {
 	})
 	testza.AssertNoError(t, err)
 
-	return testData{suggestions, tester, initialLines, model, textInput}
+	return testData{suggestions, tester, initialLines, model, textInput.(*commandinput.Model[cmdMetadata])}
 }
 
 func teardown(t *testing.T, tester tuitest.Tester) {
@@ -176,7 +178,7 @@ func TestChoosePrompt(t *testing.T) {
 	testza.AssertNoError(t, err)
 	// Check that proper styles are applied
 	testza.AssertContains(t, lines[0], testData.textInput.SelectedTextStyle.Render(testData.suggestions[0].Text))
-	testza.AssertContains(t, lines[0], testData.suggestions[0].PositionalArgs[0].PlaceholderStyle.Format(testData.suggestions[0].PositionalArgs[0].Placeholder))
+	testza.AssertContains(t, lines[0], testData.suggestions[0].Metadata.PositionalArgs()[0].PlaceholderStyle.Format(testData.suggestions[0].Metadata.PositionalArgs()[0].Placeholder))
 	maxNameLen := len("second-option")
 	testza.AssertContains(t, lines[1], testData.model.prompt.Formatters.Name.Format(testData.suggestions[0].Text, maxNameLen, true))
 	maxDescLen := len("test desc1")
@@ -187,7 +189,7 @@ func TestChoosePrompt(t *testing.T) {
 	_, _, err = testData.tester.WaitFor(func(out string, outputLines []string) bool {
 		return len(outputLines) > 1 &&
 			strings.Contains(outputLines[1], "result is "+testData.suggestions[0].Text) &&
-			!strings.Contains(outputLines[1], testData.suggestions[0].PositionalArgs[0].Placeholder)
+			!strings.Contains(outputLines[1], testData.suggestions[0].Metadata.PositionalArgs()[0].Placeholder)
 	})
 	testza.AssertNoError(t, err)
 

@@ -13,14 +13,16 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+type cmdMetadata = commandinput.CmdMetadata
+
 type model struct {
-	prompt prompt.Model
+	prompt prompt.Model[cmdMetadata]
 }
 
 type completerModel struct {
-	suggestions       []input.Suggestion
-	textInput         *commandinput.Model
-	filepathCompleter completers.FilePathCompleter
+	suggestions       []input.Suggestion[cmdMetadata]
+	textInput         *commandinput.Model[cmdMetadata]
+	filepathCompleter completers.FilePathCompleter[cmdMetadata]
 }
 
 func (m model) Init() tea.Cmd {
@@ -37,7 +39,7 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
-func (m completerModel) completer(document prompt.Document, promptModel prompt.Model) []input.Suggestion {
+func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[cmdMetadata]) []input.Suggestion[cmdMetadata] {
 	if m.textInput.CommandCompleted() {
 		filepath := ""
 		parsed := m.textInput.ParsedValue()
@@ -49,7 +51,7 @@ func (m completerModel) completer(document prompt.Document, promptModel prompt.M
 	return completers.FilterHasPrefix(document.TextBeforeCursor(), m.suggestions)
 }
 
-func executor(input string, selected *input.Suggestion, suggestions []input.Suggestion) (tea.Model, error) {
+func executor(input string) (tea.Model, error) {
 	return executors.NewAsyncStringModel(func() string {
 		time.Sleep(100 * time.Millisecond)
 		return "test"
@@ -57,7 +59,7 @@ func executor(input string, selected *input.Suggestion, suggestions []input.Sugg
 }
 
 func main() {
-	suggestions := []input.Suggestion{
+	suggestions := []input.Suggestion[cmdMetadata]{
 		{Text: "first-option", Description: "test description"},
 		{Text: "second-option", Description: "test description2"},
 		{Text: "third-option", Description: "test description3"},
@@ -65,8 +67,8 @@ func main() {
 		{Text: "fifth-option", Description: "test description5"},
 	}
 
-	textInput := commandinput.New()
-	completerModel := completerModel{suggestions: suggestions, textInput: textInput}
+	var textInput input.Input[cmdMetadata] = commandinput.New[cmdMetadata]()
+	completerModel := completerModel{suggestions: suggestions, textInput: textInput.(*commandinput.Model[cmdMetadata])}
 
 	m := model{prompt: prompt.New(
 		completerModel.completer,

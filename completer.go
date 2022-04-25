@@ -16,15 +16,15 @@ const (
 	running
 )
 
-type Completer func(document Document, prompt Model) []input.Suggestion
+type Completer[I any] func(document Document, prompt Model[I]) []input.Suggestion[I]
 
-type completionMsg []input.Suggestion
+type completionMsg[T any] []input.Suggestion[T]
 
-type completerModel struct {
-	completerFunc  Completer
+type completerModel[I any] struct {
+	completerFunc  Completer[I]
 	state          completerState
-	textInput      input.Input
-	suggestions    []input.Suggestion
+	textInput      input.Input[I]
+	suggestions    []input.Suggestion[I]
 	maxSuggestions int
 	scroll         int
 	prevScroll     int
@@ -34,8 +34,8 @@ type completerModel struct {
 	ignoreCount    int
 }
 
-func newCompleterModel(completerFunc Completer, textInput input.Input, maxSuggestions int) completerModel {
-	return completerModel{
+func newCompleterModel[I any](completerFunc Completer[I], textInput input.Input[I], maxSuggestions int) completerModel[I] {
+	return completerModel[I]{
 		textInput:      textInput,
 		completerFunc:  completerFunc,
 		state:          idle,
@@ -44,14 +44,14 @@ func newCompleterModel(completerFunc Completer, textInput input.Input, maxSugges
 	}
 }
 
-func (c completerModel) Init() tea.Cmd {
+func (c completerModel[I]) Init() tea.Cmd {
 	// Since the user hasn't typed anything on init, call the completer with empty text
-	return c.resetCompletions(Model{})
+	return c.resetCompletions(Model[I]{})
 }
 
-func (c completerModel) Update(msg tea.Msg, prompt Model) (completerModel, tea.Cmd) {
+func (c completerModel[I]) Update(msg tea.Msg, prompt Model[I]) (completerModel[I], tea.Cmd) {
 	switch msg := msg.(type) {
-	case completionMsg:
+	case completionMsg[I]:
 		if c.ignoreCount > 0 {
 			// Request was in progress when resetCompletions was called, don't update suggestions
 			c.ignoreCount--
@@ -73,7 +73,7 @@ func (c completerModel) Update(msg tea.Msg, prompt Model) (completerModel, tea.C
 	return c, nil
 }
 
-func (c completerModel) scrollbarBounds(windowHeight int) (int, int) {
+func (c completerModel[I]) scrollbarBounds(windowHeight int) (int, int) {
 	contentHeight := len(c.suggestions)
 	// The zero-based index of the first element that will be shown when the content is scrolled to the bottom
 	lastSegmentStart := contentHeight - windowHeight
@@ -92,7 +92,7 @@ func (c completerModel) scrollbarBounds(windowHeight int) (int, int) {
 	return scrollbarTop, scrollbarTop + scrollbarHeight
 }
 
-func (c completerModel) Render(paddingSize int, formatters input.Formatters,
+func (c completerModel[I]) Render(paddingSize int, formatters input.Formatters,
 	scrollbar string, scrollbarThumb string) []string {
 	maxNameLen := 0
 	maxDescLen := 0
@@ -140,7 +140,7 @@ func (c completerModel) Render(paddingSize int, formatters input.Formatters,
 	return prompts
 }
 
-func (c *completerModel) updateCompletions(prompt Model) tea.Cmd {
+func (c *completerModel[I]) updateCompletions(prompt Model[I]) tea.Cmd {
 	input := prompt.textInput
 	text := input.Value()
 	cursorPos := input.Cursor()
@@ -172,11 +172,11 @@ func (c *completerModel) updateCompletions(prompt Model) tea.Cmd {
 			Text:           in,
 			CursorPosition: cursorPos,
 		}, prompt)
-		return completionMsg(filtered)
+		return completionMsg[I](filtered)
 	}
 }
 
-func (c *completerModel) resetCompletions(prompt Model) tea.Cmd {
+func (c *completerModel[I]) resetCompletions(prompt Model[I]) tea.Cmd {
 	if c.state == running {
 		// If completion is currently running, ignore the next value and trigger another update
 		// This helps speed up getting the next valid result for slow completers
@@ -191,27 +191,32 @@ func (c *completerModel) resetCompletions(prompt Model) tea.Cmd {
 			Text:           "",
 			CursorPosition: 0,
 		}, prompt)
-		return completionMsg(filtered)
+		return completionMsg[I](filtered)
 	}
 }
 
-func (c *completerModel) unselectSuggestion() {
+func (c *completerModel[I]) unselectSuggestion() {
 	c.selectedKey = nil
 	c.scroll = 0
 	c.prevScroll = 0
 	c.textInput.OnSuggestionUnselected()
 }
 
-func (c *completerModel) selectSuggestion(suggestion input.Suggestion) {
+func (c *completerModel[I]) clearSuggestions() {
+	c.unselectSuggestion()
+	c.suggestions = []input.Suggestion[I]{}
+}
+
+func (c *completerModel[I]) selectSuggestion(suggestion input.Suggestion[I]) {
 	c.selectedKey = suggestion.Key()
 	c.textInput.OnSuggestionChanged(suggestion)
 }
 
-func (c *completerModel) isSuggestionSelected() bool {
+func (c *completerModel[I]) isSuggestionSelected() bool {
 	return c.selectedKey != nil
 }
 
-func (c *completerModel) nextSuggestion() {
+func (c *completerModel[I]) nextSuggestion() {
 	if len(c.suggestions) == 0 {
 		return
 	}
@@ -228,7 +233,7 @@ func (c *completerModel) nextSuggestion() {
 	}
 }
 
-func (c *completerModel) previousSuggestion() {
+func (c *completerModel[I]) previousSuggestion() {
 	if len(c.suggestions) == 0 {
 		return
 	}
@@ -245,7 +250,7 @@ func (c *completerModel) previousSuggestion() {
 	}
 }
 
-func (c *completerModel) getSelectedIndex() int {
+func (c *completerModel[I]) getSelectedIndex() int {
 	if c.isSuggestionSelected() {
 		for i, suggestion := range c.suggestions {
 			if *suggestion.Key() == *c.selectedKey {
@@ -256,7 +261,7 @@ func (c *completerModel) getSelectedIndex() int {
 	return -1
 }
 
-func (c *completerModel) getSelectedSuggestion() *input.Suggestion {
+func (c *completerModel[I]) getSelectedSuggestion() *input.Suggestion[I] {
 	if c.isSuggestionSelected() {
 		for _, suggestion := range c.suggestions {
 			if *suggestion.Key() == *c.selectedKey {

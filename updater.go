@@ -10,7 +10,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
+func (m Model[I]) Update(msg tea.Msg) (Model[I], tea.Cmd) {
 	// Check for exit signals before anything else
 	// to reduce chance of program becoming frozen
 	switch msg := msg.(type) {
@@ -57,7 +57,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m *Model) updateExecuting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) {
+func (m *Model[I]) updateExecuting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) {
 	executorModel, cmd := (*m.executorModel).Update(msg)
 	m.executorModel = &executorModel
 
@@ -78,7 +78,7 @@ func (m *Model) updateExecuting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) {
 	}
 }
 
-func (m *Model) updateCompleting(msg tea.Msg, cmds []tea.Cmd, prevText string) ([]tea.Cmd, bool) {
+func (m *Model[I]) updateCompleting(msg tea.Msg, cmds []tea.Cmd, prevText string) ([]tea.Cmd, bool) {
 	scrollToBottom := false
 
 	switch msg := msg.(type) {
@@ -100,7 +100,7 @@ func (m *Model) updateCompleting(msg tea.Msg, cmds []tea.Cmd, prevText string) (
 			cmds = m.updateKeypress(msg, cmds, prevText)
 
 		case tea.KeyLeft, tea.KeyRight:
-			cmds = m.updatePosition(msg, cmds)
+			cmds = m.updateKeypress(msg, cmds, prevText) //m.updatePosition(msg, cmds)
 		}
 
 	case errMsg:
@@ -110,7 +110,7 @@ func (m *Model) updateCompleting(msg tea.Msg, cmds []tea.Cmd, prevText string) (
 	return cmds, scrollToBottom
 }
 
-func (m *Model) selectSingle() {
+func (m *Model[I]) selectSingle() {
 	// Programatically select the suggestion if it's the only one and the input matches the suggestion
 	completionText := m.textInput.CompletionText(m.textInput.Value()[:m.textInput.Cursor()])
 	if len(m.completer.suggestions) == 1 && completionText == m.completer.suggestions[0].Text {
@@ -118,7 +118,7 @@ func (m *Model) selectSingle() {
 	}
 }
 
-func (m *Model) finishUpdate(msg tea.Msg) tea.Cmd {
+func (m *Model[I]) finishUpdate(msg tea.Msg) tea.Cmd {
 	suggestion := m.completer.getSelectedSuggestion()
 	if suggestion == nil {
 		// Nothing selected
@@ -136,7 +136,7 @@ func (m *Model) finishUpdate(msg tea.Msg) tea.Cmd {
 	return m.textInput.OnUpdateFinish(msg, suggestion)
 }
 
-func (m *Model) finalizeExecutor(executorModel *executorModel) {
+func (m *Model[I]) finalizeExecutor(executorModel *executorModel) {
 	m.completer.unselectSuggestion()
 	// Store the final executor view in the history
 	// Need to store previous lines in a string instead of a []string in order to handle newlines from the tea.Model's View value properly
@@ -145,7 +145,7 @@ func (m *Model) finalizeExecutor(executorModel *executorModel) {
 	m.updateExecutor(nil, nil)
 }
 
-func (m *Model) updateWindowSizeMsg(msg tea.WindowSizeMsg) {
+func (m *Model[I]) updateWindowSizeMsg(msg tea.WindowSizeMsg) {
 	if !m.ready {
 		m.viewport = viewport.New(msg.Width, msg.Height-1)
 		// TODO: register better bindings for these once the new input reader is merged
@@ -158,7 +158,7 @@ func (m *Model) updateWindowSizeMsg(msg tea.WindowSizeMsg) {
 	}
 }
 
-func (m *Model) updateChosenListEntry(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
+func (m *Model[I]) updateChosenListEntry(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	if !m.completer.isSuggestionSelected() {
 		// No suggestion currently suggested, store the last cursor position before selecting
 		// so we can restore it later
@@ -183,7 +183,7 @@ func (m *Model) updateChosenListEntry(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd 
 	}
 }
 
-func (m *Model) updateExecutor(executor *executorModel, err error) {
+func (m *Model[I]) updateExecutor(executor *executorModel, err error) {
 	m.executorModel = executor
 	if m.executorModel == nil {
 		m.modelState = completing
@@ -192,10 +192,9 @@ func (m *Model) updateExecutor(executor *executorModel, err error) {
 	}
 }
 
-func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
-	curSuggestion := m.completer.getSelectedSuggestion()
+func (m *Model[I]) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	textValue := m.textInput.Value()
-	innerExecutor, err := m.executor(textValue, curSuggestion, m.completer.suggestions)
+	innerExecutor, err := m.executor(textValue)
 	// Reset all text and selection state
 	m.typedText = ""
 	m.lastTypedCursorPosition = 0
@@ -221,9 +220,11 @@ func (m *Model) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	return append(cmds, m.completer.resetCompletions(*m))
 }
 
-func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd, prevText string) []tea.Cmd {
+func (m *Model[I]) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd, prevText string) []tea.Cmd {
 	cmds = m.updatePosition(msg, cmds)
-	if m.textInput.ShouldUnselectSuggestion(prevText, msg) {
+	if m.textInput.ShouldClearSuggestions(prevText, msg) {
+		m.completer.clearSuggestions()
+	} else if m.textInput.ShouldUnselectSuggestion(prevText, msg) {
 		// Unselect selected item since user has changed the input
 		m.completer.unselectSuggestion()
 	}
@@ -232,7 +233,7 @@ func (m *Model) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd, prevText string) 
 	return cmds
 }
 
-func (m *Model) updatePosition(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
+func (m *Model[I]) updatePosition(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	m.lastTypedCursorPosition = m.textInput.Cursor()
 	m.typedText = m.textInput.Value()
 	cmds = append(cmds, m.completer.updateCompletions(*m))

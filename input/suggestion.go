@@ -11,41 +11,15 @@ const (
 	Float
 )
 
-type PositionalArg struct {
-	Placeholder      string
-	PlaceholderStyle Text
-	ArgStyle         Text
-}
-
-func NewPositionalArg(placeholder string) PositionalArg {
-	placeholderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
-	return PositionalArg{
-		Placeholder: placeholder,
-		PlaceholderStyle: Text{
-			Style: placeholderStyle,
-		},
-	}
-}
-
-type Flag struct {
-	Short            string
-	Long             string
-	Placeholder      string
-	Datatype         Datatype
-	PlaceholderStyle Text
-}
-
-type Suggestion struct {
+type Suggestion[T any] struct {
 	Text           string
 	CompletionText string
 	Description    string
-	Metadata       interface{}
+	Metadata       T
 	CursorOffset   int
-	PositionalArgs []PositionalArg
-	Flags          []Flag
 }
 
-func (s Suggestion) Render(selected bool, leftPadding string, maxNameLen int, maxDescLen int, formatters Formatters, scrollbar string) string {
+func (s Suggestion[T]) Render(selected bool, leftPadding string, maxNameLen int, maxDescLen int, formatters Formatters, scrollbar string) string {
 	completionText := s.CompletionText
 	if completionText == "" {
 		completionText = s.Text
@@ -60,7 +34,7 @@ func (s Suggestion) Render(selected bool, leftPadding string, maxNameLen int, ma
 	return line
 }
 
-func (s Suggestion) Key() *string {
+func (s Suggestion[T]) Key() *string {
 	key := s.Text + s.Description
 	return &key
 }

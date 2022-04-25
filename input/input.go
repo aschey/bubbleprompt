@@ -4,7 +4,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type Input interface {
+type Input[T any] interface {
 	Init() tea.Cmd
 	OnUpdateStart(msg tea.Msg) tea.Cmd
 	View() string
@@ -18,9 +18,10 @@ type Input interface {
 	Prompt() string
 	SetPrompt(prompt string)
 	CompletionText(text string) string
-	OnUpdateFinish(msg tea.Msg, suggestion *Suggestion) tea.Cmd
-	OnSuggestionChanged(suggestion Suggestion)
+	OnUpdateFinish(msg tea.Msg, suggestion *Suggestion[T]) tea.Cmd
+	OnSuggestionChanged(suggestion Suggestion[T])
 	IsDelimiter(text string) bool
 	OnSuggestionUnselected()
+	ShouldClearSuggestions(prevText string, msg tea.KeyMsg) bool
 	ShouldUnselectSuggestion(prevText string, msg tea.KeyMsg) bool
 }

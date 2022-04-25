@@ -8,6 +8,8 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// TODO: https://no-color.org/
+
 type errMsg error
 
 type modelState int
@@ -17,12 +19,12 @@ const (
 	executing
 )
 
-type Executor func(input string, selected *input.Suggestion, suggestions []input.Suggestion) (tea.Model, error)
+type Executor[T any] func(input string) (tea.Model, error)
 
-type Model struct {
-	completer               completerModel
-	executor                Executor
-	textInput               input.Input
+type Model[I any] struct {
+	completer               completerModel[I]
+	executor                Executor[I]
+	textInput               input.Input[I]
 	viewport                viewport.Model
 	Formatters              input.Formatters
 	previousCommands        string
@@ -36,8 +38,8 @@ type Model struct {
 	err                     error
 }
 
-func New(completer Completer, executor Executor, textInput input.Input, opts ...Option) Model {
-	model := Model{
+func New[I any](completer Completer[I], executor Executor[I], textInput input.Input[I], opts ...Option[I]) Model[I] {
+	model := Model[I]{
 		completer:  newCompleterModel(completer, textInput, 6),
 		executor:   executor,
 		textInput:  textInput,
@@ -54,23 +56,23 @@ func New(completer Completer, executor Executor, textInput input.Input, opts ...
 	return model
 }
 
-func (m *Model) SetScrollbarColor(color lipgloss.TerminalColor) {
+func (m *Model[I]) SetScrollbarColor(color lipgloss.TerminalColor) {
 	m.scrollbar = lipgloss.NewStyle().Background(color).Render(" ")
 }
 
-func (m *Model) SetScrollbarThumbColor(color lipgloss.TerminalColor) {
+func (m *Model[I]) SetScrollbarThumbColor(color lipgloss.TerminalColor) {
 	m.scrollbarThumb = lipgloss.NewStyle().Background(color).Render(" ")
 }
 
-func (m *Model) SetMaxSuggestions(maxSuggestions int) {
+func (m *Model[I]) SetMaxSuggestions(maxSuggestions int) {
 	m.completer.maxSuggestions = maxSuggestions
 }
 
-func (m Model) Init() tea.Cmd {
+func (m Model[I]) Init() tea.Cmd {
 	return tea.Batch(textinput.Blink, m.completer.Init())
 }
 
-func (m Model) View() string {
+func (m Model[I]) View() string {
 	if !m.ready {
 		return "\n  Initializing..."
 	}

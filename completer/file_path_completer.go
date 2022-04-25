@@ -11,10 +11,10 @@ import (
 	"github.com/aschey/bubbleprompt/input"
 )
 
-type FilePathCompleter struct {
+type FilePathCompleter[T any] struct {
 	Filter        func(de fs.DirEntry) bool
 	IgnoreCase    bool
-	fileListCache map[string][]input.Suggestion
+	fileListCache map[string][]input.Suggestion[T]
 }
 
 func cleanFilePath(path string) (dir string, base string, err error) {
@@ -65,26 +65,16 @@ func equalsSeparator(check byte) bool {
 	return strings.ContainsAny(string(check), "/\\")
 }
 
-func (c *FilePathCompleter) adjustCompletions(completions []input.Suggestion, sub string) []input.Suggestion {
-	//tokens := strings.Split(sub, " ")
+func (c *FilePathCompleter[T]) adjustCompletions(completions []input.Suggestion[T], sub string) []input.Suggestion[T] {
 	filteredCompletions := FilterCompletionTextHasPrefix(sub, completions)
-	// if len(tokens) > 1 {
-	// 	allExceptLast := strings.Join(tokens[0:len(tokens)-1], " ")
-	// 	newCompletions := []Suggestion{}
-	// 	for _, completion := range filteredCompletions {
-	// 		completion.Text = completion.Text[len(allExceptLast)+1:]
-	// 		newCompletions = append(newCompletions, completion)
-	// 	}
 
-	// 	return newCompletions
-	// }
 	return filteredCompletions
 }
 
-func (c *FilePathCompleter) Complete(path string) []input.Suggestion {
+func (c *FilePathCompleter[T]) Complete(path string) []input.Suggestion[T] {
 	path = strings.ReplaceAll(path, "\"", "")
 	if c.fileListCache == nil {
-		c.fileListCache = make(map[string][]input.Suggestion, 4)
+		c.fileListCache = make(map[string][]input.Suggestion[T], 4)
 	}
 
 	dir, base, err := cleanFilePath(path)
@@ -112,7 +102,7 @@ func (c *FilePathCompleter) Complete(path string) []input.Suggestion {
 		return nil
 	}
 
-	suggests := make([]input.Suggestion, 0, len(files))
+	suggests := make([]input.Suggestion[T], 0, len(files))
 	for _, f := range files {
 		if c.Filter != nil && !c.Filter(f) {
 			continue
@@ -129,7 +119,7 @@ func (c *FilePathCompleter) Complete(path string) []input.Suggestion {
 			full = fmt.Sprintf("\"%s\"", full)
 			cursorOffset = 1
 		}
-		suggests = append(suggests, input.Suggestion{
+		suggests = append(suggests, input.Suggestion[T]{
 			Text:           full,
 			CompletionText: f.Name(),
 			CursorOffset:   cursorOffset,
