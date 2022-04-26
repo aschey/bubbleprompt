@@ -268,7 +268,11 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T]) 
 	if m.CommandCompleted() {
 		// If no suggestions, leave args alone
 		if suggestion == nil {
-			m.currentFlag = nil
+			// Don't reset current flag yet so we can still render the placeholder until the arg gets typed
+			if m.currentFlag != nil && m.currentFlag.Metadata.FlagPlaceholder().Text == "" {
+				m.currentFlag = nil
+			}
+
 			return nil
 		}
 
@@ -590,7 +594,7 @@ func (m Model[T]) View() string {
 
 		if flag.Value != nil && len(flag.Value.Value) > 0 {
 			viewBuilder.render(flag.Value.Value, lipgloss.NewStyle())
-		} else if i == len(m.parsedText.Flags.Value)-1 && m.CurrentTokenPos(RoundUp).Index == len(m.AllTokens())-1 {
+		} else if i == len(m.parsedText.Flags.Value)-1 && m.CurrentTokenPos(RoundUp).Index >= len(m.AllTokens())-1 {
 			if m.currentFlag != nil && len(m.currentFlag.Metadata.FlagPlaceholder().Text) > 0 && flag.Name[len(flag.Name)-1] != '-' {
 				viewBuilder.render(m.currentFlag.Metadata.FlagPlaceholder().Text, m.currentFlag.Metadata.FlagPlaceholder().Style.Style)
 			}
@@ -611,7 +615,9 @@ func (m Model[T]) View() string {
 		if strings.HasPrefix(m.currentFlag.Text, argVal) {
 			tokenPos := len(argVal)
 
-			viewBuilder.render(m.currentFlag.Text[tokenPos:], m.args[0].placeholderStyle)
+			if len(m.args) > 0 {
+				viewBuilder.render(m.currentFlag.Text[tokenPos:], m.args[0].placeholderStyle)
+			}
 		}
 	}
 
