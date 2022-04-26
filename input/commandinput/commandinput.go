@@ -643,22 +643,12 @@ func (m Model[T]) View() string {
 		}
 	}
 
-	// Render trailing delimiters
-	// Don't need to do this if there's no args because the trailing space before args gets rendered above
-	if m.HasArgs() {
-		value := m.Value()
-		delimMatches := m.delimiterRegex.FindAllStringIndex(value, -1)
-		if len(delimMatches) > 0 {
-			lastMatch := delimMatches[len(delimMatches)-1]
-			if lastMatch[1] == len(value) {
-				// Text ends with delimiter, get the length without trailing delimiters
-				textLength := len(value[:lastMatch[0]])
-				// Render the trailing delimiters
-				extraSpace := text[textLength:]
-				viewBuilder.render(extraSpace, lipgloss.NewStyle())
-			}
-		}
-	}
+	// Render trailing text
+	tokens := m.AllTokens()
+	value := m.Value()
+	last := tokens[len(tokens)-1]
+	trailing := last.Pos.Offset + len(last.Value)
+	viewBuilder.render(value[trailing:], lipgloss.NewStyle())
 
 	return m.PromptStyle.Render(m.prompt) + viewBuilder.getView()
 }
