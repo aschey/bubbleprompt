@@ -18,6 +18,13 @@ func WithDelimiterRegex[T CmdMetadataAccessor](delimiterRegex *regexp.Regexp) Op
 	}
 }
 
+func WithDefaultDelimiter[T CmdMetadataAccessor](defaultDelimiter string) Option[T] {
+	return func(model *Model[T]) error {
+		model.defaultDelimiter = defaultDelimiter
+		return nil
+	}
+}
+
 func WithStringRegex[T CmdMetadataAccessor](stringRegex *regexp.Regexp) Option[T] {
 	return func(model *Model[T]) error {
 		model.SetStringRegex(stringRegex)

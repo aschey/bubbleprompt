@@ -78,6 +78,7 @@ type Model[T CmdMetadataAccessor] struct {
 	textinput         textinput.Model
 	Placeholder       string
 	prompt            string
+	defaultDelimiter  string
 	delimiterRegex    *regexp.Regexp
 	stringRegex       *regexp.Regexp
 	args              []arg
@@ -117,6 +118,7 @@ func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T] {
 		parsedText:        &Statement{},
 		delimiterRegex:    regexp.MustCompile(`\s+`),
 		stringRegex:       regexp.MustCompile(`[^\-\s][^\s]*`),
+		defaultDelimiter:  " ",
 	}
 	for _, opt := range opts {
 		if err := opt(model); err != nil {
@@ -153,6 +155,10 @@ func (m *Model[T]) SetDelimiterRegex(delimiterRegex *regexp.Regexp) {
 func (m *Model[T]) SetStringRegex(stringRegex *regexp.Regexp) {
 	m.stringRegex = stringRegex
 	m.buildParser()
+}
+
+func (m *Model[T]) SetDefaultDelimiter(defaultDelimiter string) {
+	m.defaultDelimiter = defaultDelimiter
 }
 
 type Statement struct {
@@ -596,7 +602,7 @@ func (m Model[T]) View() string {
 		viewBuilder.render(space, lipgloss.NewStyle())
 		viewBuilder.render(flag.Name, lipgloss.NewStyle())
 		if len(flag.Name) > 1 {
-			delim := " "
+			delim := m.defaultDelimiter
 			if flag.Delim != nil {
 				delim = *flag.Delim
 			}
@@ -620,7 +626,7 @@ func (m Model[T]) View() string {
 
 			// Don't render another delimiter if we already added one earlier
 		} else if !m.IsDelimiter(string(*viewBuilder.last())) {
-			viewBuilder.render(" ", lipgloss.NewStyle())
+			viewBuilder.render(m.defaultDelimiter, lipgloss.NewStyle())
 		}
 
 		// Render the rest of the arg placeholder only if the prefix matches
@@ -645,8 +651,8 @@ func (m Model[T]) View() string {
 			}
 
 			last := viewBuilder.last()
-			if last == nil || *last != ' ' {
-				viewBuilder.render(" ", lipgloss.NewStyle())
+			if last == nil || !m.IsDelimiter(string(*last)) {
+				viewBuilder.render(m.defaultDelimiter, lipgloss.NewStyle())
 			}
 
 			viewBuilder.render(arg.text, arg.placeholderStyle)
