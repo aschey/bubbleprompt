@@ -282,6 +282,17 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T]) 
 			m.currentFlag = nil
 		}
 
+		m.args = []arg{}
+		for _, posArg := range suggestion.Metadata.PositionalArgs() {
+			newArg := arg{
+				text:             posArg.Placeholder,
+				placeholderStyle: posArg.PlaceholderStyle.Style,
+				argStyle:         posArg.ArgStyle.Style,
+				persist:          false,
+			}
+			m.args = append(m.args, newArg)
+		}
+
 		index := m.CurrentTokenPos(RoundUp).Index - 1
 		if index >= 0 && index < len(m.args) {
 			// Replace current arg with the suggestion
