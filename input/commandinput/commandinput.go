@@ -618,7 +618,8 @@ func (m Model[T]) View() string {
 		if len(m.parsedText.Flags.Value) > 0 {
 			argVal = m.parsedText.Flags.Value[len(m.parsedText.Flags.Value)-1].Name
 
-		} else {
+			// Don't render another delimiter if we already added one earlier
+		} else if !m.IsDelimiter(string(*viewBuilder.last())) {
 			viewBuilder.render(" ", lipgloss.NewStyle())
 		}
 
@@ -626,9 +627,7 @@ func (m Model[T]) View() string {
 		if strings.HasPrefix(m.currentFlag.Text, argVal) {
 			tokenPos := len(argVal)
 
-			if len(m.args) > 0 {
-				viewBuilder.render(m.currentFlag.Text[tokenPos:], m.args[0].placeholderStyle)
-			}
+			viewBuilder.render(m.currentFlag.Text[tokenPos:], m.PlaceholderStyle)
 		}
 	}
 
