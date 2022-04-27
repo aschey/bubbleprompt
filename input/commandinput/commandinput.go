@@ -166,6 +166,8 @@ type Statement struct {
 	Command ident `parser:"@@?"`
 	Args    args  `parser:"@@"`
 	Flags   flags `parser:"@@"`
+	// Invalid input but this needs to be included to make the parser happy
+	TrailingText []ident `parser:"@@?"`
 }
 
 type args struct {
@@ -660,11 +662,11 @@ func (m Model[T]) View() string {
 	}
 
 	// Render trailing text
-	tokens := m.AllTokens()
 	value := m.Value()
-	last := tokens[len(tokens)-1]
-	trailing := last.Pos.Offset + len(last.Value)
-	viewBuilder.render(value[trailing:], lipgloss.NewStyle())
+	viewLen := viewBuilder.viewLen()
+	if len(value) > viewLen {
+		viewBuilder.render(value[viewBuilder.viewLen():], lipgloss.NewStyle())
+	}
 
 	return m.PromptStyle.Render(m.prompt) + viewBuilder.getView()
 }
