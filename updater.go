@@ -112,8 +112,7 @@ func (m *Model[I]) updateCompleting(msg tea.Msg, cmds []tea.Cmd, prevText string
 
 func (m *Model[I]) selectSingle() {
 	// Programatically select the suggestion if it's the only one and the input matches the suggestion
-	completionText := m.textInput.CompletionText(m.textInput.Value()[:m.textInput.Cursor()])
-	if len(m.completer.suggestions) == 1 && completionText == m.completer.suggestions[0].Text {
+	if len(m.completer.suggestions) == 1 && m.textInput.ShouldSelectSuggestion(m.completer.suggestions[0]) {
 		m.completer.selectSuggestion(m.completer.suggestions[0])
 	}
 }

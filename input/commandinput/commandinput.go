@@ -192,6 +192,13 @@ type ident struct {
 	Value string `parser:"( @QuotedString | @String )"`
 }
 
+func (m *Model[T]) ShouldSelectSuggestion(suggestion input.Suggestion[T]) bool {
+	currentTokenPos := m.CurrentTokenPos(RoundUp)
+	currentToken := m.CurrentToken(RoundUp)
+	// Only select if cursor is at the end of the token or the input will cut off the part after the cursor
+	return m.Cursor() == currentTokenPos.End && currentToken == suggestion.Text
+}
+
 func (m *Model[T]) ShouldUnselectSuggestion(prevText string, msg tea.KeyMsg) bool {
 	pos := m.Cursor()
 	switch msg.Type {
@@ -600,8 +607,11 @@ func (m Model[T]) View() string {
 
 	// Render flags
 	for i, flag := range m.parsedText.Flags.Value {
-		space := text[viewBuilder.viewLen():flag.Pos.Offset]
-		viewBuilder.render(space, lipgloss.NewStyle())
+		if viewBuilder.viewLen() < flag.Pos.Offset {
+			space := text[viewBuilder.viewLen():flag.Pos.Offset]
+			viewBuilder.render(space, lipgloss.NewStyle())
+		}
+
 		viewBuilder.render(flag.Name, lipgloss.NewStyle())
 		if len(flag.Name) > 1 {
 			delim := m.defaultDelimiter

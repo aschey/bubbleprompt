@@ -17,6 +17,7 @@ type Input[T any] interface {
 	SetCursor(cursor int)
 	Prompt() string
 	SetPrompt(prompt string)
+	ShouldSelectSuggestion(suggestion Suggestion[T]) bool
 	CompletionText(text string) string
 	OnUpdateFinish(msg tea.Msg, suggestion *Suggestion[T]) tea.Cmd
 	OnSuggestionChanged(suggestion Suggestion[T])
