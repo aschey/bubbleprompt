@@ -2,7 +2,6 @@ package prompt
 
 import (
 	"math"
-	"strings"
 
 	"github.com/aschey/bubbleprompt/input"
 	tea "github.com/charmbracelet/bubbletea"
@@ -145,13 +144,13 @@ func (c *completerModel[I]) updateCompletions(prompt Model[I]) tea.Cmd {
 	text := input.Value()
 	cursorPos := input.Cursor()
 
-	textTrimmed := strings.TrimSpace(text)
 	textBeforeCursor := text
-	if cursorPos < len(textTrimmed) {
+	if cursorPos < len(text) {
 		textBeforeCursor = text[:cursorPos]
 	}
 
 	// No need to queue another update if the text hasn't changed
+	// Don't trim whitespace here because cursor location affects suggestions
 	if textBeforeCursor == c.prevText {
 		return nil
 	}
