@@ -245,7 +245,7 @@ func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 func (m *Model[T]) FlagSuggestions(inputStr string, flags []Flag, suggestionFunc func(CmdMetadata, Flag) T) []input.Suggestion[T] {
 	suggestions := []input.Suggestion[T]{}
 	isLong := strings.HasPrefix(inputStr, "--")
-	isMulti := !isLong && strings.HasPrefix(inputStr, "-") && len(inputStr) > 2
+	isMulti := !isLong && strings.HasPrefix(inputStr, "-") && len(inputStr) > 1
 	tokenIndex := m.CurrentTokenPos(RoundUp).Index
 	prevToken := m.AllTokens()[tokenIndex-1].Value
 	curFlagText := ""
@@ -342,6 +342,7 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T]) 
 }
 
 func (m *Model[T]) OnSuggestionChanged(suggestion input.Suggestion[T]) {
+	token := m.CurrentToken(RoundUp)
 	tokenPos := m.CurrentTokenPos(RoundUp)
 	if tokenPos.Index == 0 {
 		m.selectedCommand = &suggestion
@@ -349,9 +350,22 @@ func (m *Model[T]) OnSuggestionChanged(suggestion input.Suggestion[T]) {
 
 	text := m.Value()
 	if tokenPos.Start > -1 {
-		m.SetValue(text[:tokenPos.Start] + suggestion.Text + text[tokenPos.End:])
-		// Sometimes SetValue moves the cursor to the end of the line so we need to move it back to the current token
-		m.SetCursor(len(text[:tokenPos.Start]+suggestion.Text) - suggestion.CursorOffset)
+		if strings.HasPrefix(token, "-") && !strings.HasPrefix(suggestion.Text, "-") {
+			// Adding an additional flag to the flag group, don't replace the entire token
+			cursor := m.Cursor()
+			rest := ""
+			if cursor < len(text) {
+				// Add trailing text if we're not at the end of the line
+				rest = text[cursor+1:]
+			}
+			m.SetValue(text[:cursor] + suggestion.Text + rest)
+			// Sometimes SetValue moves the cursor to the end of the line so we need to move it back to the current token
+			m.SetCursor(len(text[:cursor]))
+		} else {
+			m.SetValue(text[:tokenPos.Start] + suggestion.Text + text[tokenPos.End:])
+			m.SetCursor(len(text[:tokenPos.Start]+suggestion.Text) - suggestion.CursorOffset)
+		}
+
 	} else {
 		m.SetValue(suggestion.Text)
 	}
