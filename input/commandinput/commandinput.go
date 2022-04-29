@@ -81,6 +81,7 @@ type Model[T CmdMetadataAccessor] struct {
 	defaultDelimiter  string
 	delimiterRegex    *regexp.Regexp
 	stringRegex       *regexp.Regexp
+	origArgs          []arg
 	args              []arg
 	selectedCommand   *input.Suggestion[T]
 	currentFlag       *input.Suggestion[T]
@@ -287,17 +288,19 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T]) 
 			if m.currentFlag != nil && m.currentFlag.Metadata.FlagPlaceholder().Text == "" {
 				m.currentFlag = nil
 			}
-
+			// Clear any temporary placeholders
+			m.args = m.origArgs
 			return nil
 		}
 
-		if strings.HasPrefix(suggestion.Text, "-") { //&& strings.HasPrefix(m.CurrentToken(RoundUp), "-") {
+		if strings.HasPrefix(suggestion.Text, "-") {
 			m.currentFlag = suggestion
 		} else {
 			m.currentFlag = nil
 		}
 
 		m.args = []arg{}
+		m.origArgs = []arg{}
 		for _, posArg := range suggestion.Metadata.PositionalArgs() {
 			newArg := arg{
 				text:             posArg.Placeholder,
@@ -306,6 +309,7 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T]) 
 				persist:          false,
 			}
 			m.args = append(m.args, newArg)
+			m.origArgs = append(m.origArgs, newArg)
 		}
 
 		index := m.CurrentTokenPos(RoundUp).Index - 1
@@ -320,6 +324,7 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T]) 
 		}
 	} else {
 		m.args = []arg{}
+		m.origArgs = []arg{}
 
 		if suggestion == nil {
 			// Didn't find any matching suggestions, reset
@@ -334,6 +339,7 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T]) 
 					persist:          false,
 				}
 				m.args = append(m.args, newArg)
+				m.origArgs = append(m.origArgs, newArg)
 			}
 		}
 	}
@@ -359,10 +365,9 @@ func (m *Model[T]) OnSuggestionChanged(suggestion input.Suggestion[T]) {
 				rest = text[cursor+1:]
 			}
 			m.SetValue(text[:cursor] + suggestion.Text + rest)
-			// Sometimes SetValue moves the cursor to the end of the line so we need to move it back to the current token
-			m.SetCursor(len(text[:cursor]))
 		} else {
 			m.SetValue(text[:tokenPos.Start] + suggestion.Text + text[tokenPos.End:])
+			// Sometimes SetValue moves the cursor to the end of the line so we need to move it back to the current token
 			m.SetCursor(len(text[:tokenPos.Start]+suggestion.Text) - suggestion.CursorOffset)
 		}
 
