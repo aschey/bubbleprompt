@@ -632,7 +632,8 @@ func (m Model[T]) View() string {
 		}
 
 		viewBuilder.render(flag.Name, lipgloss.NewStyle())
-		if len(flag.Name) > 1 {
+		// Render delimiter only once the full flag has been typed
+		if m.currentFlag == nil || len(flag.Name) >= len(m.currentFlag.Text) {
 			delim := m.defaultDelimiter
 			if flag.Delim != nil {
 				delim = *flag.Delim
