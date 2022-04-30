@@ -254,7 +254,7 @@ func (m *Model[T]) FlagSuggestions(inputStr string, flags []Flag, suggestionFunc
 		curFlagText = string(inputStr[len(inputStr)-1])
 	}
 	for _, flag := range flags {
-		if ((isMulti && flag.Short == curFlagText) || prevToken == "-"+flag.Short) && flag.RequiresArg {
+		if ((isMulti && flag.Short == curFlagText) || prevToken == "-"+flag.Short || prevToken == "--"+flag.Long) && flag.RequiresArg {
 			return []input.Suggestion[T]{}
 		}
 
