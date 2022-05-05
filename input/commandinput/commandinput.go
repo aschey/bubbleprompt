@@ -205,6 +205,19 @@ func (m *Model[T]) ShouldUnselectSuggestion(prevText string, msg tea.KeyMsg) boo
 	switch msg.Type {
 	case tea.KeyBackspace, tea.KeyDelete:
 		return pos < len(prevText) && !m.IsDelimiter(string(prevText[pos]))
+	case tea.KeyRunes:
+		if msg.String() != "=" {
+			return true
+		}
+		token := ""
+		if m.Cursor() == len(m.Value()) {
+			tokens := m.AllTokens()
+			token = tokens[len(tokens)-1].Value
+		} else {
+			token = m.CurrentToken(RoundDown)
+		}
+		// Don't unselect if the current token is a flag and we're adding an = delimiter
+		return !strings.HasPrefix(token, "-")
 	default:
 		return true
 	}
@@ -501,7 +514,7 @@ func (m Model[T]) currentTokenPos(tokens []ident, roundingBehavior RoundingBehav
 		last := tokens[len(tokens)-1]
 		index := len(tokens) - 1
 		value := m.Value()
-		if roundingBehavior == RoundUp && cursor > 0 && m.IsDelimiter(string(value[cursor-1])) {
+		if roundingBehavior == RoundUp && cursor > 0 && (m.IsDelimiter(string(value[cursor-1])) || (strings.HasPrefix(last.Value, "-") && string(value[cursor-1]) == "=")) {
 			// Haven't started a new token yet, but we have added a delimiter
 			// so we'll consider the current token finished
 			index++
@@ -633,7 +646,7 @@ func (m Model[T]) View() string {
 
 		viewBuilder.render(flag.Name, lipgloss.NewStyle())
 		// Render delimiter only once the full flag has been typed
-		if m.currentFlag == nil || len(flag.Name) >= len(m.currentFlag.Text) {
+		if m.currentFlag == nil || len(flag.Name) >= len(m.currentFlag.Text) || flag.Value != nil {
 			delim := m.defaultDelimiter
 			if flag.Delim != nil {
 				delim = *flag.Delim
@@ -644,28 +657,30 @@ func (m Model[T]) View() string {
 		if flag.Value != nil && len(flag.Value.Value) > 0 {
 			viewBuilder.render(flag.Value.Value, lipgloss.NewStyle())
 		} else if i == len(m.parsedText.Flags.Value)-1 && m.CurrentTokenPos(RoundUp).Index >= len(m.AllTokens())-1 {
+			// Render current flag
+			if m.currentFlag != nil {
+				argVal := ""
+				if len(m.parsedText.Flags.Value) > 0 {
+					argVal = m.parsedText.Flags.Value[len(m.parsedText.Flags.Value)-1].Name
+
+					// Don't render another delimiter if we already added one earlier
+				} else if !m.IsDelimiter(string(*viewBuilder.last())) {
+					viewBuilder.render(m.defaultDelimiter, lipgloss.NewStyle())
+				}
+
+				// Render the rest of the arg placeholder only if the prefix matches
+				if strings.HasPrefix(m.currentFlag.Text, argVal) {
+					tokenPos := len(argVal)
+					viewBuilder.render(m.currentFlag.Text[tokenPos:], m.PlaceholderStyle)
+				}
+			}
+
 			if m.currentFlag != nil && len(m.currentFlag.Metadata.FlagPlaceholder().Text) > 0 && flag.Name[len(flag.Name)-1] != '-' {
+				if !m.IsDelimiter(string(*viewBuilder.last())) && *viewBuilder.last() != '=' {
+					viewBuilder.render(m.defaultDelimiter, lipgloss.NewStyle())
+				}
 				viewBuilder.render(m.currentFlag.Metadata.FlagPlaceholder().Text, m.currentFlag.Metadata.FlagPlaceholder().Style.Style)
 			}
-		}
-	}
-
-	// Render current flag
-	if m.currentFlag != nil {
-		argVal := ""
-		if len(m.parsedText.Flags.Value) > 0 {
-			argVal = m.parsedText.Flags.Value[len(m.parsedText.Flags.Value)-1].Name
-
-			// Don't render another delimiter if we already added one earlier
-		} else if !m.IsDelimiter(string(*viewBuilder.last())) {
-			viewBuilder.render(m.defaultDelimiter, lipgloss.NewStyle())
-		}
-
-		// Render the rest of the arg placeholder only if the prefix matches
-		if strings.HasPrefix(m.currentFlag.Text, argVal) {
-			tokenPos := len(argVal)
-
-			viewBuilder.render(m.currentFlag.Text[tokenPos:], m.PlaceholderStyle)
 		}
 	}
 
