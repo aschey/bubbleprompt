@@ -1,11 +1,17 @@
 package commandinput
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"strings"
+
+	"github.com/charmbracelet/lipgloss"
+)
 
 type viewBuilder[T CmdMetadataAccessor] struct {
-	view    string
-	rawView string
-	model   Model[T]
+	view        string
+	viewLen     int
+	extraOffset int
+	rawView     string
+	model       Model[T]
 }
 
 func newViewBuilder[T CmdMetadataAccessor](model Model[T]) *viewBuilder[T] {
@@ -13,34 +19,37 @@ func newViewBuilder[T CmdMetadataAccessor](model Model[T]) *viewBuilder[T] {
 }
 
 func (v viewBuilder[T]) getView() string {
-	if v.model.Cursor() == v.viewLen() {
+	if v.model.Cursor() == v.viewLen {
 		return v.view + v.cursorView(" ", lipgloss.NewStyle())
 	}
 	return v.view
 }
 
-func (v viewBuilder[T]) viewLen() int {
-	return len(v.rawView)
-}
-
-func (v *viewBuilder[T]) render(newText string, style lipgloss.Style) {
+func (v *viewBuilder[T]) render(newText string, offset int, style lipgloss.Style) {
 	cursorPos := v.model.Cursor()
-
-	viewLen := v.viewLen()
-	if cursorPos >= viewLen && cursorPos < viewLen+len(newText) {
-		v.view += v.renderAllWithCursor(newText, cursorPos-viewLen, style)
+	if offset+v.extraOffset > v.viewLen {
+		newText = strings.Repeat(v.model.defaultDelimiter, offset+v.extraOffset-v.viewLen) + newText
+	}
+	if cursorPos >= v.viewLen && cursorPos < v.viewLen+len(newText) {
+		v.view += v.renderAllWithCursor(newText, cursorPos-v.viewLen, style)
 	} else {
 		v.view += style.Render(newText)
 	}
 	v.rawView += newText
+	v.viewLen += len(newText)
+}
+
+func (v *viewBuilder[T]) renderPlaceholder(newText string, offset int, style lipgloss.Style) {
+	v.render(newText, offset, style)
+	// Add offset to account for the extra characters we added to the view that aren't part of what the user typed
+	v.extraOffset += len(newText)
 }
 
 func (v viewBuilder[T]) last() *byte {
-	viewLen := v.viewLen()
-	if viewLen == 0 {
+	if v.viewLen == 0 {
 		return nil
 	}
-	last := v.rawView[v.viewLen()-1]
+	last := v.rawView[len(v.rawView)-1]
 	return &last
 }
 

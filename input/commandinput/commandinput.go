@@ -132,7 +132,7 @@ func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T] {
 }
 
 func (m *Model[T]) buildParser() {
-	lexer := lexer.MustSimple([]lexer.Rule{
+	lexer := lexer.MustSimple([]lexer.SimpleRule{
 		{Name: "LongFlag", Pattern: `\-\-[^\s=\-]*`},
 		{Name: "ShortFlag", Pattern: `\-[^\s=\-]*`},
 		{Name: "Eq", Pattern: "="},
@@ -183,9 +183,14 @@ type flags struct {
 
 type flag struct {
 	Pos   lexer.Position
-	Name  string  `parser:"( @ShortFlag | @LongFlag )"`
-	Delim *string `parser:"@Eq?"`
-	Value *ident  `parser:"@@?"`
+	Name  string `parser:"( @ShortFlag | @LongFlag )"`
+	Delim *delim `parser:"@@?"`
+	Value *ident `parser:"@@?"`
+}
+
+type delim struct {
+	Pos   lexer.Position
+	Value string `parser:"@Eq"`
 }
 
 type ident struct {
@@ -261,13 +266,24 @@ func (m *Model[T]) FlagSuggestions(inputStr string, flags []Flag, suggestionFunc
 	isLong := strings.HasPrefix(inputStr, "--")
 	isMulti := !isLong && strings.HasPrefix(inputStr, "-") && len(inputStr) > 1
 	tokenIndex := m.CurrentTokenPos(RoundUp).Index
-	prevToken := m.AllTokens()[tokenIndex-1].Value
+	allTokens := m.AllTokens()
+	prevToken := allTokens[tokenIndex-1].Value
+
+	currentIsFlag := false
+	currentToken := ""
+	if tokenIndex < len(allTokens) {
+		currentToken = allTokens[tokenIndex].Value
+		currentIsFlag = strings.HasPrefix(currentToken, "-")
+	}
+
 	curFlagText := ""
 	if isMulti {
 		curFlagText = string(inputStr[len(inputStr)-1])
 	}
+
 	for _, flag := range flags {
-		if ((isMulti && flag.Short == curFlagText) || prevToken == "-"+flag.Short || prevToken == "--"+flag.Long) && flag.RequiresArg {
+		// Don't show any flag suggestions if the current flag requires an arg unless the user skipped the arg and is now typing another flag that does not require an arg
+		if ((isMulti && flag.Short == curFlagText) || prevToken == "-"+flag.Short || prevToken == "--"+flag.Long) && flag.RequiresArg && (!currentIsFlag || currentToken == "-"+flag.Short || currentToken == "--"+flag.Long) {
 			return []input.Suggestion[T]{}
 		}
 
@@ -589,40 +605,27 @@ func (m *Model[T]) Blur() {
 
 func (m Model[T]) View() string {
 	viewBuilder := newViewBuilder(m)
-	text := m.Value()
-	leadingSpace := text[:m.parsedText.Command.Pos.Offset]
-	viewBuilder.render(leadingSpace, lipgloss.NewStyle())
 
 	// Render command
 	command := m.parsedText.Command.Value
 	if m.selectedCommand == nil {
-		viewBuilder.render(command, m.TextStyle)
+		viewBuilder.render(command, m.parsedText.Command.Pos.Offset, m.TextStyle)
 	} else {
-		viewBuilder.render(command, m.SelectedTextStyle)
+		viewBuilder.render(command, m.parsedText.Command.Pos.Offset, m.SelectedTextStyle)
 	}
 
 	// Render prefix
 	if strings.HasPrefix(m.Placeholder, m.Value()) && m.Placeholder != command {
-		viewBuilder.render(m.Placeholder[len(command):], m.PlaceholderStyle)
-	}
-
-	// Render space before args
-	spaceCount := m.parsedText.Args.Pos.Offset - viewBuilder.viewLen()
-	if spaceCount > 0 {
-		spaceBeforeArgs := text[viewBuilder.viewLen():m.parsedText.Args.Pos.Offset]
-		viewBuilder.render(spaceBeforeArgs, lipgloss.NewStyle())
+		viewBuilder.render(m.Placeholder[len(command):], m.parsedText.Command.Pos.Offset+len(command), m.PlaceholderStyle)
 	}
 
 	// Render args
 	for i, arg := range m.parsedText.Args.Value {
-		space := text[viewBuilder.viewLen():arg.Pos.Offset]
-		viewBuilder.render(space, lipgloss.NewStyle())
-
 		argStyle := lipgloss.NewStyle()
 		if i < len(m.args) {
 			argStyle = m.args[i].argStyle
 		}
-		viewBuilder.render(arg.Value, argStyle)
+		viewBuilder.render(arg.Value, arg.Pos.Offset, argStyle)
 	}
 
 	// Render current arg if persist == true
@@ -633,53 +636,54 @@ func (m Model[T]) View() string {
 		// Render the rest of the arg placeholder only if the prefix matches
 		if arg.persist && strings.HasPrefix(arg.text, argVal) {
 			tokenPos := len(argVal)
-			viewBuilder.render(arg.text[tokenPos:], arg.placeholderStyle)
+			viewBuilder.render(arg.text[tokenPos:], viewBuilder.viewLen, arg.placeholderStyle)
 		}
 	}
 
 	// Render flags
+	currentPos := m.CurrentTokenPos(RoundDown).Start
+	currentToken := m.CurrentToken(RoundDown)
 	for i, flag := range m.parsedText.Flags.Value {
-		if viewBuilder.viewLen() < flag.Pos.Offset {
-			space := text[viewBuilder.viewLen():flag.Pos.Offset]
-			viewBuilder.render(space, lipgloss.NewStyle())
-		}
-
-		viewBuilder.render(flag.Name, lipgloss.NewStyle())
+		viewBuilder.render(flag.Name, flag.Pos.Offset, lipgloss.NewStyle())
 		// Render delimiter only once the full flag has been typed
 		if m.currentFlag == nil || len(flag.Name) >= len(m.currentFlag.Text) || flag.Value != nil {
-			delim := m.defaultDelimiter
 			if flag.Delim != nil {
-				delim = *flag.Delim
+				viewBuilder.render(flag.Delim.Value, flag.Delim.Pos.Offset, lipgloss.NewStyle())
 			}
-			viewBuilder.render(delim, lipgloss.NewStyle())
 		}
 
-		if flag.Value != nil && len(flag.Value.Value) > 0 {
-			viewBuilder.render(flag.Value.Value, lipgloss.NewStyle())
-		} else if i == len(m.parsedText.Flags.Value)-1 && m.CurrentTokenPos(RoundUp).Index >= len(m.AllTokens())-1 {
+		if (flag.Pos.Offset != currentPos) && (currentPos < m.Cursor() || i < len(m.parsedText.Flags.Value)-1 || (len(currentToken) > 0 && !strings.HasPrefix(currentToken, "-"))) {
+			if flag.Value != nil {
+				viewBuilder.render(flag.Value.Value, flag.Value.Pos.Offset, lipgloss.NewStyle())
+			}
+
+		} else {
 			// Render current flag
 			if m.currentFlag != nil {
 				argVal := ""
 				if len(m.parsedText.Flags.Value) > 0 {
 					argVal = m.parsedText.Flags.Value[len(m.parsedText.Flags.Value)-1].Name
-
-					// Don't render another delimiter if we already added one earlier
-				} else if !m.IsDelimiter(string(*viewBuilder.last())) {
-					viewBuilder.render(m.defaultDelimiter, lipgloss.NewStyle())
 				}
 
 				// Render the rest of the arg placeholder only if the prefix matches
 				if strings.HasPrefix(m.currentFlag.Text, argVal) {
 					tokenPos := len(argVal)
-					viewBuilder.render(m.currentFlag.Text[tokenPos:], m.PlaceholderStyle)
+					viewBuilder.render(m.currentFlag.Text[tokenPos:], viewBuilder.viewLen, m.PlaceholderStyle)
 				}
 			}
 
 			if m.currentFlag != nil && len(m.currentFlag.Metadata.FlagPlaceholder().Text) > 0 && flag.Name[len(flag.Name)-1] != '-' {
 				if !m.IsDelimiter(string(*viewBuilder.last())) && *viewBuilder.last() != '=' {
-					viewBuilder.render(m.defaultDelimiter, lipgloss.NewStyle())
+					viewBuilder.render(m.defaultDelimiter, viewBuilder.viewLen, lipgloss.NewStyle())
 				}
-				viewBuilder.render(m.currentFlag.Metadata.FlagPlaceholder().Text, m.currentFlag.Metadata.FlagPlaceholder().Style.Style)
+
+				if flag.Value == nil {
+					viewBuilder.renderPlaceholder(m.currentFlag.Metadata.FlagPlaceholder().Text, viewBuilder.viewLen, m.currentFlag.Metadata.FlagPlaceholder().Style.Style)
+				}
+
+			}
+			if flag.Value != nil {
+				viewBuilder.render(flag.Value.Value, flag.Value.Pos.Offset, lipgloss.NewStyle())
 			}
 		}
 	}
@@ -691,26 +695,21 @@ func (m Model[T]) View() string {
 	// Render arg placeholders
 	startPlaceholder := len(m.parsedText.Args.Value) + len(m.parsedText.Flags.Value)
 	if startPlaceholder < len(m.args) {
-		for i, arg := range m.args[startPlaceholder:] {
-			if i == 0 && viewBuilder.viewLen() < len(text) {
-				space := text[viewBuilder.viewLen():]
-				viewBuilder.render(space, lipgloss.NewStyle())
-			}
-
+		for _, arg := range m.args[startPlaceholder:] {
 			last := viewBuilder.last()
 			if last == nil || !m.IsDelimiter(string(*last)) {
-				viewBuilder.render(m.defaultDelimiter, lipgloss.NewStyle())
+				viewBuilder.render(m.defaultDelimiter, viewBuilder.viewLen, lipgloss.NewStyle())
 			}
 
-			viewBuilder.render(arg.text, arg.placeholderStyle)
+			viewBuilder.render(arg.text, viewBuilder.viewLen, arg.placeholderStyle)
 		}
 	}
 
 	// Render trailing text
 	value := m.Value()
-	viewLen := viewBuilder.viewLen()
+	viewLen := viewBuilder.viewLen
 	if len(value) > viewLen {
-		viewBuilder.render(value[viewBuilder.viewLen():], lipgloss.NewStyle())
+		viewBuilder.render(value[viewBuilder.viewLen:], viewBuilder.viewLen, lipgloss.NewStyle())
 	}
 
 	return m.PromptStyle.Render(m.prompt) + viewBuilder.getView()
