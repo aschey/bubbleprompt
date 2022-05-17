@@ -4,7 +4,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/MarvinJWendt/testza"
 	completers "github.com/aschey/bubbleprompt/completer"
 	executors "github.com/aschey/bubbleprompt/executor"
 	"github.com/aschey/bubbleprompt/input"
@@ -12,6 +11,8 @@ import (
 	tuitest "github.com/aschey/tui-tester"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
 type cmdMetadata = commandinput.CmdMetadata
@@ -26,7 +27,8 @@ type testCompleterModel struct {
 
 type testExecutorModel struct{}
 
-type testData struct {
+type TestSuite struct {
+	suite.Suite
 	suggestions  []input.Suggestion[cmdMetadata]
 	tester       tuitest.Tester
 	initialLines []string
@@ -34,29 +36,7 @@ type testData struct {
 	textInput    *commandinput.Model[cmdMetadata]
 }
 
-func (m model) Init() tea.Cmd {
-	return m.prompt.Init()
-}
-
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	p, cmd := m.prompt.Update(msg)
-	m.prompt = p
-	return m, cmd
-}
-
-func (m model) View() string {
-	return m.prompt.View()
-}
-
-func (m testCompleterModel) completer(document Document, promptModel Model[cmdMetadata]) []input.Suggestion[cmdMetadata] {
-	return completers.FilterHasPrefix(document.TextBeforeCursor(), m.suggestions)
-}
-
-func (m testExecutorModel) executor(input string) (tea.Model, error) {
-	return executors.NewStringModel("result is " + input), nil
-}
-
-func setup(t *testing.T) testData {
+func (suite *TestSuite) SetupTest() {
 	suggestions := []input.Suggestion[cmdMetadata]{
 		{Text: "first-option", Description: "test desc", Metadata: commandinput.NewCmdMetadata([]commandinput.PositionalArg{{Placeholder: "[test placeholder]"}}, commandinput.Placeholder{})},
 		{Text: "second-option", Description: "test desc2"},
@@ -93,129 +73,153 @@ func setup(t *testing.T) testData {
 	_, initialLines, err := tester.WaitFor(func(out string, outputLines []string) bool {
 		return len(outputLines) > 1
 	})
-	testza.AssertNoError(t, err)
 
-	return testData{suggestions, tester, initialLines, model, textInput.(*commandinput.Model[cmdMetadata])}
+	require.NoError(suite.T(), err)
+	suite.suggestions = suggestions
+	suite.tester = tester
+	suite.initialLines = initialLines
+	suite.model = model
+	suite.textInput = textInput.(*commandinput.Model[cmdMetadata])
 }
 
-func teardown(t *testing.T, tester tuitest.Tester) {
-	tester.SendByte(tuitest.KeyCtrlC)
-	testza.AssertNoError(t, tester.WaitForTermination())
+func (suite *TestSuite) TearDownTest() {
+	suite.tester.SendByte(tuitest.KeyCtrlC)
+	err := suite.tester.WaitForTermination()
+	require.NoError(suite.T(), err)
 }
 
-func TestBasicCompleter(t *testing.T) {
-	testData := setup(t)
+func (m model) Init() tea.Cmd {
+	return m.prompt.Init()
+}
 
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	p, cmd := m.prompt.Update(msg)
+	m.prompt = p
+	return m, cmd
+}
+
+func (m model) View() string {
+	return m.prompt.View()
+}
+
+func (m testCompleterModel) completer(document Document, promptModel Model[cmdMetadata]) []input.Suggestion[cmdMetadata] {
+	return completers.FilterHasPrefix(document.TextBeforeCursor(), m.suggestions)
+}
+
+func (m testExecutorModel) executor(input string) (tea.Model, error) {
+	return executors.NewStringModel("result is " + input), nil
+}
+
+func TestTestSuite(t *testing.T) {
+	suite.Run(t, new(TestSuite))
+}
+
+func (suite *TestSuite) TestBasicCompleter() {
+	t := suite.T()
 	// Check that all prompts show up
-	for i := 1; i < len(testData.suggestions); i++ {
-		testza.AssertContains(t, testData.initialLines[i], testData.suggestions[i-1].Text)
-		testza.AssertContains(t, testData.initialLines[i], testData.suggestions[i-1].Description)
+	for i := 1; i < len(suite.suggestions); i++ {
+		t.Run(suite.suggestions[i].Text, func(t *testing.T) {
+			require.Contains(t, suite.initialLines[i], suite.suggestions[i-1].Text)
+			require.Contains(t, suite.initialLines[i], suite.suggestions[i-1].Description)
+		})
 	}
-
-	teardown(t, testData.tester)
 }
 
-func TestFilter(t *testing.T) {
-	testData := setup(t)
-
-	testData.tester.SendString("fi")
+func (suite *TestSuite) TestFilter() {
+	t := suite.T()
+	suite.tester.SendString("fi")
 	// Check that typed input shows up
-	_, lines, err := testData.tester.WaitFor(func(out string, outputLines []string) bool {
+	_, lines, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
 		return strings.Contains(outputLines[0], "fi")
 	})
-	testza.AssertNoError(t, err)
+	require.NoError(t, err)
 
 	// Check that suggestions filter properly
-	testza.AssertEqual(t, 3, len(lines))
-	testza.AssertContains(t, lines[1], testData.suggestions[0].Text)
-	testza.AssertContains(t, lines[1], testData.suggestions[0].Description)
-	testza.AssertContains(t, lines[2], testData.suggestions[4].Text)
-	testza.AssertContains(t, lines[2], testData.suggestions[4].Description)
+	require.Equal(t, 3, len(lines))
+	require.Contains(t, lines[1], suite.suggestions[0].Text)
+	require.Contains(t, lines[1], suite.suggestions[0].Description)
+	require.Contains(t, lines[2], suite.suggestions[4].Text)
+	require.Contains(t, lines[2], suite.suggestions[4].Description)
 
-	teardown(t, testData.tester)
 }
 
-func testExecutor(t *testing.T, in *string, expectedOut string) {
-	testData := setup(t)
-
+func (suite *TestSuite) testExecutor(in *string, expectedOut string) {
+	t := suite.T()
 	if in != nil {
-		testData.tester.SendString(*in)
+		suite.tester.SendString(*in)
 		// Wait for typed input to render
-		_, _, err := testData.tester.WaitFor(func(out string, outputLines []string) bool {
+		_, _, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
 			return strings.Contains(outputLines[0], *in)
 		})
-		testza.AssertNoError(t, err)
+		require.NoError(t, err)
 	}
 
-	testData.tester.SendByte(tuitest.KeyEnter)
+	suite.tester.SendByte(tuitest.KeyEnter)
 
 	// Check that executor output displays
-	_, _, err := testData.tester.WaitFor(func(out string, outputLines []string) bool {
+	_, _, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
 		return len(outputLines) > 1 && strings.Contains(outputLines[1], expectedOut)
 	})
-	testza.AssertNoError(t, err)
+	require.NoError(t, err)
 
-	teardown(t, testData.tester)
 }
 
-func TestExecutorNoInput(t *testing.T) {
-	testExecutor(t, nil, "result is")
+func (suite *TestSuite) TestExecutorNoInput() {
+	suite.testExecutor(nil, "result is")
 }
 
-func TestExecutorWithInput(t *testing.T) {
+func (suite *TestSuite) TestExecutorWithInput() {
 	in := "fi"
-	testExecutor(t, &in, "result is fi")
+	suite.testExecutor(&in, "result is fi")
 }
 
-func TestChoosePrompt(t *testing.T) {
-	testData := setup(t)
-	testData.tester.RemoveAnsi = false
-	testData.tester.SendString(tuitest.KeyDown)
+func (suite *TestSuite) TestChoosePrompt() {
+	t := suite.T()
+	suite.tester.RemoveAnsi = false
+	suite.tester.SendString(tuitest.KeyDown)
 	// Wait for first prompt to be selected
-	_, lines, err := testData.tester.WaitFor(func(out string, outputLines []string) bool {
-		return strings.Contains(outputLines[0], testData.suggestions[0].Text)
+	_, lines, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
+		return strings.Contains(outputLines[0], suite.suggestions[0].Text)
 	})
-	testza.AssertNoError(t, err)
+
+	require.NoError(t, err)
 	// Check that proper styles are applied
-	testza.AssertContains(t, lines[0], testData.textInput.SelectedTextStyle.Render(testData.suggestions[0].Text))
-	testza.AssertContains(t, lines[0], testData.suggestions[0].Metadata.PositionalArgs()[0].PlaceholderStyle.Format(testData.suggestions[0].Metadata.PositionalArgs()[0].Placeholder))
+	require.Contains(t, lines[0], suite.textInput.SelectedTextStyle.Render(suite.suggestions[0].Text))
+	require.Contains(t, lines[0], suite.suggestions[0].Metadata.PositionalArgs()[0].PlaceholderStyle.Format(suite.suggestions[0].Metadata.PositionalArgs()[0].Placeholder))
 	maxNameLen := len("second-option")
-	testza.AssertContains(t, lines[1], testData.model.prompt.Formatters.Name.Format(testData.suggestions[0].Text, maxNameLen, true))
+	require.Contains(t, lines[1], suite.model.prompt.Formatters.Name.Format(suite.suggestions[0].Text, maxNameLen, true))
 	maxDescLen := len("test desc1")
-	testza.AssertContains(t, lines[1], testData.model.prompt.Formatters.Description.Format(testData.suggestions[0].Description, maxDescLen, true))
+	require.Contains(t, lines[1], suite.model.prompt.Formatters.Description.Format(suite.suggestions[0].Description, maxDescLen, true))
 
 	// Check that the selected text gets sent to the executor without the placeholder
-	testData.tester.SendByte(tuitest.KeyEnter)
-	_, _, err = testData.tester.WaitFor(func(out string, outputLines []string) bool {
+	suite.tester.SendByte(tuitest.KeyEnter)
+	_, _, err = suite.tester.WaitFor(func(out string, outputLines []string) bool {
 		return len(outputLines) > 1 &&
-			strings.Contains(outputLines[1], "result is "+testData.suggestions[0].Text) &&
-			!strings.Contains(outputLines[1], testData.suggestions[0].Metadata.PositionalArgs()[0].Placeholder)
+			strings.Contains(outputLines[1], "result is "+suite.suggestions[0].Text) &&
+			!strings.Contains(outputLines[1], suite.suggestions[0].Metadata.PositionalArgs()[0].Placeholder)
 	})
-	testza.AssertNoError(t, err)
+	require.NoError(t, err)
 
-	teardown(t, testData.tester)
 }
 
-func TestTypeAfterCompleting(t *testing.T) {
-	testData := setup(t)
-
-	testData.tester.SendString(tuitest.KeyDown)
+func (suite *TestSuite) TestTypeAfterCompleting() {
+	t := suite.T()
+	suite.tester.SendString(tuitest.KeyDown)
 	// Wait for first prompt to be selected
-	_, _, err := testData.tester.WaitFor(func(out string, outputLines []string) bool {
-		return strings.Contains(outputLines[0], testData.suggestions[0].Text)
+	_, _, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
+		return strings.Contains(outputLines[0], suite.suggestions[0].Text)
 	})
-	testza.AssertNoError(t, err)
+	require.NoError(t, err)
 
-	testData.tester.SendString("a")
+	suite.tester.SendString("a")
 	// Check that text updates
-	_, lines, err := testData.tester.WaitFor(func(out string, outputLines []string) bool {
-		return strings.Contains(outputLines[0], testData.suggestions[0].Text+"a")
+	_, lines, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
+		return strings.Contains(outputLines[0], suite.suggestions[0].Text+"a")
 	})
-	testza.AssertNoError(t, err)
+	require.NoError(t, err)
 	// Check that prompts were filtered
-	testza.AssertEqual(t, 1, len(lines))
+	require.Equal(t, 1, len(lines))
 	// Check that selected text formatting was removed
-	testza.AssertNotContains(t, lines[0], testData.textInput.SelectedTextStyle.Render(testData.suggestions[0].Text+"a"))
+	require.NotContains(t, lines[0], suite.textInput.SelectedTextStyle.Render(suite.suggestions[0].Text+"a"))
 
-	teardown(t, testData.tester)
 }
