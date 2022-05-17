@@ -2,6 +2,7 @@
 [![CI](https://github.com/aschey/bubbleprompt/actions/workflows/build.yml/badge.svg)](https://github.com/aschey/bubbleprompt/actions/workflows/build.yml)
 [![godoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://pkg.go.dev/github.com/aschey/bubbleprompt)
 [![goreport](https://goreportcard.com/badge/github.com/aschey/bubbleprompt)](https://goreportcard.com/report/github.com/aschey/bubbleprompt)
+[![codecov](https://codecov.io/gh/aschey/bubbleprompt/branch/main/graph/badge.svg?token=NWS6Q3W4FP)](https://codecov.io/gh/aschey/bubbleprompt)
 
 # Bubbleprompt
 
