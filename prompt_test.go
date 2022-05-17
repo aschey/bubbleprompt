@@ -11,6 +11,7 @@ import (
 	tuitest "github.com/aschey/tui-tester"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/sclevine/spec"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
@@ -110,58 +111,67 @@ func (m testExecutorModel) executor(input string) (tea.Model, error) {
 	return executors.NewStringModel("result is " + input), nil
 }
 
-func TestTestSuite(t *testing.T) {
+func TestAll(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }
 
 func (suite *TestSuite) TestBasicCompleter() {
-	t := suite.T()
-	// Check that all prompts show up
-	for i := 1; i < len(suite.suggestions); i++ {
-		t.Run(suite.suggestions[i].Text, func(t *testing.T) {
-			require.Contains(t, suite.initialLines[i], suite.suggestions[i-1].Text)
-			require.Contains(t, suite.initialLines[i], suite.suggestions[i-1].Description)
-		})
-	}
+	spec.Run(suite.T(), "basicCompleter", func(t *testing.T, when spec.G, it spec.S) {
+		// Check that all prompts show up
+		for i := 1; i < len(suite.suggestions); i++ {
+			it("should have the initial text for "+suite.initialLines[i], func() {
+				require.Contains(t, suite.initialLines[i], suite.suggestions[i-1].Text)
+				require.Contains(t, suite.initialLines[i], suite.suggestions[i-1].Description)
+			})
+		}
+	})
 }
 
 func (suite *TestSuite) TestFilter() {
-	t := suite.T()
-	suite.tester.SendString("fi")
-	// Check that typed input shows up
-	_, lines, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
-		return strings.Contains(outputLines[0], "fi")
+	spec.Run(suite.T(), "filter", func(t *testing.T, when spec.G, it spec.S) {
+		when("the user types to filter the prompt", func() {
+			it.Before(func() {
+				suite.tester.SendString("fi")
+			})
+
+			it("should filter the suggestions", func() {
+				_, lines, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
+					return strings.Contains(outputLines[0], "fi")
+				})
+				require.NoError(t, err)
+
+				require.Equal(t, 3, len(lines))
+				require.Contains(t, lines[1], suite.suggestions[0].Text)
+				require.Contains(t, lines[1], suite.suggestions[0].Description)
+				require.Contains(t, lines[2], suite.suggestions[4].Text)
+				require.Contains(t, lines[2], suite.suggestions[4].Description)
+			})
+		})
 	})
-	require.NoError(t, err)
-
-	// Check that suggestions filter properly
-	require.Equal(t, 3, len(lines))
-	require.Contains(t, lines[1], suite.suggestions[0].Text)
-	require.Contains(t, lines[1], suite.suggestions[0].Description)
-	require.Contains(t, lines[2], suite.suggestions[4].Text)
-	require.Contains(t, lines[2], suite.suggestions[4].Description)
-
 }
 
 func (suite *TestSuite) testExecutor(in *string, expectedOut string) {
-	t := suite.T()
-	if in != nil {
-		suite.tester.SendString(*in)
-		// Wait for typed input to render
-		_, _, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
-			return strings.Contains(outputLines[0], *in)
+	spec.Run(suite.T(), "executor", func(t *testing.T, when spec.G, it spec.S) {
+		when("the user presses enter", func() {
+			it.Before(func() {
+				if in != nil {
+					suite.tester.SendString(*in)
+					// Wait for typed input to render
+					_, _, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
+						return strings.Contains(outputLines[0], *in)
+					})
+					require.NoError(t, err)
+				}
+				suite.tester.SendByte(tuitest.KeyEnter)
+			})
+			it("should display the executor output", func() {
+				_, _, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
+					return len(outputLines) > 1 && strings.Contains(outputLines[1], expectedOut)
+				})
+				require.NoError(t, err)
+			})
 		})
-		require.NoError(t, err)
-	}
-
-	suite.tester.SendByte(tuitest.KeyEnter)
-
-	// Check that executor output displays
-	_, _, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
-		return len(outputLines) > 1 && strings.Contains(outputLines[1], expectedOut)
 	})
-	require.NoError(t, err)
-
 }
 
 func (suite *TestSuite) TestExecutorNoInput() {
@@ -174,52 +184,80 @@ func (suite *TestSuite) TestExecutorWithInput() {
 }
 
 func (suite *TestSuite) TestChoosePrompt() {
-	t := suite.T()
 	suite.tester.RemoveAnsi = false
-	suite.tester.SendString(tuitest.KeyDown)
-	// Wait for first prompt to be selected
-	_, lines, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
-		return strings.Contains(outputLines[0], suite.suggestions[0].Text)
-	})
+	spec.Run(suite.T(), "choosePrompt", func(t *testing.T, when spec.G, it spec.S) {
+		when("the user presses the down arrow", func() {
+			it.Before(func() {
+				suite.tester.SendString(tuitest.KeyDown)
+			})
 
-	require.NoError(t, err)
-	// Check that proper styles are applied
-	require.Contains(t, lines[0], suite.textInput.SelectedTextStyle.Render(suite.suggestions[0].Text))
-	require.Contains(t, lines[0], suite.suggestions[0].Metadata.PositionalArgs()[0].PlaceholderStyle.Format(suite.suggestions[0].Metadata.PositionalArgs()[0].Placeholder))
-	maxNameLen := len("second-option")
-	require.Contains(t, lines[1], suite.model.prompt.Formatters.Name.Format(suite.suggestions[0].Text, maxNameLen, true))
-	maxDescLen := len("test desc1")
-	require.Contains(t, lines[1], suite.model.prompt.Formatters.Description.Format(suite.suggestions[0].Description, maxDescLen, true))
+			it("selects the first prompt", func() {
+				// Wait for first prompt to be selected
+				_, lines, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
+					return strings.Contains(outputLines[0], suite.suggestions[0].Text)
+				})
 
-	// Check that the selected text gets sent to the executor without the placeholder
-	suite.tester.SendByte(tuitest.KeyEnter)
-	_, _, err = suite.tester.WaitFor(func(out string, outputLines []string) bool {
-		return len(outputLines) > 1 &&
-			strings.Contains(outputLines[1], "result is "+suite.suggestions[0].Text) &&
-			!strings.Contains(outputLines[1], suite.suggestions[0].Metadata.PositionalArgs()[0].Placeholder)
+				require.NoError(t, err)
+				// Check that proper styles are applied
+				require.Contains(t, lines[0], suite.textInput.SelectedTextStyle.Render(suite.suggestions[0].Text))
+				require.Contains(t, lines[0], suite.suggestions[0].Metadata.PositionalArgs()[0].PlaceholderStyle.Format(suite.suggestions[0].Metadata.PositionalArgs()[0].Placeholder))
+				maxNameLen := len("second-option")
+				require.Contains(t, lines[1], suite.model.prompt.Formatters.Name.Format(suite.suggestions[0].Text, maxNameLen, true))
+				maxDescLen := len("test desc1")
+				require.Contains(t, lines[1], suite.model.prompt.Formatters.Description.Format(suite.suggestions[0].Description, maxDescLen, true))
+			})
+		})
+
+		when("the user chooses the prompt", func() {
+			it.Before(func() {
+				suite.tester.SendByte(tuitest.KeyEnter)
+			})
+
+			it("renders the executor result", func() {
+				_, _, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
+					// Check that the selected text gets sent to the executor without the placeholder
+					return len(outputLines) > 1 &&
+						strings.Contains(outputLines[1], "result is "+suite.suggestions[0].Text) &&
+						!strings.Contains(outputLines[1], suite.suggestions[0].Metadata.PositionalArgs()[0].Placeholder)
+				})
+				require.NoError(t, err)
+			})
+		})
 	})
-	require.NoError(t, err)
 
 }
 
 func (suite *TestSuite) TestTypeAfterCompleting() {
-	t := suite.T()
-	suite.tester.SendString(tuitest.KeyDown)
-	// Wait for first prompt to be selected
-	_, _, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
-		return strings.Contains(outputLines[0], suite.suggestions[0].Text)
-	})
-	require.NoError(t, err)
+	spec.Run(suite.T(), "typeAfterCompleting", func(t *testing.T, when spec.G, it spec.S) {
+		when("the user presses the down arrow", func() {
+			it.Before(func() {
+				suite.tester.SendString(tuitest.KeyDown)
+			})
 
-	suite.tester.SendString("a")
-	// Check that text updates
-	_, lines, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
-		return strings.Contains(outputLines[0], suite.suggestions[0].Text+"a")
-	})
-	require.NoError(t, err)
-	// Check that prompts were filtered
-	require.Equal(t, 1, len(lines))
-	// Check that selected text formatting was removed
-	require.NotContains(t, lines[0], suite.textInput.SelectedTextStyle.Render(suite.suggestions[0].Text+"a"))
+			it("selects the first prompt", func() {
+				// Wait for first prompt to be selected
+				_, _, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
+					return strings.Contains(outputLines[0], suite.suggestions[0].Text)
+				})
+				require.NoError(t, err)
+			})
+		})
 
+		when("the user types input", func() {
+			it.Before(func() {
+				suite.tester.SendString("a")
+			})
+
+			it("should filter the prompts", func() {
+				_, lines, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
+					return strings.Contains(outputLines[0], suite.suggestions[0].Text+"a")
+				})
+				require.NoError(t, err)
+				// Check that prompts were filtered
+				require.Equal(t, 1, len(lines))
+				// Check that selected text formatting was removed
+				require.NotContains(t, lines[0], suite.textInput.SelectedTextStyle.Render(suite.suggestions[0].Text+"a"))
+			})
+		})
+	})
 }
