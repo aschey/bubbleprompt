@@ -14,6 +14,8 @@ jobs:
       - name: Test
         # Set TERM variable to force color output
         # Unset CI var because of https://github.com/muesli/termenv/commit/1111971edffa5f9ed2a38bd57f7e434b424f7b29
-        run: go build && TERM=xterm-256color CI= script -q -e -c "go test -v"
+        run: go build && TERM=xterm-256color CI= script -q -e -c "go test -v -coverprofile=coverage.out -covermode=atomic"
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
       - name: build examples
         run: ls -d examples/* | xargs sh -c 'cd $0 && go build'
