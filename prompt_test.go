@@ -150,8 +150,8 @@ func (suite *TestSuite) TestFilter() {
 	})
 }
 
-func (suite *TestSuite) testExecutor(in *string, expectedOut string) {
-	spec.Run(suite.T(), "executor", func(t *testing.T, when spec.G, it spec.S) {
+func (suite *TestSuite) testExecutor(text string, in *string, backspace bool, doubleEnter bool, expectedOut string) {
+	spec.Run(suite.T(), "executor"+text, func(t *testing.T, when spec.G, it spec.S) {
 		when("the user presses enter", func() {
 			it.Before(func() {
 				if in != nil {
@@ -161,8 +161,20 @@ func (suite *TestSuite) testExecutor(in *string, expectedOut string) {
 						return strings.Contains(outputLines[0], *in)
 					})
 					require.NoError(t, err)
+
+				}
+				if in != nil && backspace {
+					// Send input twice quickly to test completer ignoring first input
+					suite.tester.SendByte(tuitest.KeyBackspace)
+					i := *in
+					suite.tester.SendString(string(i[len(i)-1]))
 				}
 				suite.tester.SendByte(tuitest.KeyEnter)
+				if doubleEnter {
+					// Hit enter twice to re-trigger completer
+					suite.tester.SendByte(tuitest.KeyEnter)
+				}
+
 			})
 			it("should display the executor output", func() {
 				_, _, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
@@ -174,13 +186,19 @@ func (suite *TestSuite) testExecutor(in *string, expectedOut string) {
 	})
 }
 
-func (suite *TestSuite) TestExecutorNoInput() {
-	suite.testExecutor(nil, "result is")
-}
-
-func (suite *TestSuite) TestExecutorWithInput() {
+func (suite *TestSuite) TestExecutor() {
 	in := "fi"
-	suite.testExecutor(&in, "result is fi")
+	suite.testExecutor("NoInput", nil, false, false, "result is")
+	suite.SetupTest()
+	suite.testExecutor("NoInputDoubleEnter", nil, false, true, "result is")
+	suite.SetupTest()
+	suite.testExecutor("WithInput", &in, false, false, "result is fi")
+	suite.SetupTest()
+	suite.testExecutor("WithInputDoubleEnter", &in, false, true, "result is fi")
+	suite.SetupTest()
+	suite.testExecutor("WithInputBackspace", &in, true, false, "result is fi")
+	suite.SetupTest()
+	suite.testExecutor("WithInputDoubleEnterAndBackspace", &in, true, true, "result is fi")
 }
 
 func (suite *TestSuite) TestChoosePrompt() {
