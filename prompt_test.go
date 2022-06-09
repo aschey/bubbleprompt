@@ -1,92 +1,27 @@
 package prompt
 
 import (
+	"fmt"
+	"os"
 	"strings"
-	"testing"
+	"time"
+
+	//"github.com/Netflix/go-expect"
 
 	completers "github.com/aschey/bubbleprompt/completer"
 	executors "github.com/aschey/bubbleprompt/executor"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/commandinput"
 	tuitest "github.com/aschey/tui-tester"
-	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/sclevine/spec"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 type cmdMetadata = commandinput.CmdMetadata
 
 type model struct {
 	prompt Model[cmdMetadata]
-}
-
-type testCompleterModel struct {
-	suggestions []input.Suggestion[cmdMetadata]
-}
-
-type testExecutorModel struct{}
-
-type TestSuite struct {
-	suite.Suite
-	suggestions  []input.Suggestion[cmdMetadata]
-	tester       tuitest.Tester
-	initialLines []string
-	model        model
-	textInput    *commandinput.Model[cmdMetadata]
-}
-
-func (suite *TestSuite) SetupTest() {
-	suggestions := []input.Suggestion[cmdMetadata]{
-		{Text: "first-option", Description: "test desc", Metadata: commandinput.NewCmdMetadata([]commandinput.PositionalArg{{Placeholder: "[test placeholder]"}}, commandinput.Placeholder{})},
-		{Text: "second-option", Description: "test desc2"},
-		{Text: "third-option", Description: "test desc3"},
-		{Text: "fourth-option", Description: "test desc4"},
-		{Text: "fifth-option", Description: "test desc5"},
-	}
-
-	completerModel := testCompleterModel{suggestions: suggestions}
-	executorModel := testExecutorModel{}
-
-	var textInput input.Input[cmdMetadata] = commandinput.New[cmdMetadata]()
-	model := model{
-		prompt: New(
-			completerModel.completer,
-			executorModel.executor,
-			textInput,
-		),
-	}
-	model.prompt.ready = true
-	model.prompt.viewport = viewport.New(80, 30)
-
-	program := func(tester *tuitest.Tester) {
-		if err := tea.NewProgram(model, tea.WithInput(tester), tea.WithOutput(tester)).Start(); err != nil {
-			panic(err)
-		}
-	}
-
-	tester := tuitest.New(program)
-	tester.TrimOutput = true
-	tester.RemoveAnsi = true
-
-	// Wait for prompt to initialize
-	_, initialLines, err := tester.WaitFor(func(out string, outputLines []string) bool {
-		return len(outputLines) > 1
-	})
-
-	require.NoError(suite.T(), err)
-	suite.suggestions = suggestions
-	suite.tester = tester
-	suite.initialLines = initialLines
-	suite.model = model
-	suite.textInput = textInput.(*commandinput.Model[cmdMetadata])
-}
-
-func (suite *TestSuite) TearDownTest() {
-	suite.tester.SendByte(tuitest.KeyCtrlC)
-	err := suite.tester.WaitForTermination()
-	require.NoError(suite.T(), err)
 }
 
 func (m model) Init() tea.Cmd {
@@ -103,179 +38,310 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
+type testCompleterModel struct {
+	suggestions []input.Suggestion[cmdMetadata]
+}
+
 func (m testCompleterModel) completer(document Document, promptModel Model[cmdMetadata]) []input.Suggestion[cmdMetadata] {
+	time.Sleep(2 * time.Millisecond)
 	return completers.FilterHasPrefix(document.TextBeforeCursor(), m.suggestions)
 }
 
+type testExecutorModel struct{}
+
 func (m testExecutorModel) executor(input string) (tea.Model, error) {
+	time.Sleep(2 * time.Millisecond)
 	return executors.NewStringModel("result is " + input), nil
 }
 
-func TestAll(t *testing.T) {
-	suite.Run(t, new(TestSuite))
+func testExecutor(tester *tuitest.Tester, in *string, backspace bool, doubleEnter bool, outStr string) {
+	if in != nil {
+		tester.SendString(*in)
+		// Wait for typed input to render
+		_, _ = tester.WaitFor(func(state tuitest.TermState) bool {
+			return strings.Contains(state.OutputLines()[0], *in)
+		})
+	}
+
+	if in != nil && backspace {
+		// Send input twice quickly to test completer ignoring first input
+		tester.SendByte(tuitest.KeyBackspace)
+		in := *in
+		tester.SendString(string(in[len(in)-1]))
+	}
+	tester.SendByte(tuitest.KeyEnter)
+	if doubleEnter {
+		// Hit enter twice to re-trigger completer
+		tester.SendByte(tuitest.KeyEnter)
+	}
+
+	_, _ = tester.WaitFor(func(state tuitest.TermState) bool {
+		outputLines := state.OutputLines()
+		return len(outputLines) > 1 && strings.Contains(outputLines[1], outStr)
+	})
 }
 
-func (suite *TestSuite) TestBasicCompleter() {
-	spec.Run(suite.T(), "basicCompleter", func(t *testing.T, when spec.G, it spec.S) {
-		// Check that all prompts show up
-		for i := 1; i < len(suite.suggestions); i++ {
-			it("should have the initial text for "+suite.initialLines[i], func() {
-				require.Contains(t, suite.initialLines[i], suite.suggestions[i-1].Text)
-				require.Contains(t, suite.initialLines[i], suite.suggestions[i-1].Description)
-			})
+var _ = Describe("Prompt", func() {
+	suggestions := []input.Suggestion[cmdMetadata]{
+		{Text: "first-option", Description: "test desc", Metadata: commandinput.NewCmdMetadata([]commandinput.PositionalArg{commandinput.NewPositionalArg("[test placeholder]")}, commandinput.Placeholder{})},
+		{Text: "second-option", Description: "test desc2"},
+		{Text: "third-option", Description: "test desc3"},
+		{Text: "fourth-option", Description: "test desc4"},
+		{Text: "fifth-option", Description: "test desc5"},
+		{Text: "sixth-option", Description: "test desc6"},
+		{Text: "seventh-option", Description: "test desc7"},
+	}
+	leftPadding := 2
+	margin := 1
+	longestNameLength := len("seventh-option")
+	longestDescLength := len("test desc2")
+	promptWidth := leftPadding + margin + longestNameLength + 2*margin + longestDescLength + margin
+
+	var promptModel *model
+	var tester *tuitest.Tester
+	var initialLines []string
+
+	BeforeEach(OncePerOrdered, func() {
+		completerModel := testCompleterModel{suggestions: suggestions}
+		executorModel := testExecutorModel{}
+
+		var input input.Input[cmdMetadata] = commandinput.New[cmdMetadata]()
+		promptModel = &model{
+			prompt: New(
+				completerModel.completer,
+				executorModel.executor,
+				input,
+			),
 		}
-	})
-}
 
-func (suite *TestSuite) TestFilter() {
-	spec.Run(suite.T(), "filter", func(t *testing.T, when spec.G, it spec.S) {
-		when("the user types to filter the prompt", func() {
-			it.Before(func() {
-				suite.tester.SendString("fi")
-			})
-
-			it("should filter the suggestions", func() {
-				_, lines, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
-					return strings.Contains(outputLines[0], "fi")
-				})
-				require.NoError(t, err)
-
-				require.Equal(t, 3, len(lines))
-				require.Contains(t, lines[1], suite.suggestions[0].Text)
-				require.Contains(t, lines[1], suite.suggestions[0].Description)
-				require.Contains(t, lines[2], suite.suggestions[4].Text)
-				require.Contains(t, lines[2], suite.suggestions[4].Description)
-			})
+		var err error
+		tester, err = tuitest.New(func(tty *os.File) error {
+			return tea.NewProgram(promptModel, tea.WithInput(tty), tea.WithOutput(tty)).Start()
 		})
+		tester.OnError = func(err error) error {
+			defer GinkgoRecover()
+			Expect(err).Error().ShouldNot(HaveOccurred())
+			return err
+		}
+
+		Expect(err).Error().ShouldNot(HaveOccurred())
+
+		// Wait for prompt to initialize
+		tester.TrimOutput = true
+		state, _ := tester.WaitFor(func(state tuitest.TermState) bool {
+			outputLines := state.OutputLines()
+			return len(outputLines) > 6 && strings.Contains(outputLines[6], suggestions[5].Description)
+		})
+		initialLines = state.OutputLines()
 	})
-}
 
-func (suite *TestSuite) testExecutor(text string, in *string, backspace bool, doubleEnter bool, expectedOut string) {
-	spec.Run(suite.T(), "executor"+text, func(t *testing.T, when spec.G, it spec.S) {
-		when("the user presses enter", func() {
-			it.Before(func() {
-				if in != nil {
-					suite.tester.SendString(*in)
-					// Wait for typed input to render
-					_, _, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
-						return strings.Contains(outputLines[0], *in)
-					})
-					require.NoError(t, err)
+	AfterEach(OncePerOrdered, func() {
+		tester.SendByte(byte(tea.KeyCtrlC))
+		err := tester.WaitForTermination()
+		Expect(err).Error().ShouldNot(HaveOccurred())
+	})
 
+	When("the prompt is loaded", Ordered, func() {
+		It("shows the completion text", func() {
+			for i := 0; i < 6; i++ {
+				Expect(initialLines[i+1]).To(ContainSubstring(suggestions[i].Text))
+			}
+		})
+
+		It("shows the completion description", func() {
+			for i := 0; i < 6; i++ {
+				Expect(initialLines[i+1]).To(ContainSubstring(suggestions[i].Text))
+			}
+		})
+
+		It("shows the scrollbar", func() {
+			_, _ = tester.WaitFor(func(state tuitest.TermState) bool {
+				for i := 1; i < 6; i++ {
+					if fmt.Sprint(state.BgColor(1, promptWidth)) != DefaultScrollbarThumbColor {
+						return false
+					}
 				}
-				if in != nil && backspace {
-					// Send input twice quickly to test completer ignoring first input
-					suite.tester.SendByte(tuitest.KeyBackspace)
-					i := *in
-					suite.tester.SendString(string(i[len(i)-1]))
+				return true
+			})
+
+			_, _ = tester.WaitFor(func(state tuitest.TermState) bool {
+				return fmt.Sprint(state.BgColor(6, promptWidth)) == DefaultScrollbarColor
+			})
+
+		})
+	})
+
+	When("the user types to filter the prompt", Ordered, func() {
+		var lines []string
+		BeforeAll(func() {
+			tester.SendString("fi")
+		})
+
+		It("shows the typed filter", func() {
+			_, _ = tester.WaitFor(func(state tuitest.TermState) bool {
+				return strings.Contains(state.OutputLines()[0], "> fi")
+			})
+		})
+
+		It("filters the suggestions", func() {
+			state, _ := tester.WaitFor(func(state tuitest.TermState) bool {
+				outputLines := state.OutputLines()
+				return len(outputLines) == 3 && strings.Contains(outputLines[2], suggestions[4].Description)
+			})
+			lines = state.OutputLines()
+		})
+
+		It("shows the correct suggestions", func() {
+			Expect(lines[1]).To(ContainSubstring(suggestions[0].Text))
+			Expect(lines[1]).To(ContainSubstring(suggestions[0].Description))
+			Expect(lines[2]).To(ContainSubstring(suggestions[4].Text))
+			Expect(lines[2]).To(ContainSubstring(suggestions[4].Description))
+		})
+	})
+
+	When("the user presses enter without filtering", func() {
+		It("shows the output", func() {
+			testExecutor(tester, nil, false, false, "result is")
+		})
+	})
+
+	When("the user presses enter twice without filtering", func() {
+		It("shows the output", func() {
+			testExecutor(tester, nil, false, true, "result is")
+		})
+	})
+
+	When("the user presses enter after typing", func() {
+		It("shows the output", func() {
+			in := "fi"
+			testExecutor(tester, &in, false, false, "result is fi")
+		})
+	})
+
+	When("the user presses enter twice after typing", func() {
+		It("shows the output", func() {
+			in := "fi"
+			testExecutor(tester, &in, false, true, "result is fi")
+		})
+	})
+
+	When("the user presses enter after typing and pressing backspace", func() {
+		It("shows the output", func() {
+			in := "fi"
+			testExecutor(tester, &in, true, false, "result is fi")
+		})
+	})
+
+	When("the user presses enter twice after typing and pressing backspace", func() {
+		It("shows the output", func() {
+			in := "fi"
+			testExecutor(tester, &in, true, true, "result is fi")
+		})
+	})
+
+	When("the user presses the down arrow", Ordered, func() {
+		BeforeAll(func() {
+			tester.SendString(tuitest.KeyDown)
+		})
+
+		It("selects the first prompt", func() {
+			_, _ = tester.WaitFor(func(state tuitest.TermState) bool {
+				return strings.Contains(state.OutputLines()[0], suggestions[0].Text)
+			})
+		})
+
+		It("applies the selected text styling", func() {
+			_, _ = tester.WaitFor(func(state tuitest.TermState) bool {
+				return fmt.Sprint(state.FgColor(0, leftPadding)) == commandinput.DefaultSelectedTextColor
+			})
+		})
+
+		It("applies the selected placeholder styling", func() {
+			_, _ = tester.WaitFor(func(state tuitest.TermState) bool {
+				return fmt.Sprint(state.FgColor(0, leftPadding+margin+len(suggestions[0].Text))) == commandinput.DefaultPlaceholderForeground
+			})
+		})
+
+		It("applies the correct background for the suggestion name so it covers the longest name", func() {
+			maxNameLen := len("seventh-option")
+			_, _ = tester.WaitFor(func(state tuitest.TermState) bool {
+				return fmt.Sprint(state.BgColor(1, leftPadding+maxNameLen+margin)) == input.DefaultNameBackground
+			})
+		})
+
+		It("applies the correct background for the suggestion description so it covers the longest description", func() {
+			maxNameLen := len("seventh-option")
+			maxDescLen := len("test desc2")
+			_, _ = tester.WaitFor(func(state tuitest.TermState) bool {
+				return fmt.Sprint(state.BgColor(1, leftPadding+maxNameLen+2*margin+maxDescLen+margin)) == input.DefaultDescriptionBackground
+			})
+		})
+	})
+
+	When("the user chooses the first prompt", Ordered, func() {
+		BeforeAll(func() {
+			tester.SendString(tuitest.KeyDown)
+			tester.SendByte(tuitest.KeyEnter)
+		})
+
+		It("renders the executor result", func() {
+			_, _ = tester.WaitFor(func(state tuitest.TermState) bool {
+				outputLines := state.OutputLines()
+				return len(outputLines) > 1 &&
+					strings.Contains(outputLines[1], "result is "+suggestions[0].Text) &&
+					!strings.Contains(outputLines[1], suggestions[0].Metadata.PositionalArgs()[0].Placeholder)
+			})
+		})
+	})
+
+	When("the user filters all the prompts", Ordered, func() {
+		BeforeAll(func() {
+			tester.SendString(tuitest.KeyDown)
+			tester.SendString("a")
+		})
+
+		It("displays the input", func() {
+			_, _ = tester.WaitFor(func(state tuitest.TermState) bool {
+				return strings.Contains(state.OutputLines()[0], suggestions[0].Text+"a")
+			})
+		})
+
+		It("does not display any prompts", func() {
+			_, _ = tester.WaitForDuration(func(state tuitest.TermState) bool {
+				return len(state.OutputLines()) == 1
+			}, 100*time.Millisecond)
+		})
+
+		It("removes the selected text styling", func() {
+			_, _ = tester.WaitForDuration(func(state tuitest.TermState) bool {
+				return state.FgColor(0, 2) == tuitest.DefaultFG
+			}, 100*time.Millisecond)
+		})
+	})
+
+	When("the user scrolls down", Ordered, func() {
+		BeforeAll(func() {
+			for i := 0; i < 8; i++ {
+				tester.SendString(tuitest.KeyDown)
+				time.Sleep(10 * time.Millisecond)
+			}
+		})
+
+		It("updates the scrollbar", func() {
+
+			_, _ = tester.WaitFor(func(state tuitest.TermState) bool {
+				for i := 2; i < 7; i++ {
+					if fmt.Sprint(state.BgColor(1, promptWidth)) != DefaultScrollbarThumbColor {
+						return false
+					}
 				}
-				suite.tester.SendByte(tuitest.KeyEnter)
-				if doubleEnter {
-					// Hit enter twice to re-trigger completer
-					suite.tester.SendByte(tuitest.KeyEnter)
-				}
+				return true
+			})
 
-			})
-			it("should display the executor output", func() {
-				_, _, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
-					return len(outputLines) > 1 && strings.Contains(outputLines[1], expectedOut)
-				})
-				require.NoError(t, err)
-			})
+			// _, _ = tester.WaitFor(func(state tuitest.TermState) bool {
+			// 	return fmt.Sprint(state.BgColor(1, promptWidth)) == DefaultScrollbarColor
+			// })
+
 		})
 	})
-}
-
-func (suite *TestSuite) TestExecutor() {
-	in := "fi"
-	suite.testExecutor("NoInput", nil, false, false, "result is")
-	suite.SetupTest()
-	suite.testExecutor("NoInputDoubleEnter", nil, false, true, "result is")
-	suite.SetupTest()
-	suite.testExecutor("WithInput", &in, false, false, "result is fi")
-	suite.SetupTest()
-	suite.testExecutor("WithInputDoubleEnter", &in, false, true, "result is fi")
-	suite.SetupTest()
-	suite.testExecutor("WithInputBackspace", &in, true, false, "result is fi")
-	suite.SetupTest()
-	suite.testExecutor("WithInputDoubleEnterAndBackspace", &in, true, true, "result is fi")
-}
-
-func (suite *TestSuite) TestChoosePrompt() {
-	suite.tester.RemoveAnsi = false
-	spec.Run(suite.T(), "choosePrompt", func(t *testing.T, when spec.G, it spec.S) {
-		when("the user presses the down arrow", func() {
-			it.Before(func() {
-				suite.tester.SendString(tuitest.KeyDown)
-			})
-
-			it("selects the first prompt", func() {
-				// Wait for first prompt to be selected
-				_, lines, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
-					return strings.Contains(outputLines[0], suite.suggestions[0].Text)
-				})
-
-				require.NoError(t, err)
-				// Check that proper styles are applied
-				require.Contains(t, lines[0], suite.textInput.SelectedTextStyle.Render(suite.suggestions[0].Text))
-				require.Contains(t, lines[0], suite.suggestions[0].Metadata.PositionalArgs()[0].PlaceholderStyle.Format(suite.suggestions[0].Metadata.PositionalArgs()[0].Placeholder))
-				maxNameLen := len("second-option")
-				require.Contains(t, lines[1], suite.model.prompt.Formatters.Name.Format(suite.suggestions[0].Text, maxNameLen, true))
-				maxDescLen := len("test desc1")
-				require.Contains(t, lines[1], suite.model.prompt.Formatters.Description.Format(suite.suggestions[0].Description, maxDescLen, true))
-			})
-		})
-
-		when("the user chooses the prompt", func() {
-			it.Before(func() {
-				suite.tester.SendByte(tuitest.KeyEnter)
-			})
-
-			it("renders the executor result", func() {
-				_, _, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
-					// Check that the selected text gets sent to the executor without the placeholder
-					return len(outputLines) > 1 &&
-						strings.Contains(outputLines[1], "result is "+suite.suggestions[0].Text) &&
-						!strings.Contains(outputLines[1], suite.suggestions[0].Metadata.PositionalArgs()[0].Placeholder)
-				})
-				require.NoError(t, err)
-			})
-		})
-	})
-
-}
-
-func (suite *TestSuite) TestTypeAfterCompleting() {
-	spec.Run(suite.T(), "typeAfterCompleting", func(t *testing.T, when spec.G, it spec.S) {
-		when("the user presses the down arrow", func() {
-			it.Before(func() {
-				suite.tester.SendString(tuitest.KeyDown)
-			})
-
-			it("selects the first prompt", func() {
-				// Wait for first prompt to be selected
-				_, _, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
-					return strings.Contains(outputLines[0], suite.suggestions[0].Text)
-				})
-				require.NoError(t, err)
-			})
-		})
-
-		when("the user types input", func() {
-			it.Before(func() {
-				suite.tester.SendString("a")
-			})
-
-			it("should filter the prompts", func() {
-				_, lines, err := suite.tester.WaitFor(func(out string, outputLines []string) bool {
-					return strings.Contains(outputLines[0], suite.suggestions[0].Text+"a")
-				})
-				require.NoError(t, err)
-				// Check that prompts were filtered
-				require.Equal(t, 1, len(lines))
-				// Check that selected text formatting was removed
-				require.NotContains(t, lines[0], suite.textInput.SelectedTextStyle.Render(suite.suggestions[0].Text+"a"))
-			})
-		})
-	})
-}
+})

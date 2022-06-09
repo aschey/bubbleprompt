@@ -11,7 +11,6 @@ import (
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/commandinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 type cmdMetadata = commandinput.CmdMetadata
@@ -47,40 +46,19 @@ func (m completerModel) completer(document prompt.Document, promptModel prompt.M
 func executor(input string) (tea.Model, error) {
 	return executors.NewAsyncStringModel(func() string {
 		time.Sleep(100 * time.Millisecond)
-		return "test"
+		return "result is " + input
 	}), nil
 }
 
 func main() {
-	placeholderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
-	argStyle1 := lipgloss.NewStyle().Foreground(lipgloss.Color("15"))
-	argStyle2 := lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
 	suggestions := []input.Suggestion[cmdMetadata]{
-		{
-			Text:        "first-option",
-			Description: "test description",
-			Metadata: commandinput.NewCmdMetadata([]commandinput.PositionalArg{
-				{Placeholder: "<test1>", PlaceholderStyle: input.Text{Style: placeholderStyle}, ArgStyle: input.Text{Style: argStyle1}},
-				{Placeholder: "<test2>", PlaceholderStyle: input.Text{Style: placeholderStyle}, ArgStyle: input.Text{Style: argStyle2}}}, commandinput.Placeholder{}),
-		},
-		{
-			Text:        "second-option",
-			Description: "test description2",
-		},
-		{
-			Text:        "third-option",
-			Description: "test description3",
-		},
-		{
-			Text:        "fourth-option",
-			Description: "test description4",
-		},
-		{
-			Text:        "fifth-option",
-			Description: "test description5",
-			Metadata: commandinput.NewCmdMetadata([]commandinput.PositionalArg{
-				{Placeholder: "<abc>", PlaceholderStyle: input.Text{Style: placeholderStyle}}}, commandinput.Placeholder{}),
-		}}
+		{Text: "first-option", Description: "test desc", Metadata: commandinput.NewCmdMetadata([]commandinput.PositionalArg{commandinput.NewPositionalArg("[test placeholder]")}, commandinput.Placeholder{})},
+		{Text: "second-option", Description: "test desc2"},
+		{Text: "third-option", Description: "test desc3"},
+		{Text: "fourth-option", Description: "test desc4"},
+		{Text: "fifth-option", Description: "test desc5"},
+		{Text: "sixth-option", Description: "test desc6"},
+		{Text: "seventh-option", Description: "test desc7"}}
 
 	var textInput input.Input[cmdMetadata] = commandinput.New[cmdMetadata]()
 	completerModel := completerModel{suggestions: suggestions, textInput: textInput.(*commandinput.Model[cmdMetadata])}

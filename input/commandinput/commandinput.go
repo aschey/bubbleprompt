@@ -40,8 +40,10 @@ type Flag struct {
 	PlaceholderStyle input.Text
 }
 
+const DefaultPlaceholderForeground = "14"
+
 func NewPositionalArg(placeholder string) PositionalArg {
-	placeholderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("14"))
+	placeholderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(DefaultPlaceholderForeground))
 	return PositionalArg{
 		Placeholder: placeholder,
 		PlaceholderStyle: input.Text{
@@ -107,6 +109,8 @@ const (
 	RoundDown
 )
 
+const DefaultSelectedTextColor = "10"
+
 func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T] {
 	textinput := textinput.New()
 	textinput.Focus()
@@ -115,7 +119,7 @@ func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T] {
 		Placeholder:       "",
 		prompt:            "> ",
 		PlaceholderStyle:  textinput.PlaceholderStyle,
-		SelectedTextStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("10")),
+		SelectedTextStyle: lipgloss.NewStyle().Foreground(lipgloss.Color(DefaultSelectedTextColor)),
 		parsedText:        &Statement{},
 		delimiterRegex:    regexp.MustCompile(`\s+`),
 		stringRegex:       regexp.MustCompile(`[^\-\s][^\s]*`),

@@ -21,6 +21,9 @@ const (
 
 type Executor[T any] func(input string) (tea.Model, error)
 
+const DefaultScrollbarColor = "14"
+const DefaultScrollbarThumbColor = "240"
+
 type Model[I any] struct {
 	completer               completerModel[I]
 	executor                Executor[I]
@@ -45,8 +48,8 @@ func New[I any](completer Completer[I], executor Executor[I], textInput input.In
 		textInput:  textInput,
 		Formatters: input.DefaultFormatters(),
 	}
-	model.SetScrollbarColor(lipgloss.Color("14"))
-	model.SetScrollbarThumbColor(lipgloss.Color("240"))
+	model.SetScrollbarColor(lipgloss.Color(DefaultScrollbarColor))
+	model.SetScrollbarThumbColor(lipgloss.Color(DefaultScrollbarThumbColor))
 	for _, opt := range opts {
 		if err := opt(&model); err != nil {
 			panic(err)
