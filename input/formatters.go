@@ -9,8 +9,8 @@ type Formatters struct {
 	ErrorText          Text
 }
 
-const DefaultNameBackground = "14"
-const DefaultDescriptionBackground = "37"
+const DefaultNameBackground = "15"
+const DefaultDescriptionBackground = "13"
 
 func DefaultFormatters() Formatters {
 	return Formatters{
@@ -19,14 +19,14 @@ func DefaultFormatters() Formatters {
 				NewStyle().
 				Foreground(lipgloss.Color("240")).
 				Background(lipgloss.Color(DefaultNameBackground)),
-			Style: lipgloss.NewStyle().Background(lipgloss.Color("14")),
+			Style: lipgloss.NewStyle().Background(lipgloss.Color(DefaultNameBackground)),
 		},
 		Description: SuggestionText{
 			SelectedStyle: lipgloss.
 				NewStyle().
 				Foreground(lipgloss.Color("240")).
 				Background(lipgloss.Color(DefaultDescriptionBackground)),
-			Style: lipgloss.NewStyle().Background(lipgloss.Color("37")),
+			Style: lipgloss.NewStyle().Background(lipgloss.Color(DefaultDescriptionBackground)),
 		},
 		DefaultPlaceholder: Text{
 			Style: lipgloss.NewStyle().Foreground(lipgloss.Color("6")),
