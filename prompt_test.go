@@ -118,7 +118,6 @@ var _ = Describe("Prompt", Ordered, func() {
 
 		It("shows the scrollbar", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				println(state.BgColor(1, promptWidth))
 				for i := 1; i < 6; i++ {
 					if fmt.Sprint(state.BgColor(1, promptWidth)) != DefaultScrollbarThumbColor {
 						return false
