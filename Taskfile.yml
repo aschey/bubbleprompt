@@ -10,8 +10,11 @@ tasks:
   test:
     cmds:
       - ginkgo -v -race -procs 2
+  covTest:
+    cmds:
+      - ginkgo -v -race
   buildCoverage:
-    deps: [test]
+    deps: [covTest]
     cmds:
       - go tool cover -html coverage.out -o coverage.html
   coverage:

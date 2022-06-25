@@ -17,7 +17,7 @@ jobs:
         run: |
           sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d
           ./bin/task setup
-          TERM=xterm-256color CI= ./bin/task test
+          TERM=xterm-256color CI= ./bin/task covTest
       - name: build examples
         run: ./bin/task examples
       - name: Upload coverage to Codecov
