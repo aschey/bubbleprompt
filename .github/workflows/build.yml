@@ -14,7 +14,7 @@ jobs:
       - name: Test
         # Set TERM variable to force color output
         # Unset CI var because of https://github.com/muesli/termenv/commit/1111971edffa5f9ed2a38bd57f7e434b424f7b29
-        run: go build && TERM=xterm-256color CI= go test -v
+        run: go build && TERM=xterm-256color CI= go test -v -race
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:

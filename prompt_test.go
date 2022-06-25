@@ -62,8 +62,7 @@ var _ = AfterSuite(func() {
 
 var suggestions []input.Suggestion[commandinput.CmdMetadata] = testapp.Suggestions
 
-var _ = Describe("Prompt", Ordered, func() {
-
+var _ = Describe("Prompt", func() {
 	leftPadding := 2
 	margin := 1
 	longestNameLength := len("seventh-option")
@@ -284,9 +283,8 @@ var _ = Describe("Prompt", Ordered, func() {
 
 	When("the user scrolls down", Ordered, func() {
 		BeforeAll(func() {
-			for i := 0; i < 8; i++ {
+			for i := 0; i < 7; i++ {
 				console.SendString(tuitest.KeyDown)
-				time.Sleep(10 * time.Millisecond)
 			}
 		})
 
@@ -303,8 +301,50 @@ var _ = Describe("Prompt", Ordered, func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				return fmt.Sprint(state.BgColor(1, promptWidth)) == DefaultScrollbarColor
 			})
-
 		})
 	})
 
+	When("then user scrolls back up", Ordered, func() {
+		BeforeAll(func() {
+			for i := 0; i < 7; i++ {
+				console.SendString(tuitest.KeyDown)
+			}
+			for i := 0; i < 7; i++ {
+				console.SendString(tuitest.KeyUp)
+			}
+		})
+
+		It("updates the scrollbar", func() {
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				for i := 1; i < 6; i++ {
+					if fmt.Sprint(state.BgColor(1, promptWidth)) != DefaultScrollbarThumbColor {
+						return false
+					}
+				}
+				return true
+			})
+
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				return fmt.Sprint(state.BgColor(6, promptWidth)) == DefaultScrollbarColor
+			})
+		})
+	})
+
+	When("the user moves the cursor left", Ordered, func() {
+		BeforeAll(func() {
+			console.SendString(tuitest.KeyDown)
+			for i := 0; i < 10; i++ {
+				console.SendString(tuitest.KeyLeft)
+			}
+		})
+
+		It("shows the completions matching the prefix", func() {
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				lines := state.OutputLines()
+				return len(lines) == 3 &&
+					strings.Contains(lines[1], suggestions[0].Text) &&
+					strings.Contains(lines[2], suggestions[4].Text)
+			})
+		})
+	})
 })
