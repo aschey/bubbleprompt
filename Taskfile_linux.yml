@@ -1,0 +1,9 @@
+version: '3'
+
+tasks:
+  coverage:
+    cmds:
+      - xdg-open ./coverage.html
+  examples:
+    cmds:
+      - ls -d examples/* | xargs sh -c 'cd $0 && go build'
