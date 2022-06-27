@@ -3,10 +3,10 @@ module github.com/aschey/bubbleprompt
 go 1.18
 
 require (
-	github.com/alecthomas/participle/v2 v2.0.0-alpha8
+	github.com/alecthomas/participle/v2 v2.0.0-beta.3
 	github.com/aschey/tui-tester v0.0.0-20220625211952-dff0c1b186c5
-	github.com/charmbracelet/bubbles v0.10.4-0.20220301123521-e349920524a2
-	github.com/charmbracelet/bubbletea v0.20.0
+	github.com/charmbracelet/bubbles v0.12.0
+	github.com/charmbracelet/bubbletea v0.22.0
 	github.com/charmbracelet/lipgloss v0.5.0
 	github.com/onsi/ginkgo/v2 v2.1.4
 	github.com/onsi/gomega v1.19.0
@@ -26,13 +26,14 @@ require (
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/muesli/ansi v0.0.0-20211031195517-c9f0611b6c70 // indirect
+	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
-	github.com/muesli/termenv v0.11.1-0.20220212125758-44cd13922739 // indirect
+	github.com/muesli/termenv v0.12.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/stretchr/testify v1.7.0 // indirect
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
-	golang.org/x/sys v0.0.0-20220624220833-87e55d714810 // indirect
-	golang.org/x/term v0.0.0-20220411215600-e5f449aeb171 // indirect
+	golang.org/x/sys v0.0.0-20220627191245-f75cf1eec38b // indirect
+	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.11 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect

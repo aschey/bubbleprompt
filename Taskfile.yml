@@ -24,3 +24,9 @@ tasks:
   examples:
     cmds:
       - task: os:examples
+  update:
+    cmds:
+      - go get -u ./...
+      - go mod tidy
+      - cd examples && go get -u ./...
+      - cd examples && go mod tidy

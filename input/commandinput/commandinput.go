@@ -92,7 +92,7 @@ type Model[T CmdMetadataAccessor] struct {
 	SelectedTextStyle lipgloss.Style
 	CursorStyle       lipgloss.Style
 	PlaceholderStyle  lipgloss.Style
-	parser            *participle.Parser
+	parser            *participle.Parser[Statement]
 	parsedText        *Statement
 }
 
@@ -144,7 +144,7 @@ func (m *Model[T]) buildParser() {
 		{Name: `String`, Pattern: m.stringRegex.String()},
 		{Name: "whitespace", Pattern: m.delimiterRegex.String()},
 	})
-	parser := participle.MustBuild(&Statement{}, participle.Lexer(lexer))
+	parser := participle.MustBuild[Statement](participle.Lexer(lexer))
 	m.parser = parser
 }
 
@@ -243,8 +243,8 @@ func (m *Model[T]) SelectedCommand() *input.Suggestion[T] {
 func (m *Model[T]) ArgsBeforeCursor() []string {
 	args := []string{}
 	textBeforeCursor := m.Value()[:m.Cursor()]
-	expr := &Statement{}
-	_ = m.parser.ParseString("", textBeforeCursor, expr)
+
+	expr, _ := m.parser.ParseString("", textBeforeCursor)
 
 	for _, arg := range expr.Args.Value {
 		args = append(args, arg.Value)
@@ -256,8 +256,7 @@ func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
 	m.textinput, cmd = m.textinput.Update(msg)
 
-	expr := &Statement{}
-	err := m.parser.ParseString("", m.Value(), expr)
+	expr, err := m.parser.ParseString("", m.Value())
 	if err == nil {
 		m.parsedText = expr
 	}
@@ -416,8 +415,7 @@ func (m *Model[T]) OnSuggestionUnselected() {
 }
 
 func (m *Model[T]) CompletionText(text string) string {
-	expr := &Statement{}
-	_ = m.parser.ParseString("", text, expr)
+	expr, _ := m.parser.ParseString("", text)
 	tokens := m.allTokens(expr)
 	token := m.currentToken(tokens, RoundUp)
 
@@ -446,8 +444,7 @@ func (m *Model[T]) CommandBeforeCursor() string {
 
 func (m *Model[T]) SetValue(s string) {
 	m.textinput.SetValue(s)
-	expr := &Statement{}
-	err := m.parser.ParseString("", m.Value(), expr)
+	expr, err := m.parser.ParseString("", m.Value())
 	if err != nil {
 		fmt.Println(err)
 	}
