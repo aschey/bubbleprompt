@@ -74,7 +74,6 @@ var _ = Describe("Prompt", func() {
 	_ = initialLines
 
 	BeforeEach(OncePerOrdered, func() {
-
 		var err error
 		console, err = tester.NewConsole([]string{})
 		Expect(err).ShouldNot(HaveOccurred())
@@ -345,6 +344,24 @@ var _ = Describe("Prompt", func() {
 					strings.Contains(lines[1], suggestions[0].Text) &&
 					strings.Contains(lines[2], suggestions[4].Text)
 			})
+		})
+	})
+
+	When("the user chooses an item and presses the spacebar", Ordered, func() {
+		BeforeAll(func() {
+			console.SendString(tuitest.KeyDown)
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				lines := state.OutputLines()
+				return len(lines) > 1 && fmt.Sprint(state.FgColor(1, leftPadding+1)) == input.DefaultSelectedForeground
+			})
+			console.SendString(" ")
+		})
+
+		It("unselects the suggestion", func() {
+			_, _ = console.WaitForDuration(func(state tuitest.TermState) bool {
+				lines := state.OutputLines()
+				return len(lines) > 1 && state.FgColor(1, leftPadding+margin+len(suggestions[0].Text)+margin) == tuitest.DefaultFG
+			}, 100*time.Millisecond)
 		})
 	})
 })
