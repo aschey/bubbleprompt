@@ -214,7 +214,7 @@ func (m *Model[T]) ShouldUnselectSuggestion(prevText string, msg tea.KeyMsg) boo
 	switch msg.Type {
 	case tea.KeyBackspace, tea.KeyDelete:
 		return pos < len(prevText) && !m.IsDelimiter(string(prevText[pos]))
-	case tea.KeyRunes:
+	case tea.KeyRunes, tea.KeySpace:
 		if msg.String() != "=" {
 			return true
 		}

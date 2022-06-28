@@ -96,11 +96,8 @@ func (m *Model[I]) updateCompleting(msg tea.Msg, cmds []tea.Cmd, prevText string
 		case tea.KeyEnter:
 			cmds = m.submit(msg, cmds)
 
-		case tea.KeyBackspace, tea.KeyDelete, tea.KeyRunes:
+		case tea.KeyBackspace, tea.KeyDelete, tea.KeyRunes, tea.KeySpace, tea.KeyLeft, tea.KeyRight:
 			cmds = m.updateKeypress(msg, cmds, prevText)
-
-		case tea.KeyLeft, tea.KeyRight:
-			cmds = m.updateKeypress(msg, cmds, prevText) //m.updatePosition(msg, cmds)
 		}
 
 	case errMsg:
