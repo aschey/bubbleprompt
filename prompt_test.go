@@ -380,4 +380,16 @@ var _ = Describe("Prompt", FlakeAttempts(2), func() {
 			}, 100*time.Millisecond)
 		})
 	})
+
+	When("the user types the full suggestion", Ordered, func() {
+		BeforeAll(func() {
+			console.SendString(suggestions[0].Text)
+		})
+
+		It("selects the suggestion", func() {
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				return fmt.Sprint(state.FgColor(0, leftPadding)) == commandinput.DefaultSelectedTextColor
+			})
+		})
+	})
 })
