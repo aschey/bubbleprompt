@@ -62,7 +62,7 @@ var _ = AfterSuite(func() {
 
 var suggestions []input.Suggestion[commandinput.CmdMetadata] = testapp.Suggestions
 
-var _ = Describe("Prompt", func() {
+var _ = Describe("Prompt", FlakeAttempts(2), func() {
 	leftPadding := 2
 	margin := 1
 	longestNameLength := len("seventh-option")
@@ -351,16 +351,32 @@ var _ = Describe("Prompt", func() {
 		BeforeAll(func() {
 			console.SendString(tuitest.KeyDown)
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				lines := state.OutputLines()
-				return len(lines) > 1 && fmt.Sprint(state.FgColor(1, leftPadding+1)) == input.DefaultSelectedForeground
+				return fmt.Sprint(state.FgColor(1, leftPadding+margin)) == input.DefaultSelectedForeground
 			})
 			console.SendString(" ")
 		})
 
 		It("unselects the suggestion", func() {
 			_, _ = console.WaitForDuration(func(state tuitest.TermState) bool {
-				lines := state.OutputLines()
-				return len(lines) > 1 && state.FgColor(1, leftPadding+margin+len(suggestions[0].Text)+margin) == tuitest.DefaultFG
+				return state.FgColor(1, leftPadding+margin+len(suggestions[0].Text)+margin) == tuitest.DefaultFG
+			}, 100*time.Millisecond)
+		})
+	})
+
+	When("the user cycles through all suggestions", Ordered, func() {
+		BeforeAll(func() {
+			for i := 0; i < 7; i++ {
+				console.SendString(tuitest.KeyDown)
+			}
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				return fmt.Sprint(state.FgColor(6, leftPadding+margin)) == input.DefaultSelectedForeground
+			})
+			console.SendString(tuitest.KeyDown)
+		})
+
+		It("unselects the suggestion", func() {
+			_, _ = console.WaitForDuration(func(state tuitest.TermState) bool {
+				return state.FgColor(6, leftPadding+margin) == tuitest.DefaultFG
 			}, 100*time.Millisecond)
 		})
 	})
