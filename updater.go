@@ -5,8 +5,6 @@ import (
 
 	"github.com/aschey/bubbleprompt/completer"
 	"github.com/aschey/bubbleprompt/executor"
-	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -26,7 +24,7 @@ func (m Model[I]) Update(msg tea.Msg) (Model[I], tea.Cmd) {
 
 	// Order is important here, there's some strange freezing behavior
 	// that happens if we update the text input before the viewport
-	m.viewport, cmd = m.viewport.Update(msg)
+	m.renderer, cmd = m.renderer.Update(msg)
 	cmds = append(cmds, cmd)
 
 	prevText := m.textInput.Value()
@@ -49,9 +47,12 @@ func (m Model[I]) Update(msg tea.Msg) (Model[I], tea.Cmd) {
 	cmd = m.finishUpdate(msg)
 	cmds = append(cmds, cmd)
 
-	m.viewport.SetContent(m.render())
+	m.renderer.SetContent(m.render())
+	cmd = m.renderer.FinishUpdate()
+	cmds = append(cmds, cmd)
+
 	if scrollToBottom {
-		m.viewport.GotoBottom()
+		m.renderer.GotoBottom(msg)
 	}
 
 	return m, tea.Batch(cmds...)
@@ -137,20 +138,16 @@ func (m *Model[I]) finalizeExecutor(executorModel *executorModel) {
 	// Store the final executor view in the history
 	// Need to store previous lines in a string instead of a []string in order to handle newlines from the tea.Model's View value properly
 	// When executing a tea.Model standalone, the output must end in a newline and if we use a []string to track newlines, we'll get a double newline here
-	m.previousCommands += executorModel.View()
+	m.renderer.AddOutput(executorModel.View())
 	m.updateExecutor(nil, nil)
 }
 
 func (m *Model[I]) updateWindowSizeMsg(msg tea.WindowSizeMsg) {
 	if !m.ready {
-		m.viewport = viewport.New(msg.Width, msg.Height-1)
-		// TODO: register better bindings for these once the new input reader is merged
-		m.viewport.KeyMap.Up = key.NewBinding(key.WithKeys("ctrl+a"))
-		m.viewport.KeyMap.Down = key.NewBinding(key.WithKeys("ctrl+s"))
+		m.renderer.Initialize(msg)
 		m.ready = true
 	} else {
-		m.viewport.Width = msg.Width
-		m.viewport.Height = msg.Height
+		m.renderer.SetSize(msg)
 	}
 }
 
@@ -198,7 +195,7 @@ func (m *Model[I]) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 
 	// Store the whole user input including the prompt state and the executor result
 	// However note that we don't include all of textInput.View() because we don't want to include the cursor
-	m.previousCommands += m.textInput.Prompt() + textValue + "\n"
+	m.renderer.AddOutput(m.textInput.Prompt() + textValue)
 	m.textInput.SetValue("")
 
 	executorModel := newExecutorModel(innerExecutor, m.Formatters.ErrorText, err)

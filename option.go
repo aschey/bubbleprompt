@@ -2,6 +2,7 @@ package prompt
 
 import (
 	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/renderer"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -31,6 +32,20 @@ func WithScrollbarThumb[I any](color lipgloss.TerminalColor) Option[I] {
 func WithMaxSuggestions[I any](maxSuggestions int) Option[I] {
 	return func(model *Model[I]) error {
 		model.SetMaxSuggestions(maxSuggestions)
+		return nil
+	}
+}
+
+func WithUnmanagedRenderer[I any]() Option[I] {
+	return func(model *Model[I]) error {
+		model.SetRenderer(renderer.NewUnmanagedRenderer())
+		return nil
+	}
+}
+
+func WithViewportRenderer[I any]() Option[I] {
+	return func(model *Model[I]) error {
+		model.SetRenderer(renderer.NewViewportRenderer())
 		return nil
 	}
 }

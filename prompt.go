@@ -2,8 +2,8 @@ package prompt
 
 import (
 	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/renderer"
 	"github.com/charmbracelet/bubbles/textinput"
-	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -28,9 +28,8 @@ type Model[I any] struct {
 	completer               completerModel[I]
 	executor                Executor[I]
 	textInput               input.Input[I]
-	viewport                viewport.Model
+	renderer                renderer.Renderer
 	Formatters              input.Formatters
-	previousCommands        string
 	executorModel           *executorModel
 	modelState              modelState
 	scrollbar               string
@@ -46,6 +45,7 @@ func New[I any](completer Completer[I], executor Executor[I], textInput input.In
 		completer:  newCompleterModel(completer, textInput, 6),
 		executor:   executor,
 		textInput:  textInput,
+		renderer:   &renderer.UnmanagedRenderer{},
 		Formatters: input.DefaultFormatters(),
 	}
 	model.SetScrollbarColor(lipgloss.Color(DefaultScrollbarColor))
@@ -71,6 +71,10 @@ func (m *Model[I]) SetMaxSuggestions(maxSuggestions int) {
 	m.completer.maxSuggestions = maxSuggestions
 }
 
+func (m *Model[I]) SetRenderer(renderer renderer.Renderer) {
+	m.renderer = renderer
+}
+
 func (m Model[I]) Init() tea.Cmd {
 	return tea.Batch(textinput.Blink, m.completer.Init())
 }
@@ -79,5 +83,5 @@ func (m Model[I]) View() string {
 	if !m.ready {
 		return "\n  Initializing..."
 	}
-	return m.viewport.View()
+	return m.renderer.View()
 }

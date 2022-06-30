@@ -6,19 +6,17 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func (m Model[I]) renderExecuting(lines string) string {
+func (m Model[I]) renderExecuting() string {
 	executorModel := *m.executorModel
 	// Add a newline to ensure the text gets pushed up
 	// this ensures the text doesn't jump if the completer takes a while to finish
-	lines += executorModel.View() + "\n"
-
-	return lines
+	return executorModel.View() + "\n"
 }
 
-func (m Model[I]) renderCompleting(lines string) string {
+func (m Model[I]) renderCompleting() string {
 	// If an item is selected, parse out the text portion and apply formatting
 	textView := m.textInput.View()
-	lines += textView + "\n"
+	lines := textView + "\n"
 
 	// Calculate left offset for suggestions
 	// Choosing a prompt via arrow keys or tab shouldn't change the prompt position
@@ -31,18 +29,17 @@ func (m Model[I]) renderCompleting(lines string) string {
 }
 
 func (m Model[I]) render() string {
-	lines := m.previousCommands
 	suggestionLength := len(m.completer.suggestions)
-
+	lines := ""
 	switch m.modelState {
 	case executing:
 		// Executor is running, render next executor view
 		// We're not going to render suggestions here, so set the length to 0 to apply the appropriate padding below the output
 		suggestionLength = 0
-		lines = m.renderExecuting(lines)
+		lines = m.renderExecuting()
 
 	case completing:
-		lines = m.renderCompleting(lines)
+		lines = m.renderCompleting()
 	}
 
 	// Reserve height for prompts that were filtered out

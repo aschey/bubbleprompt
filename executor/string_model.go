@@ -17,5 +17,5 @@ func (m StringModel) Update(tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m StringModel) View() string {
-	return string(m + "\n")
+	return string(m)
 }
