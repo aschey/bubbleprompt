@@ -11,7 +11,6 @@ type Renderer interface {
 	Update(msg tea.Msg) (Renderer, tea.Cmd)
 	FinishUpdate() tea.Cmd
 	SetContent(content string)
-	History() string
 	AddOutput(output string)
 	GotoBottom(msg tea.Msg)
 }

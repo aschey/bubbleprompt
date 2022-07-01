@@ -29,10 +29,6 @@ func (u *UnmanagedRenderer) SetContent(content string) {
 	u.content = content
 }
 
-func (u *UnmanagedRenderer) History() string {
-	return ""
-}
-
 func (u *UnmanagedRenderer) AddOutput(output string) {
 	if len(u.history) > 0 {
 		u.history += "\n"

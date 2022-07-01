@@ -40,9 +40,7 @@ func (v *ViewportRenderer) Update(msg tea.Msg) (Renderer, tea.Cmd) {
 func (v *ViewportRenderer) SetContent(content string) {
 	v.viewport.SetContent(v.history + content)
 }
-func (v *ViewportRenderer) History() string {
-	return v.history
-}
+
 func (v *ViewportRenderer) AddOutput(output string) {
 	v.history += (output + "\n")
 }
