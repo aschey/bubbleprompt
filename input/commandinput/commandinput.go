@@ -388,15 +388,24 @@ func (m *Model[T]) OnSuggestionChanged(suggestion input.Suggestion[T]) {
 
 	text := m.Value()
 	if tokenPos.Start > -1 {
+		cursor := m.Cursor()
 		if strings.HasPrefix(token, "-") && !strings.HasPrefix(suggestion.Text, "-") {
 			// Adding an additional flag to the flag group, don't replace the entire token
-			cursor := m.Cursor()
 			rest := ""
 			if cursor < len(text) {
 				// Add trailing text if we're not at the end of the line
 				rest = text[cursor+1:]
 			}
 			m.SetValue(text[:cursor] + suggestion.Text + rest)
+		} else if strings.HasPrefix(token, "-") && !strings.HasPrefix(token, "--") && len(token) > 2 && suggestion.Metadata.FlagPlaceholder().Text == "" {
+			// handle multi flag like -ab
+			if cursor == tokenPos.Start {
+				// If cursor is on the leading dash, replace the first two characters of the token ([-ab]c)
+				m.SetValue(text[:cursor] + suggestion.Text + text[cursor+2:])
+			} else {
+				// If the cursor is after the dash, trim the dash from the suggestion and replace the single character on the cursor
+				m.SetValue(text[:cursor] + suggestion.Text[1:] + text[cursor+1:])
+			}
 		} else {
 			m.SetValue(text[:tokenPos.Start] + suggestion.Text + text[tokenPos.End:])
 			// Sometimes SetValue moves the cursor to the end of the line so we need to move it back to the current token
