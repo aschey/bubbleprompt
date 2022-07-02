@@ -56,7 +56,7 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
-	err := tester.CoverageTearDown()
+	err := tester.TearDown()
 	Expect(err).ShouldNot(HaveOccurred())
 })
 

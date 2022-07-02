@@ -12,7 +12,7 @@ tasks:
       - ginkgo -v -race -procs 4
   covTest:
     cmds:
-      - ginkgo -v -race
+      - go test -v -race -- -coverage
   buildCoverage:
     deps: [covTest]
     cmds:
