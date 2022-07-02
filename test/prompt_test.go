@@ -1,4 +1,4 @@
-package prompt
+package test
 
 import (
 	"flag"
@@ -6,9 +6,10 @@ import (
 	"strings"
 	"time"
 
+	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/commandinput"
-	"github.com/aschey/bubbleprompt/testapp"
+	"github.com/aschey/bubbleprompt/test/testapp"
 	tuitest "github.com/aschey/tui-tester"
 	tea "github.com/charmbracelet/bubbletea"
 	. "github.com/onsi/ginkgo/v2"
@@ -51,7 +52,7 @@ func init() {
 var tester tuitest.Tester = tuitest.Tester{}
 var _ = BeforeSuite(func() {
 	var err error
-	tester, err = tuitest.NewTester("./testapp", ".", "coverage.out")
+	tester, err = tuitest.NewTester("./testapp", "..", "coverage.out")
 	Expect(err).ShouldNot(HaveOccurred())
 })
 
@@ -117,7 +118,7 @@ var _ = Describe("Prompt", FlakeAttempts(2), func() {
 		It("shows the scrollbar", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				for i := 1; i < 6; i++ {
-					if fmt.Sprint(state.BgColor(1, promptWidth)) != DefaultScrollbarThumbColor {
+					if fmt.Sprint(state.BgColor(1, promptWidth)) != prompt.DefaultScrollbarThumbColor {
 						return false
 					}
 				}
@@ -125,7 +126,7 @@ var _ = Describe("Prompt", FlakeAttempts(2), func() {
 			})
 
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return fmt.Sprint(state.BgColor(6, promptWidth)) == DefaultScrollbarColor
+				return fmt.Sprint(state.BgColor(6, promptWidth)) == prompt.DefaultScrollbarColor
 			})
 
 		})
@@ -290,7 +291,7 @@ var _ = Describe("Prompt", FlakeAttempts(2), func() {
 		It("updates the scrollbar", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				for i := 2; i < 7; i++ {
-					if fmt.Sprint(state.BgColor(i, promptWidth)) != DefaultScrollbarThumbColor {
+					if fmt.Sprint(state.BgColor(i, promptWidth)) != prompt.DefaultScrollbarThumbColor {
 						return false
 					}
 				}
@@ -298,7 +299,7 @@ var _ = Describe("Prompt", FlakeAttempts(2), func() {
 			})
 
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return fmt.Sprint(state.BgColor(1, promptWidth)) == DefaultScrollbarColor
+				return fmt.Sprint(state.BgColor(1, promptWidth)) == prompt.DefaultScrollbarColor
 			})
 		})
 	})
@@ -316,7 +317,7 @@ var _ = Describe("Prompt", FlakeAttempts(2), func() {
 		It("updates the scrollbar", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				for i := 1; i < 6; i++ {
-					if fmt.Sprint(state.BgColor(1, promptWidth)) != DefaultScrollbarThumbColor {
+					if fmt.Sprint(state.BgColor(1, promptWidth)) != prompt.DefaultScrollbarThumbColor {
 						return false
 					}
 				}
@@ -324,7 +325,7 @@ var _ = Describe("Prompt", FlakeAttempts(2), func() {
 			})
 
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return fmt.Sprint(state.BgColor(6, promptWidth)) == DefaultScrollbarColor
+				return fmt.Sprint(state.BgColor(6, promptWidth)) == prompt.DefaultScrollbarColor
 			})
 		})
 	})

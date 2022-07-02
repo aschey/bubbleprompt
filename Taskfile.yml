@@ -9,14 +9,14 @@ tasks:
       - go install github.com/onsi/ginkgo/v2/ginkgo@latest
   test:
     cmds:
-      - ginkgo -v -race -procs 4
+      - ginkgo ./test -v -race -procs 4
   covTest:
     cmds:
-      - go test -v -race -- -cover
+      - go test ./test -v -race -- -cover
   buildCoverage:
     deps: [covTest]
     cmds:
-      - go tool cover -html coverage.out -o coverage.html
+      - go tool cover -html test/coverage.out -o coverage.html
   coverage:
     cmds:
       - task: buildCoverage
