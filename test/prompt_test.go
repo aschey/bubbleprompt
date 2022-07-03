@@ -40,16 +40,22 @@ func testExecutor(console *tuitest.Console, in *string, backspace bool, doubleEn
 	})
 }
 
-var tester tuitest.Tester = tuitest.Tester{}
+var tester *tuitest.Tester = nil
 var _ = BeforeSuite(func() {
 	var err error
-	tester, err = tuitest.NewTester("./testapp")
+	tester, err = tuitest.NewTester("./testapp",
+		tuitest.WithMinInputInterval(10*time.Millisecond),
+		tuitest.WithDefaultWaitTimeout(5*time.Second),
+		tuitest.WithErrorHandler(func(err error) error {
+			defer GinkgoRecover()
+			Expect(err).Error().ShouldNot(HaveOccurred())
+			return err
+		}))
 	Expect(err).ShouldNot(HaveOccurred())
 })
 
 var _ = AfterSuite(func() {
-	err := tester.TearDown()
-	Expect(err).ShouldNot(HaveOccurred())
+	_ = tester.TearDown()
 })
 
 var suggestions []input.Suggestion[commandinput.CmdMetadata] = testapp.Suggestions
@@ -66,17 +72,7 @@ var _ = Describe("Prompt", FlakeAttempts(2), func() {
 	_ = initialLines
 
 	BeforeEach(OncePerOrdered, func() {
-		var err error
-		console, err = tester.NewConsole([]string{})
-		Expect(err).ShouldNot(HaveOccurred())
-
-		console.OnError = func(err error) error {
-			defer GinkgoRecover()
-			Expect(err).Error().ShouldNot(HaveOccurred())
-			return err
-		}
-
-		Expect(err).Error().ShouldNot(HaveOccurred())
+		console, _ = tester.CreateConsole([]string{})
 
 		// Wait for prompt to initialize
 		console.TrimOutput = true
@@ -88,8 +84,7 @@ var _ = Describe("Prompt", FlakeAttempts(2), func() {
 
 	AfterEach(OncePerOrdered, func() {
 		console.SendString(tuitest.KeyCtrlC)
-		err := console.WaitForTermination()
-		Expect(err).Error().ShouldNot(HaveOccurred())
+		_ = console.WaitForTermination()
 	})
 
 	When("the prompt is loaded", Ordered, func() {
