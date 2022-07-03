@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 includes:
   os: ./Taskfile_{{OS}}.yml
@@ -12,7 +12,7 @@ tasks:
       - ginkgo -v -race -procs 4 ./test
   covTest:
     cmds:
-      - go test ./test -v -race -- -cover
+      - go test ./test -v -tuicover -tuicoverpkg ../...
   buildCoverage:
     deps: [covTest]
     cmds:

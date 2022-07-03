@@ -1,7 +1,6 @@
 package test
 
 import (
-	"flag"
 	"fmt"
 	"strings"
 	"time"
@@ -41,16 +40,10 @@ func testExecutor(console *tuitest.Console, in *string, backspace bool, doubleEn
 	})
 }
 
-var systemTest *bool
-
-func init() {
-	systemTest = flag.Bool("systemTest", false, "Set to true when running system tests")
-}
-
 var tester tuitest.Tester = tuitest.Tester{}
 var _ = BeforeSuite(func() {
 	var err error
-	tester, err = tuitest.NewTester("./testapp", "..", "coverage.out")
+	tester, err = tuitest.NewTester("./testapp")
 	Expect(err).ShouldNot(HaveOccurred())
 })
 

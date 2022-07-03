@@ -12,8 +12,8 @@ github.com/alecthomas/participle/v2 v2.0.0-beta.3/go.mod h1:RC764t6n4L8D8ITAJv0q
 github.com/alecthomas/repr v0.1.0 h1:ENn2e1+J3k09gyj2shc0dHr/yjaWSHRlrJ4DPMevDqE=
 github.com/aschey/termtest v0.7.2-0.20220625211044-3c495615a51f h1:78TdXZV/85c4piq/W1woTdLhsXqVHsDzurXuOBkAZsk=
 github.com/aschey/termtest v0.7.2-0.20220625211044-3c495615a51f/go.mod h1:xioM66PKAGZu0ub4sLCzoTFYXea7n8J2rS0ZqJ+vCOk=
-github.com/aschey/tui-tester v0.0.0-20220703173256-1acb322f0b4e h1:51vvjDQWLhlFeQ7rHV41n3Acb4gAMCEh/IY+c6JbK0s=
-github.com/aschey/tui-tester v0.0.0-20220703173256-1acb322f0b4e/go.mod h1:t+ew7SobhOn8VxIZSVLhosr8KSKhSGP/mbdzUzAXUOw=
+github.com/aschey/tui-tester v0.0.0-20220703190320-00a6d8fa3637 h1:qiL1ijFKKzmJq4Pn5MyIIJNCvhGi2/rGVDm+WIvFWmQ=
+github.com/aschey/tui-tester v0.0.0-20220703190320-00a6d8fa3637/go.mod h1:t+ew7SobhOn8VxIZSVLhosr8KSKhSGP/mbdzUzAXUOw=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
 github.com/autarch/testify v1.2.2 h1:9Q9V6zqhP7R6dv+zRUddv6kXKLo6ecQhnFRFWM71i1c=
