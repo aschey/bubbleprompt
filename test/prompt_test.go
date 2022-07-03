@@ -11,7 +11,6 @@ import (
 	"github.com/aschey/bubbleprompt/input/commandinput"
 	"github.com/aschey/bubbleprompt/test/testapp"
 	tuitest "github.com/aschey/tui-tester"
-	tea "github.com/charmbracelet/bubbletea"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -27,14 +26,14 @@ func testExecutor(console *tuitest.Console, in *string, backspace bool, doubleEn
 
 	if in != nil && backspace {
 		// Send input twice quickly to test completer ignoring first input
-		console.SendByte(tuitest.KeyBackspace)
+		console.SendString(tuitest.KeyBackspace)
 		in := *in
 		console.SendString(string(in[len(in)-1]))
 	}
-	console.SendByte(tuitest.KeyEnter)
+	console.SendString(tuitest.KeyEnter)
 	if doubleEnter {
 		// Hit enter twice to re-trigger completer
-		console.SendByte(tuitest.KeyEnter)
+		console.SendString(tuitest.KeyEnter)
 	}
 
 	_, _ = console.WaitFor(func(state tuitest.TermState) bool {
@@ -95,7 +94,7 @@ var _ = Describe("Prompt", FlakeAttempts(2), func() {
 	})
 
 	AfterEach(OncePerOrdered, func() {
-		console.SendByte(byte(tea.KeyCtrlC))
+		console.SendString(tuitest.KeyCtrlC)
 		err := console.WaitForTermination()
 		Expect(err).Error().ShouldNot(HaveOccurred())
 	})
@@ -240,7 +239,7 @@ var _ = Describe("Prompt", FlakeAttempts(2), func() {
 	When("the user chooses the first prompt", Ordered, func() {
 		BeforeAll(func() {
 			console.SendString(tuitest.KeyDown)
-			console.SendByte(tuitest.KeyEnter)
+			console.SendString(tuitest.KeyEnter)
 		})
 
 		It("renders the executor result", func() {
