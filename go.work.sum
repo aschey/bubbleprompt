@@ -13,6 +13,7 @@ github.com/aschey/tui-tester v0.0.0-20220619041657-40873c8575db h1:N2RGew9+FzJO6
 github.com/aschey/tui-tester v0.0.0-20220619042203-388d67e69f05 h1:1LZty0ENWJPCr7kFfccsiEL7liscz79m65trljaPW5I=
 github.com/aschey/tui-tester v0.0.0-20220625211952-dff0c1b186c5/go.mod h1:t+ew7SobhOn8VxIZSVLhosr8KSKhSGP/mbdzUzAXUOw=
 github.com/aschey/tui-tester v0.0.0-20220702031912-f708d160f50c h1:z7JPt67frC7P/8l8AacXwA764gxjyfNmmiTqXJij5Zw=
+github.com/aschey/tui-tester v0.0.0-20220703164501-8da92c5e3c5d h1:HCKdj2CBh+Cg/lzp3GGCYtei94zxoEW4cceT5AwXlr8=
 github.com/hexops/gotextdiff v1.0.3/go.mod h1:pSWU5MAI3yDq+fZBTazCSJysOMbxWL1BSow5/V2vxeg=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=

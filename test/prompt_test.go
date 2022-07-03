@@ -21,7 +21,7 @@ func testExecutor(console *tuitest.Console, in *string, backspace bool, doubleEn
 		console.SendString(*in)
 		// Wait for typed input to render
 		_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-			return strings.Contains(state.OutputLines()[0], *in)
+			return strings.Contains(state.NthOutputLine(0), *in)
 		})
 	}
 
@@ -38,8 +38,7 @@ func testExecutor(console *tuitest.Console, in *string, backspace bool, doubleEn
 	}
 
 	_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-		outputLines := state.OutputLines()
-		return len(outputLines) > 1 && strings.Contains(outputLines[1], outStr)
+		return strings.Contains(state.NthOutputLine(1), outStr)
 	})
 }
 
@@ -90,8 +89,7 @@ var _ = Describe("Prompt", FlakeAttempts(2), func() {
 		// Wait for prompt to initialize
 		console.TrimOutput = true
 		state, _ := console.WaitFor(func(state tuitest.TermState) bool {
-			outputLines := state.OutputLines()
-			return len(outputLines) > 6 && strings.Contains(outputLines[6], suggestions[5].Description)
+			return strings.Contains(state.NthOutputLine(6), suggestions[5].Description)
 		})
 		initialLines = state.OutputLines()
 	})
@@ -141,14 +139,13 @@ var _ = Describe("Prompt", FlakeAttempts(2), func() {
 
 		It("shows the typed filter", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return strings.Contains(state.OutputLines()[0], "> fi")
+				return strings.Contains(state.NthOutputLine(0), "> fi")
 			})
 		})
 
 		It("filters the suggestions", func() {
 			state, _ := console.WaitFor(func(state tuitest.TermState) bool {
-				outputLines := state.OutputLines()
-				return len(outputLines) == 3 && strings.Contains(outputLines[2], suggestions[4].Description)
+				return state.NumLines() == 3 && strings.Contains(state.NthOutputLine(2), suggestions[4].Description)
 			})
 			lines = state.OutputLines()
 		})
@@ -208,7 +205,7 @@ var _ = Describe("Prompt", FlakeAttempts(2), func() {
 
 		It("selects the first prompt", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return strings.Contains(state.OutputLines()[0], suggestions[0].Text)
+				return strings.Contains(state.NthOutputLine(0), suggestions[0].Text)
 			})
 		})
 
@@ -248,10 +245,9 @@ var _ = Describe("Prompt", FlakeAttempts(2), func() {
 
 		It("renders the executor result", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				outputLines := state.OutputLines()
-				return len(outputLines) > 1 &&
-					strings.Contains(outputLines[1], "result is "+suggestions[0].Text) &&
-					!strings.Contains(outputLines[1], suggestions[0].Metadata.PositionalArgs()[0].Placeholder)
+				secondLine := state.NthOutputLine(1)
+				return strings.Contains(secondLine, "result is "+suggestions[0].Text) &&
+					!strings.Contains(secondLine, suggestions[0].Metadata.PositionalArgs()[0].Placeholder)
 			})
 		})
 	})
@@ -264,13 +260,13 @@ var _ = Describe("Prompt", FlakeAttempts(2), func() {
 
 		It("displays the input", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return strings.Contains(state.OutputLines()[0], suggestions[0].Text+"a")
+				return strings.Contains(state.NthOutputLine(0), suggestions[0].Text+"a")
 			})
 		})
 
 		It("does not display any prompts", func() {
 			_, _ = console.WaitForDuration(func(state tuitest.TermState) bool {
-				return len(state.OutputLines()) == 1
+				return state.NumLines() == 1
 			}, 100*time.Millisecond)
 		})
 
@@ -340,10 +336,10 @@ var _ = Describe("Prompt", FlakeAttempts(2), func() {
 
 		It("shows the completions matching the prefix", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				lines := state.OutputLines()
-				return len(lines) == 3 &&
-					strings.Contains(lines[1], suggestions[0].Text) &&
-					strings.Contains(lines[2], suggestions[4].Text)
+
+				return state.NumLines() == 3 &&
+					strings.Contains(state.NthOutputLine(1), suggestions[0].Text) &&
+					strings.Contains(state.NthOutputLine(2), suggestions[4].Text)
 			})
 		})
 	})
