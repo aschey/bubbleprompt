@@ -17,6 +17,7 @@ github.com/aschey/tui-tester v0.0.0-20220703164501-8da92c5e3c5d h1:HCKdj2CBh+Cg/
 github.com/aschey/tui-tester v0.0.0-20220703173256-1acb322f0b4e h1:51vvjDQWLhlFeQ7rHV41n3Acb4gAMCEh/IY+c6JbK0s=
 github.com/aschey/tui-tester v0.0.0-20220703190320-00a6d8fa3637 h1:qiL1ijFKKzmJq4Pn5MyIIJNCvhGi2/rGVDm+WIvFWmQ=
 github.com/aschey/tui-tester v0.0.0-20220703193753-cb6b7245ca31 h1:l1329cBsAN16T1EZNu0oJC14ZiEhI4n762R4NMoAQEg=
+github.com/aschey/tui-tester v0.0.0-20220704222528-b40a2fce8e58 h1:L2CZ4Ngk3XsKnLRZldzV+DPVGg3/AScV1TC5SmB9/4k=
 github.com/hexops/gotextdiff v1.0.3/go.mod h1:pSWU5MAI3yDq+fZBTazCSJysOMbxWL1BSow5/V2vxeg=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
@@ -31,6 +32,8 @@ golang.org/x/sys v0.0.0-20220615213510-4f61da869c0c h1:aFV+BgZ4svzjfabn8ERpuB4JI
 golang.org/x/sys v0.0.0-20220615213510-4f61da869c0c/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20220702020025-31831981b65f h1:xdsejrW/0Wf2diT5CPp3XmKUNbr7Xvw8kYilQ+6qjRY=
 golang.org/x/sys v0.0.0-20220702020025-31831981b65f/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/sys v0.0.0-20220704084225-05e143d24a9e h1:CsOuNlbOuf0mzxJIefr6Q4uAUetRUwZE4qt7VfzP+xo=
+golang.org/x/sys v0.0.0-20220704084225-05e143d24a9e/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/text v0.3.7/go.mod h1:u+2+/6zg+i71rQMx5EYifcz6MCKuco9NR6JIITiCfzQ=
 gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=

@@ -40,27 +40,9 @@ func testExecutor(console *tuitest.Console, in *string, backspace bool, doubleEn
 	})
 }
 
-var tester *tuitest.Tester = nil
-var _ = BeforeSuite(func() {
-	var err error
-	tester, err = tuitest.NewTester("./testapp",
-		tuitest.WithMinInputInterval(10*time.Millisecond),
-		tuitest.WithDefaultWaitTimeout(5*time.Second),
-		tuitest.WithErrorHandler(func(err error) error {
-			defer GinkgoRecover()
-			Expect(err).Error().ShouldNot(HaveOccurred())
-			return err
-		}))
-	Expect(err).ShouldNot(HaveOccurred())
-})
-
-var _ = AfterSuite(func() {
-	_ = tester.TearDown()
-})
-
 var suggestions []input.Suggestion[commandinput.CmdMetadata] = testapp.Suggestions
 
-var _ = Describe("Prompt", FlakeAttempts(2), func() {
+var _ = Describe("Prompt", func() {
 	leftPadding := 2
 	margin := 1
 	longestNameLength := len("seventh-option")
@@ -72,7 +54,7 @@ var _ = Describe("Prompt", FlakeAttempts(2), func() {
 	_ = initialLines
 
 	BeforeEach(OncePerOrdered, func() {
-		console, _ = tester.CreateConsole([]string{})
+		console, _ = tester.CreateConsole()
 
 		// Wait for prompt to initialize
 		console.TrimOutput = true
