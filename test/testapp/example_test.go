@@ -14,6 +14,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+type cmdMetadata = commandinput.CmdMetadata
 type model struct {
 	prompt prompt.Model[cmdMetadata]
 }
@@ -22,6 +23,15 @@ type completrModel struct {
 	suggestions []input.Suggestion[cmdMetadata]
 	textInput   *commandinput.Model[cmdMetadata]
 }
+
+var suggestions []input.Suggestion[cmdMetadata] = []input.Suggestion[cmdMetadata]{
+	{Text: "first-option", Description: "test desc", Metadata: commandinput.NewCmdMetadata([]commandinput.PositionalArg{commandinput.NewPositionalArg("[test placeholder]")}, commandinput.Placeholder{})},
+	{Text: "second-option", Description: "test desc2"},
+	{Text: "third-option", Description: "test desc3"},
+	{Text: "fourth-option", Description: "test desc4"},
+	{Text: "fifth-option", Description: "test desc5"},
+	{Text: "sixth-option", Description: "test desc6"},
+	{Text: "seventh-option", Description: "test desc7"}}
 
 func (m model) Init() tea.Cmd {
 	return m.prompt.Init()
@@ -52,7 +62,7 @@ func executr(input string) (tea.Model, error) {
 func TestApp(t *testing.T) {
 
 	var textInput input.Input[cmdMetadata] = commandinput.New[cmdMetadata]()
-	completerModel := completrModel{suggestions: Suggestions, textInput: textInput.(*commandinput.Model[cmdMetadata])}
+	completerModel := completrModel{suggestions: suggestions, textInput: textInput.(*commandinput.Model[cmdMetadata])}
 
 	m := model{prompt: prompt.New(
 		completerModel.completer,
