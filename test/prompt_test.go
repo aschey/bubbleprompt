@@ -8,7 +8,7 @@ import (
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/commandinput"
-	"github.com/aschey/bubbleprompt/test/testapp"
+	testapp "github.com/aschey/bubbleprompt/test/_testapp"
 	tuitest "github.com/aschey/tui-tester"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
