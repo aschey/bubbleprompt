@@ -19,14 +19,14 @@ const (
 	executing
 )
 
-type Executor[T any] func(input string) (tea.Model, error)
+type Executor func(input string) (tea.Model, error)
 
 const DefaultScrollbarColor = "13"
 const DefaultScrollbarThumbColor = "14"
 
 type Model[I any] struct {
 	completer               completerModel[I]
-	executor                Executor[I]
+	executor                Executor
 	textInput               input.Input[I]
 	renderer                renderer.Renderer
 	Formatters              input.Formatters
@@ -40,7 +40,7 @@ type Model[I any] struct {
 	err                     error
 }
 
-func New[I any](completer Completer[I], executor Executor[I], textInput input.Input[I], opts ...Option[I]) Model[I] {
+func New[I any](completer Completer[I], executor Executor, textInput input.Input[I], opts ...Option[I]) Model[I] {
 	model := Model[I]{
 		completer:  newCompleterModel(completer, textInput, 6),
 		executor:   executor,
