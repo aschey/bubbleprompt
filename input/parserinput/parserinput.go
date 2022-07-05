@@ -1,6 +1,8 @@
 package parserinput
 
 import (
+	"github.com/alecthomas/chroma/v2/lexers"
+	"github.com/alecthomas/chroma/v2/styles"
 	"github.com/alecthomas/participle/v2"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -39,7 +41,13 @@ func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 }
 
 func (m *Model[T]) View() string {
-	return m.textinput.View()
+	lexer := lexers.Get("javascript")
+	iter, err := lexer.Tokenise(nil, m.textinput.Value())
+	style := styles.Get("swapoff")
+	if err != nil {
+		println(err)
+	}
+	return m.textinput.Prompt + inputFormatter(style, iter)
 }
 
 func (m *Model[T]) Focus() tea.Cmd {

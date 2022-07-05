@@ -3,6 +3,7 @@ module github.com/aschey/bubbleprompt
 go 1.18
 
 require (
+	github.com/alecthomas/chroma/v2 v2.2.0
 	github.com/alecthomas/participle/v2 v2.0.0-beta.3
 	github.com/aschey/tui-tester v0.0.0-20220704222528-b40a2fce8e58
 	github.com/charmbracelet/bubbles v0.12.0
@@ -20,6 +21,7 @@ require (
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/creack/pty v1.1.18 // indirect
+	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
