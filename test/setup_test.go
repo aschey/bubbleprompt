@@ -12,7 +12,7 @@ var tester *tuitest.Tester = nil
 
 var _ = BeforeSuite(func() {
 	var err error
-	tester, err = tuitest.NewTester("./testapp",
+	tester, err = tuitest.NewTester("./_testapp",
 		tuitest.WithMinInputInterval(10*time.Millisecond),
 		tuitest.WithDefaultWaitTimeout(5*time.Second),
 		tuitest.WithErrorHandler(func(err error) error {
