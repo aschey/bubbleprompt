@@ -47,7 +47,7 @@ func (m *Model[T]) View() string {
 	if err != nil {
 		println(err)
 	}
-	return m.textinput.Prompt + inputFormatter(style, iter)
+	return m.textinput.Prompt + m.inputFormatter(style, iter)
 }
 
 func (m *Model[T]) Focus() tea.Cmd {
