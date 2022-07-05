@@ -8,7 +8,6 @@ import (
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/commandinput"
-	testapp "github.com/aschey/bubbleprompt/test/_testapp"
 	tuitest "github.com/aschey/tui-tester"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -39,8 +38,6 @@ func testExecutor(console *tuitest.Console, in *string, backspace bool, doubleEn
 		return strings.Contains(state.NthOutputLine(1), outStr)
 	})
 }
-
-var suggestions []input.Suggestion[commandinput.CmdMetadata] = testapp.Suggestions
 
 var _ = Describe("Prompt", func() {
 	leftPadding := 2
