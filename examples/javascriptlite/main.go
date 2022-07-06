@@ -26,8 +26,13 @@ type completerModel struct {
 }
 
 type statement struct {
-	Identifier *identifier `parser:"((@@ '=')?"`
-	Expression expression  `parser:"@@)?"`
+	Assignment *assignment `parser:"(@@"`
+	Expression *expression `parser:"| @@)?"`
+}
+
+type assignment struct {
+	Identifier identifier `parser:" @@ '=' "`
+	Expression expression `parser:"@@"`
 }
 
 type identifier struct {
@@ -35,26 +40,27 @@ type identifier struct {
 	Accessor *expression `parser:" ('[' @@ ']')? "`
 }
 
+type group struct {
+	Expression *expression `parser:"'(' @@ ')'"`
+}
+
 type expression struct {
 	Array      *array      `parser:"( @@"`
 	Object     *object     `parser:"| @@"`
+	Group      *group      `parser:"| @@"`
+	Prop       *prop       `parser:"| @@"`
 	Token      *token      `parser:"| @@)"`
 	InfixOp    *infixOp    `parser:"(@@"`
 	Expression *expression `parser:"@@)?"`
 }
 
 type token struct {
-	Literal  *literal    `parser:"( @@"`
-	Variable *identifier `parser:"| @@ )"`
-}
-
-type accessor struct {
-	Expr               expression `parser:"@@"`
-	AccessorExpression expression `parser:" '[' @@ ']' "`
+	Literal  *literal    `parser:"@@"`
+	Variable *identifier `parser:"| @@"`
 }
 
 type keyValuePair struct {
-	Key   string     `parser:" (@DoubleQuoteString | @SingleQuoteString) "`
+	Key   string     `parser:" @String "`
 	Value expression `parser:" ':' @@ "`
 }
 
@@ -62,8 +68,13 @@ type object struct {
 	Properties *[]keyValuePair `parser:" '{' (@@ (',' @@)*)* '}' "`
 }
 
+type prop struct {
+	Identifier identifier `parser:" @@ '.' "`
+	Prop       string     `parser:"@Ident"`
+}
+
 type infixOp struct {
-	Op string `parser:" '+' | '-' | '*' | '/' | '||' | '&&' "`
+	Op string `parser:" '+' | '-' | '*' | '/' | '||' | '&&' | '==' | '===' "`
 }
 
 type array struct {
@@ -73,7 +84,7 @@ type array struct {
 type literal struct {
 	Null    *string  `parser:" ( ( 'null' | 'undefined' ) "`
 	Boolean *bool    `parser:" | ( 'true' | 'false' ) "`
-	Str     *string  `parser:"| @DoubleQuoteString | @SingleQuoteString"`
+	Str     *string  `parser:"| @String"`
 	Number  *float64 `parser:"| @Number )"`
 }
 
@@ -86,14 +97,16 @@ func (p statement) CurrentToken() string {
 
 var lex = lexer.MustSimple([]lexer.SimpleRule{
 	{Name: "whitespace", Pattern: `\s+`},
-	{Name: "DoubleQuoteString", Pattern: `"[^"]*"`},
-	{Name: "SingleQuoteString", Pattern: `'[^']*'`},
+	{Name: "String", Pattern: `"([^"]*")|('[^']*')`},
+	{Name: "And", Pattern: `&&`},
+	{Name: "Or", Pattern: `\|\|`},
+	{Name: "Eq", Pattern: `===?`},
 	{Name: "Number", Pattern: `[0-9]+(\.[0-9]*)*`},
 	{Name: "Punct", Pattern: `[-\[!@#$%^&*()+_=\{\}\|:;"'<,>.?/\]|]`},
 	{Name: "Ident", Pattern: `[_a-zA-Z]+[_a-zA-Z0-9]*`},
 })
 
-var parser = participle.MustBuild[statement](participle.Lexer(lex))
+var parser = participle.MustBuild[statement](participle.Lexer(lex), participle.UseLookahead(20))
 
 func (m model) Init() tea.Cmd {
 	return m.prompt.Init()
