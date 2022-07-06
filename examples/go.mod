@@ -6,6 +6,7 @@ require (
 	github.com/alecthomas/participle/v2 v2.0.0-beta.3
 	github.com/aschey/bubbleprompt v0.0.0
 	github.com/charmbracelet/bubbletea v0.22.0
+	github.com/davecgh/go-spew v1.1.1
 
 )
 

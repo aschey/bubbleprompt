@@ -36,6 +36,8 @@ func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	expr, err := m.parser.ParseString("", m.Value())
 	if err == nil {
 		m.parsedText = expr
+	} else {
+		println(err.Error())
 	}
 	return cmd
 }
@@ -56,6 +58,10 @@ func (m *Model[T]) Focus() tea.Cmd {
 
 func (m *Model[T]) Focused() bool {
 	return m.textinput.Focused()
+}
+
+func (m *Model[T]) Parsed() *T {
+	return m.parsedText
 }
 
 func (m *Model[T]) Value() string {
@@ -92,7 +98,10 @@ func (m *Model[T]) ShouldSelectSuggestion(suggestion input.Suggestion[T]) bool {
 
 func (m *Model[T]) CompletionText(text string) string {
 	expr, _ := m.parser.ParseString("", text)
-	return (*expr).CurrentToken()
+	if expr != nil {
+		return (*expr).CurrentToken()
+	}
+	return ""
 }
 
 func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T]) tea.Cmd {
