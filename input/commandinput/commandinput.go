@@ -614,19 +614,19 @@ func (m *Model[T]) Blur() {
 }
 
 func (m Model[T]) View() string {
-	viewBuilder := newViewBuilder(m)
+	viewBuilder := input.NewViewBuilder(m.Cursor(), m.CursorStyle, m.defaultDelimiter, m.textinput.Blink())
 
 	// Render command
 	command := m.parsedText.Command.Value
 	if m.selectedCommand == nil {
-		viewBuilder.render(command, m.parsedText.Command.Pos.Offset, m.TextStyle)
+		viewBuilder.Render(command, m.parsedText.Command.Pos.Offset, m.TextStyle)
 	} else {
-		viewBuilder.render(command, m.parsedText.Command.Pos.Offset, m.SelectedTextStyle)
+		viewBuilder.Render(command, m.parsedText.Command.Pos.Offset, m.SelectedTextStyle)
 	}
 
 	// Render prefix
 	if strings.HasPrefix(m.Placeholder, m.Value()) && m.Placeholder != command {
-		viewBuilder.render(m.Placeholder[len(command):], m.parsedText.Command.Pos.Offset+len(command), m.PlaceholderStyle)
+		viewBuilder.Render(m.Placeholder[len(command):], m.parsedText.Command.Pos.Offset+len(command), m.PlaceholderStyle)
 	}
 
 	// Render args
@@ -635,7 +635,7 @@ func (m Model[T]) View() string {
 		if i < len(m.args) {
 			argStyle = m.args[i].argStyle
 		}
-		viewBuilder.render(arg.Value, arg.Pos.Offset, argStyle)
+		viewBuilder.Render(arg.Value, arg.Pos.Offset, argStyle)
 	}
 
 	// Render current arg if persist == true
@@ -646,7 +646,7 @@ func (m Model[T]) View() string {
 		// Render the rest of the arg placeholder only if the prefix matches
 		if arg.persist && strings.HasPrefix(arg.text, argVal) {
 			tokenPos := len(argVal)
-			viewBuilder.render(arg.text[tokenPos:], viewBuilder.viewLen, arg.placeholderStyle)
+			viewBuilder.Render(arg.text[tokenPos:], viewBuilder.ViewLen(), arg.placeholderStyle)
 		}
 	}
 
@@ -654,17 +654,17 @@ func (m Model[T]) View() string {
 	currentPos := m.CurrentTokenPos(RoundDown).Start
 	currentToken := m.CurrentToken(RoundDown)
 	for i, flag := range m.parsedText.Flags.Value {
-		viewBuilder.render(flag.Name, flag.Pos.Offset, lipgloss.NewStyle())
+		viewBuilder.Render(flag.Name, flag.Pos.Offset, lipgloss.NewStyle())
 		// Render delimiter only once the full flag has been typed
 		if m.currentFlag == nil || len(flag.Name) >= len(m.currentFlag.Text) || flag.Value != nil {
 			if flag.Delim != nil {
-				viewBuilder.render(flag.Delim.Value, flag.Delim.Pos.Offset, lipgloss.NewStyle())
+				viewBuilder.Render(flag.Delim.Value, flag.Delim.Pos.Offset, lipgloss.NewStyle())
 			}
 		}
 
 		if (flag.Pos.Offset != currentPos) && (currentPos < m.Cursor() || i < len(m.parsedText.Flags.Value)-1 || (len(currentToken) > 0 && !strings.HasPrefix(currentToken, "-"))) {
 			if flag.Value != nil {
-				viewBuilder.render(flag.Value.Value, flag.Value.Pos.Offset, lipgloss.NewStyle())
+				viewBuilder.Render(flag.Value.Value, flag.Value.Pos.Offset, lipgloss.NewStyle())
 			}
 
 		} else {
@@ -678,22 +678,22 @@ func (m Model[T]) View() string {
 				// Render the rest of the arg placeholder only if the prefix matches
 				if strings.HasPrefix(m.currentFlag.Text, argVal) {
 					tokenPos := len(argVal)
-					viewBuilder.render(m.currentFlag.Text[tokenPos:], viewBuilder.viewLen, m.PlaceholderStyle)
+					viewBuilder.Render(m.currentFlag.Text[tokenPos:], viewBuilder.ViewLen(), m.PlaceholderStyle)
 				}
 			}
 
 			if m.currentFlag != nil && len(m.currentFlag.Metadata.FlagPlaceholder().Text) > 0 && flag.Name[len(flag.Name)-1] != '-' {
-				if !m.IsDelimiter(string(*viewBuilder.last())) && *viewBuilder.last() != '=' {
-					viewBuilder.render(m.defaultDelimiter, viewBuilder.viewLen, lipgloss.NewStyle())
+				if !m.IsDelimiter(string(*viewBuilder.Last())) && *viewBuilder.Last() != '=' {
+					viewBuilder.Render(m.defaultDelimiter, viewBuilder.ViewLen(), lipgloss.NewStyle())
 				}
 
 				if flag.Value == nil {
-					viewBuilder.renderPlaceholder(m.currentFlag.Metadata.FlagPlaceholder().Text, viewBuilder.viewLen, m.currentFlag.Metadata.FlagPlaceholder().Style.Style)
+					viewBuilder.RenderPlaceholder(m.currentFlag.Metadata.FlagPlaceholder().Text, viewBuilder.ViewLen(), m.currentFlag.Metadata.FlagPlaceholder().Style.Style)
 				}
 
 			}
 			if flag.Value != nil {
-				viewBuilder.render(flag.Value.Value, flag.Value.Pos.Offset, lipgloss.NewStyle())
+				viewBuilder.Render(flag.Value.Value, flag.Value.Pos.Offset, lipgloss.NewStyle())
 			}
 		}
 	}
@@ -706,21 +706,21 @@ func (m Model[T]) View() string {
 	startPlaceholder := len(m.parsedText.Args.Value) + len(m.parsedText.Flags.Value)
 	if startPlaceholder < len(m.args) {
 		for _, arg := range m.args[startPlaceholder:] {
-			last := viewBuilder.last()
+			last := viewBuilder.Last()
 			if last == nil || !m.IsDelimiter(string(*last)) {
-				viewBuilder.render(m.defaultDelimiter, viewBuilder.viewLen, lipgloss.NewStyle())
+				viewBuilder.Render(m.defaultDelimiter, viewBuilder.ViewLen(), lipgloss.NewStyle())
 			}
 
-			viewBuilder.render(arg.text, viewBuilder.viewLen, arg.placeholderStyle)
+			viewBuilder.Render(arg.text, viewBuilder.ViewLen(), arg.placeholderStyle)
 		}
 	}
 
 	// Render trailing text
 	value := m.Value()
-	viewLen := viewBuilder.viewLen
+	viewLen := viewBuilder.ViewLen()
 	if len(value) > viewLen {
-		viewBuilder.render(value[viewBuilder.viewLen:], viewBuilder.viewLen, lipgloss.NewStyle())
+		viewBuilder.Render(value[viewBuilder.ViewLen():], viewBuilder.ViewLen(), lipgloss.NewStyle())
 	}
 
-	return m.PromptStyle.Render(m.prompt) + viewBuilder.getView()
+	return m.PromptStyle.Render(m.prompt) + viewBuilder.GetView()
 }
