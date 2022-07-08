@@ -1,4 +1,4 @@
-package testapp
+package test
 
 import (
 	"github.com/aschey/bubbleprompt/input"
@@ -7,7 +7,7 @@ import (
 
 type cmdMetadata = commandinput.CmdMetadata
 
-var Suggestions []input.Suggestion[cmdMetadata] = []input.Suggestion[cmdMetadata]{
+var suggestions []input.Suggestion[cmdMetadata] = []input.Suggestion[cmdMetadata]{
 	{Text: "first-option", Description: "test desc", Metadata: commandinput.NewCmdMetadata([]commandinput.PositionalArg{commandinput.NewPositionalArg("[test placeholder]")}, commandinput.Placeholder{})},
 	{Text: "second-option", Description: "test desc2"},
 	{Text: "third-option", Description: "test desc3"},
