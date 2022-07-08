@@ -18,7 +18,7 @@ type model struct {
 	prompt prompt.Model[cmdMetadata]
 }
 
-type completrModel struct {
+type completerModel struct {
 	suggestions []input.Suggestion[cmdMetadata]
 	textInput   *commandinput.Model[cmdMetadata]
 }
@@ -37,12 +37,12 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
-func (m completrModel) completer(document prompt.Document, promptModel prompt.Model[cmdMetadata]) []input.Suggestion[cmdMetadata] {
+func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[cmdMetadata]) []input.Suggestion[cmdMetadata] {
 	time.Sleep(100 * time.Millisecond)
 	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp), m.suggestions)
 }
 
-func executr(input string) (tea.Model, error) {
+func executor(input string) (tea.Model, error) {
 	return executors.NewAsyncStringModel(func() string {
 		time.Sleep(100 * time.Millisecond)
 		return "result is " + input
@@ -52,11 +52,11 @@ func executr(input string) (tea.Model, error) {
 func TestApp(t *testing.T) {
 
 	var textInput input.Input[cmdMetadata] = commandinput.New[cmdMetadata]()
-	completerModel := completrModel{suggestions: Suggestions, textInput: textInput.(*commandinput.Model[cmdMetadata])}
+	completerModel := completerModel{suggestions: Suggestions, textInput: textInput.(*commandinput.Model[cmdMetadata])}
 
 	m := model{prompt: prompt.New(
 		completerModel.completer,
-		executr,
+		executor,
 		textInput,
 	)}
 
