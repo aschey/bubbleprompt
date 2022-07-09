@@ -1,6 +1,7 @@
 package prompt
 
 import (
+	"github.com/aschey/bubbleprompt/executor"
 	"github.com/aschey/bubbleprompt/input"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -26,7 +27,14 @@ func (m executorModel) Init() tea.Cmd {
 func (m executorModel) Update(msg tea.Msg) (executorModel, tea.Cmd) {
 	inner, cmd := m.inner.Update(msg)
 	m.inner = inner
-	return m, cmd
+	switch msg := msg.(type) {
+	case executor.ErrorMsg:
+		m.err = error(msg)
+		return m, tea.Quit
+	default:
+		return m, cmd
+	}
+
 }
 
 func (m executorModel) View() string {

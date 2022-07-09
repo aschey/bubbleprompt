@@ -44,9 +44,9 @@ func (m completerModel) completer(document prompt.Document, promptModel prompt.M
 }
 
 func executor(input string) (tea.Model, error) {
-	return executors.NewAsyncStringModel(func() string {
+	return executors.NewAsyncStringModel(func() (string, error) {
 		time.Sleep(100 * time.Millisecond)
-		return "result is " + input
+		return "result is " + input, nil
 	}), nil
 }
 
