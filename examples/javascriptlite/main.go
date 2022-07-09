@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
@@ -13,87 +12,26 @@ import (
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/parserinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/dop251/goja"
 )
 
 type model struct {
 	prompt prompt.Model[statement]
+	vm     *goja.Runtime
 }
 
 type completerModel struct {
 	textInput   *parserinput.Model[statement]
 	suggestions []input.Suggestion[statement]
+	vm          *goja.Runtime
 }
 
-type statement struct {
-	Assignment *assignment `parser:"(@@"`
-	Expression *expression `parser:"| @@)?"`
-}
-
-type assignment struct {
-	Identifier identifier `parser:" @@ '=' "`
-	Expression expression `parser:"@@"`
-}
-
-type identifier struct {
-	Variable string      `parser:"@Ident"`
-	Accessor *expression `parser:" ('[' @@ ']')? "`
-}
-
-type group struct {
-	Expression *expression `parser:"'(' @@ ')'"`
-}
-
-type expression struct {
-	Array      *array      `parser:"( @@"`
-	Object     *object     `parser:"| @@"`
-	Group      *group      `parser:"| @@"`
-	Prop       *prop       `parser:"| @@"`
-	Token      *token      `parser:"| @@)"`
-	InfixOp    *infixOp    `parser:"(@@"`
-	Expression *expression `parser:"@@)?"`
-}
-
-type token struct {
-	Literal  *literal    `parser:"@@"`
-	Variable *identifier `parser:"| @@"`
-}
-
-type keyValuePair struct {
-	Key   string     `parser:" @String "`
-	Value expression `parser:" ':' @@ "`
-}
-
-type object struct {
-	Properties *[]keyValuePair `parser:" '{' (@@ (',' @@)*)* '}' "`
-}
-
-type prop struct {
-	Identifier identifier `parser:" @@ '.' "`
-	Prop       string     `parser:"@Ident"`
-}
-
-type infixOp struct {
-	Op string `parser:" '+' | '-' | '*' | '/' | '||' | '&&' | '==' | '===' "`
-}
-
-type array struct {
-	Values []expression `parser:" '[' (@@ ( ',' @@ )*)* ']' "`
-}
-
-type literal struct {
-	Null    *string  `parser:" ( ( 'null' | 'undefined' ) "`
-	Boolean *bool    `parser:" | ( 'true' | 'false' ) "`
-	Str     *string  `parser:"| @String"`
-	Number  *float64 `parser:"| @Number )"`
-}
-
-func (p statement) CurrentToken() string {
-	// if len(p.Parts) == 0 {
-	// 	return ""
-	// }
-	return "" //p.Parts[len(p.Parts)-1].Obj
-}
+// func (p statement) CurrentToken() string {
+// 	// if len(p.Parts) == 0 {
+// 	// 	return ""
+// 	// }
+// 	return "" //p.Parts[len(p.Parts)-1].Obj
+// }
 
 var lex = lexer.MustSimple([]lexer.SimpleRule{
 	{Name: "whitespace", Pattern: `\s+`},
@@ -123,34 +61,41 @@ func (m model) View() string {
 }
 
 func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[statement]) []input.Suggestion[statement] {
-	time.Sleep(100 * time.Millisecond)
-	p := m.textInput.Parsed()
-	if p != nil {
-		spew.Printf("%#v", *p)
+	vars := m.vm.GlobalObject().Keys()
+	suggestions := []input.Suggestion[statement]{}
+	for _, v := range vars {
+		suggestions = append(suggestions, input.Suggestion[statement]{Text: v})
 	}
-
-	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions)
+	//println("current", m.textInput.CurrentTokenBeforeCursor())
+	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), suggestions)
 }
 
-func executor(input string) (tea.Model, error) {
+func (m completerModel) executor(input string) (tea.Model, error) {
 	return executors.NewAsyncStringModel(func() string {
-		time.Sleep(100 * time.Millisecond)
-		return "result is " + input
+		res, _ := m.vm.RunString(input)
+		return res.ToString().String()
+
 	}), nil
 }
 
 func main() {
-	suggestions := []input.Suggestion[statement]{
-		{Text: "obj1"},
-		{Text: "obj2"},
-	}
+
 	var textInput input.Input[statement] = parserinput.New(parser)
-	completerModel := completerModel{suggestions: suggestions, textInput: textInput.(*parserinput.Model[statement])}
+	vm := goja.New()
+	_, _ = vm.RunString(`obj = {a: 2, b: 3}`)
+	_, _ = vm.RunString(`arr = [1, 2, 3]`)
+	vm.GlobalObject().Keys()
+	completerModel := completerModel{
+		suggestions: []input.Suggestion[statement]{},
+		textInput:   textInput.(*parserinput.Model[statement]),
+		vm:          vm,
+	}
+
 	m := model{prompt: prompt.New(
 		completerModel.completer,
-		executor,
+		completerModel.executor,
 		textInput,
-	)}
+	), vm: vm}
 
 	if err := tea.NewProgram(m).Start(); err != nil {
 		fmt.Printf("Could not start program :(\n%v\n", err)

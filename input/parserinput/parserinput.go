@@ -1,6 +1,8 @@
 package parserinput
 
 import (
+	"strings"
+
 	"github.com/alecthomas/chroma/v2/lexers"
 	"github.com/alecthomas/chroma/v2/styles"
 	"github.com/alecthomas/participle/v2"
@@ -10,7 +12,6 @@ import (
 )
 
 type Grammar interface {
-	CurrentToken() string
 }
 
 type Model[T Grammar] struct {
@@ -33,7 +34,7 @@ func (m *Model[T]) Init() tea.Cmd {
 func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
 	m.textinput, cmd = m.textinput.Update(msg)
-	expr, err := m.parser.ParseString("", m.Value())
+	expr, err := m.parser.ParseString("", m.Value(), participle.AllowTrailing(true))
 	if err == nil {
 		m.parsedText = expr
 	} else {
@@ -97,11 +98,11 @@ func (m *Model[T]) ShouldSelectSuggestion(suggestion input.Suggestion[T]) bool {
 }
 
 func (m *Model[T]) CompletionText(text string) string {
-	expr, _ := m.parser.ParseString("", text)
-	if expr != nil {
-		return (*expr).CurrentToken()
+	tokens, _ := m.parser.Lex("", strings.NewReader(text))
+	if len(tokens) < 2 {
+		return ""
 	}
-	return ""
+	return tokens[len(tokens)-2].String()
 }
 
 func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T]) tea.Cmd {
@@ -128,5 +129,5 @@ func (m *Model[T]) CurrentTokenBeforeCursor() string {
 	if m.parsedText == nil {
 		return ""
 	}
-	return (*m.parsedText).CurrentToken()
+	return m.CompletionText(m.textinput.Value())
 }
