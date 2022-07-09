@@ -71,9 +71,9 @@ func (m completerModel) completer(document prompt.Document, promptModel prompt.M
 }
 
 func (m completerModel) executor(input string) (tea.Model, error) {
-	return executors.NewAsyncStringModel(func() string {
-		res, _ := m.vm.RunString(input)
-		return res.ToString().String()
+	return executors.NewAsyncStringModel(func() (string, error) {
+		res, err := m.vm.RunString(input)
+		return res.ToString().String(), err
 
 	}), nil
 }
