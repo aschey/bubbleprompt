@@ -139,7 +139,7 @@ func (m *Model[I]) finalizeExecutor(executorModel *executorModel) {
 	// Need to store previous lines in a string instead of a []string in order to handle newlines from the tea.Model's View value properly
 	// When executing a tea.Model standalone, the output must end in a newline and if we use a []string to track newlines, we'll get a double newline here
 	m.renderer.AddOutput(executorModel.View())
-	m.updateExecutor(nil, nil)
+	m.updateExecutor(nil)
 }
 
 func (m *Model[I]) updateWindowSizeMsg(msg tea.WindowSizeMsg) {
@@ -176,7 +176,7 @@ func (m *Model[I]) updateChosenListEntry(msg tea.KeyMsg, cmds []tea.Cmd) []tea.C
 	}
 }
 
-func (m *Model[I]) updateExecutor(executor *executorModel, err error) {
+func (m *Model[I]) updateExecutor(executor *executorModel) {
 	m.executorModel = executor
 	if m.executorModel == nil {
 		m.modelState = completing
@@ -206,7 +206,7 @@ func (m *Model[I]) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	if _, ok := innerExecutor.(executor.StringModel); ok {
 		m.finalizeExecutor(executorModel)
 	} else {
-		m.updateExecutor(executorModel, err)
+		m.updateExecutor(executorModel)
 		cmds = append(cmds, executorModel.Init())
 	}
 

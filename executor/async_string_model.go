@@ -7,14 +7,14 @@ import (
 )
 
 type AsyncStringModel struct {
-	outputFunc func() string
+	outputFunc func() (string, error)
 	output     *string
 	spinner    spinner.Model
 }
 
 type outputMsg string
 
-func NewAsyncStringModel(outputFunc func() string) AsyncStringModel {
+func NewAsyncStringModel(outputFunc func() (string, error)) AsyncStringModel {
 	spin := spinner.New()
 	spin.Spinner = spinner.Dot
 	spin.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("69"))
@@ -23,7 +23,11 @@ func NewAsyncStringModel(outputFunc func() string) AsyncStringModel {
 
 func (m AsyncStringModel) Init() tea.Cmd {
 	return tea.Batch(m.spinner.Tick, func() tea.Msg {
-		return outputMsg(m.outputFunc())
+		output, err := m.outputFunc()
+		if err != nil {
+			return ErrorMsg(err)
+		}
+		return outputMsg(output)
 	})
 }
 
