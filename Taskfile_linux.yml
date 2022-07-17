@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 tasks:
   coverage:
@@ -6,4 +6,4 @@ tasks:
       - xdg-open ./coverage.html
   examples:
     cmds:
-      - ls -d examples/* | xargs sh -c 'cd $0 && go build'
+      - \ls -d examples/*/ | tr '\n' '\0' | xargs -0 -n1 sh -c 'cd $0 && go build -o bin/example $0'

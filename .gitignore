@@ -17,3 +17,5 @@
 coverage.html
 
 .vscode
+
+examples/**/bin/**
