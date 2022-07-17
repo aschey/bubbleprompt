@@ -145,8 +145,18 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T]) 
 }
 
 func (m *Model[T]) OnSuggestionChanged(suggestion input.Suggestion[T]) {
-	m.SetValue(suggestion.Text)
-	m.SetCursor(len(suggestion.Text))
+	_, token := m.CurrentToken()
+	if token == nil {
+		return
+	}
+	tokenLen := 0
+	if !token.EOF() {
+		tokenLen = len(token.String())
+	}
+
+	tokenPos := token.Pos.Offset
+	m.SetValue(m.Value()[:tokenPos+tokenLen] + suggestion.Text)
+	m.SetCursor(tokenPos + tokenLen + len(suggestion.Text))
 }
 
 func (m *Model[T]) IsDelimiter(text string) bool {
