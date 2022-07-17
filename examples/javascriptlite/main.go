@@ -13,6 +13,7 @@ import (
 	"github.com/aschey/bubbleprompt/input/parserinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/dop251/goja"
+	"golang.org/x/exp/slices"
 )
 
 type model struct {
@@ -25,13 +26,6 @@ type completerModel struct {
 	suggestions []input.Suggestion[statement]
 	vm          *goja.Runtime
 }
-
-// func (p statement) CurrentToken() string {
-// 	// if len(p.Parts) == 0 {
-// 	// 	return ""
-// 	// }
-// 	return "" //p.Parts[len(p.Parts)-1].Obj
-// }
 
 var lex = lexer.MustSimple([]lexer.SimpleRule{
 	{Name: "whitespace", Pattern: `\s+`},
@@ -62,12 +56,34 @@ func (m model) View() string {
 
 func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[statement]) []input.Suggestion[statement] {
 	vars := m.vm.GlobalObject().Keys()
+	symbols := lexer.SymbolsByRune(lex)
 	suggestions := []input.Suggestion[statement]{}
 	for _, v := range vars {
 		suggestions = append(suggestions, input.Suggestion[statement]{Text: v})
 	}
-	//println("current", m.textInput.CurrentTokenBeforeCursor())
-	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), suggestions)
+
+	_, current := m.textInput.CurrentToken()
+	_, prev := m.textInput.PreviousToken()
+	currentBeforeCursor := m.textInput.CurrentTokenBeforeCursor()
+
+	if current != nil && prev != nil {
+		current := *current
+		prev := *prev
+		if symbols[prev.Type] == "Ident" && symbols[current.Type] == "Punct" {
+			currentBeforeCursor = ""
+			varName := prev.String()
+			if slices.Contains(vars, varName) {
+				fields := m.vm.Get(varName).ToObject(m.vm).Keys()
+
+				suggestions = []input.Suggestion[statement]{}
+				for _, f := range fields {
+					suggestions = append(suggestions, input.Suggestion[statement]{Text: f})
+				}
+			}
+		}
+	}
+
+	return completers.FilterHasPrefix(currentBeforeCursor, suggestions)
 }
 
 func (m completerModel) executor(input string) (tea.Model, error) {
@@ -95,6 +111,7 @@ func main() {
 		completerModel.completer,
 		completerModel.executor,
 		textInput,
+		prompt.WithViewportRenderer[statement](),
 	), vm: vm}
 
 	if err := tea.NewProgram(m).Start(); err != nil {

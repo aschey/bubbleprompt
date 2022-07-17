@@ -6,7 +6,8 @@ require (
 	github.com/alecthomas/participle/v2 v2.0.0-beta.3
 	github.com/aschey/bubbleprompt v0.0.0
 	github.com/charmbracelet/bubbletea v0.22.0
-	github.com/davecgh/go-spew v1.1.1
+	github.com/dop251/goja v0.0.0-20220705101429-189bfeb9f530
+	golang.org/x/exp v0.0.0-20220713135740-79cabaa25d75
 
 )
 
@@ -17,7 +18,6 @@ require (
 	github.com/charmbracelet/lipgloss v0.5.0 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/dlclark/regexp2 v1.4.1-0.20201116162257-a2a8dda75c91 // indirect
-	github.com/dop251/goja v0.0.0-20220705101429-189bfeb9f530 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.3+incompatible // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
