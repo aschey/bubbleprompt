@@ -613,6 +613,8 @@ func (m *Model[T]) Blur() {
 	m.textinput.Blur()
 }
 
+func (m *Model[T]) OnExecutorFinished() {}
+
 func (m Model[T]) View() string {
 	viewBuilder := input.NewViewBuilder(m.Cursor(), m.CursorStyle, m.defaultDelimiter, m.textinput.Blink())
 

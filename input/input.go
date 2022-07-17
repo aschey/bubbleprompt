@@ -21,6 +21,7 @@ type Input[T any] interface {
 	CompletionText(text string) string
 	OnUpdateFinish(msg tea.Msg, suggestion *Suggestion[T]) tea.Cmd
 	OnSuggestionChanged(suggestion Suggestion[T])
+	OnExecutorFinished()
 	IsDelimiter(text string) bool
 	OnSuggestionUnselected()
 	ShouldClearSuggestions(prevText string, msg tea.KeyMsg) bool

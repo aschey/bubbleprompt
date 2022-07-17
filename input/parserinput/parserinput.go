@@ -22,6 +22,7 @@ type Model[T Token, G any] struct {
 	parsedText *G
 	tokens     []lexer.Token
 	prompt     string
+	err        error
 }
 
 func New[T Token, G any](parser *participle.Parser[G]) *Model[T, G] {
@@ -35,18 +36,23 @@ func (m *Model[T, G]) Init() tea.Cmd {
 }
 
 func (m *Model[T, G]) updateParsed() {
-	expr, err := m.parser.ParseString("", m.Value(), participle.AllowTrailing(true))
-	if err == nil {
-		m.parsedText = expr
-	} else {
-		println(err.Error())
-	}
-	tokens, err := m.parser.Lex("", strings.NewReader(m.Value()))
-	if err == nil {
+	tokens, lexErr := m.parser.Lex("", strings.NewReader(m.Value()))
+	if lexErr == nil {
 		m.tokens = tokens
 	} else {
-		println(err.Error())
+		m.err = lexErr
+		return
 	}
+
+	expr, parseErr := m.parser.ParseString("", m.Value(), participle.AllowTrailing(true))
+	if parseErr == nil {
+		m.parsedText = expr
+	} else {
+		m.err = parseErr
+		return
+	}
+
+	m.err = nil
 }
 
 func (m *Model[T, G]) OnUpdateStart(msg tea.Msg) tea.Cmd {
@@ -54,6 +60,10 @@ func (m *Model[T, G]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	m.textinput, cmd = m.textinput.Update(msg)
 	m.updateParsed()
 	return cmd
+}
+
+func (m *Model[T, G]) Error() error {
+	return m.err
 }
 
 func (m *Model[T, G]) View() string {
@@ -187,4 +197,9 @@ func (m *Model[T, G]) CurrentTokenBeforeCursor() string {
 	}
 	val := m.Value()[start:cursor]
 	return val
+}
+
+func (m *Model[T, G]) OnExecutorFinished() {
+	// Clear out error once inpu text is reset
+	m.err = nil
 }

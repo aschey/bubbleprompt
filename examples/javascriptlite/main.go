@@ -118,8 +118,16 @@ func (m completerModel) completer(document prompt.Document, promptModel prompt.M
 
 func (m completerModel) executor(input string) (tea.Model, error) {
 	return executors.NewAsyncStringModel(func() (string, error) {
+		err := m.textInput.Error()
+		if err != nil {
+			return "", err
+		}
 		res, err := m.vm.RunString(input)
-		return res.ToString().String(), err
+		if res == nil || err != nil {
+			return "", err
+		}
+
+		return res.ToString().String(), nil
 
 	}), nil
 }

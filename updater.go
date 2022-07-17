@@ -145,6 +145,7 @@ func (m *Model[I]) finalizeExecutor(executorModel *executorModel) {
 	// Need to store previous lines in a string instead of a []string in order to handle newlines from the tea.Model's View value properly
 	// When executing a tea.Model standalone, the output must end in a newline and if we use a []string to track newlines, we'll get a double newline here
 	m.renderer.AddOutput(executorModel.View())
+	m.textInput.OnExecutorFinished()
 	m.updateExecutor(nil)
 }
 
