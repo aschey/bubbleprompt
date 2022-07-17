@@ -20,13 +20,13 @@ type group struct {
 }
 
 type expression struct {
-	Array      *array      `parser:"( @@"`
-	Object     *object     `parser:"| @@"`
-	Group      *group      `parser:"| @@"`
-	Prop       *prop       `parser:"| @@"`
-	Token      *token      `parser:"| @@)"`
-	InfixOp    *infixOp    `parser:"(@@"`
-	Expression *expression `parser:"@@)?"`
+	Array        *array        `parser:"( @@"`
+	Object       *object       `parser:"| @@"`
+	Group        *group        `parser:"| @@"`
+	PropAccessor *propAccessor `parser:"| @@"`
+	Token        *token        `parser:"| @@)"`
+	InfixOp      *infixOp      `parser:"(@@"`
+	Expression   *expression   `parser:"@@)?"`
 }
 
 type token struct {
@@ -43,9 +43,10 @@ type object struct {
 	Properties *[]keyValuePair `parser:" '{' (@@ (',' @@)*)* '}' "`
 }
 
-type prop struct {
-	Identifier identifier `parser:" @@ '.' "`
-	Prop       *string    `parser:"@Ident?"`
+type propAccessor struct {
+	Identifier identifier    `parser:" @@ '.' "`
+	Accessor   *propAccessor `parser:"( @@"`
+	Prop       *string       `parser:" | @Ident )?"`
 }
 
 type infixOp struct {
