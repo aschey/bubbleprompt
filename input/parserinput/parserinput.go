@@ -12,28 +12,29 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type Grammar interface {
+type Token interface {
+	SkipPrevious() bool
 }
 
-type Model[T Grammar] struct {
+type Model[T Token, G any] struct {
 	textinput  textinput.Model
-	parser     *participle.Parser[T]
-	parsedText *T
+	parser     *participle.Parser[G]
+	parsedText *G
 	tokens     []lexer.Token
 	prompt     string
 }
 
-func New[T Grammar](parser *participle.Parser[T]) *Model[T] {
+func New[T Token, G any](parser *participle.Parser[G]) *Model[T, G] {
 	textinput := textinput.New()
 	textinput.Focus()
-	return &Model[T]{parser: parser, textinput: textinput}
+	return &Model[T, G]{parser: parser, textinput: textinput}
 }
 
-func (m *Model[T]) Init() tea.Cmd {
+func (m *Model[T, G]) Init() tea.Cmd {
 	return textinput.Blink
 }
 
-func (m *Model[T]) updateParsed() {
+func (m *Model[T, G]) updateParsed() {
 	expr, err := m.parser.ParseString("", m.Value(), participle.AllowTrailing(true))
 	if err == nil {
 		m.parsedText = expr
@@ -48,14 +49,14 @@ func (m *Model[T]) updateParsed() {
 	}
 }
 
-func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
+func (m *Model[T, G]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
 	m.textinput, cmd = m.textinput.Update(msg)
 	m.updateParsed()
 	return cmd
 }
 
-func (m *Model[T]) View() string {
+func (m *Model[T, G]) View() string {
 	lexer := lexers.Get("javascript")
 	iter, err := lexer.Tokenise(nil, m.textinput.Value())
 	style := styles.Get("swapoff")
@@ -65,51 +66,51 @@ func (m *Model[T]) View() string {
 	return m.textinput.Prompt + m.inputFormatter(style, iter)
 }
 
-func (m *Model[T]) Focus() tea.Cmd {
+func (m *Model[T, G]) Focus() tea.Cmd {
 	return m.textinput.Focus()
 }
 
-func (m *Model[T]) Focused() bool {
+func (m *Model[T, G]) Focused() bool {
 	return m.textinput.Focused()
 }
 
-func (m *Model[T]) Parsed() *T {
+func (m *Model[T, G]) Parsed() *G {
 	return m.parsedText
 }
 
-func (m *Model[T]) Value() string {
+func (m *Model[T, G]) Value() string {
 	return m.textinput.Value()
 }
 
-func (m *Model[T]) SetValue(value string) {
+func (m *Model[T, G]) SetValue(value string) {
 	m.textinput.SetValue(value)
 }
 
-func (m *Model[T]) Blur() {
+func (m *Model[T, G]) Blur() {
 	m.textinput.Blur()
 }
 
-func (m *Model[T]) Cursor() int {
+func (m *Model[T, G]) Cursor() int {
 	return m.textinput.Cursor()
 }
 
-func (m *Model[T]) SetCursor(cursor int) {
+func (m *Model[T, G]) SetCursor(cursor int) {
 	m.textinput.SetCursor(cursor)
 }
 
-func (m *Model[T]) Prompt() string {
+func (m *Model[T, G]) Prompt() string {
 	return m.prompt
 }
 
-func (m *Model[T]) SetPrompt(prompt string) {
+func (m *Model[T, G]) SetPrompt(prompt string) {
 	m.prompt = prompt
 }
 
-func (m *Model[T]) ShouldSelectSuggestion(suggestion input.Suggestion[T]) bool {
+func (m *Model[T, G]) ShouldSelectSuggestion(suggestion input.Suggestion[T]) bool {
 	return suggestion.Text == m.CompletionText(m.Value())
 }
 
-func (m *Model[T]) currentToken(text string) (int, *lexer.Token) {
+func (m *Model[T, G]) currentToken(text string) (int, *lexer.Token) {
 	cursor := m.Cursor()
 	for i, token := range m.tokens {
 		if cursor >= token.Pos.Offset && cursor <= token.Pos.Offset+len(token.String()) {
@@ -119,11 +120,11 @@ func (m *Model[T]) currentToken(text string) (int, *lexer.Token) {
 	return -1, nil
 }
 
-func (m *Model[T]) CurrentToken() (int, *lexer.Token) {
+func (m *Model[T, G]) CurrentToken() (int, *lexer.Token) {
 	return m.currentToken(m.Value())
 }
 
-func (m *Model[T]) PreviousToken() (int, *lexer.Token) {
+func (m *Model[T, G]) PreviousToken() (int, *lexer.Token) {
 	index, _ := m.CurrentToken()
 	if index <= 0 {
 		return -1, nil
@@ -131,49 +132,50 @@ func (m *Model[T]) PreviousToken() (int, *lexer.Token) {
 	return index - 1, &m.tokens[index-1]
 }
 
-func (m *Model[T]) CompletionText(text string) string {
+func (m *Model[T, G]) CompletionText(text string) string {
 	_, token := m.currentToken(text)
 	return token.String()
 }
 
-func (m *Model[T]) Tokens() []lexer.Token {
+func (m *Model[T, G]) Tokens() []lexer.Token {
 	return m.tokens
 }
 
-func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T]) tea.Cmd {
+func (m *Model[T, G]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T]) tea.Cmd {
 	return nil
 }
 
-func (m *Model[T]) OnSuggestionChanged(suggestion input.Suggestion[T]) {
+func (m *Model[T, G]) OnSuggestionChanged(suggestion input.Suggestion[T]) {
 	_, token := m.CurrentToken()
 	if token == nil {
 		return
 	}
-	tokenLen := 0
-	if !token.EOF() {
-		tokenLen = len(token.String())
+	start := token.Pos.Offset
+
+	if !token.EOF() && suggestion.Metadata.SkipPrevious() {
+		start += len(token.String())
 	}
 
-	tokenPos := token.Pos.Offset
-	m.SetValue(m.Value()[:tokenPos+tokenLen] + suggestion.Text)
-	m.SetCursor(tokenPos + tokenLen + len(suggestion.Text))
+	m.SetValue(m.Value()[:start] + suggestion.Text)
+	m.SetCursor(start + len(suggestion.Text) - suggestion.CursorOffset)
+
 }
 
-func (m *Model[T]) IsDelimiter(text string) bool {
+func (m *Model[T, G]) IsDelimiter(text string) bool {
 	return false
 }
 
-func (m *Model[T]) OnSuggestionUnselected() {}
+func (m *Model[T, G]) OnSuggestionUnselected() {}
 
-func (m *Model[T]) ShouldClearSuggestions(prevText string, msg tea.KeyMsg) bool {
+func (m *Model[T, G]) ShouldClearSuggestions(prevText string, msg tea.KeyMsg) bool {
 	return false
 }
 
-func (m *Model[T]) ShouldUnselectSuggestion(prevText string, msg tea.KeyMsg) bool {
+func (m *Model[T, G]) ShouldUnselectSuggestion(prevText string, msg tea.KeyMsg) bool {
 	return false
 }
 
-func (m *Model[T]) CurrentTokenBeforeCursor() string {
+func (m *Model[T, G]) CurrentTokenBeforeCursor() string {
 	if m.parsedText == nil {
 		return ""
 	}

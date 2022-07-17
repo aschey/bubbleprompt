@@ -13,17 +13,24 @@ import (
 	"github.com/aschey/bubbleprompt/input/parserinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/dop251/goja"
-	"golang.org/x/exp/slices"
 )
 
 type model struct {
-	prompt prompt.Model[statement]
+	prompt prompt.Model[tokenMetadata]
 	vm     *goja.Runtime
 }
 
+type tokenMetadata struct {
+	skipPrevious bool
+}
+
+func (t tokenMetadata) SkipPrevious() bool {
+	return t.skipPrevious
+}
+
 type completerModel struct {
-	textInput   *parserinput.Model[statement]
-	suggestions []input.Suggestion[statement]
+	textInput   *parserinput.Model[tokenMetadata, statement]
+	suggestions []input.Suggestion[tokenMetadata]
 	vm          *goja.Runtime
 }
 
@@ -54,34 +61,57 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
-func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[statement]) []input.Suggestion[statement] {
+func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[tokenMetadata]) []input.Suggestion[tokenMetadata] {
 	vars := m.vm.GlobalObject().Keys()
-	symbols := lexer.SymbolsByRune(lex)
-	suggestions := []input.Suggestion[statement]{}
+	//symbols := lexer.SymbolsByRune(lex)
+	suggestions := []input.Suggestion[tokenMetadata]{}
 	for _, v := range vars {
-		suggestions = append(suggestions, input.Suggestion[statement]{Text: v})
+		suggestions = append(suggestions, input.Suggestion[tokenMetadata]{Text: v})
 	}
 
-	_, current := m.textInput.CurrentToken()
-	_, prev := m.textInput.PreviousToken()
+	// _, current := m.textInput.CurrentToken()
+	// _, prev := m.textInput.PreviousToken()
 	currentBeforeCursor := m.textInput.CurrentTokenBeforeCursor()
 
-	if current != nil && prev != nil {
-		current := *current
-		prev := *prev
-		if symbols[prev.Type] == "Ident" && symbols[current.Type] == "Punct" {
-			currentBeforeCursor = ""
-			varName := prev.String()
-			if slices.Contains(vars, varName) {
+	parsed := m.textInput.Parsed()
+	if parsed != nil {
+		if parsed.Expression != nil {
+			if parsed.Expression.Prop != nil {
+				varName := parsed.Expression.Prop.Identifier.Variable
 				fields := m.vm.Get(varName).ToObject(m.vm).Keys()
+				suggestions = []input.Suggestion[tokenMetadata]{}
+				skipPrevious := false
+				if parsed.Expression.Prop.Prop == nil {
+					currentBeforeCursor = ""
+					skipPrevious = true
+				}
 
-				suggestions = []input.Suggestion[statement]{}
 				for _, f := range fields {
-					suggestions = append(suggestions, input.Suggestion[statement]{Text: f})
+					suggestions = append(suggestions, input.Suggestion[tokenMetadata]{
+						Text:     f,
+						Metadata: tokenMetadata{skipPrevious},
+					})
 				}
 			}
 		}
 	}
+
+	// if current != nil && prev != nil {
+	// 	current := *current
+	// 	prev := *prev
+	// 	if symbols[prev.Type] == "Ident" && symbols[current.Type] == "Punct" {
+	// 		currentBeforeCursor = ""
+	// 		varName := prev.String()
+	// 		if slices.Contains(vars, varName) {
+	// 			fields := m.vm.Get(varName).ToObject(m.vm).Keys()
+
+	// 			suggestions = []input.Suggestion[tokenMetadata]{}
+	// 			for _, f := range fields {
+	// 				suggestions = append(suggestions, input.Suggestion[tokenMetadata]{Text: f})
+	// 			}
+	// 		}
+	// 	} else if  symbols[current.Type] == "Punct" &&
+	// }
 
 	return completers.FilterHasPrefix(currentBeforeCursor, suggestions)
 }
@@ -96,14 +126,14 @@ func (m completerModel) executor(input string) (tea.Model, error) {
 
 func main() {
 
-	var textInput input.Input[statement] = parserinput.New(parser)
+	var textInput input.Input[tokenMetadata] = parserinput.New[tokenMetadata](parser)
 	vm := goja.New()
-	_, _ = vm.RunString(`obj = {a: 2, b: 3}`)
+	_, _ = vm.RunString(`obj = {a: 2, secondVal: 3}`)
 	_, _ = vm.RunString(`arr = [1, 2, 3]`)
 	vm.GlobalObject().Keys()
 	completerModel := completerModel{
-		suggestions: []input.Suggestion[statement]{},
-		textInput:   textInput.(*parserinput.Model[statement]),
+		suggestions: []input.Suggestion[tokenMetadata]{},
+		textInput:   textInput.(*parserinput.Model[tokenMetadata, statement]),
 		vm:          vm,
 	}
 
@@ -111,7 +141,7 @@ func main() {
 		completerModel.completer,
 		completerModel.executor,
 		textInput,
-		prompt.WithViewportRenderer[statement](),
+		prompt.WithViewportRenderer[tokenMetadata](),
 	), vm: vm}
 
 	if err := tea.NewProgram(m).Start(); err != nil {

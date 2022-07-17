@@ -122,7 +122,13 @@ func (m *Model[I]) finishUpdate(msg tea.Msg) tea.Cmd {
 		// Select the first suggestion if it matches
 		m.selectSingle()
 
-		typedCompletionText := m.textInput.CompletionText(m.typedText[:m.textInput.Cursor()])
+		cursor := m.textInput.Cursor()
+		text := m.typedText
+		// Get completion text before the cursor
+		if cursor < len(text) {
+			text = text[:cursor]
+		}
+		typedCompletionText := m.textInput.CompletionText(text)
 		filteredSuggestions := completer.FilterHasPrefix(typedCompletionText, m.completer.suggestions)
 		// Show placeholders for the first matching suggestion, but don't actually select it
 		if len(filteredSuggestions) > 0 {

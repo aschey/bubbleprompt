@@ -45,7 +45,7 @@ type object struct {
 
 type prop struct {
 	Identifier identifier `parser:" @@ '.' "`
-	Prop       string     `parser:"@Ident"`
+	Prop       *string    `parser:"@Ident?"`
 }
 
 type infixOp struct {
