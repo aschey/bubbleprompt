@@ -1,6 +1,8 @@
 package parserinput
 
 import (
+	"strings"
+
 	"github.com/alecthomas/chroma/v2"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/charmbracelet/lipgloss"
@@ -29,7 +31,7 @@ func (m Model[T, G]) inputFormatter(theme *chroma.Style, iter chroma.Iterator) s
 				style = style.Background(lipgloss.Color(entry.Background.String()))
 			}
 		}
-		viewBuilder.Render(token.Value, viewBuilder.ViewLen(), style)
+		viewBuilder.Render(strings.TrimRight(token.Value, "\n"), viewBuilder.ViewLen(), style)
 	}
 
 	return viewBuilder.GetView()
