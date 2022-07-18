@@ -97,6 +97,36 @@ func (m completerModel) objSuggestions(parent *goja.Object, accessor *propAccess
 	return completers.FilterHasPrefix(currentBeforeCursor, suggestions)
 }
 
+func (m completerModel) accessorSuggestions(variable *identifier) []input.Suggestion[tokenMetadata] {
+	curVar := m.vm.Get(variable.Variable)
+	if curVar == nil {
+		return []input.Suggestion[tokenMetadata]{}
+	}
+	switch curVar.ExportType().String() {
+	case "[]interface {}":
+		return m.accessorSuggestionsHelper(curVar, nil)
+
+	case "map[string]interface {}":
+		return m.accessorSuggestionsHelper(curVar, func(key string) string { return `"` + key + `"` })
+	}
+	return []input.Suggestion[tokenMetadata]{}
+}
+
+func (m completerModel) accessorSuggestionsHelper(curVar goja.Value, keyFormatter func(key string) string) []input.Suggestion[tokenMetadata] {
+	arrayVar := curVar.ToObject(m.vm)
+	suggestions := []input.Suggestion[tokenMetadata]{}
+	for _, key := range arrayVar.Keys() {
+		if keyFormatter != nil {
+			key = keyFormatter(key)
+		}
+		suggestions = append(suggestions, input.Suggestion[tokenMetadata]{
+			Text:     key,
+			Metadata: tokenMetadata{skipPrevious: true},
+		})
+	}
+	return suggestions
+}
+
 func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[tokenMetadata]) []input.Suggestion[tokenMetadata] {
 	vars := m.vm.GlobalObject().Keys()
 	suggestions := []input.Suggestion[tokenMetadata]{}
@@ -111,6 +141,12 @@ func (m completerModel) completer(document prompt.Document, promptModel prompt.M
 		if parsed.Expression != nil {
 			if parsed.Expression.PropAccessor != nil {
 				return m.objSuggestions(nil, parsed.Expression.PropAccessor)
+			} else if parsed.Expression.Token != nil {
+				if parsed.Expression.Token.Variable != nil {
+					if currentBeforeCursor == "[" {
+						return m.accessorSuggestions(parsed.Expression.Token.Variable)
+					}
+				}
 			}
 		}
 	}
@@ -135,7 +171,6 @@ func (m completerModel) executor(input string) (tea.Model, error) {
 }
 
 func main() {
-
 	var textInput input.Input[tokenMetadata] = parserinput.New[tokenMetadata](parser)
 	vm := goja.New()
 	_, _ = vm.RunString(`obj = {a: 2, secondVal: 3, blah: {arg: 1, b: '2'}}`)

@@ -12,7 +12,7 @@ type assignment struct {
 
 type identifier struct {
 	Variable string      `parser:"@Ident"`
-	Accessor *expression `parser:" ('[' @@ ']')? "`
+	Accessor *expression `parser:" ('[' @@ ']?')? "`
 }
 
 type group struct {
