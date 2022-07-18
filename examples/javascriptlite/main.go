@@ -15,6 +15,9 @@ import (
 	"github.com/dop251/goja"
 )
 
+const arrayType = "[]interface {}"
+const objectType = "map[string]interface {}"
+
 type model struct {
 	prompt prompt.Model[tokenMetadata]
 	vm     *goja.Runtime
@@ -70,7 +73,9 @@ func (m completerModel) objSuggestions(parent *goja.Object, accessor *propAccess
 	} else {
 		obj = parent.Get(varName).ToObject(m.vm)
 	}
-
+	if obj.ExportType().String() == arrayType {
+		return []input.Suggestion[tokenMetadata]{}
+	}
 	fields := obj.Keys()
 	suggestions := []input.Suggestion[tokenMetadata]{}
 	skipPrevious := false
@@ -82,7 +87,7 @@ func (m completerModel) objSuggestions(parent *goja.Object, accessor *propAccess
 	for _, f := range fields {
 		datatype := obj.Get(f).ExportType().String()
 		switch datatype {
-		case "map[string]interface {}":
+		case objectType:
 			if accessor.Accessor != nil {
 				return m.objSuggestions(obj, accessor.Accessor)
 			}
@@ -103,10 +108,10 @@ func (m completerModel) accessorSuggestions(variable *identifier) []input.Sugges
 		return []input.Suggestion[tokenMetadata]{}
 	}
 	switch curVar.ExportType().String() {
-	case "[]interface {}":
+	case arrayType:
 		return m.accessorSuggestionsHelper(curVar, nil)
 
-	case "map[string]interface {}":
+	case objectType:
 		return m.accessorSuggestionsHelper(curVar, func(key string) string { return `"` + key + `"` })
 	}
 	return []input.Suggestion[tokenMetadata]{}
@@ -138,16 +143,27 @@ func (m completerModel) completer(document prompt.Document, promptModel prompt.M
 
 	parsed := m.textInput.Parsed()
 	if parsed != nil {
-		if parsed.Expression != nil {
-			if parsed.Expression.PropAccessor != nil {
-				return m.objSuggestions(nil, parsed.Expression.PropAccessor)
-			} else if parsed.Expression.Token != nil {
-				if parsed.Expression.Token.Variable != nil {
-					if currentBeforeCursor == "[" {
-						return m.accessorSuggestions(parsed.Expression.Token.Variable)
+		switch {
+		case parsed.Expression != nil:
+			expression := parsed.Expression
+			switch {
+			case expression.PropAccessor != nil:
+				return m.objSuggestions(nil, expression.PropAccessor)
+			case expression.Token != nil:
+				token := expression.Token
+				switch {
+				case token.Variable != nil:
+					switch currentBeforeCursor {
+					case "[":
+						return m.accessorSuggestions(token.Variable)
+					case "":
+						return []input.Suggestion[tokenMetadata]{}
 					}
+
 				}
 			}
+		case parsed.Assignment != nil:
+			return []input.Suggestion[tokenMetadata]{}
 		}
 	}
 
@@ -165,7 +181,13 @@ func (m completerModel) executor(input string) (tea.Model, error) {
 			return "", err
 		}
 
-		return res.ToString().String(), nil
+		switch res.ExportType().String() {
+		case arrayType, objectType:
+			json, err := res.ToObject(m.vm).MarshalJSON()
+			return string(json), err
+		default:
+			return res.ToString().String(), nil
+		}
 
 	}), nil
 }

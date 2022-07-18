@@ -7,7 +7,7 @@ type statement struct {
 
 type assignment struct {
 	Identifier identifier `parser:" @@ '=' "`
-	Expression expression `parser:"@@"`
+	Expression expression `parser:"@@?"`
 }
 
 type identifier struct {
