@@ -94,6 +94,7 @@ func (m *Model[T, G]) Value() string {
 
 func (m *Model[T, G]) SetValue(value string) {
 	m.textinput.SetValue(value)
+	m.updateParsed()
 }
 
 func (m *Model[T, G]) Blur() {
@@ -169,10 +170,6 @@ func (m *Model[T, G]) OnSuggestionChanged(suggestion input.Suggestion[T]) {
 	m.SetValue(m.Value()[:start] + suggestion.Text)
 	m.SetCursor(start + len(suggestion.Text) - suggestion.CursorOffset)
 
-}
-
-func (m *Model[T, G]) IsDelimiter(text string) bool {
-	return false
 }
 
 func (m *Model[T, G]) OnSuggestionUnselected() {}
