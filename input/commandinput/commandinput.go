@@ -213,7 +213,7 @@ func (m *Model[T]) ShouldUnselectSuggestion(prevText string, msg tea.KeyMsg) boo
 	pos := m.Cursor()
 	switch msg.Type {
 	case tea.KeyBackspace, tea.KeyDelete:
-		return pos < len(prevText) && !m.IsDelimiter(string(prevText[pos]))
+		return pos < len(prevText) && !m.isDelimiter(string(prevText[pos]))
 	case tea.KeyRunes, tea.KeySpace:
 		if msg.String() != "=" {
 			return true
@@ -233,7 +233,7 @@ func (m *Model[T]) ShouldUnselectSuggestion(prevText string, msg tea.KeyMsg) boo
 }
 
 func (m *Model[T]) ShouldClearSuggestions(prevText string, msg tea.KeyMsg) bool {
-	return m.IsDelimiter(msg.String())
+	return m.isDelimiter(msg.String())
 }
 
 func (m *Model[T]) SelectedCommand() *input.Suggestion[T] {
@@ -461,7 +461,7 @@ func (m *Model[T]) SetValue(s string) {
 	m.parsedText = expr
 }
 
-func (m *Model[T]) IsDelimiter(s string) bool {
+func (m *Model[T]) isDelimiter(s string) bool {
 	return m.delimiterRegex.MatchString(s)
 }
 
@@ -540,7 +540,7 @@ func (m Model[T]) currentTokenPos(tokens []ident, roundingBehavior RoundingBehav
 		last := tokens[len(tokens)-1]
 		index := len(tokens) - 1
 		value := m.Value()
-		if roundingBehavior == RoundUp && cursor > 0 && (m.IsDelimiter(string(value[cursor-1])) || (strings.HasPrefix(last.Value, "-") && string(value[cursor-1]) == "=")) {
+		if roundingBehavior == RoundUp && cursor > 0 && (m.isDelimiter(string(value[cursor-1])) || (strings.HasPrefix(last.Value, "-") && string(value[cursor-1]) == "=")) {
 			// Haven't started a new token yet, but we have added a delimiter
 			// so we'll consider the current token finished
 			index++
@@ -685,7 +685,7 @@ func (m Model[T]) View() string {
 			}
 
 			if m.currentFlag != nil && len(m.currentFlag.Metadata.FlagPlaceholder().Text) > 0 && flag.Name[len(flag.Name)-1] != '-' {
-				if !m.IsDelimiter(string(*viewBuilder.Last())) && *viewBuilder.Last() != '=' {
+				if !m.isDelimiter(string(*viewBuilder.Last())) && *viewBuilder.Last() != '=' {
 					viewBuilder.Render(m.defaultDelimiter, viewBuilder.ViewLen(), lipgloss.NewStyle())
 				}
 
@@ -709,7 +709,7 @@ func (m Model[T]) View() string {
 	if startPlaceholder < len(m.args) {
 		for _, arg := range m.args[startPlaceholder:] {
 			last := viewBuilder.Last()
-			if last == nil || !m.IsDelimiter(string(*last)) {
+			if last == nil || !m.isDelimiter(string(*last)) {
 				viewBuilder.Render(m.defaultDelimiter, viewBuilder.ViewLen(), lipgloss.NewStyle())
 			}
 
