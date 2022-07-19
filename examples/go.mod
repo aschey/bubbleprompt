@@ -12,6 +12,7 @@ require (
 
 require (
 	github.com/alecthomas/chroma/v2 v2.2.0 // indirect
+	github.com/alecthomas/repr v0.1.0 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/charmbracelet/bubbles v0.13.0 // indirect
 	github.com/charmbracelet/lipgloss v0.5.0 // indirect

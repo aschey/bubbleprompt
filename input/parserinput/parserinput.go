@@ -88,6 +88,11 @@ func (m *Model[T, G]) Parsed() *G {
 	return m.parsedText
 }
 
+func (m *Model[T, G]) ParsedBeforeCursor() *G {
+	expr, _ := m.parser.ParseString("", m.Value()[:m.Cursor()], participle.AllowTrailing(true))
+	return expr
+}
+
 func (m *Model[T, G]) Value() string {
 	return m.textinput.Value()
 }
