@@ -3,6 +3,7 @@ package prompt
 import (
 	"strings"
 
+	"github.com/aschey/bubbleprompt/input"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -15,7 +16,7 @@ func (m Model[I]) renderExecuting() string {
 
 func (m Model[I]) renderCompleting() string {
 	// If an item is selected, parse out the text portion and apply formatting
-	textView := m.textInput.View()
+	textView := m.textInput.View(input.Interactive)
 	lines := textView + "\n"
 
 	// Calculate left offset for suggestions

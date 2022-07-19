@@ -66,14 +66,14 @@ func (m *Model[T, G]) Error() error {
 	return m.err
 }
 
-func (m *Model[T, G]) View() string {
+func (m *Model[T, G]) View(viewMode input.ViewMode) string {
 	lexer := lexers.Get("javascript")
 	iter, err := lexer.Tokenise(nil, m.textinput.Value())
 	style := styles.Get("swapoff")
 	if err != nil {
 		println(err)
 	}
-	return m.textinput.Prompt + m.inputFormatter(style, iter)
+	return m.textinput.Prompt + m.inputFormatter(style, iter, viewMode)
 }
 
 func (m *Model[T, G]) Focus() tea.Cmd {

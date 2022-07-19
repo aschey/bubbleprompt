@@ -14,11 +14,11 @@ type ViewBuilder struct {
 	cursor      int
 	cursorStyle lipgloss.Style
 	delimiter   string
-	blink       bool
+	showCursor  bool
 }
 
-func NewViewBuilder(cursor int, cursorStyle lipgloss.Style, delimiter string, blink bool) *ViewBuilder {
-	return &ViewBuilder{cursor: cursor, cursorStyle: cursorStyle, delimiter: delimiter, blink: blink}
+func NewViewBuilder(cursor int, cursorStyle lipgloss.Style, delimiter string, showCursor bool) *ViewBuilder {
+	return &ViewBuilder{cursor: cursor, cursorStyle: cursorStyle, delimiter: delimiter, showCursor: showCursor}
 }
 
 func (v ViewBuilder) GetView() string {
@@ -74,7 +74,7 @@ func (v ViewBuilder) renderAllWithCursor(text string, cursorPos int, s lipgloss.
 }
 
 func (v ViewBuilder) cursorView(view string, s lipgloss.Style) string {
-	if v.blink {
+	if !v.showCursor {
 		return s.Render(view)
 	}
 	return v.cursorStyle.Inline(true).Reverse(true).Render(view)

@@ -4,10 +4,17 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+type ViewMode int
+
+const (
+	Interactive ViewMode = iota
+	Static
+)
+
 type Input[T any] interface {
 	Init() tea.Cmd
 	OnUpdateStart(msg tea.Msg) tea.Cmd
-	View() string
+	View(viewMode ViewMode) string
 	Focus() tea.Cmd
 	Focused() bool
 	Value() string

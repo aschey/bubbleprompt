@@ -615,8 +615,13 @@ func (m *Model[T]) Blur() {
 
 func (m *Model[T]) OnExecutorFinished() {}
 
-func (m Model[T]) View() string {
-	viewBuilder := input.NewViewBuilder(m.Cursor(), m.CursorStyle, m.defaultDelimiter, m.textinput.Blink())
+func (m Model[T]) View(viewMode input.ViewMode) string {
+	showCursor := !m.textinput.Blink()
+	if viewMode == input.Static {
+		showCursor = false
+	}
+	showPlaceholders := viewMode == input.Interactive
+	viewBuilder := input.NewViewBuilder(m.Cursor(), m.CursorStyle, m.defaultDelimiter, showCursor)
 
 	// Render command
 	command := m.parsedText.Command.Value
@@ -627,7 +632,7 @@ func (m Model[T]) View() string {
 	}
 
 	// Render prefix
-	if strings.HasPrefix(m.Placeholder, m.Value()) && m.Placeholder != command {
+	if showPlaceholders && strings.HasPrefix(m.Placeholder, m.Value()) && m.Placeholder != command {
 		viewBuilder.Render(m.Placeholder[len(command):], m.parsedText.Command.Pos.Offset+len(command), m.PlaceholderStyle)
 	}
 
@@ -678,7 +683,7 @@ func (m Model[T]) View() string {
 				}
 
 				// Render the rest of the arg placeholder only if the prefix matches
-				if strings.HasPrefix(m.currentFlag.Text, argVal) {
+				if showPlaceholders && strings.HasPrefix(m.currentFlag.Text, argVal) {
 					tokenPos := len(argVal)
 					viewBuilder.Render(m.currentFlag.Text[tokenPos:], viewBuilder.ViewLen(), m.PlaceholderStyle)
 				}
@@ -689,7 +694,7 @@ func (m Model[T]) View() string {
 					viewBuilder.Render(m.defaultDelimiter, viewBuilder.ViewLen(), lipgloss.NewStyle())
 				}
 
-				if flag.Value == nil {
+				if showPlaceholders && flag.Value == nil {
 					viewBuilder.RenderPlaceholder(m.currentFlag.Metadata.FlagPlaceholder().Text, viewBuilder.ViewLen(), m.currentFlag.Metadata.FlagPlaceholder().Style.Style)
 				}
 
@@ -700,13 +705,13 @@ func (m Model[T]) View() string {
 		}
 	}
 
-	if len(m.parsedText.Flags.Value) == 0 {
+	if showPlaceholders && len(m.parsedText.Flags.Value) == 0 {
 		m.args = append(m.args, arg{text: "[flags]", placeholderStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("14"))})
 	}
 
 	// Render arg placeholders
 	startPlaceholder := len(m.parsedText.Args.Value) + len(m.parsedText.Flags.Value)
-	if startPlaceholder < len(m.args) {
+	if showPlaceholders && startPlaceholder < len(m.args) {
 		for _, arg := range m.args[startPlaceholder:] {
 			last := viewBuilder.Last()
 			if last == nil || !m.isDelimiter(string(*last)) {

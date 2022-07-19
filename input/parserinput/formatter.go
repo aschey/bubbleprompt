@@ -8,9 +8,13 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func (m Model[T, G]) inputFormatter(theme *chroma.Style, iter chroma.Iterator) string {
+func (m Model[T, G]) inputFormatter(theme *chroma.Style, iter chroma.Iterator, viewMode input.ViewMode) string {
 	theme = clearBackground(theme)
-	viewBuilder := input.NewViewBuilder(m.Cursor(), lipgloss.NewStyle(), " ", m.textinput.Blink())
+	showCursor := !m.textinput.Blink()
+	if viewMode == input.Static {
+		showCursor = false
+	}
+	viewBuilder := input.NewViewBuilder(m.Cursor(), lipgloss.NewStyle(), " ", showCursor)
 	for token := iter(); token != chroma.EOF; token = iter() {
 		entry := theme.Get(token.Type)
 		style := lipgloss.NewStyle()

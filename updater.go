@@ -5,6 +5,7 @@ import (
 
 	"github.com/aschey/bubbleprompt/completer"
 	"github.com/aschey/bubbleprompt/executor"
+	"github.com/aschey/bubbleprompt/input"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -193,16 +194,16 @@ func (m *Model[I]) updateExecutor(executor *executorModel) {
 }
 
 func (m *Model[I]) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
-	textValue := m.textInput.Value()
-	innerExecutor, err := m.executor(textValue)
+	innerExecutor, err := m.executor(m.textInput.Value())
 	// Reset all text and selection state
 	m.typedText = ""
 	m.lastTypedCursorPosition = 0
 	m.completer.unselectSuggestion()
 
-	// Store the whole user input including the prompt state and the executor result
-	// However note that we don't include all of textInput.View() because we don't want to include the cursor
-	m.renderer.AddOutput(m.textInput.Prompt() + textValue)
+	// Store the user input including the prompt state and the executor result
+	// Pass in the static flag to signal to the text input to exclude interactive elements
+	// such as placeholders and the cursor
+	m.renderer.AddOutput(m.textInput.View(input.Static))
 	m.textInput.SetValue("")
 
 	executorModel := newExecutorModel(innerExecutor, m.Formatters.ErrorText, err)
