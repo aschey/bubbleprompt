@@ -57,7 +57,7 @@ type propAccessor struct {
 }
 
 type infixOp struct {
-	Op string `parser:" @ '+' | '-' | '*' | '/' | '||' | '&&' | '==' | '===' "`
+	Op string `parser:" @ ( '+' | '-' | '*' | '/' | '||' | '&&' | '==' | '===' ) "`
 }
 
 type array struct {

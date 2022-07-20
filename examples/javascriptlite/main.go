@@ -44,7 +44,7 @@ var lex = lexer.MustSimple([]lexer.SimpleRule{
 	{Name: "Or", Pattern: `\|\|`},
 	{Name: "Eq", Pattern: `===?`},
 	{Name: "Number", Pattern: `[0-9]+(\.[0-9]*)*`},
-	{Name: "Punct", Pattern: `[-\[!@#$%^&*()+_=\{\}\|:;"'<,>.?/\]|]`},
+	{Name: "Punct", Pattern: `[-\[!@#$%^&*()+_=\{\}\|:;"'<,>.?\/\]|]`},
 	{Name: "Ident", Pattern: `[_a-zA-Z]+[_a-zA-Z0-9]*`},
 })
 

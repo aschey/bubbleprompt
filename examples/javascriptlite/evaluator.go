@@ -20,6 +20,13 @@ func (m completerModel) evaluateStatement(statement statement) goja.Value {
 	return parent
 }
 
+func getString(value goja.Value) string {
+	if value.ExportType().String() == "string" {
+		return `"` + value.String() + `"`
+	}
+	return value.String()
+}
+
 func (m completerModel) evaluateExpression(parent *goja.Object, expression expression) goja.Value {
 	var value goja.Value = nil
 	switch {
@@ -31,8 +38,7 @@ func (m completerModel) evaluateExpression(parent *goja.Object, expression expre
 
 	if expression.InfixOp != nil && expression.Expression != nil {
 		rightSide := m.evaluateExpression(parent, *expression.Expression)
-		val, err := m.vm.RunString(value.String() + expression.InfixOp.Op + rightSide.String())
-
+		val, err := m.vm.RunString(getString(value) + expression.InfixOp.Op + getString(rightSide))
 		if err != nil {
 			fmt.Println(err)
 		}
