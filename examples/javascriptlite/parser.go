@@ -65,8 +65,8 @@ type array struct {
 }
 
 type literal struct {
-	Null    *string  `parser:" ( ( 'null' | 'undefined' ) "`
-	Boolean *bool    `parser:" | ( 'true' | 'false' ) "`
+	Null    *string  `parser:" ( @( 'null' | 'undefined' ) "`
+	Boolean *bool    `parser:" | @( 'true' | 'false' ) "`
 	Str     *string  `parser:"| @String"`
 	Number  *float64 `parser:"| @Number )"`
 }
