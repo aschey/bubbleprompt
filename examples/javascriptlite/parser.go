@@ -6,13 +6,14 @@ type statement struct {
 }
 
 type assignment struct {
-	Identifier identifier `parser:" @@ '=' "`
+	Identifier string     `parser:" @Ident '=' "`
 	Expression expression `parser:"@@?"`
 }
 
-type identifier struct {
-	Variable string      `parser:"@Ident"`
-	Accessor *expression `parser:" ('[' @@ ']'?)? "`
+type indexer struct {
+	OBracket   string      `parser:"@ '['"`
+	Expression *expression `parser:"(@@"`
+	CBracket   *string     `parser:"@ ']')?"`
 }
 
 type group struct {
@@ -30,8 +31,8 @@ type expression struct {
 }
 
 type token struct {
-	Literal  *literal    `parser:"@@"`
-	Variable *identifier `parser:"| @@"`
+	Literal  *literal `parser:"@@"`
+	Variable *string  `parser:"| @Ident"`
 }
 
 type keyValuePair struct {
@@ -43,14 +44,20 @@ type object struct {
 	Properties *[]keyValuePair `parser:" '{' (@@ (',' @@)*)* '}' "`
 }
 
+type accessor struct {
+	Indexer  *indexer  `parser:"(@@"`
+	Delim    *string   `parser:"| (@ '.' "`
+	Prop     *string   `parser:" @Ident?))"`
+	Accessor *accessor `parser:"@@?"`
+}
+
 type propAccessor struct {
-	Identifier identifier    `parser:" @@ '.' "`
-	Accessor   *propAccessor `parser:"( @@"`
-	Prop       *string       `parser:" | @Ident )?"`
+	Identifier string   `parser:" @Ident "`
+	Accessor   accessor `parser:"@@"`
 }
 
 type infixOp struct {
-	Op string `parser:" '+' | '-' | '*' | '/' | '||' | '&&' | '==' | '===' "`
+	Op string `parser:" @ '+' | '-' | '*' | '/' | '||' | '&&' | '==' | '===' "`
 }
 
 type array struct {

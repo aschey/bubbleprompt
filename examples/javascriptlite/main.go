@@ -2,10 +2,7 @@ package main
 
 import (
 	"fmt"
-	"math"
 	"os"
-	"strconv"
-	"strings"
 
 	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
@@ -67,87 +64,6 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
-func (m completerModel) objSuggestions(parent *goja.Object, accessor *propAccessor) (goja.Value, []input.Suggestion[tokenMetadata]) {
-	currentBeforeCursor := m.textInput.CurrentTokenBeforeCursor()
-	varName := accessor.Identifier.Variable
-	var obj *goja.Object
-	curVar := m.vm.Get(varName)
-	if parent == nil {
-		obj = m.vm.Get(varName).ToObject(m.vm)
-	} else {
-		obj = parent.Get(varName).ToObject(m.vm)
-	}
-	if accessor.Identifier.Accessor != nil {
-		curVar, suggestions := m.expressionSuggestions(obj, accessor.Identifier.Accessor)
-		if accessor.Accessor != nil {
-			return m.objSuggestions(curVar.ToObject(m.vm), accessor.Accessor)
-		} else if accessor.Prop != nil {
-			return curVar, m.accessorSuggestionsHelper(curVar, *accessor.Prop, false, nil)
-		}
-		return curVar, suggestions
-	}
-	if obj.ExportType().String() == arrayType {
-		return curVar, []input.Suggestion[tokenMetadata]{}
-	}
-	fields := obj.Keys()
-	suggestions := []input.Suggestion[tokenMetadata]{}
-	skipPrevious := false
-	if accessor.Prop == nil {
-		currentBeforeCursor = ""
-		skipPrevious = true
-	}
-
-	for _, f := range fields {
-		datatype := obj.Get(f).ExportType().String()
-		switch datatype {
-		case objectType:
-			if accessor.Accessor != nil {
-				return m.objSuggestions(obj, accessor.Accessor)
-			}
-		}
-
-		suggestions = append(suggestions, input.Suggestion[tokenMetadata]{
-			Text:     f,
-			Metadata: tokenMetadata{skipPrevious},
-		})
-
-	}
-	return curVar, completers.FilterHasPrefix(currentBeforeCursor, suggestions)
-}
-
-func (m completerModel) accessorSuggestions(variable *identifier, filterText string, skipPrevious bool) (goja.Value, []input.Suggestion[tokenMetadata]) {
-	curVar := m.vm.Get(variable.Variable)
-	if curVar == nil {
-		return curVar, []input.Suggestion[tokenMetadata]{}
-	}
-	switch curVar.ExportType().String() {
-	case arrayType:
-		return curVar, m.accessorSuggestionsHelper(curVar, filterText, skipPrevious, nil)
-
-	case objectType:
-		return curVar, m.accessorSuggestionsHelper(curVar, filterText, skipPrevious, func(key string) string { return `"` + key + `"` })
-	}
-	return curVar, []input.Suggestion[tokenMetadata]{}
-}
-
-func (m completerModel) accessorSuggestionsHelper(curVar goja.Value, filterText string, skipPrevious bool, keyFormatter func(key string) string) []input.Suggestion[tokenMetadata] {
-	if curVar == nil {
-		return []input.Suggestion[tokenMetadata]{}
-	}
-	objectVar := curVar.ToObject(m.vm)
-	suggestions := []input.Suggestion[tokenMetadata]{}
-	for _, key := range objectVar.Keys() {
-		if keyFormatter != nil {
-			key = keyFormatter(key)
-		}
-		suggestions = append(suggestions, input.Suggestion[tokenMetadata]{
-			Text:     key,
-			Metadata: tokenMetadata{skipPrevious},
-		})
-	}
-	return completers.FilterHasPrefix(filterText, suggestions)
-}
-
 func (m completerModel) globalSuggestions() []input.Suggestion[tokenMetadata] {
 	currentBeforeCursor := m.textInput.CurrentTokenBeforeCursor()
 	vars := m.vm.GlobalObject().Keys()
@@ -159,63 +75,46 @@ func (m completerModel) globalSuggestions() []input.Suggestion[tokenMetadata] {
 	return completers.FilterHasPrefix(currentBeforeCursor, suggestions)
 }
 
-func (m completerModel) expressionSuggestions(parent *goja.Object, expression *expression) (goja.Value, []input.Suggestion[tokenMetadata]) {
-	currentBeforeCursor := m.textInput.CurrentTokenBeforeCursor()
-	switch {
-	case expression.PropAccessor != nil:
-		return m.objSuggestions(parent, expression.PropAccessor)
-	case expression.Token != nil:
-		token := expression.Token
-		switch {
-		case token.Variable != nil:
-			variable := token.Variable
-			switch {
-			case currentBeforeCursor == "[":
-				return m.accessorSuggestions(variable, "", true)
-			case variable.Accessor != nil:
-				return m.accessorSuggestions(variable, currentBeforeCursor, false)
-			case currentBeforeCursor == "":
-				return nil, []input.Suggestion[tokenMetadata]{}
-			case parent == nil:
-				return nil, m.globalSuggestions()
-			}
-		case token.Literal != nil:
-			literal := token.Literal
-			literalVal := ""
-			switch {
-			case literal.Str != nil:
-				literalVal = strings.ReplaceAll(*literal.Str, `"`, "")
-			case literal.Boolean != nil:
-				literalVal = strconv.FormatBool(*literal.Boolean)
-			case literal.Number != nil:
-				num := *literal.Number
-				// Check if number has decimal
-				if num-math.Floor(num) > 0 {
-					literalVal = strconv.FormatFloat(num, 'f', 4, 64)
-				} else {
-					literalVal = strconv.FormatInt(int64(*literal.Number), 10)
-				}
-			}
-
-			curVar := parent.Get(literalVal)
-			return curVar, m.accessorSuggestionsHelper(curVar, "", true, nil)
-		}
-
+func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[tokenMetadata] {
+	if value == nil {
+		return m.globalSuggestions()
 	}
-	return nil, []input.Suggestion[tokenMetadata]{}
+	objectVar := value.ToObject(m.vm)
+	suggestions := []input.Suggestion[tokenMetadata]{}
+	currentBeforeCursor := m.textInput.CurrentTokenBeforeCursor()
+	_, prev := m.textInput.PreviousToken()
+	prevToken := prev.Value
+	skipPrevious := false
+	keyWrap := ""
+
+	if objectVar.ExportType().String() == objectType {
+		keyWrap = `"`
+	}
+	if currentBeforeCursor == "." || prevToken == "." {
+		keyWrap = ""
+	}
+
+	if currentBeforeCursor == "." || currentBeforeCursor == "[" {
+		currentBeforeCursor = ""
+		skipPrevious = true
+	}
+
+	for _, key := range objectVar.Keys() {
+		suggestions = append(suggestions, input.Suggestion[tokenMetadata]{
+			Text:     keyWrap + key + keyWrap,
+			Metadata: tokenMetadata{skipPrevious},
+		})
+	}
+
+	return completers.FilterHasPrefix(currentBeforeCursor, suggestions)
 }
 
 func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[tokenMetadata]) []input.Suggestion[tokenMetadata] {
 	parsed := m.textInput.ParsedBeforeCursor()
 	if parsed != nil {
 		//repr.Println(parsed)
-		switch {
-		case parsed.Expression != nil:
-			_, suggestions := m.expressionSuggestions(nil, parsed.Expression)
-			return suggestions
-		case parsed.Assignment != nil:
-			return []input.Suggestion[tokenMetadata]{}
-		}
+		value := m.evaluateStatement(*parsed)
+		return m.valueSuggestions(value)
 	}
 
 	return m.globalSuggestions()
@@ -251,7 +150,7 @@ func main() {
 	vm := goja.New()
 	_, _ = vm.RunString(`obj = {a: 2, secondVal: 3, blah: {arg: 1, b: '2'}}`)
 	_, _ = vm.RunString(`arr = [1, 2, obj]`)
-	vm.GlobalObject().Keys()
+
 	completerModel := completerModel{
 		suggestions: []input.Suggestion[tokenMetadata]{},
 		textInput:   textInput.(*parserinput.Model[tokenMetadata, statement]),
