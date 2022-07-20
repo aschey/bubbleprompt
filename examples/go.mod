@@ -6,13 +6,12 @@ require (
 	github.com/alecthomas/participle/v2 v2.0.0-beta.4
 	github.com/aschey/bubbleprompt v0.0.0
 	github.com/charmbracelet/bubbletea v0.22.0
-	github.com/dop251/goja v0.0.0-20220714114325-87952593a54c
+	github.com/dop251/goja v0.0.0-20220719153422-38a3647bcce0
 
 )
 
 require (
 	github.com/alecthomas/chroma/v2 v2.2.0 // indirect
-	github.com/alecthomas/repr v0.1.0 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/charmbracelet/bubbles v0.13.0 // indirect
 	github.com/charmbracelet/lipgloss v0.5.0 // indirect
