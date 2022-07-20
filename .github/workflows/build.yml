@@ -21,7 +21,7 @@ jobs:
       - name: build examples
         run: ./bin/task examples
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           files: ./test/coverage.out
           verbose: true
