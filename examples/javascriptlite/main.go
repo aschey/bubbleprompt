@@ -76,22 +76,19 @@ func (m completerModel) globalSuggestions() []input.Suggestion[tokenMetadata] {
 }
 
 func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[tokenMetadata] {
-	if value == nil {
-		return m.globalSuggestions()
-	}
 	objectVar := value.ToObject(m.vm)
 	suggestions := []input.Suggestion[tokenMetadata]{}
 	currentBeforeCursor := m.textInput.CurrentTokenBeforeCursor()
 	_, prev := m.textInput.PreviousToken()
-	prevToken := prev.Value
+	prevToken := ""
+	if prev != nil {
+		prevToken = prev.Value
+	}
 	skipPrevious := false
 	keyWrap := ""
 
-	if objectVar.ExportType().String() == objectType {
+	if objectVar.ExportType().String() == objectType && currentBeforeCursor != "." && prevToken != "." && !objectVar.Equals(m.vm.GlobalObject()) {
 		keyWrap = `"`
-	}
-	if currentBeforeCursor == "." || prevToken == "." {
-		keyWrap = ""
 	}
 
 	if currentBeforeCursor == "." || currentBeforeCursor == "[" {

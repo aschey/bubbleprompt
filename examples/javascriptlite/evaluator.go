@@ -9,29 +9,28 @@ import (
 )
 
 func (m completerModel) evaluateStatement(statement statement) goja.Value {
+	parent := m.vm.GlobalObject()
 	switch {
 	case statement.Expression != nil:
-		return m.evaluateExpression(true, m.vm.GlobalObject(), *statement.Expression)
-	case statement.Assignment != nil:
-		return nil
+		if statement.Expression.Token != nil {
+			return parent
+		}
+		return m.evaluateExpression(parent, *statement.Expression)
 	}
-	return nil
+	return parent
 }
 
-func (m completerModel) evaluateExpression(isRoot bool, parent *goja.Object, expression expression) goja.Value {
+func (m completerModel) evaluateExpression(parent *goja.Object, expression expression) goja.Value {
 	var value goja.Value = nil
 	switch {
 	case expression.PropAccessor != nil:
 		value = m.evalutePropAccessor(parent, *expression.PropAccessor)
 	case expression.Token != nil:
-		if isRoot {
-			return nil
-		}
 		value = m.evaluateToken(parent, *expression.Token)
 	}
 
 	if expression.InfixOp != nil && expression.Expression != nil {
-		rightSide := m.evaluateExpression(false, parent, *expression.Expression)
+		rightSide := m.evaluateExpression(parent, *expression.Expression)
 		val, err := m.vm.RunString(value.String() + expression.InfixOp.Op + rightSide.String())
 
 		if err != nil {
@@ -54,7 +53,6 @@ func (m completerModel) evaluateToken(parent *goja.Object, token token) goja.Val
 }
 
 func (m completerModel) evaluateLiteral(literal literal) goja.Value {
-
 	literalVal := ""
 	switch {
 	case literal.Str != nil:
@@ -104,6 +102,6 @@ func (m completerModel) evaluteAccessor(parent *goja.Object, accessor accessor) 
 }
 
 func (m completerModel) evaluateIndexer(parent *goja.Object, indexer indexer) goja.Value {
-	val := m.evaluateExpression(false, parent, *indexer.Expression)
+	val := m.evaluateExpression(parent, *indexer.Expression)
 	return parent.Get(val.String())
 }
