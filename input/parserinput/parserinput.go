@@ -123,7 +123,9 @@ func (m *Model[T, G]) SetPrompt(prompt string) {
 }
 
 func (m *Model[T, G]) ShouldSelectSuggestion(suggestion input.Suggestion[T]) bool {
-	return suggestion.Text == m.CompletionText(m.Value())
+	_, token := m.CurrentToken()
+	tokenStr := token.Value
+	return m.Cursor() == token.Pos.Offset+len(tokenStr) && tokenStr == suggestion.Text
 }
 
 func (m *Model[T, G]) currentToken(text string) (int, *lexer.Token) {
@@ -169,10 +171,15 @@ func (m *Model[T, G]) OnSuggestionChanged(suggestion input.Suggestion[T]) {
 	start := token.Pos.Offset
 
 	if !token.EOF() && suggestion.Metadata.SkipPrevious() {
-		start += len(token.String())
+		start += len(token.Value)
 	}
-
-	m.SetValue(m.Value()[:start] + suggestion.Text)
+	rest := start + len(token.Value)
+	value := m.Value()
+	newVal := value[:start] + suggestion.Text
+	if rest < len(value) {
+		newVal += value[start+len(token.Value):]
+	}
+	m.SetValue(newVal)
 	m.SetCursor(start + len(suggestion.Text) - suggestion.CursorOffset)
 
 }
@@ -180,11 +187,17 @@ func (m *Model[T, G]) OnSuggestionChanged(suggestion input.Suggestion[T]) {
 func (m *Model[T, G]) OnSuggestionUnselected() {}
 
 func (m *Model[T, G]) ShouldClearSuggestions(prevText string, msg tea.KeyMsg) bool {
-	return false
+	return true
 }
 
 func (m *Model[T, G]) ShouldUnselectSuggestion(prevText string, msg tea.KeyMsg) bool {
-	return false
+	pos := m.Cursor()
+	switch msg.Type {
+	case tea.KeyBackspace, tea.KeyDelete:
+		return pos < len(prevText)
+	default:
+		return true
+	}
 }
 
 func (m *Model[T, G]) CurrentTokenBeforeCursor() string {
