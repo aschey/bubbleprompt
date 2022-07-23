@@ -128,17 +128,23 @@ func (m *Model[T, G]) ShouldSelectSuggestion(suggestion input.Suggestion[T]) boo
 	return m.Cursor() == token.Pos.Offset+len(tokenStr) && tokenStr == suggestion.Text
 }
 
-func (m *Model[T, G]) currentToken(text string) (int, *lexer.Token) {
+func (m *Model[T, G]) currentToken(text string) (int, lexer.Token) {
+	if len(m.tokens) == 0 {
+		return -1, lexer.EOFToken(lexer.Position{})
+	}
+	if len(m.Value()) == 0 {
+		return 0, m.tokens[0]
+	}
 	cursor := m.Cursor()
-	for i, token := range m.tokens {
-		if cursor >= token.Pos.Offset && cursor <= token.Pos.Offset+len(token.String()) {
-			return i, &token
+	for i, token := range m.tokens[:len(m.tokens)-1] {
+		if i == len(m.tokens)-2 || cursor >= token.Pos.Offset && cursor < token.Pos.Offset+len(token.Value) {
+			return i, token
 		}
 	}
-	return -1, nil
+	return -1, lexer.EOFToken(lexer.Position{})
 }
 
-func (m *Model[T, G]) CurrentToken() (int, *lexer.Token) {
+func (m *Model[T, G]) CurrentToken() (int, lexer.Token) {
 	return m.currentToken(m.Value())
 }
 
@@ -165,9 +171,7 @@ func (m *Model[T, G]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T
 
 func (m *Model[T, G]) OnSuggestionChanged(suggestion input.Suggestion[T]) {
 	_, token := m.CurrentToken()
-	if token == nil {
-		return
-	}
+
 	start := token.Pos.Offset
 
 	if !token.EOF() && suggestion.Metadata.SkipPrevious() {

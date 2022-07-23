@@ -166,8 +166,10 @@ func (m *Model[I]) updateChosenListEntry(msg tea.KeyMsg, cmds []tea.Cmd) []tea.C
 		m.lastTypedCursorPosition = m.textInput.Cursor()
 	}
 	// Set the text back to the last thing the user typed in case the current suggestion changed the text length
-	m.textInput.SetCursor(m.lastTypedCursorPosition)
 	m.textInput.SetValue(m.typedText)
+	// Make sure to set the cursor AFTER setting the value or it may get overwritten
+	m.textInput.SetCursor(m.lastTypedCursorPosition)
+
 	if msg.Type == tea.KeyUp {
 		m.completer.previousSuggestion()
 	} else {

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
@@ -39,7 +40,7 @@ type completerModel struct {
 
 var lex = lexer.MustSimple([]lexer.SimpleRule{
 	{Name: "whitespace", Pattern: `\s+`},
-	{Name: "String", Pattern: `"([^"]*")|('[^']*')`},
+	{Name: "String", Pattern: `"([^"]*"?)|('[^']*'?)`},
 	{Name: "And", Pattern: `&&`},
 	{Name: "Or", Pattern: `\|\|`},
 	{Name: "Eq", Pattern: `===?`},
@@ -78,6 +79,11 @@ func (m completerModel) globalSuggestions() []input.Suggestion[tokenMetadata] {
 func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[tokenMetadata] {
 	objectVar := value.ToObject(m.vm)
 	suggestions := []input.Suggestion[tokenMetadata]{}
+	tokenIndex, currentToken := m.textInput.CurrentToken()
+	tokenLen := len(m.textInput.Tokens())
+	if currentToken.Value == "]" || (tokenIndex < tokenLen-2 && (currentToken.Value == "." || currentToken.Value == "[")) {
+		return []input.Suggestion[tokenMetadata]{}
+	}
 	currentBeforeCursor := m.textInput.CurrentTokenBeforeCursor()
 	_, prev := m.textInput.PreviousToken()
 	prevToken := ""
@@ -89,6 +95,7 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[to
 
 	if objectVar.ExportType().String() == objectType && currentBeforeCursor != "." && prevToken != "." && !objectVar.Equals(m.vm.GlobalObject()) {
 		keyWrap = `"`
+		currentBeforeCursor = strings.Trim(currentBeforeCursor, `"`)
 	}
 
 	if currentBeforeCursor == "." || currentBeforeCursor == "[" {
@@ -98,12 +105,13 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[to
 
 	for _, key := range objectVar.Keys() {
 		suggestions = append(suggestions, input.Suggestion[tokenMetadata]{
-			Text:     keyWrap + key + keyWrap,
-			Metadata: tokenMetadata{skipPrevious},
+			Text:           keyWrap + key + keyWrap,
+			CompletionText: key,
+			Metadata:       tokenMetadata{skipPrevious},
 		})
 	}
 
-	return completers.FilterHasPrefix(currentBeforeCursor, suggestions)
+	return completers.FilterCompletionTextHasPrefix(currentBeforeCursor, suggestions)
 }
 
 func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[tokenMetadata]) []input.Suggestion[tokenMetadata] {
