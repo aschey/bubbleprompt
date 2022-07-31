@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/alecthomas/participle/v2"
-	"github.com/alecthomas/participle/v2/lexer"
 	prompt "github.com/aschey/bubbleprompt"
 	completers "github.com/aschey/bubbleprompt/completer"
 	executors "github.com/aschey/bubbleprompt/executor"
@@ -20,36 +19,20 @@ const arrayType = "[]interface {}"
 const objectType = "map[string]interface {}"
 
 type model struct {
-	prompt prompt.Model[tokenMetadata]
-	vm     *goja.Runtime
-}
-
-type tokenMetadata struct {
-	skipPrevious bool
-}
-
-func (t tokenMetadata) SkipPrevious() bool {
-	return t.skipPrevious
+	prompt prompt.Model[any]
+	vm     *vm
 }
 
 type completerModel struct {
-	textInput   *parserinput.Model[tokenMetadata, statement]
-	suggestions []input.Suggestion[tokenMetadata]
-	vm          *goja.Runtime
+	textInput   *parserinput.Model[statement]
+	suggestions []input.Suggestion[any]
+	vm          *vm
 }
 
-var lex = lexer.MustSimple([]lexer.SimpleRule{
-	{Name: "whitespace", Pattern: `\s+`},
-	{Name: "String", Pattern: `"([^"]*"?)|('[^']*'?)`},
-	{Name: "And", Pattern: `&&`},
-	{Name: "Or", Pattern: `\|\|`},
-	{Name: "Eq", Pattern: `===?`},
-	{Name: "Number", Pattern: `[0-9]+(\.[0-9]*)*`},
-	{Name: "Punct", Pattern: `[-\[!@#$%^&*()+_=\{\}\|:;"'<,>.?\/\]|]`},
-	{Name: "Ident", Pattern: `[_a-zA-Z]+[_a-zA-Z0-9]*`},
-})
-
-var parser = participle.MustBuild[statement](participle.Lexer(lex), participle.UseLookahead(20))
+var parser = participle.MustBuild[statement](participle.Lexer(lex),
+	participle.UseLookahead(20),
+	participle.Elide("Whitespace"),
+)
 
 func (m model) Init() tea.Cmd {
 	return m.prompt.Init()
@@ -65,32 +48,32 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
-func (m completerModel) globalSuggestions() []input.Suggestion[tokenMetadata] {
+func (m completerModel) globalSuggestions() []input.Suggestion[any] {
 	currentBeforeCursor := m.textInput.CurrentTokenBeforeCursor()
 	vars := m.vm.GlobalObject().Keys()
-	suggestions := []input.Suggestion[tokenMetadata]{}
+	suggestions := []input.Suggestion[any]{}
 	for _, v := range vars {
-		suggestions = append(suggestions, input.Suggestion[tokenMetadata]{Text: v})
+		suggestions = append(suggestions, input.Suggestion[any]{Text: v})
 	}
 
 	return completers.FilterHasPrefix(currentBeforeCursor, suggestions)
 }
 
-func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[tokenMetadata] {
-	objectVar := value.ToObject(m.vm)
-	suggestions := []input.Suggestion[tokenMetadata]{}
-	tokenIndex, currentToken := m.textInput.CurrentToken()
-	tokenLen := len(m.textInput.Tokens())
-	if currentToken.Value == "]" || (tokenIndex < tokenLen-2 && (currentToken.Value == "." || currentToken.Value == "[")) {
-		return []input.Suggestion[tokenMetadata]{}
+func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[any] {
+	suggestions := []input.Suggestion[any]{}
+	strVal := value.String()
+	if strVal == "null" || strVal == "undefined" {
+		return suggestions
 	}
+	objectVar := m.vm.ToObject(value)
+
 	currentBeforeCursor := m.textInput.CurrentTokenBeforeCursor()
 	_, prev := m.textInput.PreviousToken()
 	prevToken := ""
 	if prev != nil {
 		prevToken = prev.Value
 	}
-	skipPrevious := false
+
 	keyWrap := ""
 
 	if objectVar.ExportType().String() == objectType && currentBeforeCursor != "." && prevToken != "." && !objectVar.Equals(m.vm.GlobalObject()) {
@@ -100,24 +83,21 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[to
 
 	if currentBeforeCursor == "." || currentBeforeCursor == "[" {
 		currentBeforeCursor = ""
-		skipPrevious = true
 	}
 
 	for _, key := range objectVar.Keys() {
-		suggestions = append(suggestions, input.Suggestion[tokenMetadata]{
+		suggestions = append(suggestions, input.Suggestion[any]{
 			Text:           keyWrap + key + keyWrap,
 			CompletionText: key,
-			Metadata:       tokenMetadata{skipPrevious},
 		})
 	}
 
 	return completers.FilterCompletionTextHasPrefix(currentBeforeCursor, suggestions)
 }
 
-func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[tokenMetadata]) []input.Suggestion[tokenMetadata] {
+func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[any]) []input.Suggestion[any] {
 	parsed := m.textInput.ParsedBeforeCursor()
 	if parsed != nil {
-		//repr.Println(parsed)
 		value := m.evaluateStatement(*parsed)
 		return m.valueSuggestions(value)
 	}
@@ -131,6 +111,7 @@ func (m completerModel) executor(input string) (tea.Model, error) {
 		if err != nil {
 			return "", err
 		}
+
 		res, err := m.vm.RunString(input)
 		if res == nil || err != nil {
 			return "", err
@@ -140,7 +121,7 @@ func (m completerModel) executor(input string) (tea.Model, error) {
 		if exportType != nil {
 			switch exportType.String() {
 			case arrayType, objectType:
-				json, err := res.ToObject(m.vm).MarshalJSON()
+				json, err := m.vm.ToObject(res).MarshalJSON()
 				return string(json), err
 			}
 		}
@@ -151,14 +132,14 @@ func (m completerModel) executor(input string) (tea.Model, error) {
 }
 
 func main() {
-	var textInput input.Input[tokenMetadata] = parserinput.New[tokenMetadata](parser)
-	vm := goja.New()
+	var textInput input.Input[any] = parserinput.New(parser)
+	vm := newVm()
 	_, _ = vm.RunString(`obj = {a: 2, secondVal: 3, blah: {arg: 1, b: '2'}}`)
 	_, _ = vm.RunString(`arr = [1, 2, obj]`)
 
 	completerModel := completerModel{
-		suggestions: []input.Suggestion[tokenMetadata]{},
-		textInput:   textInput.(*parserinput.Model[tokenMetadata, statement]),
+		suggestions: []input.Suggestion[any]{},
+		textInput:   textInput.(*parserinput.Model[statement]),
 		vm:          vm,
 	}
 
@@ -166,7 +147,7 @@ func main() {
 		completerModel.completer,
 		completerModel.executor,
 		textInput,
-		prompt.WithViewportRenderer[tokenMetadata](),
+		prompt.WithViewportRenderer[any](),
 	), vm: vm}
 
 	if err := tea.NewProgram(m).Start(); err != nil {

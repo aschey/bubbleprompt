@@ -55,7 +55,7 @@ func (m completerModel) evaluateToken(parent *goja.Object, token token) goja.Val
 	case token.Variable != nil:
 		return parent.Get(*token.Variable)
 	}
-	return nil
+	return goja.Null()
 }
 
 func (m completerModel) evaluateLiteral(literal literal) goja.Value {
@@ -80,10 +80,10 @@ func (m completerModel) evaluateLiteral(literal literal) goja.Value {
 
 func (m completerModel) evalutePropAccessor(parent *goja.Object, propAccessor propAccessor) goja.Value {
 	curVal := parent.Get(propAccessor.Identifier)
-	return m.evaluteAccessor(curVal.ToObject(m.vm), propAccessor.Accessor)
+	return m.evaluateAccessor(m.vm.ToObject(curVal), propAccessor.Accessor)
 }
 
-func (m completerModel) evaluteAccessor(parent *goja.Object, accessor accessor) goja.Value {
+func (m completerModel) evaluateAccessor(parent *goja.Object, accessor accessor) goja.Value {
 	var value goja.Value
 	switch {
 	case accessor.Indexer != nil:
@@ -93,6 +93,10 @@ func (m completerModel) evaluteAccessor(parent *goja.Object, accessor accessor) 
 		value = m.evaluateIndexer(parent, *accessor.Indexer)
 	case accessor.Delim != nil:
 		if accessor.Prop == nil {
+			// Invalid case: two delimiters with no value, don't return suggestions
+			if accessor.Accessor != nil {
+				return goja.Null()
+			}
 			return parent
 		}
 		value = parent.Get(*accessor.Prop)
@@ -101,7 +105,7 @@ func (m completerModel) evaluteAccessor(parent *goja.Object, accessor accessor) 
 		}
 	}
 	if accessor.Accessor != nil {
-		return m.evaluteAccessor(value.ToObject(m.vm), *accessor.Accessor)
+		return m.evaluateAccessor(m.vm.ToObject(value), *accessor.Accessor)
 	}
 
 	return value

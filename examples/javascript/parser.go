@@ -1,5 +1,18 @@
 package main
 
+import "github.com/alecthomas/participle/v2/lexer"
+
+var lex = lexer.MustSimple([]lexer.SimpleRule{
+	{Name: "Whitespace", Pattern: `\s+`},
+	{Name: "String", Pattern: `"([^"]*"?)|('[^']*'?)`},
+	{Name: "And", Pattern: `&&`},
+	{Name: "Or", Pattern: `\|\|`},
+	{Name: "Eq", Pattern: `===?`},
+	{Name: "Number", Pattern: `[0-9]+(\.[0-9]*)*`},
+	{Name: "Punct", Pattern: `[-\[!@#$%^&*()+_=\{\}\|:;"'<,>.?\/\]|]`},
+	{Name: "Ident", Pattern: `[_a-zA-Z]+[_a-zA-Z0-9]*`},
+})
+
 type statement struct {
 	Assignment *assignment `parser:"(@@"`
 	Expression *expression `parser:"| @@)?"`

@@ -180,7 +180,6 @@ func (m *Model[I]) updateChosenListEntry(msg tea.KeyMsg, cmds []tea.Cmd) []tea.C
 		// Set the input to the suggestion's selected text
 		return nil
 	} else {
-
 		// Need to update completions since we changed the text and the cursor position
 		return append(cmds, m.completer.updateCompletions(*m))
 	}

@@ -8,7 +8,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func (m Model[T, G]) inputFormatter(theme *chroma.Style, iter chroma.Iterator, viewMode input.ViewMode) string {
+func (m Model[G]) inputFormatter(theme *chroma.Style, iter chroma.Iterator, viewMode input.ViewMode) string {
 	theme = clearBackground(theme)
 	showCursor := !m.textinput.Blink()
 	if viewMode == input.Static {

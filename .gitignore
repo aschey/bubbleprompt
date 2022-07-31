@@ -19,3 +19,5 @@ coverage.html
 .vscode
 
 examples/**/bin/**
+
+__debug_bin

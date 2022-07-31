@@ -17,20 +17,26 @@ func (m Model[I]) renderExecuting() string {
 func (m Model[I]) renderCompleting() string {
 	// If an item is selected, parse out the text portion and apply formatting
 	textView := m.textInput.View(input.Interactive)
-	lines := textView + "\n"
+	if !strings.HasSuffix(textView, "\n") {
+		textView += "\n"
+	}
 
 	// Calculate left offset for suggestions
 	// Choosing a prompt via arrow keys or tab shouldn't change the prompt position
 	// so we use the last typed cursor position instead of the current position
 	paddingSize := len(m.textInput.Prompt()) + m.lastTypedCursorPosition
 	prompts := m.completer.Render(paddingSize, m.Formatters, m.scrollbar, m.scrollbarThumb)
-	lines += strings.Join(prompts, "\n")
+	textView += strings.Join(prompts, "\n")
 
-	return lines
+	return textView
 }
 
 func (m Model[I]) render() string {
 	suggestionLength := len(m.completer.suggestions)
+	if suggestionLength < 1 {
+		// Always add at least one empty line
+		suggestionLength = 1
+	}
 	lines := ""
 	switch m.modelState {
 	case executing:
@@ -44,10 +50,9 @@ func (m Model[I]) render() string {
 	}
 
 	// Reserve height for prompts that were filtered out
-	extraHeight := m.completer.maxSuggestions - suggestionLength - 1
+	extraHeight := m.completer.maxSuggestions - suggestionLength
 	if extraHeight > 0 {
-		extraLines := strings.Repeat("\n", extraHeight)
-		lines += extraLines
+		lines += strings.Repeat("\n", extraHeight)
 	}
 
 	ret := lipgloss.JoinVertical(lipgloss.Left, lines)
