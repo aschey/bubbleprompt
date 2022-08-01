@@ -61,6 +61,9 @@ func (m completerModel) globalSuggestions() []input.Suggestion[any] {
 
 func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[any] {
 	suggestions := []input.Suggestion[any]{}
+	if value == nil {
+		return suggestions
+	}
 	strVal := value.String()
 	if strVal == "null" || strVal == "undefined" {
 		return suggestions
@@ -81,7 +84,7 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[an
 		currentBeforeCursor = strings.Trim(currentBeforeCursor, `"`)
 	}
 
-	if currentBeforeCursor == "." || currentBeforeCursor == "[" {
+	if currentBeforeCursor == "." || currentBeforeCursor == "[" || currentBeforeCursor == ":" {
 		currentBeforeCursor = ""
 	}
 

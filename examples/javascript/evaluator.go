@@ -16,6 +16,8 @@ func (m completerModel) evaluateStatement(statement statement) goja.Value {
 			return parent
 		}
 		return m.evaluateExpression(parent, *statement.Expression)
+	case statement.Assignment != nil:
+		return m.evaluateAssignment(parent, *statement.Assignment)
 	}
 	return parent
 }
@@ -27,6 +29,13 @@ func getString(value goja.Value) string {
 	return value.String()
 }
 
+func (m completerModel) evaluateAssignment(parent *goja.Object, assignment assignment) goja.Value {
+	if assignment.Expression != nil {
+		return m.evaluateExpression(parent, *assignment.Expression)
+	}
+	return goja.Null()
+}
+
 func (m completerModel) evaluateExpression(parent *goja.Object, expression expression) goja.Value {
 	var value goja.Value = nil
 	switch {
@@ -34,6 +43,8 @@ func (m completerModel) evaluateExpression(parent *goja.Object, expression expre
 		value = m.evalutePropAccessor(parent, *expression.PropAccessor)
 	case expression.Token != nil:
 		value = m.evaluateToken(parent, *expression.Token)
+	case expression.Object != nil:
+		value = m.evaluteObject(parent, *expression.Object)
 	}
 
 	if expression.InfixOp != nil && expression.Expression != nil {
@@ -46,6 +57,25 @@ func (m completerModel) evaluateExpression(parent *goja.Object, expression expre
 		return val
 	}
 	return value
+}
+
+func (m completerModel) evaluteObject(parent *goja.Object, object object) goja.Value {
+	if object.Properties != nil && len(*object.Properties) > 0 {
+		props := *object.Properties
+		last := props[len(props)-1]
+		return m.evaluteKeyValuePair(parent, last)
+	}
+	return goja.Null()
+}
+
+func (m completerModel) evaluteKeyValuePair(parent *goja.Object, keyValuePair keyValuePair) goja.Value {
+	if keyValuePair.Delim != nil {
+		if keyValuePair.Value == nil {
+			return m.vm.GlobalObject()
+		}
+		return m.evaluateExpression(parent, *keyValuePair.Value)
+	}
+	return goja.Null()
 }
 
 func (m completerModel) evaluateToken(parent *goja.Object, token token) goja.Value {

@@ -19,8 +19,8 @@ type statement struct {
 }
 
 type assignment struct {
-	Identifier string     `parser:" @Ident '=' "`
-	Expression expression `parser:"@@?"`
+	Identifier string      `parser:" @Ident '=' "`
+	Expression *expression `parser:"@@?"`
 }
 
 type indexer struct {
@@ -49,12 +49,13 @@ type token struct {
 }
 
 type keyValuePair struct {
-	Key   string     `parser:" @String "`
-	Value expression `parser:" ':' @@ "`
+	Key   string      `parser:" @String | @Ident "`
+	Delim *string     `parser:" @':'? "`
+	Value *expression `parser:"  @@? "`
 }
 
 type object struct {
-	Properties *[]keyValuePair `parser:" '{' (@@ (',' @@)*)* '}' "`
+	Properties *[]keyValuePair `parser:" '{' (@@ (',' @@)*)* '}'? "`
 }
 
 type accessor struct {
