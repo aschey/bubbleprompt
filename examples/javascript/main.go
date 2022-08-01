@@ -78,8 +78,13 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[an
 	}
 
 	keyWrap := ""
+	datatype := objectVar.ExportType().String()
+	// Can't use dot notation with arrays
+	if datatype == arrayType && currentBeforeCursor == "." {
+		return suggestions
+	}
 
-	if objectVar.ExportType().String() == objectType && currentBeforeCursor != "." && prevToken != "." && !objectVar.Equals(m.vm.GlobalObject()) {
+	if datatype == objectType && currentBeforeCursor != "." && prevToken != "." && !objectVar.Equals(m.vm.GlobalObject()) {
 		keyWrap = `"`
 		currentBeforeCursor = strings.Trim(currentBeforeCursor, `"`)
 	}
