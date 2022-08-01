@@ -70,9 +70,10 @@ func (m completerModel) evaluteObject(parent *goja.Object, object object) goja.V
 
 func (m completerModel) evaluteKeyValuePair(parent *goja.Object, keyValuePair keyValuePair) goja.Value {
 	if keyValuePair.Delim != nil {
-		if keyValuePair.Value == nil {
-			return m.vm.GlobalObject()
+		if keyValuePair.Value == nil || keyValuePair.Value.Token != nil {
+			return parent
 		}
+
 		return m.evaluateExpression(parent, *keyValuePair.Value)
 	}
 	return goja.Null()

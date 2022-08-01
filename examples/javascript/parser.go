@@ -49,7 +49,7 @@ type token struct {
 }
 
 type keyValuePair struct {
-	Key   string      `parser:" @String | @Ident "`
+	Key   string      `parser:" ( @String | @Ident ) "`
 	Delim *string     `parser:" @':'? "`
 	Value *expression `parser:"  @@? "`
 }
