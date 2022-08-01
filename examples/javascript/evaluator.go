@@ -40,11 +40,13 @@ func (m completerModel) evaluateExpression(parent *goja.Object, expression expre
 	var value goja.Value = nil
 	switch {
 	case expression.PropAccessor != nil:
-		value = m.evalutePropAccessor(parent, *expression.PropAccessor)
+		value = m.evaluatePropAccessor(parent, *expression.PropAccessor)
 	case expression.Token != nil:
 		value = m.evaluateToken(parent, *expression.Token)
 	case expression.Object != nil:
-		value = m.evaluteObject(parent, *expression.Object)
+		value = m.evaluateObject(parent, *expression.Object)
+	case expression.Array != nil:
+		value = m.evaluateArray(parent, *expression.Array)
 	}
 
 	if expression.InfixOp != nil && expression.Expression != nil {
@@ -59,16 +61,32 @@ func (m completerModel) evaluateExpression(parent *goja.Object, expression expre
 	return value
 }
 
-func (m completerModel) evaluteObject(parent *goja.Object, object object) goja.Value {
-	if object.Properties != nil && len(*object.Properties) > 0 {
-		props := *object.Properties
+func (m completerModel) evaluateArray(parent *goja.Object, array array) goja.Value {
+	values := array.Values
+	if len(values) > 0 {
+		last := values[len(values)-1]
+		if last.Token != nil {
+			return parent
+		}
+		// Easier to check for trailing commas here than in the parser
+		if m.textInput.CurrentTokenBeforeCursor() == "," {
+			return parent
+		}
+		return m.evaluateExpression(parent, last)
+	}
+	return parent
+}
+
+func (m completerModel) evaluateObject(parent *goja.Object, object object) goja.Value {
+	props := object.Properties
+	if len(props) > 0 {
 		last := props[len(props)-1]
-		return m.evaluteKeyValuePair(parent, last)
+		return m.evaluateKeyValuePair(parent, last)
 	}
 	return goja.Null()
 }
 
-func (m completerModel) evaluteKeyValuePair(parent *goja.Object, keyValuePair keyValuePair) goja.Value {
+func (m completerModel) evaluateKeyValuePair(parent *goja.Object, keyValuePair keyValuePair) goja.Value {
 	if keyValuePair.Delim != nil {
 		if keyValuePair.Value == nil || keyValuePair.Value.Token != nil {
 			return parent
@@ -109,7 +127,7 @@ func (m completerModel) evaluateLiteral(literal literal) goja.Value {
 	return val
 }
 
-func (m completerModel) evalutePropAccessor(parent *goja.Object, propAccessor propAccessor) goja.Value {
+func (m completerModel) evaluatePropAccessor(parent *goja.Object, propAccessor propAccessor) goja.Value {
 	curVal := parent.Get(propAccessor.Identifier)
 	return m.evaluateAccessor(m.vm.ToObject(curVal), propAccessor.Accessor)
 }

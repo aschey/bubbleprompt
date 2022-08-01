@@ -54,10 +54,6 @@ type keyValuePair struct {
 	Value *expression `parser:"  @@? "`
 }
 
-type object struct {
-	Properties *[]keyValuePair `parser:" '{' (@@ (',' @@)*)* '}'? "`
-}
-
 type accessor struct {
 	Indexer  *indexer  `parser:"(@@"`
 	Delim    *string   `parser:"| (@ '.' "`
@@ -74,8 +70,12 @@ type infixOp struct {
 	Op string `parser:" @( '+' | '-' | '*' | '/' | '||' | '&&' | '==' | '===' ) "`
 }
 
+type object struct {
+	Properties []keyValuePair `parser:" '{' (@@ (',' @@)*)* '}'? "`
+}
+
 type array struct {
-	Values []expression `parser:" '[' (@@ ( ',' @@ )*)* ']' "`
+	Values []expression `parser:" '[' (@@ ( ',' @@ )*)* ']'? "`
 }
 
 type literal struct {

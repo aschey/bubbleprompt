@@ -6,7 +6,7 @@ require (
 	github.com/alecthomas/participle/v2 v2.0.0-beta.4
 	github.com/aschey/bubbleprompt v0.0.0
 	github.com/charmbracelet/bubbletea v0.22.0
-	github.com/dop251/goja v0.0.0-20220719153422-38a3647bcce0
+	github.com/dop251/goja v0.0.0-20220801092856-7adb49968576
 
 )
 
@@ -25,9 +25,9 @@ require (
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.12.0 // indirect
-	github.com/rivo/uniseg v0.2.0 // indirect
-	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
-	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467 // indirect
+	github.com/rivo/uniseg v0.3.1 // indirect
+	golang.org/x/sys v0.0.0-20220731174439-a90be440212d // indirect
+	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
 	golang.org/x/text v0.3.7 // indirect
 )
 

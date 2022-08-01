@@ -84,7 +84,7 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[an
 		currentBeforeCursor = strings.Trim(currentBeforeCursor, `"`)
 	}
 
-	if currentBeforeCursor == "." || currentBeforeCursor == "[" || currentBeforeCursor == ":" {
+	if currentBeforeCursor == "." || currentBeforeCursor == "[" || currentBeforeCursor == ":" || currentBeforeCursor == "," {
 		currentBeforeCursor = ""
 	}
 
