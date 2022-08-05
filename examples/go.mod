@@ -7,6 +7,7 @@ require (
 	github.com/aschey/bubbleprompt v0.0.0
 	github.com/charmbracelet/bubbletea v0.22.0
 	github.com/dop251/goja v0.0.0-20220801092856-7adb49968576
+	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
 
 )
 

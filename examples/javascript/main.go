@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/alecthomas/participle/v2"
 	prompt "github.com/aschey/bubbleprompt"
 	completers "github.com/aschey/bubbleprompt/completer"
 	executors "github.com/aschey/bubbleprompt/executor"
@@ -13,10 +12,13 @@ import (
 	"github.com/aschey/bubbleprompt/input/parserinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/dop251/goja"
+	"golang.org/x/exp/slices"
 )
 
 const arrayType = "[]interface {}"
 const objectType = "map[string]interface {}"
+
+var glue = []string{".", "[", ":", ",", "+", "-", "/", "*", "&&", "||", "="}
 
 type model struct {
 	prompt prompt.Model[any]
@@ -28,11 +30,6 @@ type completerModel struct {
 	suggestions []input.Suggestion[any]
 	vm          *vm
 }
-
-var parser = participle.MustBuild[statement](participle.Lexer(lex),
-	participle.UseLookahead(20),
-	participle.Elide("Whitespace"),
-)
 
 func (m model) Init() tea.Cmd {
 	return m.prompt.Init()
@@ -89,7 +86,7 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[an
 		currentBeforeCursor = strings.Trim(currentBeforeCursor, `"`)
 	}
 
-	if currentBeforeCursor == "." || currentBeforeCursor == "[" || currentBeforeCursor == ":" || currentBeforeCursor == "," {
+	if slices.Contains(glue, currentBeforeCursor) {
 		currentBeforeCursor = ""
 	}
 

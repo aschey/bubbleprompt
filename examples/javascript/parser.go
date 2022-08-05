@@ -1,17 +1,26 @@
 package main
 
-import "github.com/alecthomas/participle/v2/lexer"
+import (
+	"github.com/alecthomas/participle/v2"
+	"github.com/alecthomas/participle/v2/lexer"
+)
 
 var lex = lexer.MustSimple([]lexer.SimpleRule{
 	{Name: "Whitespace", Pattern: `\s+`},
+	{Name: "Grouping", Pattern: `[\(\)]`},
 	{Name: "String", Pattern: `"([^"]*"?)|('[^']*'?)`},
 	{Name: "And", Pattern: `&&`},
 	{Name: "Or", Pattern: `\|\|`},
 	{Name: "Eq", Pattern: `===?`},
-	{Name: "Number", Pattern: `[0-9]+(\.[0-9]*)*`},
-	{Name: "Punct", Pattern: `[-\[!@#$%^&*()+_=\{\}\|:;"'<,>.?\/\]|]`},
+	{Name: "Number", Pattern: `\-?[0-9]+(\.[0-9]*)*`},
+	{Name: "Punct", Pattern: `[-\[!@#$%^&*+_=\{\}\|:;"'<,>.?\/\]|]`},
 	{Name: "Ident", Pattern: `[_a-zA-Z]+[_a-zA-Z0-9]*`},
 })
+
+var parser = participle.MustBuild[statement](participle.Lexer(lex),
+	participle.UseLookahead(20),
+	participle.Elide("Whitespace", "Grouping"),
+)
 
 type statement struct {
 	Assignment *assignment `parser:"(@@"`
@@ -29,14 +38,9 @@ type indexer struct {
 	CBracket   *string     `parser:"@ ']')?"`
 }
 
-type group struct {
-	Expression *expression `parser:"'(' @@ ')'"`
-}
-
 type expression struct {
 	Array        *array        `parser:"( @@"`
 	Object       *object       `parser:"| @@"`
-	Group        *group        `parser:"| @@"`
 	PropAccessor *propAccessor `parser:"| @@"`
 	Token        *token        `parser:"| @@)"`
 	InfixOp      *infixOp      `parser:"(@@"`

@@ -8,20 +8,6 @@ import (
 	"github.com/dop251/goja"
 )
 
-func (m completerModel) evaluateStatement(statement statement) goja.Value {
-	parent := m.vm.GlobalObject()
-	switch {
-	case statement.Expression != nil:
-		if statement.Expression.Token != nil {
-			return parent
-		}
-		return m.evaluateExpression(parent, *statement.Expression)
-	case statement.Assignment != nil:
-		return m.evaluateAssignment(parent, *statement.Assignment)
-	}
-	return parent
-}
-
 func getString(value goja.Value) string {
 	if value.ExportType().String() == "string" {
 		return `"` + value.String() + `"`
@@ -29,11 +15,34 @@ func getString(value goja.Value) string {
 	return value.String()
 }
 
+func (m completerModel) evaluateStatement(statement statement) goja.Value {
+	parent := m.vm.GlobalObject()
+	switch {
+	case statement.Expression != nil:
+		return m.evaluateExpressionInitial(parent, *statement.Expression)
+	case statement.Assignment != nil:
+		return m.evaluateAssignment(parent, *statement.Assignment)
+	}
+	return parent
+}
+
+func (m completerModel) evaluateExpressionInitial(parent *goja.Object, expression expression) goja.Value {
+	if expression.Token != nil {
+		if expression.Expression == nil {
+			// If this is a token, show completions against global object
+			return parent
+		}
+		// Get completions for right hand side
+		return m.evaluateExpressionInitial(parent, *expression.Expression)
+	}
+	return m.evaluateExpression(parent, expression)
+}
+
 func (m completerModel) evaluateAssignment(parent *goja.Object, assignment assignment) goja.Value {
 	if assignment.Expression != nil {
-		return m.evaluateExpression(parent, *assignment.Expression)
+		return m.evaluateExpressionInitial(parent, *assignment.Expression)
 	}
-	return goja.Null()
+	return parent
 }
 
 func (m completerModel) evaluateExpression(parent *goja.Object, expression expression) goja.Value {
