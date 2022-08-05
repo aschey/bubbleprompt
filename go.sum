@@ -16,6 +16,8 @@ github.com/aschey/termtest v0.7.2-0.20220625211044-3c495615a51f h1:78TdXZV/85c4p
 github.com/aschey/termtest v0.7.2-0.20220625211044-3c495615a51f/go.mod h1:xioM66PKAGZu0ub4sLCzoTFYXea7n8J2rS0ZqJ+vCOk=
 github.com/aschey/tui-tester v0.0.0-20220805182147-e02d91b66003 h1:wcm/RVGDloSLdFZo8NtCncWZSkDVJX3N6Veg4W+hLnM=
 github.com/aschey/tui-tester v0.0.0-20220805182147-e02d91b66003/go.mod h1:CsxDG5nnt6mbb4xxhtOS5aNtFnGvqQOXwuWjTUp+Pyw=
+github.com/aschey/tui-tester v0.0.0-20220805183054-ca54f8ec424c h1:HBRgDSgIeYqRNewpOUAsYPjRNzWD6gEvWdPidgvNO2k=
+github.com/aschey/tui-tester v0.0.0-20220805183054-ca54f8ec424c/go.mod h1:CsxDG5nnt6mbb4xxhtOS5aNtFnGvqQOXwuWjTUp+Pyw=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
 github.com/autarch/testify v1.2.2 h1:9Q9V6zqhP7R6dv+zRUddv6kXKLo6ecQhnFRFWM71i1c=

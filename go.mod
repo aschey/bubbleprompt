@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/alecthomas/chroma/v2 v2.2.0
 	github.com/alecthomas/participle/v2 v2.0.0-beta.4
-	github.com/aschey/tui-tester v0.0.0-20220805182147-e02d91b66003
+	github.com/aschey/tui-tester v0.0.0-20220805183054-ca54f8ec424c
 	github.com/charmbracelet/bubbles v0.13.0
 	github.com/charmbracelet/bubbletea v0.22.0
 	github.com/charmbracelet/lipgloss v0.5.0
