@@ -26,7 +26,7 @@ type model struct {
 }
 
 type completerModel struct {
-	textInput   *parserinput.Model[statement]
+	textInput   *parserinput.ParserModel[statement]
 	suggestions []input.Suggestion[any]
 	vm          *vm
 }
@@ -137,14 +137,14 @@ func (m completerModel) executor(input string) (tea.Model, error) {
 }
 
 func main() {
-	var textInput input.Input[any] = parserinput.New(parser)
+	var textInput input.Input[any] = parserinput.NewParserModel(parser)
 	vm := newVm()
 	_, _ = vm.RunString(`obj = {a: 2, secondVal: 3, blah: {arg: 1, b: '2'}}`)
 	_, _ = vm.RunString(`arr = [1, 2, obj]`)
 
 	completerModel := completerModel{
 		suggestions: []input.Suggestion[any]{},
-		textInput:   textInput.(*parserinput.Model[statement]),
+		textInput:   textInput.(*parserinput.ParserModel[statement]),
 		vm:          vm,
 	}
 
