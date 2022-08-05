@@ -40,8 +40,6 @@ func testExecutor(console *tuitest.Console, in *string, backspace bool, doubleEn
 }
 
 var _ = Describe("Prompt", func() {
-	leftPadding := 2
-	margin := 1
 	longestNameLength := len("seventh-option")
 	longestDescLength := len("test desc2")
 	promptWidth := leftPadding + margin + longestNameLength + 2*margin + longestDescLength + margin
@@ -51,7 +49,7 @@ var _ = Describe("Prompt", func() {
 	_ = initialLines
 
 	BeforeEach(OncePerOrdered, func() {
-		console, _ = tester.CreateConsole()
+		console, _ = cmdTester.CreateConsole()
 
 		// Wait for prompt to initialize
 		console.TrimOutput = true

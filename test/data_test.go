@@ -5,6 +5,9 @@ import (
 	"github.com/aschey/bubbleprompt/input/commandinput"
 )
 
+var leftPadding = 2
+var margin = 1
+
 type cmdMetadata = commandinput.CmdMetadata
 
 var suggestions []input.Suggestion[cmdMetadata] = []input.Suggestion[cmdMetadata]{

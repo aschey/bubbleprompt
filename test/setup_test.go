@@ -8,11 +8,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var tester *tuitest.Tester = nil
-
-var _ = BeforeSuite(func() {
-	var err error
-	tester, err = tuitest.NewTester("./cmdtestapp",
+func getTester(binDir string) *tuitest.Tester {
+	tester, err := tuitest.NewTester(binDir,
 		tuitest.WithMinInputInterval(10*time.Millisecond),
 		tuitest.WithDefaultWaitTimeout(5*time.Second),
 		tuitest.WithErrorHandler(func(err error) error {
@@ -21,8 +18,17 @@ var _ = BeforeSuite(func() {
 			return err
 		}))
 	Expect(err).ShouldNot(HaveOccurred())
+	return tester
+}
+
+var cmdTester *tuitest.Tester = nil
+var parserTester *tuitest.Tester = nil
+
+var _ = BeforeSuite(func() {
+	cmdTester = getTester("./cmdtestapp")
+	parserTester = getTester("./parsertestapp")
 })
 
 var _ = AfterSuite(func() {
-	_ = tester.TearDown()
+	_ = cmdTester.TearDown()
 })
