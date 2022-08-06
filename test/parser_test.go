@@ -139,7 +139,7 @@ var _ = Describe("Prompt", func() {
 	When("the user enters a suggestion between two delimiters with spaces", Ordered, func() {
 		BeforeAll(func() {
 			console.SendString("def , , abcd")
-			for i := 0; i < 5; i++ {
+			for i := 0; i < 7; i++ {
 				console.SendString(tuitest.KeyLeft)
 			}
 			console.SendString(tuitest.KeyTab)
@@ -148,7 +148,7 @@ var _ = Describe("Prompt", func() {
 
 		It("updates the correct token", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return strings.Contains(state.NthOutputLine(0), "> def,def,abcd")
+				return strings.Contains(state.NthOutputLine(0), "> def ,abcd , abcd")
 			})
 		})
 	})
