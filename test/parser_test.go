@@ -78,4 +78,19 @@ var _ = Describe("Prompt", func() {
 			})
 		})
 	})
+
+	When("the user types multiple tokens with whitespace", Ordered, func() {
+		BeforeAll(func() {
+			console.SendString(tuitest.KeyTab)
+			console.SendString(" ")
+			console.SendString(tuitest.KeyTab)
+			console.SendString(tuitest.KeyTab)
+		})
+
+		It("updates the correct token", func() {
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				return strings.Contains(state.NthOutputLine(0), "> abc def")
+			})
+		})
+	})
 })

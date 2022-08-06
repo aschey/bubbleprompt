@@ -137,7 +137,7 @@ func (m completerModel) executor(input string) (tea.Model, error) {
 }
 
 func main() {
-	var textInput input.Input[any] = parserinput.NewParserModel(parser)
+	var textInput input.Input[any] = parserinput.NewParserModel(parser, parserinput.WithDelimiterTokens("Punct", "Whitespace"))
 	vm := newVm()
 	_, _ = vm.RunString(`obj = {a: 2, secondVal: 3, blah: {arg: 1, b: '2'}}`)
 	_, _ = vm.RunString(`arr = [1, 2, obj]`)

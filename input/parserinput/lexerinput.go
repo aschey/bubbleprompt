@@ -1,6 +1,7 @@
 package parserinput
 
 import (
+	"math"
 	"strings"
 
 	"github.com/alecthomas/chroma/v2/lexers"
@@ -9,20 +10,30 @@ import (
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"golang.org/x/exp/slices"
 )
 
+const defaultWhitespace = math.MinInt
+
 type LexerModel struct {
-	textinput textinput.Model
-	lexer     lexer.Definition
-	tokens    []lexer.Token
-	prompt    string
-	err       error
+	textinput       textinput.Model
+	lexer           lexer.Definition
+	tokens          []lexer.Token
+	delimiterTokens []string
+	prompt          string
+	err             error
 }
 
-func NewLexerModel(lexer lexer.Definition) *LexerModel {
+func NewLexerModel(lexer lexer.Definition, options ...Option) *LexerModel {
 	textinput := textinput.New()
 	textinput.Focus()
-	return &LexerModel{lexer: lexer, textinput: textinput}
+	model := &LexerModel{lexer: lexer, textinput: textinput}
+	for _, option := range options {
+		if err := option(model); err != nil {
+			panic(err)
+		}
+	}
+	return model
 }
 
 func (m *LexerModel) Init() tea.Cmd {
@@ -36,9 +47,25 @@ func (m *LexerModel) updateTokens() {
 		return
 	}
 	tokens, err := lexer.ConsumeAll(lex)
-
+	fullTokens := []lexer.Token{}
 	if err == nil {
-		m.tokens = tokens
+		for i, token := range tokens {
+			if i > 0 {
+				prevEnd := tokens[i-1].Pos.Offset + len(tokens[i-1].Value)
+				if prevEnd < token.Pos.Offset {
+					// This part of the input was ignored by the lexer
+					// so insert a dummy token to account for it
+					fullTokens = append(fullTokens, lexer.Token{
+						Value: strings.Repeat(" ", token.Pos.Offset-prevEnd),
+						Type:  defaultWhitespace,
+						Pos: lexer.Position{
+							Offset: prevEnd,
+						}})
+				}
+			}
+			fullTokens = append(fullTokens, token)
+		}
+		m.tokens = fullTokens
 	} else {
 		m.err = err
 		return
@@ -154,15 +181,20 @@ func (m *LexerModel) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[an
 	return nil
 }
 
+func (m *LexerModel) isDelimiterToken(token lexer.Token) bool {
+	symbols := lexer.SymbolsByRune(m.lexer)
+	symbol := symbols[token.Type]
+	// Dummy whitespace tokens won't be registered with the lexer so check it separately
+	return slices.Contains(m.delimiterTokens, symbol) || token.Type == defaultWhitespace
+}
+
 func (m *LexerModel) OnSuggestionChanged(suggestion input.Suggestion[any]) {
 	i, token := m.currentToken(m.Value(), m.Cursor())
 
-	symbols := lexer.SymbolsByRune(m.lexer)
-	tokenType := symbols[token.Type]
-	if tokenType == "Punct" {
+	if m.isDelimiterToken(token) {
 		if m.Cursor() < len(m.Value()) {
 			token = m.tokens[i-1]
-			if symbols[token.Type] == "Punct" {
+			if m.isDelimiterToken(token) {
 				token = lexer.Token{Pos: lexer.Position{Offset: token.Pos.Offset + len(token.Value)}}
 			}
 		} else {

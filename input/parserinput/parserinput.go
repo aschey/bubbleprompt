@@ -11,8 +11,8 @@ type ParserModel[G any] struct {
 	parsedText *G
 }
 
-func NewParserModel[G any](parser *participle.Parser[G]) *ParserModel[G] {
-	lexerModel := NewLexerModel(parser.Lexer())
+func NewParserModel[G any](parser *participle.Parser[G], options ...Option) *ParserModel[G] {
+	lexerModel := NewLexerModel(parser.Lexer(), options...)
 	return &ParserModel[G]{parser: parser, LexerModel: *lexerModel}
 }
 
