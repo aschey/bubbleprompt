@@ -78,9 +78,10 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[an
 		return suggestions
 	}
 
+	completable := m.textInput.CompletableTokenBeforeCursor()
 	if datatype == objectType && currentBeforeCursor != "." && prevToken != "." && !objectVar.Equals(m.vm.GlobalObject()) {
 		keyWrap = `"`
-		currentBeforeCursor = strings.Trim(currentBeforeCursor, `"`)
+		completable = strings.Trim(completable, `"`)
 	}
 
 	for _, key := range objectVar.Keys() {
@@ -90,7 +91,7 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[an
 		})
 	}
 
-	return completers.FilterCompletionTextHasPrefix(currentBeforeCursor, suggestions)
+	return completers.FilterCompletionTextHasPrefix(completable, suggestions)
 }
 
 func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[any]) []input.Suggestion[any] {

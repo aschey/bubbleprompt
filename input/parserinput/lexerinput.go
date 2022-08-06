@@ -25,10 +25,10 @@ type LexerModel struct {
 	err             error
 }
 
-func NewLexerModel(lexer lexer.Definition, options ...Option) *LexerModel {
+func NewLexerModel(def lexer.Definition, options ...Option) *LexerModel {
 	textinput := textinput.New()
 	textinput.Focus()
-	model := &LexerModel{lexer: lexer, textinput: textinput}
+	model := &LexerModel{lexer: def, textinput: textinput, tokens: []lexer.Token{}}
 	for _, option := range options {
 		if err := option(model); err != nil {
 			panic(err)
@@ -233,15 +233,22 @@ func (m *LexerModel) ShouldUnselectSuggestion(prevText string, msg tea.KeyMsg) b
 	}
 }
 
-func (m *LexerModel) CurrentTokenBeforeCursor() string {
-	if m.tokens == nil {
-		return ""
-	}
+func (m *LexerModel) CompletableTokenBeforeCursor() string {
 	_, token := m.CurrentToken()
 	if m.isDelimiterToken(token) {
 		// Don't filter suggestions on delimiters
 		return ""
 	}
+	return m.currentTokenBeforeCursor(token)
+}
+
+func (m *LexerModel) CurrentTokenBeforeCursor() string {
+	_, token := m.CurrentToken()
+
+	return m.currentTokenBeforeCursor(token)
+}
+
+func (m *LexerModel) currentTokenBeforeCursor(token lexer.Token) string {
 	start := token.Pos.Offset
 	cursor := m.Cursor()
 	if start > cursor {
@@ -252,6 +259,6 @@ func (m *LexerModel) CurrentTokenBeforeCursor() string {
 }
 
 func (m *LexerModel) OnExecutorFinished() {
-	// Clear out error once inpu text is reset
+	// Clear out error once input text is reset
 	m.err = nil
 }
