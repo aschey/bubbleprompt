@@ -12,13 +12,10 @@ import (
 	"github.com/aschey/bubbleprompt/input/parserinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/dop251/goja"
-	"golang.org/x/exp/slices"
 )
 
 const arrayType = "[]interface {}"
 const objectType = "map[string]interface {}"
-
-var glue = []string{".", "[", ":", ",", "+", "-", "/", "*", "&&", "||", "="}
 
 type model struct {
 	prompt prompt.Model[any]
@@ -86,10 +83,6 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[an
 		currentBeforeCursor = strings.Trim(currentBeforeCursor, `"`)
 	}
 
-	if slices.Contains(glue, currentBeforeCursor) {
-		currentBeforeCursor = ""
-	}
-
 	for _, key := range objectVar.Keys() {
 		suggestions = append(suggestions, input.Suggestion[any]{
 			Text:           keyWrap + key + keyWrap,
@@ -137,7 +130,8 @@ func (m completerModel) executor(input string) (tea.Model, error) {
 }
 
 func main() {
-	var textInput input.Input[any] = parserinput.NewParserModel(parser, parserinput.WithDelimiterTokens("Punct", "Whitespace"))
+	var textInput input.Input[any] = parserinput.NewParserModel(parser,
+		parserinput.WithDelimiterTokens("Punct", "Whitespace", "And", "Or", "Eq"))
 	vm := newVm()
 	_, _ = vm.RunString(`obj = {a: 2, secondVal: 3, blah: {arg: 1, b: '2'}}`)
 	_, _ = vm.RunString(`arr = [1, 2, obj]`)

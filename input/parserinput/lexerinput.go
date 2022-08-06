@@ -20,6 +20,7 @@ type LexerModel struct {
 	lexer           lexer.Definition
 	tokens          []lexer.Token
 	delimiterTokens []string
+	delimiters      []string
 	prompt          string
 	err             error
 }
@@ -185,7 +186,7 @@ func (m *LexerModel) isDelimiterToken(token lexer.Token) bool {
 	symbols := lexer.SymbolsByRune(m.lexer)
 	symbol := symbols[token.Type]
 	// Dummy whitespace tokens won't be registered with the lexer so check it separately
-	return slices.Contains(m.delimiterTokens, symbol) || token.Type == defaultWhitespace
+	return slices.Contains(m.delimiters, token.Value) || slices.Contains(m.delimiterTokens, symbol) || token.Type == defaultWhitespace
 }
 
 func (m *LexerModel) OnSuggestionChanged(suggestion input.Suggestion[any]) {
@@ -237,6 +238,10 @@ func (m *LexerModel) CurrentTokenBeforeCursor() string {
 		return ""
 	}
 	_, token := m.CurrentToken()
+	if m.isDelimiterToken(token) {
+		// Don't filter suggestions on delimiters
+		return ""
+	}
 	start := token.Pos.Offset
 	cursor := m.Cursor()
 	if start > cursor {

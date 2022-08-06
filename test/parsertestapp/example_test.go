@@ -67,7 +67,7 @@ func (m completerModel) executor(input string) (tea.Model, error) {
 }
 
 func TestApp(t *testing.T) {
-	var textInput input.Input[any] = parserinput.NewParserModel(parser)
+	var textInput input.Input[any] = parserinput.NewParserModel(parser, parserinput.WithDelimiters(","))
 
 	completerModel := completerModel{
 		suggestions: []input.Suggestion[any]{},

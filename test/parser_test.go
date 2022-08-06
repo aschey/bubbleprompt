@@ -93,4 +93,30 @@ var _ = Describe("Prompt", func() {
 			})
 		})
 	})
+
+	When("the user types a token and a delimiter", Ordered, func() {
+		BeforeAll(func() {
+			console.SendString("a")
+			console.SendString(tuitest.KeyTab)
+			console.SendString(",")
+		})
+
+		It("suggests a new token", func() {
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				return strings.Contains(state.NthOutputLine(1), "abc")
+			})
+		})
+
+		When("the user chooses the suggestion", Ordered, func() {
+			BeforeAll(func() {
+				console.SendString(tuitest.KeyTab)
+			})
+
+			It("updates the correct token", func() {
+				_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+					return strings.Contains(state.NthOutputLine(0), "> abc,abc")
+				})
+			})
+		})
+	})
 })

@@ -8,3 +8,10 @@ func WithDelimiterTokens(tokens ...string) Option {
 		return nil
 	}
 }
+
+func WithDelimiters(delimiters ...string) Option {
+	return func(model *LexerModel) error {
+		model.delimiters = delimiters
+		return nil
+	}
+}
