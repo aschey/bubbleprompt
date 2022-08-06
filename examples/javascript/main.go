@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/alecthomas/participle/v2/lexer"
 	prompt "github.com/aschey/bubbleprompt"
 	completers "github.com/aschey/bubbleprompt/completer"
 	executors "github.com/aschey/bubbleprompt/executor"
@@ -65,11 +66,6 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[an
 	objectVar := m.vm.ToObject(value)
 
 	currentBeforeCursor := m.textInput.CurrentTokenBeforeCursor()
-	_, prev := m.textInput.PreviousToken()
-	prevToken := ""
-	if prev != nil {
-		prevToken = prev.Value
-	}
 
 	keyWrap := ""
 	datatype := objectVar.ExportType().String()
@@ -79,6 +75,14 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[an
 	}
 
 	completable := m.textInput.CompletableTokenBeforeCursor()
+	prev := m.textInput.FindLast(func(token lexer.Token, symbol string) bool {
+		return symbol != "Whitespace"
+	})
+	prevToken := ""
+	if prev != nil {
+		prevToken = prev.Value
+	}
+
 	if datatype == objectType && currentBeforeCursor != "." && prevToken != "." && !objectVar.Equals(m.vm.GlobalObject()) {
 		keyWrap = `"`
 		completable = strings.Trim(completable, `"`)

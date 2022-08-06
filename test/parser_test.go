@@ -45,7 +45,7 @@ var _ = Describe("Prompt", func() {
 
 		It("filters the completions", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return strings.Contains(state.NthOutputLine(1), "abc")
+				return strings.Contains(state.NthOutputLine(1), "abcd")
 			})
 		})
 	})
@@ -58,7 +58,7 @@ var _ = Describe("Prompt", func() {
 
 		It("updates the input", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return strings.Contains(state.NthOutputLine(0), "> abc")
+				return strings.Contains(state.NthOutputLine(0), "> abcd")
 			})
 		})
 	})
@@ -67,14 +67,14 @@ var _ = Describe("Prompt", func() {
 		BeforeAll(func() {
 			console.SendString("a")
 			console.SendString(tuitest.KeyTab)
-			console.SendString(".")
+			console.SendString(",")
 			console.SendString("d")
 			console.SendString(tuitest.KeyTab)
 		})
 
 		It("updates each token separately", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return strings.Contains(state.NthOutputLine(0), "> abc.def")
+				return strings.Contains(state.NthOutputLine(0), "> abcd,def")
 			})
 		})
 	})
@@ -89,7 +89,7 @@ var _ = Describe("Prompt", func() {
 
 		It("updates the correct token", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return strings.Contains(state.NthOutputLine(0), "> abc def")
+				return strings.Contains(state.NthOutputLine(0), "> abcd def")
 			})
 		})
 	})
@@ -103,7 +103,7 @@ var _ = Describe("Prompt", func() {
 
 		It("suggests a new token", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return strings.Contains(state.NthOutputLine(1), "abc")
+				return strings.Contains(state.NthOutputLine(1), "abcd")
 			})
 		})
 
@@ -114,8 +114,41 @@ var _ = Describe("Prompt", func() {
 
 			It("updates the correct token", func() {
 				_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-					return strings.Contains(state.NthOutputLine(0), "> abc,abc")
+					return strings.Contains(state.NthOutputLine(0), "> abcd,abc")
 				})
+			})
+		})
+	})
+	When("the user enters a suggestion between two delimiters", Ordered, func() {
+		BeforeAll(func() {
+			console.SendString("def,,abcd")
+			for i := 0; i < 5; i++ {
+				console.SendString(tuitest.KeyLeft)
+			}
+			console.SendString(tuitest.KeyTab)
+			console.SendString(tuitest.KeyTab)
+		})
+
+		It("updates the correct token", func() {
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				return strings.Contains(state.NthOutputLine(0), "> def,def,abcd")
+			})
+		})
+	})
+
+	When("the user enters a suggestion between two delimiters with spaces", Ordered, func() {
+		BeforeAll(func() {
+			console.SendString("def , , abcd")
+			for i := 0; i < 5; i++ {
+				console.SendString(tuitest.KeyLeft)
+			}
+			console.SendString(tuitest.KeyTab)
+			console.SendString(tuitest.KeyTab)
+		})
+
+		It("updates the correct token", func() {
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				return strings.Contains(state.NthOutputLine(0), "> def,def,abcd")
 			})
 		})
 	})

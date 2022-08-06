@@ -28,7 +28,7 @@ type LexerModel struct {
 func NewLexerModel(def lexer.Definition, options ...Option) *LexerModel {
 	textinput := textinput.New()
 	textinput.Focus()
-	model := &LexerModel{lexer: def, textinput: textinput, tokens: []lexer.Token{}}
+	model := &LexerModel{lexer: def, textinput: textinput, prompt: "> ", tokens: []lexer.Token{}}
 	for _, option := range options {
 		if err := option(model); err != nil {
 			panic(err)
@@ -93,7 +93,7 @@ func (m *LexerModel) View(viewMode input.ViewMode) string {
 	if err != nil {
 		println(err)
 	}
-	return m.textinput.Prompt + m.inputFormatter(style, iter, viewMode)
+	return m.prompt + m.inputFormatter(style, iter, viewMode)
 }
 
 func (m *LexerModel) Focus() tea.Cmd {
@@ -136,7 +136,7 @@ func (m *LexerModel) SetPrompt(prompt string) {
 func (m *LexerModel) ShouldSelectSuggestion(suggestion input.Suggestion[any]) bool {
 	_, token := m.CurrentToken()
 	tokenStr := token.Value
-	return m.Cursor()-1 == token.Pos.Offset+len(tokenStr) && tokenStr == suggestion.Text
+	return m.Cursor() == token.Pos.Offset+len(tokenStr) && tokenStr == suggestion.Text
 }
 
 func (m *LexerModel) currentToken(text string, tokenPos int) (int, lexer.Token) {
@@ -161,6 +161,21 @@ func (m *LexerModel) CurrentToken() (int, lexer.Token) {
 	return m.currentToken(m.Value(), m.Cursor()-1)
 }
 
+func (m *LexerModel) FindLast(filter func(token lexer.Token, symbol string) bool) *lexer.Token {
+	currentIndex, _ := m.CurrentToken()
+	symbols := lexer.SymbolsByRune(m.lexer)
+	for i := currentIndex; i >= 0; i-- {
+		token := m.tokens[i]
+
+		symbol := symbols[token.Type]
+		if filter(token, symbol) {
+			return &token
+		}
+	}
+
+	return nil
+}
+
 func (m *LexerModel) PreviousToken() (int, *lexer.Token) {
 	index, _ := m.CurrentToken()
 	if index <= 0 {
@@ -182,7 +197,7 @@ func (m *LexerModel) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[an
 	return nil
 }
 
-func (m *LexerModel) isDelimiterToken(token lexer.Token) bool {
+func (m *LexerModel) IsDelimiterToken(token lexer.Token) bool {
 	symbols := lexer.SymbolsByRune(m.lexer)
 	symbol := symbols[token.Type]
 	// Dummy whitespace tokens won't be registered with the lexer so check it separately
@@ -192,10 +207,10 @@ func (m *LexerModel) isDelimiterToken(token lexer.Token) bool {
 func (m *LexerModel) OnSuggestionChanged(suggestion input.Suggestion[any]) {
 	i, token := m.currentToken(m.Value(), m.Cursor())
 
-	if m.isDelimiterToken(token) {
+	if m.IsDelimiterToken(token) {
 		if m.Cursor() < len(m.Value()) {
 			token = m.tokens[i-1]
-			if m.isDelimiterToken(token) {
+			if m.IsDelimiterToken(token) {
 				token = lexer.Token{Pos: lexer.Position{Offset: token.Pos.Offset + len(token.Value)}}
 			}
 		} else {
@@ -219,23 +234,16 @@ func (m *LexerModel) OnSuggestionChanged(suggestion input.Suggestion[any]) {
 func (m *LexerModel) OnSuggestionUnselected() {}
 
 func (m *LexerModel) ShouldClearSuggestions(prevText string, msg tea.KeyMsg) bool {
-	// Don't reset if no text because the completer won't run again
-	return len(m.Value()) > 0
+	return false
 }
 
 func (m *LexerModel) ShouldUnselectSuggestion(prevText string, msg tea.KeyMsg) bool {
-	pos := m.Cursor()
-	switch msg.Type {
-	case tea.KeyBackspace, tea.KeyDelete:
-		return pos < len(prevText)
-	default:
-		return true
-	}
+	return true
 }
 
 func (m *LexerModel) CompletableTokenBeforeCursor() string {
 	_, token := m.CurrentToken()
-	if m.isDelimiterToken(token) {
+	if m.IsDelimiterToken(token) {
 		// Don't filter suggestions on delimiters
 		return ""
 	}
