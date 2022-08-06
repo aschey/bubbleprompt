@@ -300,7 +300,6 @@ var _ = Describe("Prompt", func() {
 
 		It("shows the completions matching the prefix", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-
 				return state.NumLines() == 3 &&
 					strings.Contains(state.NthOutputLine(1), suggestions[0].Text) &&
 					strings.Contains(state.NthOutputLine(2), suggestions[4].Text)

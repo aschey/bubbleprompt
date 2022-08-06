@@ -49,4 +49,33 @@ var _ = Describe("Prompt", func() {
 			})
 		})
 	})
+
+	When("the user selects a suggestion", Ordered, func() {
+		BeforeAll(func() {
+			console.SendString("a")
+			console.SendString(tuitest.KeyTab)
+		})
+
+		It("updates the input", func() {
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				return strings.Contains(state.NthOutputLine(0), "> abc")
+			})
+		})
+	})
+
+	When("the user selects multiple tokens", Ordered, func() {
+		BeforeAll(func() {
+			console.SendString("a")
+			console.SendString(tuitest.KeyTab)
+			console.SendString(".")
+			console.SendString("d")
+			console.SendString(tuitest.KeyTab)
+		})
+
+		It("updates each token separately", func() {
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				return strings.Contains(state.NthOutputLine(0), "> abc.def")
+			})
+		})
+	})
 })

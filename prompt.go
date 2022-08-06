@@ -3,7 +3,6 @@ package prompt
 import (
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/renderer"
-	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -76,7 +75,7 @@ func (m *Model[I]) SetRenderer(renderer renderer.Renderer) {
 }
 
 func (m Model[I]) Init() tea.Cmd {
-	return tea.Batch(textinput.Blink, m.completer.Init())
+	return tea.Batch(m.textInput.Init(), m.completer.Init())
 }
 
 func (m Model[I]) View() string {

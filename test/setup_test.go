@@ -14,7 +14,7 @@ var parserTester *tuitest.Tester = nil
 
 func getTester(binDir string) *tuitest.Tester {
 	tester, err := testSuite.NewTester(binDir,
-		tuitest.WithMinInputInterval(10*time.Millisecond),
+		tuitest.WithMinInputInterval(20*time.Millisecond),
 		tuitest.WithDefaultWaitTimeout(5*time.Second),
 		tuitest.WithErrorHandler(func(err error) error {
 			defer GinkgoRecover()

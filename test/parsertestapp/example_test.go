@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"text/scanner"
 
 	"github.com/alecthomas/participle/v2"
+	"github.com/alecthomas/participle/v2/lexer"
 	prompt "github.com/aschey/bubbleprompt"
 	completers "github.com/aschey/bubbleprompt/completer"
 	executors "github.com/aschey/bubbleprompt/executor"
@@ -16,6 +18,7 @@ import (
 
 var parser = participle.MustBuild[Statement](
 	participle.UseLookahead(20),
+	participle.Lexer(lexer.NewTextScannerLexer(func(scanner *scanner.Scanner) { scanner.Whitespace = 0 })),
 )
 
 type model struct {
