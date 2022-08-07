@@ -352,4 +352,19 @@ var _ = Describe("Prompt", func() {
 			})
 		})
 	})
+
+	When("the executor returns an error", Ordered, func() {
+		BeforeAll(func() {
+			console.SendString("error")
+			console.SendString(tuitest.KeyEnter)
+		})
+
+		It("displays the error message", func() {
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				return strings.Contains(state.NthOutputLine(0), "> error") &&
+					strings.Contains(state.NthOutputLine(1), "bad things") &&
+					fmt.Sprint(state.BgColor(1, 0)) == input.DefaultErrorTextBackground
+			})
+		})
+	})
 })

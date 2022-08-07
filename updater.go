@@ -196,6 +196,10 @@ func (m *Model[I]) updateExecutor(executor *executorModel) {
 
 func (m *Model[I]) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	innerExecutor, err := m.executor(m.textInput.Value())
+	if innerExecutor == nil {
+		// No executor returned, default to empty model to prevent nil reference errors
+		innerExecutor = executor.NewStringModel("")
+	}
 	// Reset all text and selection state
 	m.typedText = ""
 	m.lastTypedCursorPosition = 0
