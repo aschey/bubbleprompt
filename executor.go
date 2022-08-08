@@ -27,11 +27,10 @@ func (m executorModel) Init() tea.Cmd {
 func (m executorModel) Update(msg tea.Msg) (executorModel, tea.Cmd) {
 	inner, cmd := m.inner.Update(msg)
 	m.inner = inner
-	switch msg := msg.(type) {
-	case executor.ErrorMsg:
+	if msg, ok := msg.(executor.ErrorMsg); ok {
 		m.err = error(msg)
 		return m, tea.Quit
-	default:
+	} else {
 		return m, cmd
 	}
 

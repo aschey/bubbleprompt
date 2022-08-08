@@ -152,4 +152,17 @@ var _ = Describe("Prompt", func() {
 			})
 		})
 	})
+
+	When("the user enters invalid input", Ordered, func() {
+		BeforeAll(func() {
+			console.SendString("'")
+			console.SendString(tuitest.KeyEnter)
+		})
+
+		It("displays the error message", func() {
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				return strings.Contains(state.NthOutputLine(1), "invalid char literal")
+			})
+		})
+	})
 })

@@ -12,8 +12,7 @@ import (
 func (m Model[I]) Update(msg tea.Msg) (Model[I], tea.Cmd) {
 	// Check for exit signals before anything else
 	// to reduce chance of program becoming frozen
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	if msg, ok := msg.(tea.KeyMsg); ok {
 		switch msg.Type {
 		case tea.KeyCtrlC, tea.KeyEsc:
 			return m, tea.Quit
@@ -90,7 +89,6 @@ func (m *Model[I]) updateCompleting(msg tea.Msg, cmds []tea.Cmd, prevText string
 	case tea.KeyMsg:
 		scrollToBottom = true
 		switch msg.Type {
-
 		// Select next/previous list entry
 		case tea.KeyUp, tea.KeyDown, tea.KeyTab:
 			cmds = m.updateChosenListEntry(msg, cmds)
@@ -209,7 +207,7 @@ func (m *Model[I]) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	// Pass in the static flag to signal to the text input to exclude interactive elements
 	// such as placeholders and the cursor
 	m.renderer.AddOutput(m.textInput.View(input.Static))
-	m.textInput.SetValue("")
+	m.textInput.ResetValue()
 
 	executorModel := newExecutorModel(innerExecutor, m.Formatters.ErrorText, err)
 

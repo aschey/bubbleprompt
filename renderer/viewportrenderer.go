@@ -50,12 +50,8 @@ func (v *ViewportRenderer) FinishUpdate() tea.Cmd {
 }
 
 func (v *ViewportRenderer) GotoBottom(msg tea.Msg) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		if msg.String() != "ctrl+up" && msg.String() != "ctrl+down" {
-			v.viewport.GotoBottom()
-		}
-	default:
+	keyMsg, isKeyMsg := msg.(tea.KeyMsg)
+	if !isKeyMsg || (keyMsg.String() != "ctrl+up" && keyMsg.String() != "ctrl+down") {
 		v.viewport.GotoBottom()
 	}
 }

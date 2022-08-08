@@ -41,11 +41,10 @@ func (m *LexerModel) Init() tea.Cmd {
 	return textinput.Blink
 }
 
-func (m *LexerModel) updateTokens() {
+func (m *LexerModel) updateTokens() error {
 	lex, err := m.lexer.Lex("", strings.NewReader(m.Value()))
 	if err != nil {
-		m.err = err
-		return
+		return err
 	}
 	tokens, err := lexer.ConsumeAll(lex)
 	fullTokens := []lexer.Token{}
@@ -68,17 +67,24 @@ func (m *LexerModel) updateTokens() {
 		}
 		m.tokens = fullTokens
 	} else {
-		m.err = err
-		return
+		return err
 	}
 
-	m.err = nil
+	return nil
 }
 
 func (m *LexerModel) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
 	m.textinput, cmd = m.textinput.Update(msg)
-	m.updateTokens()
+	if msg, ok := msg.(tea.KeyMsg); ok {
+		err := m.updateTokens()
+		// Don't reset error on submit yet because we need to pass it to the view
+		// It will get reset during OnUpdateFinish
+		if msg.Type != tea.KeyEnter {
+			m.err = err
+		}
+	}
+
 	return cmd
 }
 
@@ -108,9 +114,14 @@ func (m *LexerModel) Value() string {
 	return m.textinput.Value()
 }
 
+func (m *LexerModel) ResetValue() {
+	m.textinput.SetValue("")
+	_ = m.updateTokens()
+}
+
 func (m *LexerModel) SetValue(value string) {
 	m.textinput.SetValue(value)
-	m.updateTokens()
+	m.err = m.updateTokens()
 }
 
 func (m *LexerModel) Blur() {

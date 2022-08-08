@@ -256,9 +256,11 @@ func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
 	m.textinput, cmd = m.textinput.Update(msg)
 
-	expr, err := m.parser.ParseString("", m.Value())
-	if err == nil {
-		m.parsedText = expr
+	if _, ok := msg.(tea.KeyMsg); ok {
+		expr, err := m.parser.ParseString("", m.Value())
+		if err == nil {
+			m.parsedText = expr
+		}
 	}
 
 	return cmd
@@ -459,6 +461,11 @@ func (m *Model[T]) SetValue(s string) {
 	}
 
 	m.parsedText = expr
+}
+
+func (m *Model[T]) ResetValue() {
+	m.textinput.SetValue("")
+	m.parsedText = &Statement{}
 }
 
 func (m *Model[T]) isDelimiter(s string) bool {

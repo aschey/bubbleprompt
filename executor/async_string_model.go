@@ -34,8 +34,7 @@ func (m AsyncStringModel) Init() tea.Cmd {
 func (m AsyncStringModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	m.spinner, cmd = m.spinner.Update(msg)
-	switch msg := msg.(type) {
-	case outputMsg:
+	if msg, ok := msg.(outputMsg); ok {
 		stringMsg := string(msg)
 		m.output = &stringMsg
 		return m, tea.Quit

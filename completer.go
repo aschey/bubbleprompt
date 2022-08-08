@@ -69,8 +69,7 @@ func (c completerModel[I]) Update(msg tea.Msg, prompt Model[I]) (completerModel[
 			}
 		}
 	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyTab:
+		if msg.Type == tea.KeyTab {
 			// Tab completion may have changed text so reset previous value
 			c.prevText = ""
 		}

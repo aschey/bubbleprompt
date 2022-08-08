@@ -18,6 +18,7 @@ type Input[T any] interface {
 	Focus() tea.Cmd
 	Focused() bool
 	Value() string
+	ResetValue()
 	SetValue(value string)
 	Blur()
 	Cursor() int
