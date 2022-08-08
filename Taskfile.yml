@@ -9,7 +9,7 @@ tasks:
       - go install github.com/onsi/ginkgo/v2/ginkgo@latest
   test:
     cmds:
-      - ginkgo -v -race -procs 4 ./test
+      - ginkgo -v -race -p ./test
   covTest:
     cmds:
       - go test ./test -v -tuicover -tuicoverpkg ../...
