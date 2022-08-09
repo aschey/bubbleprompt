@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/alecthomas/chroma/v2 v2.2.0
-	github.com/alecthomas/participle/v2 v2.0.0-beta.4
+	github.com/alecthomas/participle/v2 v2.0.0-beta.5
 	github.com/aschey/tui-tester v0.0.0-20220805183054-ca54f8ec424c
 	github.com/charmbracelet/bubbles v0.13.0
 	github.com/charmbracelet/bubbletea v0.22.0
@@ -34,8 +34,8 @@ require (
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.12.0 // indirect
 	github.com/rivo/uniseg v0.3.4 // indirect
-	golang.org/x/net v0.0.0-20220805013720-a33c5aa5df48 // indirect
-	golang.org/x/sys v0.0.0-20220804214406-8e32c043e418 // indirect
+	golang.org/x/net v0.0.0-20220809012201-f428fae20770 // indirect
+	golang.org/x/sys v0.0.0-20220808155132-1c4a2a72c664 // indirect
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.12 // indirect

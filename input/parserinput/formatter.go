@@ -8,8 +8,8 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func (m LexerModel) inputFormatter(theme *chroma.Style, iter chroma.Iterator, viewMode input.ViewMode) string {
-	theme = clearBackground(theme)
+func (m LexerModel) inputFormatter(iter chroma.Iterator, viewMode input.ViewMode) string {
+	theme := clearBackground(m.style)
 	showCursor := !m.textinput.Blink()
 	if viewMode == input.Static {
 		showCursor = false

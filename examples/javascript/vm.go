@@ -24,6 +24,9 @@ func (v *vm) GlobalObject() *goja.Object {
 func (v *vm) ToObject(val goja.Value) *goja.Object {
 	v.mutex.Lock()
 	defer v.mutex.Unlock()
+	if val == nil {
+		return nil
+	}
 	return val.ToObject(v.runtime)
 }
 

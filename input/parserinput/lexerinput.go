@@ -4,12 +4,12 @@ import (
 	"math"
 	"strings"
 
-	"github.com/alecthomas/chroma/v2/lexers"
-	"github.com/alecthomas/chroma/v2/styles"
+	"github.com/alecthomas/chroma/v2"
 	"github.com/alecthomas/participle/v2/lexer"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"golang.org/x/exp/slices"
 )
 
@@ -18,6 +18,8 @@ const defaultWhitespace = math.MinInt
 type LexerModel struct {
 	textinput       textinput.Model
 	lexer           lexer.Definition
+	styleLexer      chroma.Lexer
+	style           *chroma.Style
 	tokens          []lexer.Token
 	delimiterTokens []string
 	delimiters      []string
@@ -93,13 +95,16 @@ func (m *LexerModel) Error() error {
 }
 
 func (m *LexerModel) View(viewMode input.ViewMode) string {
-	lexer := lexers.Get("javascript")
-	iter, err := lexer.Tokenise(nil, m.textinput.Value())
-	style := styles.Get("swapoff")
+	if m.styleLexer == nil {
+		viewBuilder := input.NewViewBuilder(m.Cursor(), lipgloss.NewStyle(), " ", !m.textinput.Blink())
+		viewBuilder.Render(m.Value(), 0, lipgloss.NewStyle())
+		return m.prompt + viewBuilder.GetView()
+	}
+	iter, err := m.styleLexer.Tokenise(nil, m.textinput.Value())
 	if err != nil {
 		println(err)
 	}
-	return m.prompt + m.inputFormatter(style, iter, viewMode)
+	return m.prompt + m.inputFormatter(iter, viewMode)
 }
 
 func (m *LexerModel) Focus() tea.Cmd {

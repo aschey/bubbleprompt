@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/alecthomas/chroma/v2/styles"
 	"github.com/alecthomas/participle/v2/lexer"
 	prompt "github.com/aschey/bubbleprompt"
 	completers "github.com/aschey/bubbleprompt/completer"
@@ -65,7 +66,11 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[an
 	}
 	objectVar := m.vm.ToObject(value)
 
+	_, currentToken := m.textInput.CurrentToken()
 	currentBeforeCursor := m.textInput.CurrentTokenBeforeCursor()
+	if currentBeforeCursor == "]" {
+		return suggestions
+	}
 
 	keyWrap := ""
 	datatype := objectVar.ExportType().String()
@@ -76,7 +81,7 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[an
 
 	completable := m.textInput.CompletableTokenBeforeCursor()
 	prev := m.textInput.FindLast(func(token lexer.Token, symbol string) bool {
-		return symbol != "Whitespace"
+		return token.Pos.Offset < currentToken.Pos.Offset && symbol != "Whitespace"
 	})
 	prevToken := ""
 	if prev != nil {
@@ -136,7 +141,10 @@ func (m completerModel) executor(input string) (tea.Model, error) {
 
 func main() {
 	var textInput input.Input[any] = parserinput.NewParserModel(parser,
-		parserinput.WithDelimiterTokens("Punct", "Whitespace", "And", "Or", "Eq"))
+		parserinput.WithDelimiterTokens("Punct", "Whitespace", "And", "Or", "Eq"),
+		parserinput.WithStyle(styleLexer, *styles.SwapOff),
+	)
+
 	vm := newVm()
 	_, _ = vm.RunString(`obj = {a: 2, secondVal: 3, blah: {arg: 1, b: '2'}}`)
 	_, _ = vm.RunString(`arr = [1, 2, obj]`)
