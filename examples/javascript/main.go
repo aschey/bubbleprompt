@@ -103,18 +103,17 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[an
 	return completers.FilterCompletionTextHasPrefix(completable, suggestions)
 }
 
-func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[any]) []input.Suggestion[any] {
+func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
 	parsed, err := m.textInput.ParsedBeforeCursor()
 	if err != nil {
-		println(err.Error())
-		return nil
+		return nil, err
 	}
 	if parsed != nil {
 		value := m.evaluateStatement(*parsed)
-		return m.valueSuggestions(value)
+		return m.valueSuggestions(value), nil
 	}
 
-	return m.globalSuggestions()
+	return m.globalSuggestions(), nil
 }
 
 func (m completerModel) executor(input string) (tea.Model, error) {

@@ -2,6 +2,7 @@ package prompt
 
 import (
 	"math"
+	"strings"
 
 	"github.com/aschey/bubbleprompt/input"
 	tea "github.com/charmbracelet/bubbletea"
@@ -15,15 +16,19 @@ const (
 	running
 )
 
-type Completer[I any] func(document Document, prompt Model[I]) []input.Suggestion[I]
+type Completer[I any] func(document Document, prompt Model[I]) ([]input.Suggestion[I], error)
 
-type completionMsg[T any] []input.Suggestion[T]
+type completionMsg[T any] struct {
+	suggestions []input.Suggestion[T]
+	err         error
+}
 
 type completerModel[I any] struct {
 	completerFunc  Completer[I]
 	state          completerState
 	textInput      input.Input[I]
 	suggestions    []input.Suggestion[I]
+	errorText      input.Text
 	maxSuggestions int
 	scroll         int
 	prevScroll     int
@@ -31,14 +36,16 @@ type completerModel[I any] struct {
 	prevText       string
 	queueNext      bool
 	ignoreCount    int
+	err            error
 }
 
-func newCompleterModel[I any](completerFunc Completer[I], textInput input.Input[I], maxSuggestions int) completerModel[I] {
+func newCompleterModel[I any](completerFunc Completer[I], textInput input.Input[I], errorText input.Text, maxSuggestions int) completerModel[I] {
 	return completerModel[I]{
 		textInput:      textInput,
 		completerFunc:  completerFunc,
 		state:          idle,
 		maxSuggestions: maxSuggestions,
+		errorText:      errorText,
 		prevText:       " ", // Need to set the previous text to something in order to force the initial render
 	}
 }
@@ -56,7 +63,13 @@ func (c completerModel[I]) Update(msg tea.Msg, prompt Model[I]) (completerModel[
 			c.ignoreCount--
 		} else {
 			c.state = idle
-			c.suggestions = msg
+			if msg.suggestions == nil {
+				c.suggestions = []input.Suggestion[I]{}
+			} else {
+				c.suggestions = msg.suggestions
+			}
+
+			c.err = msg.err
 			// Selection is out of range of the current view or the key is no longer present
 			if c.scroll > len(c.suggestions)-1 || c.getSelectedSuggestion() == nil {
 				c.unselectSuggestion()
@@ -97,7 +110,10 @@ func (c completerModel[I]) scrollbarBounds(windowHeight int) (int, int) {
 }
 
 func (c completerModel[I]) Render(paddingSize int, formatters input.Formatters,
-	scrollbar string, scrollbarThumb string) []string {
+	scrollbar string, scrollbarThumb string) string {
+	if c.err != nil {
+		return c.errorText.Format(c.err.Error())
+	}
 	maxNameLen := 0
 	maxDescLen := 0
 
@@ -141,7 +157,7 @@ func (c completerModel[I]) Render(paddingSize int, formatters input.Formatters,
 		prompts = append(prompts, line)
 	}
 
-	return prompts
+	return strings.Join(prompts, "\n")
 }
 
 func (c *completerModel[I]) updateCompletions(prompt Model[I]) tea.Cmd {
@@ -172,11 +188,11 @@ func (c *completerModel[I]) updateCompletions(prompt Model[I]) tea.Cmd {
 	in := input.Value()
 
 	return func() tea.Msg {
-		filtered := c.completerFunc(Document{
+		filtered, err := c.completerFunc(Document{
 			Text:           in,
 			CursorPosition: cursorPos,
 		}, prompt)
-		return completionMsg[I](filtered)
+		return completionMsg[I]{suggestions: filtered, err: err}
 	}
 }
 
@@ -191,11 +207,11 @@ func (c *completerModel[I]) resetCompletions(prompt Model[I]) tea.Cmd {
 	c.prevText = ""
 
 	return func() tea.Msg {
-		filtered := c.completerFunc(Document{
+		filtered, err := c.completerFunc(Document{
 			Text:           "",
 			CursorPosition: 0,
 		}, prompt)
-		return completionMsg[I](filtered)
+		return completionMsg[I]{suggestions: filtered, err: err}
 	}
 }
 

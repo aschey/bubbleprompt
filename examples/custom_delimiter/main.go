@@ -39,7 +39,7 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
-func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[cmdMetadata]) []input.Suggestion[cmdMetadata] {
+func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
 	if m.textInput.CommandCompleted() {
 		suggestions := []input.Suggestion[cmdMetadata]{
 			{Text: "abc"},
@@ -49,9 +49,9 @@ func (m completerModel) completer(document prompt.Document, promptModel prompt.M
 		if len(m.textInput.ParsedValue().Args.Value) > 0 {
 			argText = m.textInput.ParsedValue().Args.Value[0].Value
 		}
-		return completers.FilterHasPrefix(argText, suggestions)
+		return completers.FilterHasPrefix(argText, suggestions), nil
 	}
-	return completers.FilterHasPrefix(document.TextBeforeCursor(), m.suggestions)
+	return completers.FilterHasPrefix(document.TextBeforeCursor(), m.suggestions), nil
 }
 
 func executor(input string) (tea.Model, error) {

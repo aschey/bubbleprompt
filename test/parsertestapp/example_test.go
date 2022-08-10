@@ -46,14 +46,14 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
-func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[any]) []input.Suggestion[any] {
+func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
 	current := m.textInput.CompletableTokenBeforeCursor()
 	suggestions := []input.Suggestion[any]{
 		{Text: "abcd"},
 		{Text: "def"},
 		{Text: "abcdef"},
 	}
-	return completers.FilterHasPrefix(current, suggestions)
+	return completers.FilterHasPrefix(current, suggestions), nil
 }
 
 func (m completerModel) executor(input string) (tea.Model, error) {

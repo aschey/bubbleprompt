@@ -40,12 +40,13 @@ type Model[I any] struct {
 }
 
 func New[I any](completer Completer[I], executor Executor, textInput input.Input[I], opts ...Option[I]) Model[I] {
+	formatters := input.DefaultFormatters()
 	model := Model[I]{
-		completer:  newCompleterModel(completer, textInput, 6),
+		completer:  newCompleterModel(completer, textInput, formatters.ErrorText, 6),
 		executor:   executor,
 		textInput:  textInput,
 		renderer:   &renderer.UnmanagedRenderer{},
-		Formatters: input.DefaultFormatters(),
+		Formatters: formatters,
 	}
 	model.SetScrollbarColor(lipgloss.Color(DefaultScrollbarColor))
 	model.SetScrollbarThumbColor(lipgloss.Color(DefaultScrollbarThumbColor))

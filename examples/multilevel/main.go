@@ -39,16 +39,16 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
-func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[cmdMetadata]) []input.Suggestion[cmdMetadata] {
+func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
 	if m.textInput.CommandCompleted() {
 		filepath := ""
 		parsed := m.textInput.ParsedValue()
 		if len(parsed.Args.Value) > 0 {
 			filepath = m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp)
 		}
-		return m.filepathCompleter.Complete(filepath)
+		return m.filepathCompleter.Complete(filepath), nil
 	}
-	return completers.FilterHasPrefix(document.TextBeforeCursor(), m.suggestions)
+	return completers.FilterHasPrefix(document.TextBeforeCursor(), m.suggestions), nil
 }
 
 func executor(input string) (tea.Model, error) {

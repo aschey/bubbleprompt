@@ -26,7 +26,7 @@ func (m Model[I]) renderCompleting() string {
 	// so we use the last typed cursor position instead of the current position
 	paddingSize := len(m.textInput.Prompt()) + m.lastTypedCursorPosition
 	prompts := m.completer.Render(paddingSize, m.Formatters, m.scrollbar, m.scrollbarThumb)
-	textView += strings.Join(prompts, "\n")
+	textView += prompts
 
 	return textView
 }
