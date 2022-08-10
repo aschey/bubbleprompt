@@ -1,7 +1,8 @@
 package parserinput
 
 import (
-	"github.com/alecthomas/chroma/v2"
+	"strings"
+
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/parser"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -13,8 +14,7 @@ import (
 type LexerModel struct {
 	textinput        textinput.Model
 	lexer            parser.Lexer
-	styleLexer       chroma.Lexer
-	style            *chroma.Style
+	formatter        parser.Formatter
 	tokens           []parser.Token
 	delimiterTokens  []string
 	delimiters       []string
@@ -103,17 +103,36 @@ func (m *LexerModel) Error() error {
 	return m.err
 }
 
-func (m *LexerModel) View(viewMode input.ViewMode) string {
-	if m.styleLexer == nil {
-		viewBuilder := input.NewViewBuilder(m.Cursor(), lipgloss.NewStyle(), " ", !m.textinput.Blink())
-		viewBuilder.Render(m.Value(), 0, lipgloss.NewStyle())
-		return m.prompt + viewBuilder.GetView()
-	}
-	iter, err := m.styleLexer.Tokenise(nil, m.textinput.Value())
+func (m *LexerModel) unstyledView(showCursor bool) string {
+	viewBuilder := input.NewViewBuilder(m.Cursor(), lipgloss.NewStyle(), " ", showCursor)
+	viewBuilder.Render(m.Value(), 0, lipgloss.NewStyle())
+	return m.prompt + viewBuilder.GetView()
+}
+
+func (m *LexerModel) styledView(showCursor bool) string {
+	formatterTokens, err := m.formatter.Lex(m.Value())
 	if err != nil {
 		println(err)
 	}
-	return m.prompt + m.inputFormatter(iter, viewMode)
+
+	viewBuilder := input.NewViewBuilder(m.Cursor(), lipgloss.NewStyle(), " ", showCursor)
+	for _, token := range formatterTokens {
+		viewBuilder.Render(strings.TrimRight(token.Value, "\n"), viewBuilder.ViewLen(), token.Style)
+	}
+
+	return m.prompt + viewBuilder.GetView()
+}
+
+func (m *LexerModel) View(viewMode input.ViewMode) string {
+	showCursor := !m.textinput.Blink()
+	if viewMode == input.Static {
+		showCursor = false
+	}
+	if m.formatter == nil {
+		return m.unstyledView(showCursor)
+	}
+
+	return m.styledView(showCursor)
 }
 
 func (m *LexerModel) Focus() tea.Cmd {

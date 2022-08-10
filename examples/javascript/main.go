@@ -146,7 +146,7 @@ func main() {
 	var textInput input.Input[any] = parserinput.NewParserModel[statement](
 		parser.NewParticipleParser(participleParser),
 		parserinput.WithDelimiterTokens("Punct", "Whitespace", "And", "Or", "Eq"),
-		parserinput.WithStyle(styleLexer, *styles.SwapOff),
+		parserinput.WithFormatter(parser.NewChromaFormatter(styles.SwapOff, styleLexer)),
 	)
 
 	vm := newVm()

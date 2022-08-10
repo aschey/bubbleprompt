@@ -1,6 +1,8 @@
 package parserinput
 
-import "github.com/alecthomas/chroma/v2"
+import (
+	"github.com/aschey/bubbleprompt/input/parser"
+)
 
 type Option func(model *LexerModel) error
 
@@ -18,10 +20,9 @@ func WithDelimiters(delimiters ...string) Option {
 	}
 }
 
-func WithStyle(styleLexer chroma.Lexer, style chroma.Style) Option {
+func WithFormatter(formatter parser.Formatter) Option {
 	return func(model *LexerModel) error {
-		model.styleLexer = styleLexer
-		model.style = &style
+		model.formatter = formatter
 		return nil
 	}
 }

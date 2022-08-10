@@ -1,20 +1,26 @@
-package parserinput
+package parser
 
 import (
-	"strings"
-
 	"github.com/alecthomas/chroma/v2"
-	"github.com/aschey/bubbleprompt/input"
 	"github.com/charmbracelet/lipgloss"
 )
 
-func (m LexerModel) inputFormatter(iter chroma.Iterator, viewMode input.ViewMode) string {
-	theme := clearBackground(m.style)
-	showCursor := !m.textinput.Blink()
-	if viewMode == input.Static {
-		showCursor = false
+type ChromaFormatter struct {
+	style *chroma.Style
+	lexer chroma.Lexer
+}
+
+func NewChromaFormatter(style *chroma.Style, lexer chroma.Lexer) *ChromaFormatter {
+	return &ChromaFormatter{style: style, lexer: lexer}
+}
+
+func (c *ChromaFormatter) Lex(input string) ([]FormatterToken, error) {
+	theme := clearBackground(c.style)
+	iter, err := c.lexer.Tokenise(nil, input)
+	if err != nil {
+		return nil, err
 	}
-	viewBuilder := input.NewViewBuilder(m.Cursor(), lipgloss.NewStyle(), " ", showCursor)
+	tokens := []FormatterToken{}
 	for token := iter(); token != chroma.EOF; token = iter() {
 		entry := theme.Get(token.Type)
 		style := lipgloss.NewStyle()
@@ -35,10 +41,10 @@ func (m LexerModel) inputFormatter(iter chroma.Iterator, viewMode input.ViewMode
 				style = style.Background(lipgloss.Color(entry.Background.String()))
 			}
 		}
-		viewBuilder.Render(strings.TrimRight(token.Value, "\n"), viewBuilder.ViewLen(), style)
+		tokens = append(tokens, FormatterToken{Value: token.Value, Style: style})
 	}
 
-	return viewBuilder.GetView()
+	return tokens, nil
 }
 
 func clearBackground(style *chroma.Style) *chroma.Style {
