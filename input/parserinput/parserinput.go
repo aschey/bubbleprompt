@@ -1,17 +1,17 @@
 package parserinput
 
 import (
-	"github.com/alecthomas/participle/v2"
+	"github.com/aschey/bubbleprompt/input/parser"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type ParserModel[G any] struct {
 	LexerModel
-	parser     *participle.Parser[G]
+	parser     parser.Parser[G]
 	parsedText *G
 }
 
-func NewParserModel[G any](parser *participle.Parser[G], options ...Option) *ParserModel[G] {
+func NewParserModel[G any](parser parser.Parser[G], options ...Option) *ParserModel[G] {
 	lexerModel := NewLexerModel(parser.Lexer(), options...)
 	return &ParserModel[G]{parser: parser, LexerModel: *lexerModel}
 }
@@ -32,12 +32,12 @@ func (m *ParserModel[G]) Parsed() *G {
 }
 
 func (m *ParserModel[G]) ParsedBeforeCursor() *G {
-	expr, _ := m.parser.ParseString("", m.Value()[:m.Cursor()])
+	expr, _ := m.parser.Parse(m.Value()[:m.Cursor()])
 	return expr
 }
 
 func (m *ParserModel[G]) updateParsed() {
-	expr, err := m.parser.ParseString("", m.Value())
+	expr, err := m.parser.Parse(m.Value())
 	if err == nil {
 		m.parsedText = expr
 	} else {

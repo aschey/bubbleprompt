@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	"github.com/alecthomas/chroma/v2/styles"
-	"github.com/alecthomas/participle/v2/lexer"
 	prompt "github.com/aschey/bubbleprompt"
 	completers "github.com/aschey/bubbleprompt/completer"
 	executors "github.com/aschey/bubbleprompt/executor"
 	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/input/parser"
 	"github.com/aschey/bubbleprompt/input/parserinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/dop251/goja"
@@ -80,8 +80,8 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[an
 	}
 
 	completable := m.textInput.CompletableTokenBeforeCursor()
-	prev := m.textInput.FindLast(func(token lexer.Token, symbol string) bool {
-		return token.Pos.Offset < currentToken.Pos.Offset && symbol != "Whitespace"
+	prev := m.textInput.FindLast(func(token parser.Token, symbol string) bool {
+		return token.Start < currentToken.Start && symbol != "Whitespace"
 	})
 	prevToken := ""
 	if prev != nil {
@@ -140,7 +140,8 @@ func (m completerModel) executor(input string) (tea.Model, error) {
 }
 
 func main() {
-	var textInput input.Input[any] = parserinput.NewParserModel(parser,
+	var textInput input.Input[any] = parserinput.NewParserModel[statement](
+		parser.NewParticipleParser(participleParser),
 		parserinput.WithDelimiterTokens("Punct", "Whitespace", "And", "Or", "Eq"),
 		parserinput.WithStyle(styleLexer, *styles.SwapOff),
 	)

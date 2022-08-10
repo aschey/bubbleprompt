@@ -1,36 +1,38 @@
 package parserinput
 
 import (
-	"math"
-	"strings"
-
 	"github.com/alecthomas/chroma/v2"
-	"github.com/alecthomas/participle/v2/lexer"
 	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/input/parser"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"golang.org/x/exp/slices"
 )
 
-const defaultWhitespace = math.MinInt
-
 type LexerModel struct {
-	textinput       textinput.Model
-	lexer           lexer.Definition
-	styleLexer      chroma.Lexer
-	style           *chroma.Style
-	tokens          []lexer.Token
-	delimiterTokens []string
-	delimiters      []string
-	prompt          string
-	err             error
+	textinput        textinput.Model
+	lexer            parser.Lexer
+	styleLexer       chroma.Lexer
+	style            *chroma.Style
+	tokens           []parser.Token
+	delimiterTokens  []string
+	delimiters       []string
+	whitespaceTokens map[int]bool
+	prompt           string
+	err              error
 }
 
-func NewLexerModel(def lexer.Definition, options ...Option) *LexerModel {
+func NewLexerModel(lexer parser.Lexer, options ...Option) *LexerModel {
 	textinput := textinput.New()
 	textinput.Focus()
-	model := &LexerModel{lexer: def, textinput: textinput, prompt: "> ", tokens: []lexer.Token{}}
+	model := &LexerModel{
+		lexer:            lexer,
+		textinput:        textinput,
+		prompt:           "> ",
+		tokens:           []parser.Token{},
+		whitespaceTokens: make(map[int]bool),
+	}
 	for _, option := range options {
 		if err := option(model); err != nil {
 			panic(err)
@@ -43,34 +45,41 @@ func (m *LexerModel) Init() tea.Cmd {
 	return textinput.Blink
 }
 
+func (m *LexerModel) createWhitespaceToken(start int, end int) parser.Token {
+	token := parser.Token{
+		Value: m.Value()[start:end],
+		Start: start,
+	}
+	m.whitespaceTokens[start] = true
+	return token
+}
+
 func (m *LexerModel) updateTokens() error {
-	lex, err := m.lexer.Lex("", strings.NewReader(m.Value()))
+	tokens, err := m.lexer.Lex(m.Value())
 	if err != nil {
 		return err
 	}
-	tokens, err := lexer.ConsumeAll(lex)
-	fullTokens := []lexer.Token{}
-	if err == nil {
-		for i, token := range tokens {
-			if i > 0 {
-				prevEnd := tokens[i-1].Pos.Offset + len(tokens[i-1].Value)
-				if prevEnd < token.Pos.Offset {
-					// This part of the input was ignored by the lexer
-					// so insert a dummy token to account for it
-					fullTokens = append(fullTokens, lexer.Token{
-						Value: strings.Repeat(" ", token.Pos.Offset-prevEnd),
-						Type:  defaultWhitespace,
-						Pos: lexer.Position{
-							Offset: prevEnd,
-						}})
-				}
+	fullTokens := []parser.Token{}
+	m.whitespaceTokens = make(map[int]bool)
+	last := 0
+	for i, token := range tokens {
+		if i > 0 {
+			prevEnd := tokens[i-1].End()
+			if prevEnd < token.Start {
+				// This part of the input was ignored by the lexer
+				// so insert a dummy token to account for it
+				fullTokens = append(fullTokens, m.createWhitespaceToken(prevEnd, token.Start))
 			}
-			fullTokens = append(fullTokens, token)
 		}
-		m.tokens = fullTokens
-	} else {
-		return err
+		fullTokens = append(fullTokens, token)
+		last = token.End()
 	}
+
+	// Check for trailing whitespace
+	if m.Cursor() > last {
+		fullTokens = append(fullTokens, m.createWhitespaceToken(last, m.Cursor()))
+	}
+	m.tokens = fullTokens
 
 	return nil
 }
@@ -152,39 +161,35 @@ func (m *LexerModel) SetPrompt(prompt string) {
 func (m *LexerModel) ShouldSelectSuggestion(suggestion input.Suggestion[any]) bool {
 	_, token := m.CurrentToken()
 	tokenStr := token.Value
-	return m.Cursor() == token.Pos.Offset+len(tokenStr) && tokenStr == suggestion.Text
+	return m.Cursor() == token.End() && tokenStr == suggestion.Text
 }
 
-func (m *LexerModel) currentToken(text string, tokenPos int) (int, lexer.Token) {
+func (m *LexerModel) currentToken(text string, tokenPos int) (int, parser.Token) {
 	if len(m.tokens) == 0 {
-		return -1, lexer.EOFToken(lexer.Position{})
+		return -1, parser.Token{}
 	}
 	if len(m.Value()) == 0 {
 		return 0, m.tokens[0]
 	}
 
-	// Remove EOF token
-	tokens := m.tokens[:len(m.tokens)-1]
-	for i, token := range tokens {
-		if i == len(tokens)-1 || (tokenPos >= token.Pos.Offset && tokenPos < token.Pos.Offset+len(token.Value)) {
+	for i, token := range m.tokens {
+		if i == len(m.tokens)-1 || (tokenPos >= token.Start && tokenPos < token.End()) {
 			return i, token
 		}
 	}
-	return -1, lexer.EOFToken(lexer.Position{})
+	return -1, parser.Token{}
 }
 
-func (m *LexerModel) CurrentToken() (int, lexer.Token) {
+func (m *LexerModel) CurrentToken() (int, parser.Token) {
 	return m.currentToken(m.Value(), m.Cursor()-1)
 }
 
-func (m *LexerModel) FindLast(filter func(token lexer.Token, symbol string) bool) *lexer.Token {
+func (m *LexerModel) FindLast(filter func(token parser.Token, symbol string) bool) *parser.Token {
 	currentIndex, _ := m.CurrentToken()
-	symbols := lexer.SymbolsByRune(m.lexer)
 	for i := currentIndex; i >= 0; i-- {
 		token := m.tokens[i]
 
-		symbol := symbols[token.Type]
-		if filter(token, symbol) {
+		if filter(token, token.Type) {
 			return &token
 		}
 	}
@@ -192,7 +197,7 @@ func (m *LexerModel) FindLast(filter func(token lexer.Token, symbol string) bool
 	return nil
 }
 
-func (m *LexerModel) PreviousToken() (int, *lexer.Token) {
+func (m *LexerModel) PreviousToken() (int, *parser.Token) {
 	index, _ := m.CurrentToken()
 	if index <= 0 {
 		return -1, nil
@@ -202,10 +207,10 @@ func (m *LexerModel) PreviousToken() (int, *lexer.Token) {
 
 func (m *LexerModel) CompletionText(text string) string {
 	_, token := m.currentToken(text, m.Cursor()-1)
-	return token.String()
+	return token.Value
 }
 
-func (m *LexerModel) Tokens() []lexer.Token {
+func (m *LexerModel) Tokens() []parser.Token {
 	return m.tokens
 }
 
@@ -213,11 +218,9 @@ func (m *LexerModel) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[an
 	return nil
 }
 
-func (m *LexerModel) IsDelimiterToken(token lexer.Token) bool {
-	symbols := lexer.SymbolsByRune(m.lexer)
-	symbol := symbols[token.Type]
-	// Dummy whitespace tokens won't be registered with the lexer so check it separately
-	return slices.Contains(m.delimiters, token.Value) || slices.Contains(m.delimiterTokens, symbol) || token.Type == defaultWhitespace
+func (m *LexerModel) IsDelimiterToken(token parser.Token) bool {
+	// Dummy whitespace tokens won't be registered with the lexer so check them separately
+	return slices.Contains(m.delimiters, token.Value) || slices.Contains(m.delimiterTokens, token.Type) || m.whitespaceTokens[token.Start]
 }
 
 func (m *LexerModel) OnSuggestionChanged(suggestion input.Suggestion[any]) {
@@ -227,23 +230,22 @@ func (m *LexerModel) OnSuggestionChanged(suggestion input.Suggestion[any]) {
 		if m.Cursor() < len(m.Value()) {
 			token = m.tokens[i-1]
 			if m.IsDelimiterToken(token) {
-				token = lexer.Token{Pos: lexer.Position{Offset: token.Pos.Offset + len(token.Value)}}
+				token = parser.Token{Start: token.End()}
 			}
 		} else {
-			token = m.tokens[i+1]
+			token = parser.Token{
+				Start: token.End(),
+			}
 		}
 	}
 
-	start := token.Pos.Offset
-
-	rest := start + len(token.Value)
 	value := m.Value()
-	newVal := value[:start] + suggestion.Text
-	if rest < len(value) {
-		newVal += value[start+len(token.Value):]
+	newVal := value[:token.Start] + suggestion.Text
+	if token.End() < len(value) {
+		newVal += value[token.End():]
 	}
 	m.SetValue(newVal)
-	m.SetCursor(start + len(suggestion.Text) - suggestion.CursorOffset)
+	m.SetCursor(token.Start + len(suggestion.Text) - suggestion.CursorOffset)
 
 }
 
@@ -272,8 +274,8 @@ func (m *LexerModel) CurrentTokenBeforeCursor() string {
 	return m.currentTokenBeforeCursor(token)
 }
 
-func (m *LexerModel) currentTokenBeforeCursor(token lexer.Token) string {
-	start := token.Pos.Offset
+func (m *LexerModel) currentTokenBeforeCursor(token parser.Token) string {
+	start := token.Start
 	cursor := m.Cursor()
 	if start > cursor {
 		return ""

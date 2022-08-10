@@ -5,9 +5,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/alecthomas/participle/v2"
-	"github.com/alecthomas/participle/v2/lexer"
 	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/input/parser"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -92,7 +91,7 @@ type Model[T CmdMetadataAccessor] struct {
 	SelectedTextStyle lipgloss.Style
 	CursorStyle       lipgloss.Style
 	PlaceholderStyle  lipgloss.Style
-	parser            *participle.Parser[Statement]
+	parser            parser.Parser[Statement]
 	parsedText        *Statement
 }
 
@@ -135,19 +134,6 @@ func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T] {
 	return model
 }
 
-func (m *Model[T]) buildParser() {
-	lexer := lexer.MustSimple([]lexer.SimpleRule{
-		{Name: "LongFlag", Pattern: `\-\-[^\s=\-]*`},
-		{Name: "ShortFlag", Pattern: `\-[^\s=\-]*`},
-		{Name: "Eq", Pattern: "="},
-		{Name: "QuotedString", Pattern: `"[^"]*"`},
-		{Name: `String`, Pattern: m.stringRegex.String()},
-		{Name: "whitespace", Pattern: m.delimiterRegex.String()},
-	})
-	parser := participle.MustBuild[Statement](participle.Lexer(lexer))
-	m.parser = parser
-}
-
 func (m *Model[T]) Init() tea.Cmd {
 	return textinput.Blink
 }
@@ -164,42 +150,6 @@ func (m *Model[T]) SetStringRegex(stringRegex *regexp.Regexp) {
 
 func (m *Model[T]) SetDefaultDelimiter(defaultDelimiter string) {
 	m.defaultDelimiter = defaultDelimiter
-}
-
-type Statement struct {
-	Pos     lexer.Position
-	Command ident `parser:"@@?"`
-	Args    args  `parser:"@@"`
-	Flags   flags `parser:"@@"`
-	// Invalid input but this needs to be included to make the parser happy
-	TrailingText []ident `parser:"@@?"`
-}
-
-type args struct {
-	Pos   lexer.Position
-	Value []ident `parser:"@@*"`
-}
-
-type flags struct {
-	Pos   lexer.Position
-	Value []flag `parser:"@@*"`
-}
-
-type flag struct {
-	Pos   lexer.Position
-	Name  string `parser:"( @ShortFlag | @LongFlag )"`
-	Delim *delim `parser:"@@?"`
-	Value *ident `parser:"@@?"`
-}
-
-type delim struct {
-	Pos   lexer.Position
-	Value string `parser:"@Eq"`
-}
-
-type ident struct {
-	Pos   lexer.Position
-	Value string `parser:"( @QuotedString | @String )"`
 }
 
 func (m *Model[T]) ShouldSelectSuggestion(suggestion input.Suggestion[T]) bool {
@@ -244,7 +194,7 @@ func (m *Model[T]) ArgsBeforeCursor() []string {
 	args := []string{}
 	textBeforeCursor := m.Value()[:m.Cursor()]
 
-	expr, _ := m.parser.ParseString("", textBeforeCursor)
+	expr, _ := m.parser.Parse(textBeforeCursor)
 
 	for _, arg := range expr.Args.Value {
 		args = append(args, arg.Value)
@@ -257,7 +207,7 @@ func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	m.textinput, cmd = m.textinput.Update(msg)
 
 	if _, ok := msg.(tea.KeyMsg); ok {
-		expr, err := m.parser.ParseString("", m.Value())
+		expr, err := m.parser.Parse(m.Value())
 		if err == nil {
 			m.parsedText = expr
 		}
@@ -426,7 +376,7 @@ func (m *Model[T]) OnSuggestionUnselected() {
 }
 
 func (m *Model[T]) CompletionText(text string) string {
-	expr, _ := m.parser.ParseString("", text)
+	expr, _ := m.parser.Parse(text)
 	tokens := m.allTokens(expr)
 	token := m.currentToken(tokens, RoundUp)
 
@@ -455,7 +405,7 @@ func (m *Model[T]) CommandBeforeCursor() string {
 
 func (m *Model[T]) SetValue(s string) {
 	m.textinput.SetValue(s)
-	expr, err := m.parser.ParseString("", m.Value())
+	expr, err := m.parser.Parse(m.Value())
 	if err != nil {
 		fmt.Println(err)
 	}

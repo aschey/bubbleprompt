@@ -23,7 +23,7 @@ var lex = lexer.MustSimple(lexerRules)
 var styleLexer = chroma.MustNewLexer(&chroma.Config{},
 	func() chroma.Rules { return chroma.Rules{"root": styleRules} })
 
-var parser = participle.MustBuild[statement](participle.Lexer(lex),
+var participleParser = participle.MustBuild[statement](participle.Lexer(lex),
 	participle.UseLookahead(20),
 	participle.Elide("Whitespace", "Grouping"),
 )

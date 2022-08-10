@@ -10,11 +10,12 @@ import (
 	completers "github.com/aschey/bubbleprompt/completer"
 	executors "github.com/aschey/bubbleprompt/executor"
 	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/input/parser"
 	"github.com/aschey/bubbleprompt/input/parserinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-var parser = participle.MustBuild[Statement](
+var participleParser = participle.MustBuild[Statement](
 	participle.UseLookahead(20),
 )
 
@@ -68,7 +69,9 @@ func (m completerModel) executor(input string) (tea.Model, error) {
 }
 
 func TestApp(t *testing.T) {
-	var textInput input.Input[any] = parserinput.NewParserModel(parser, parserinput.WithDelimiters(","))
+	var textInput input.Input[any] = parserinput.NewParserModel[Statement](
+		parser.NewParticipleParser(participleParser),
+		parserinput.WithDelimiters(","))
 
 	completerModel := completerModel{
 		suggestions: []input.Suggestion[any]{},
