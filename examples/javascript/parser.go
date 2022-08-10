@@ -34,14 +34,15 @@ type statement struct {
 }
 
 type assignment struct {
-	Identifier string      `parser:" @Ident '=' "`
-	Expression *expression `parser:"@@?"`
+	PropAccessor *propAccessor `parser:" ( @@ "`
+	Identifier   *string       `parser:"| @Ident ) '=' "`
+	Expression   *expression   `parser:"@@?"`
 }
 
 type indexer struct {
 	OBracket   string      `parser:"@ '['"`
 	Expression *expression `parser:"(@@"`
-	CBracket   *string     `parser:"@ ']')?"`
+	CBracket   *string     `parser:"@ ']'?)?"`
 }
 
 type expression struct {

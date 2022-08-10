@@ -104,7 +104,11 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[an
 }
 
 func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[any]) []input.Suggestion[any] {
-	parsed := m.textInput.ParsedBeforeCursor()
+	parsed, err := m.textInput.ParsedBeforeCursor()
+	if err != nil {
+		println(err.Error())
+		return nil
+	}
 	if parsed != nil {
 		value := m.evaluateStatement(*parsed)
 		return m.valueSuggestions(value)

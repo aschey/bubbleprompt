@@ -31,9 +31,8 @@ func (m *ParserModel[G]) Parsed() *G {
 	return m.parsedText
 }
 
-func (m *ParserModel[G]) ParsedBeforeCursor() *G {
-	expr, _ := m.parser.Parse(m.Value()[:m.Cursor()])
-	return expr
+func (m *ParserModel[G]) ParsedBeforeCursor() (*G, error) {
+	return m.parser.Parse(m.Value()[:m.Cursor()])
 }
 
 func (m *ParserModel[G]) updateParsed() {
