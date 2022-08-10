@@ -30,7 +30,12 @@ func (p *ParticipleLexer) Lex(input string) ([]Token, error) {
 	symbols := lexer.SymbolsByRune(p.definition)
 	tokens := make([]Token, len(lexerTokens))
 	for i, token := range lexerTokens {
-		tokens[i] = Token{Start: token.Pos.Offset, Value: token.Value, Type: symbols[token.Type]}
+		tokens[i] = Token{
+			Start: token.Pos.Offset,
+			Value: token.Value,
+			Type:  symbols[token.Type],
+			Index: i,
+		}
 	}
 
 	return tokens, nil

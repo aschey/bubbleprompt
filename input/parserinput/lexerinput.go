@@ -47,10 +47,11 @@ func (m *LexerModel) Init() tea.Cmd {
 	return textinput.Blink
 }
 
-func (m *LexerModel) createWhitespaceToken(start int, end int) parser.Token {
+func (m *LexerModel) createWhitespaceToken(start int, end int, index int) parser.Token {
 	token := parser.Token{
 		Value: m.Value()[start:end],
 		Start: start,
+		Index: index,
 	}
 	m.whitespaceTokens[start] = true
 	return token
@@ -72,22 +73,26 @@ func (m *LexerModel) updateTokens() error {
 	fullTokens := []parser.Token{}
 	m.whitespaceTokens = make(map[int]bool)
 	last := 0
+	index := 0
 	for i, token := range tokens {
 		if i > 0 {
 			prevEnd := tokens[i-1].End()
 			if prevEnd < token.Start {
 				// This part of the input was ignored by the lexer
 				// so insert a dummy token to account for it
-				fullTokens = append(fullTokens, m.createWhitespaceToken(prevEnd, token.Start))
+				fullTokens = append(fullTokens, m.createWhitespaceToken(prevEnd, token.Start, index))
+				index++
 			}
 		}
+		token.Index = index
+		index++
 		fullTokens = append(fullTokens, token)
 		last = token.End()
 	}
 
 	// Check for trailing whitespace
 	if m.Cursor() > last {
-		fullTokens = append(fullTokens, m.createWhitespaceToken(last, m.Cursor()))
+		fullTokens = append(fullTokens, m.createWhitespaceToken(last, m.Cursor(), index))
 	}
 	m.tokens = fullTokens
 
@@ -183,34 +188,34 @@ func (m *LexerModel) SetPrompt(prompt string) {
 }
 
 func (m *LexerModel) ShouldSelectSuggestion(suggestion input.Suggestion[any]) bool {
-	_, token := m.CurrentToken()
+	token := m.CurrentToken()
 	tokenStr := token.Value
 	return m.Cursor() == token.End() && tokenStr == suggestion.Text
 }
 
-func (m *LexerModel) currentToken(text string, tokenPos int) (int, parser.Token) {
+func (m *LexerModel) currentToken(text string, tokenPos int) parser.Token {
 	if len(m.tokens) == 0 {
-		return -1, parser.Token{}
+		return parser.Token{Index: -1}
 	}
 	if len(m.Value()) == 0 {
-		return 0, m.tokens[0]
+		return m.tokens[0]
 	}
 
 	for i, token := range m.tokens {
 		if i == len(m.tokens)-1 || (tokenPos >= token.Start && tokenPos < token.End()) {
-			return i, token
+			return token
 		}
 	}
-	return -1, parser.Token{}
+	return parser.Token{Index: -1}
 }
 
-func (m *LexerModel) CurrentToken() (int, parser.Token) {
+func (m *LexerModel) CurrentToken() parser.Token {
 	return m.currentToken(m.Value(), m.Cursor()-1)
 }
 
 func (m *LexerModel) FindLast(filter func(token parser.Token, symbol string) bool) *parser.Token {
-	currentIndex, _ := m.CurrentToken()
-	for i := currentIndex; i >= 0; i-- {
+	currentToken := m.CurrentToken()
+	for i := currentToken.Index; i >= 0; i-- {
 		token := m.tokens[i]
 
 		if filter(token, token.Type) {
@@ -221,16 +226,16 @@ func (m *LexerModel) FindLast(filter func(token parser.Token, symbol string) boo
 	return nil
 }
 
-func (m *LexerModel) PreviousToken() (int, *parser.Token) {
-	index, _ := m.CurrentToken()
-	if index <= 0 {
-		return -1, nil
+func (m *LexerModel) PreviousToken() *parser.Token {
+	currentToken := m.CurrentToken()
+	if currentToken.Index <= 0 {
+		return nil
 	}
-	return index - 1, &m.tokens[index-1]
+	return &m.tokens[currentToken.Index-1]
 }
 
 func (m *LexerModel) CompletionText(text string) string {
-	_, token := m.currentToken(text, m.Cursor()-1)
+	token := m.currentToken(text, m.Cursor()-1)
 	return token.Value
 }
 
@@ -248,11 +253,11 @@ func (m *LexerModel) IsDelimiterToken(token parser.Token) bool {
 }
 
 func (m *LexerModel) OnSuggestionChanged(suggestion input.Suggestion[any]) {
-	i, token := m.currentToken(m.Value(), m.Cursor())
+	token := m.currentToken(m.Value(), m.Cursor())
 
 	if m.IsDelimiterToken(token) {
 		if m.Cursor() < len(m.Value()) {
-			token = m.tokens[i-1]
+			token = m.tokens[token.Index-1]
 			if m.IsDelimiterToken(token) {
 				token = parser.Token{Start: token.End()}
 			}
@@ -284,7 +289,7 @@ func (m *LexerModel) ShouldUnselectSuggestion(prevText string, msg tea.KeyMsg) b
 }
 
 func (m *LexerModel) CompletableTokenBeforeCursor() string {
-	_, token := m.CurrentToken()
+	token := m.CurrentToken()
 	if m.IsDelimiterToken(token) {
 		// Don't filter suggestions on delimiters
 		return ""
@@ -293,8 +298,7 @@ func (m *LexerModel) CompletableTokenBeforeCursor() string {
 }
 
 func (m *LexerModel) CurrentTokenBeforeCursor() string {
-	_, token := m.CurrentToken()
-
+	token := m.CurrentToken()
 	return m.currentTokenBeforeCursor(token)
 }
 

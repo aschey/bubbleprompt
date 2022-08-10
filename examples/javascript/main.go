@@ -66,7 +66,7 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[an
 	}
 	objectVar := m.vm.ToObject(value)
 
-	_, currentToken := m.textInput.CurrentToken()
+	currentToken := m.textInput.CurrentToken()
 	currentBeforeCursor := m.textInput.CurrentTokenBeforeCursor()
 	if currentBeforeCursor == "]" {
 		return suggestions
