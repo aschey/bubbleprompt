@@ -16,6 +16,7 @@ type LexerModel struct {
 	lexer            parser.Lexer
 	formatter        parser.Formatter
 	tokens           []parser.Token
+	formatterTokens  []parser.FormatterToken
 	delimiterTokens  []string
 	delimiters       []string
 	whitespaceTokens map[int]bool
@@ -31,6 +32,7 @@ func NewLexerModel(lexer parser.Lexer, options ...Option) *LexerModel {
 		textinput:        textinput,
 		prompt:           "> ",
 		tokens:           []parser.Token{},
+		formatterTokens:  []parser.FormatterToken{},
 		whitespaceTokens: make(map[int]bool),
 	}
 	for _, option := range options {
@@ -59,6 +61,14 @@ func (m *LexerModel) updateTokens() error {
 	if err != nil {
 		return err
 	}
+
+	if m.formatter != nil {
+		m.formatterTokens, err = m.formatter.Lex(m.Value())
+		if err != nil {
+			return err
+		}
+	}
+
 	fullTokens := []parser.Token{}
 	m.whitespaceTokens = make(map[int]bool)
 	last := 0
@@ -110,13 +120,8 @@ func (m *LexerModel) unstyledView(showCursor bool) string {
 }
 
 func (m *LexerModel) styledView(showCursor bool) string {
-	formatterTokens, err := m.formatter.Lex(m.Value())
-	if err != nil {
-		println(err)
-	}
-
 	viewBuilder := input.NewViewBuilder(m.Cursor(), lipgloss.NewStyle(), " ", showCursor)
-	for _, token := range formatterTokens {
+	for _, token := range m.formatterTokens {
 		viewBuilder.Render(strings.TrimRight(token.Value, "\n"), viewBuilder.ViewLen(), token.Style)
 	}
 
