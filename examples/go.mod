@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/alecthomas/chroma/v2 v2.2.0
 	github.com/alecthomas/participle/v2 v2.0.0-beta.5
+	github.com/arriqaaq/flashdb v0.1.7-0.20220531093229-cc4605a9db90
 	github.com/aschey/bubbleprompt v0.0.0
 	github.com/charmbracelet/bubbletea v0.22.0
 	github.com/dop251/goja v0.0.0-20220806120448-1444e6b94559
@@ -13,8 +14,7 @@ require (
 
 require (
 	github.com/arriqaaq/aol v0.1.2 // indirect
-	github.com/arriqaaq/art v0.1.1 // indirect
-	github.com/arriqaaq/flashdb v0.1.6 // indirect
+	github.com/arriqaaq/art v0.1.2 // indirect
 	github.com/arriqaaq/hash v0.1.2 // indirect
 	github.com/arriqaaq/set v0.1.2 // indirect
 	github.com/arriqaaq/zset v0.1.2 // indirect
@@ -33,7 +33,7 @@ require (
 	github.com/muesli/termenv v0.12.0 // indirect
 	github.com/rivo/uniseg v0.3.4 // indirect
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e // indirect
-	golang.org/x/sys v0.0.0-20220808155132-1c4a2a72c664 // indirect
+	golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab // indirect
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
 	golang.org/x/text v0.3.7 // indirect
 )

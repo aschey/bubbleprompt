@@ -8,7 +8,8 @@ import (
 	"os"
 	"reflect"
 	"runtime"
-	"time"
+	"strconv"
+	"strings"
 
 	"github.com/arriqaaq/flashdb"
 	prompt "github.com/aschey/bubbleprompt"
@@ -26,7 +27,6 @@ type model struct {
 }
 
 type completerModel struct {
-	//suggestions []input.Suggestion[cmdMetadata]
 	db        *flashdb.FlashDB
 	textInput *commandinput.Model[cmdMetadata]
 }
@@ -50,7 +50,6 @@ func (m completerModel) completer(document prompt.Document, promptModel prompt.M
 	m.db.View(func(tx *flashdb.Tx) error {
 
 		txType := reflect.TypeOf(tx)
-		txValue := reflect.ValueOf(tx)
 
 		for i := 0; i < txType.NumMethod(); i++ {
 			method := txType.Method(i)
@@ -59,38 +58,26 @@ func (m completerModel) completer(document prompt.Document, promptModel prompt.M
 			fset := token.NewFileSet()
 			parsedAst, _ := parser.ParseFile(fset, fileName, nil, parser.ParseComments)
 			desc := ""
+			args := []commandinput.PositionalArg{}
 			for _, dec := range parsedAst.Decls {
 				if funcDecl, ok := dec.(*ast.FuncDecl); ok {
 					if funcDecl.Name.Name == method.Name {
+						for _, arg := range funcDecl.Type.Params.List {
+							for _, name := range arg.Names {
+								args = append(args, commandinput.NewPositionalArg(name.Name))
+							}
+
+						}
 						if funcDecl.Doc != nil {
 							desc = funcDecl.Doc.Text()
-							if len(desc) > 20 {
-								desc = desc[:20]
+							desc = strings.ReplaceAll(desc, "\n", " ")
+							if len(desc) > 80 {
+								desc = desc[:80]
 							}
 						}
 						break
 					}
 				}
-			}
-			// pkg := &ast.Package{
-			// 	Name:  "Any",
-			// 	Files: make(map[string]*ast.File),
-			// }
-			// pkg.Files[fileName] = parsedAst
-
-			// importPath, _ := filepath.Abs("/")
-			// myDoc := doc.New(pkg, importPath, doc.AllDecls)
-			// doc := ""
-			// for _, theFunc := range myDoc.Funcs {
-			// 	if theFunc.Name == method.Name {
-			// 		doc = theFunc.Doc
-			// 	}
-			// }
-			methodVal := txValue.MethodByName(method.Name).Type()
-			args := []commandinput.PositionalArg{}
-			for j := 0; j < methodVal.NumIn(); j++ {
-				param := methodVal.In(j)
-				args = append(args, commandinput.NewPositionalArg(param.Name()))
 			}
 
 			suggestions = append(suggestions, input.Suggestion[cmdMetadata]{Text: method.Name, Description: desc, Metadata: commandinput.NewCmdMetadata(args, commandinput.Placeholder{})})
@@ -100,11 +87,60 @@ func (m completerModel) completer(document prompt.Document, promptModel prompt.M
 	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp), suggestions), nil
 }
 
-func executor(input string) (tea.Model, error) {
-	return executors.NewAsyncStringModel(func() (string, error) {
-		time.Sleep(100 * time.Millisecond)
-		return "result is " + input, nil
-	}), nil
+func (m completerModel) executor(input string) (tea.Model, error) {
+	outStr := ""
+	m.db.Update(func(tx *flashdb.Tx) error {
+		params := strings.Split(input, " ")
+		method, _ := reflect.TypeOf(tx).MethodByName(params[0])
+
+		paramVals := []reflect.Value{reflect.ValueOf(tx)}
+		if len(params) > 1 {
+			for i, p := range params[1:] {
+				var reflectVal any
+				methodParam := method.Type.In(i + 1)
+				switch methodParam.Kind() {
+				case reflect.Int64:
+					reflectVal, _ = strconv.ParseInt(p, 10, 64)
+				case reflect.Float64:
+					reflectVal, _ = strconv.ParseFloat(p, 64)
+				case reflect.String:
+					reflectVal = p
+				}
+				paramVals = append(paramVals, reflect.ValueOf(reflectVal))
+
+			}
+		}
+
+		out := method.Func.Call(paramVals)
+		retVals := []string{}
+		for _, outVal := range out {
+			if outVal.CanInterface() {
+				iface := outVal.Interface()
+				if iface == nil {
+					outStr = ""
+				}
+				switch ifaceVal := iface.(type) {
+				case error:
+					retVals = append(retVals, ifaceVal.Error())
+				case []string:
+					retVals = append(retVals, strings.Join(ifaceVal, ","))
+				case string:
+					retVals = append(retVals, ifaceVal)
+				case bool:
+					retVals = append(retVals, strconv.FormatBool(ifaceVal))
+				case int64:
+					retVals = append(retVals, strconv.FormatInt(ifaceVal, 10))
+				}
+			} else {
+				retVals = append(retVals, outVal.String())
+			}
+
+		}
+		outStr = strings.Join(retVals, " ")
+		return nil
+	})
+
+	return executors.NewStringModel(outStr), nil
 }
 
 func main() {
@@ -116,7 +152,7 @@ func main() {
 
 	m := model{prompt: prompt.New(
 		completerModel.completer,
-		executor,
+		completerModel.executor,
 		textInput,
 	)}
 
