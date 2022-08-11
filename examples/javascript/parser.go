@@ -3,11 +3,10 @@ package main
 import (
 	"github.com/alecthomas/chroma/v2"
 	"github.com/alecthomas/participle/v2"
-	"github.com/alecthomas/participle/v2/lexer"
-	"github.com/aschey/bubbleprompt/input/parserinput"
+	"github.com/aschey/bubbleprompt/input/parser/lexerbuilder"
 )
 
-var rules = parserinput.Rules{
+var rules = []lexerbuilder.Rule{
 	{Name: "Whitespace", Pattern: `\s+`, Type: chroma.Whitespace},
 	{Name: "Grouping", Pattern: `[\(\)]`, Type: chroma.Punctuation},
 	{Name: "String", Pattern: `"([^"]*"?)|('[^']*'?)`, Type: chroma.String},
@@ -16,12 +15,7 @@ var rules = parserinput.Rules{
 	{Name: "Ident", Pattern: `[_a-zA-Z]+[_a-zA-Z0-9]*`, Type: chroma.Text},
 }
 
-var lexerRules, styleRules = rules.BuildLexers()
-
-var lex = lexer.MustSimple(lexerRules)
-
-var styleLexer = chroma.MustNewLexer(&chroma.Config{},
-	func() chroma.Rules { return chroma.Rules{"root": styleRules} })
+var lex, styleLexer = lexerbuilder.NewLexerBuilder(rules).BuildLexers()
 
 var participleParser = participle.MustBuild[statement](participle.Lexer(lex),
 	participle.UseLookahead(20),
