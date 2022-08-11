@@ -28,13 +28,21 @@ func DefaultFormatters() Formatters {
 				NewStyle().
 				Foreground(lipgloss.Color(DefaultSelectedForeground)).
 				Background(lipgloss.Color(DefaultDescriptionBackground)),
-			Style: lipgloss.NewStyle().Background(lipgloss.Color(DefaultDescriptionBackground)),
+			Style: lipgloss.
+				NewStyle().
+				Background(lipgloss.Color(DefaultDescriptionBackground)),
 		},
 		DefaultPlaceholder: Text{
-			Style: lipgloss.NewStyle().Foreground(lipgloss.Color("6")),
+			Style: lipgloss.
+				NewStyle().
+				Foreground(lipgloss.Color("6")),
 		},
 		ErrorText: Text{
-			Style: lipgloss.NewStyle().PaddingLeft(1).PaddingRight(1).Background(lipgloss.Color(DefaultErrorTextBackground)),
+			Style: lipgloss.
+				NewStyle().
+				PaddingLeft(1).
+				PaddingRight(1).
+				Background(lipgloss.Color(DefaultErrorTextBackground)),
 		},
 	}
 }
