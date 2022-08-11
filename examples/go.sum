@@ -4,6 +4,18 @@ github.com/alecthomas/chroma/v2 v2.2.0/go.mod h1:vf4zrexSH54oEjJ7EdB65tGNHmH3pGZ
 github.com/alecthomas/participle/v2 v2.0.0-beta.5 h1:y6dsSYVb1G5eK6mgmy+BgI3Mw35a3WghArZ/Hbebrjo=
 github.com/alecthomas/participle/v2 v2.0.0-beta.5/go.mod h1:RC764t6n4L8D8ITAJv0qdokritYSNR3wV5cVwmIEaMM=
 github.com/alecthomas/repr v0.1.0 h1:ENn2e1+J3k09gyj2shc0dHr/yjaWSHRlrJ4DPMevDqE=
+github.com/arriqaaq/aol v0.1.2 h1:uGEMA1mYu968vmRUSE9d2++YUaDGObbBN1QzD6RlgC4=
+github.com/arriqaaq/aol v0.1.2/go.mod h1:GQ7Jdsp3RYIbUsovCh0XdIbRj0mvBNBFQeIfL1oKKKE=
+github.com/arriqaaq/art v0.1.1 h1:RPrzuaAkIkBAHvfqubVCFu5+IDyn0Lk8BIkAHWRJ+Ns=
+github.com/arriqaaq/art v0.1.1/go.mod h1:11r05D8a+owc6lTpI/yVypn16g7LrsVif+8lU9riSDM=
+github.com/arriqaaq/flashdb v0.1.6 h1:3aQlCl2rql2LXPn+rGSjnmrMLnpcZtv2xlfkUZ2zJz4=
+github.com/arriqaaq/flashdb v0.1.6/go.mod h1:pHq2x7sAZoRopqp/jV3hFXJ5aA48+vTe91cTi6Zl1mg=
+github.com/arriqaaq/hash v0.1.2 h1:q/Az5T00nkqEc/XhlnrGcPeZBmgBM5ktKi26nr70s9c=
+github.com/arriqaaq/hash v0.1.2/go.mod h1:WB3wOwaJdkNPb8DX+J2YHivF9y+sJkXhM1B4gH7xphE=
+github.com/arriqaaq/set v0.1.2 h1:uiIarvVXvsAWr/RQ4L9C7HgOXh4jteaBeFMwU/faWlk=
+github.com/arriqaaq/set v0.1.2/go.mod h1:Sj43MSlXuSY6tqVu2XZ1jf30fQylGp3FCM2O6qFBSd8=
+github.com/arriqaaq/zset v0.1.2 h1:vF/B95Unz/zA0Ttmc1XHCQVyxIXd7B6PNc3H4aCOdyo=
+github.com/arriqaaq/zset v0.1.2/go.mod h1:5DoabYGc0lHZnhhzZoYawG015X7i+bphIsa6qEekFuI=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
 github.com/charmbracelet/bubbles v0.13.0 h1:zP/ROH3wJEBqZWKIsD50ZKKlx3ydLInq3LdD/Nrlb8w=
@@ -66,6 +78,7 @@ github.com/rivo/uniseg v0.3.4/go.mod h1:FN3SvrM+Zdj16jyLfmOkMNblXMcoc8DfTHruCPUc
 github.com/rogpeppe/go-internal v1.6.1/go.mod h1:xXDCJY+GAPziupqXw64V24skbSoqbTEfhy4qGm1nDQc=
 github.com/sahilm/fuzzy v0.1.0/go.mod h1:VFvziUEIMCrT6A6tw2RFIXPXXmzXbOsSHF0DOI8ZK9Y=
 github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
+github.com/stretchr/testify v1.7.1 h1:5TQK59W5E3v0r2duFAb7P95B6hEeOyEnHRa8MjYSMTY=
 golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e h1:+WEEuIdZHnUeJJmEUjyYC2gfUMj69yZXw17EnHg/otA=
 golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e/go.mod h1:Kr81I6Kryrl9sr8s2FK3vxD90NdsKWRuOIl2O4CvYbA=
 golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=

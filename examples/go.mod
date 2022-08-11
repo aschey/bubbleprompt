@@ -12,6 +12,12 @@ require (
 )
 
 require (
+	github.com/arriqaaq/aol v0.1.2 // indirect
+	github.com/arriqaaq/art v0.1.1 // indirect
+	github.com/arriqaaq/flashdb v0.1.6 // indirect
+	github.com/arriqaaq/hash v0.1.2 // indirect
+	github.com/arriqaaq/set v0.1.2 // indirect
+	github.com/arriqaaq/zset v0.1.2 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/charmbracelet/bubbles v0.13.0 // indirect
 	github.com/charmbracelet/lipgloss v0.5.0 // indirect
