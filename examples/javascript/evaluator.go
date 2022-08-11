@@ -133,6 +133,9 @@ func (m completerModel) evaluateLiteral(literal literal) goja.Value {
 		}
 	}
 	val, _ := m.vm.RunString(literalVal)
+	if val == nil {
+		return goja.Null()
+	}
 	return val
 }
 
