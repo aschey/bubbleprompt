@@ -56,27 +56,26 @@ func (m completerModel) globalSuggestions() []input.Suggestion[any] {
 }
 
 func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[any] {
-	suggestions := []input.Suggestion[any]{}
 	if value == nil {
-		return suggestions
+		return nil
 	}
 	strVal := value.String()
 	if strVal == "null" || strVal == "undefined" {
-		return suggestions
+		return nil
 	}
 	objectVar := m.vm.ToObject(value)
 
 	currentToken := m.textInput.CurrentToken()
 	currentBeforeCursor := m.textInput.CurrentTokenBeforeCursor()
 	if currentBeforeCursor == "]" {
-		return suggestions
+		return nil
 	}
 
 	keyWrap := ""
 	datatype := objectVar.ExportType().String()
 	// Can't use dot notation with arrays
 	if datatype == arrayType && currentBeforeCursor == "." {
-		return suggestions
+		return nil
 	}
 
 	completable := m.textInput.CompletableTokenBeforeCursor()
@@ -93,6 +92,7 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[an
 		completable = strings.Trim(completable, `"`)
 	}
 
+	suggestions := []input.Suggestion[any]{}
 	for _, key := range objectVar.Keys() {
 		suggestions = append(suggestions, input.Suggestion[any]{
 			Text:           keyWrap + key + keyWrap,
