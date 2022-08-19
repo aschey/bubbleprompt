@@ -84,27 +84,46 @@ func (m completerModel) completer(document prompt.Document, promptModel prompt.M
 		}
 		return nil
 	})
-	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp), suggestions), nil
+	if m.textInput.CommandCompleted() {
+		return nil, nil
+	}
+	return completers.FilterHasPrefix(m.textInput.CommandBeforeCursor(), suggestions), nil
 }
 
-func (m completerModel) executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (tea.Model, error) {
+func (m completerModel) executor(input string) (tea.Model, error) {
+	if len(input) > 0 {
+		input = strings.ToUpper(string(input[0])) + input[1:]
+	}
 	outStr := ""
-	m.db.Update(func(tx *flashdb.Tx) error {
+	err := m.db.Update(func(tx *flashdb.Tx) error {
 		params := strings.Split(input, " ")
-		method, _ := reflect.TypeOf(tx).MethodByName(params[0])
+		method, found := reflect.TypeOf(tx).MethodByName(params[0])
+		if !found {
+			return fmt.Errorf("command not found")
+		}
+
+		expectedParams := method.Type.NumIn()
+		if len(params) != expectedParams {
+			// Subtract one for the tx object
+			return fmt.Errorf("expected %d params but got %d", expectedParams-1, len(params)-1)
+		}
 
 		paramVals := []reflect.Value{reflect.ValueOf(tx)}
 		if len(params) > 1 {
 			for i, p := range params[1:] {
 				var reflectVal any
+				var err error
 				methodParam := method.Type.In(i + 1)
 				switch methodParam.Kind() {
 				case reflect.Int64:
-					reflectVal, _ = strconv.ParseInt(p, 10, 64)
+					reflectVal, err = strconv.ParseInt(p, 10, 64)
 				case reflect.Float64:
-					reflectVal, _ = strconv.ParseFloat(p, 64)
+					reflectVal, err = strconv.ParseFloat(p, 64)
 				case reflect.String:
 					reflectVal = p
+				}
+				if err != nil {
+					return err
 				}
 				paramVals = append(paramVals, reflect.ValueOf(reflectVal))
 
@@ -140,7 +159,7 @@ func (m completerModel) executor(input string, selectedSuggestion *input.Suggest
 		return nil
 	})
 
-	return executors.NewStringModel(outStr), nil
+	return executors.NewStringModel(outStr), err
 }
 
 func main() {
