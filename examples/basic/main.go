@@ -43,7 +43,7 @@ func (m completerModel) completer(document prompt.Document, promptModel prompt.M
 	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp), m.suggestions), nil
 }
 
-func executor(input string) (tea.Model, error) {
+func executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (tea.Model, error) {
 	return executors.NewAsyncStringModel(func() (string, error) {
 		time.Sleep(100 * time.Millisecond)
 		return "result is " + input, nil

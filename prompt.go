@@ -18,14 +18,14 @@ const (
 	executing
 )
 
-type Executor func(input string) (tea.Model, error)
+type Executor[T any] func(input string, selectedSuggestion *input.Suggestion[T]) (tea.Model, error)
 
 const DefaultScrollbarColor = "13"
 const DefaultScrollbarThumbColor = "14"
 
 type Model[I any] struct {
 	completer               completerModel[I]
-	executor                Executor
+	executor                Executor[I]
 	textInput               input.Input[I]
 	renderer                renderer.Renderer
 	Formatters              input.Formatters
@@ -39,7 +39,7 @@ type Model[I any] struct {
 	err                     error
 }
 
-func New[I any](completer Completer[I], executor Executor, textInput input.Input[I], opts ...Option[I]) Model[I] {
+func New[I any](completer Completer[I], executor Executor[I], textInput input.Input[I], opts ...Option[I]) Model[I] {
 	formatters := input.DefaultFormatters()
 	model := Model[I]{
 		completer:  newCompleterModel(completer, textInput, formatters.ErrorText, 6),

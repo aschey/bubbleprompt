@@ -193,7 +193,7 @@ func (m *Model[I]) updateExecutor(executor *executorModel) {
 }
 
 func (m *Model[I]) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
-	innerExecutor, err := m.executor(m.textInput.Value())
+	innerExecutor, err := m.executor(m.textInput.Value(), m.completer.getSelectedSuggestion())
 	if innerExecutor == nil {
 		// No executor returned, default to empty model to prevent nil reference errors
 		innerExecutor = executor.NewStringModel("")

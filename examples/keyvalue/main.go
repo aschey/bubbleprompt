@@ -87,7 +87,7 @@ func (m completerModel) completer(document prompt.Document, promptModel prompt.M
 	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp), suggestions), nil
 }
 
-func (m completerModel) executor(input string) (tea.Model, error) {
+func (m completerModel) executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (tea.Model, error) {
 	outStr := ""
 	m.db.Update(func(tx *flashdb.Tx) error {
 		params := strings.Split(input, " ")

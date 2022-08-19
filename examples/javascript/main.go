@@ -116,7 +116,7 @@ func (m completerModel) completer(document prompt.Document, promptModel prompt.M
 	return m.globalSuggestions(), nil
 }
 
-func (m completerModel) executor(input string) (tea.Model, error) {
+func (m completerModel) executor(input string, selectedSuggestion *input.Suggestion[any]) (tea.Model, error) {
 	return executors.NewAsyncStringModel(func() (string, error) {
 		err := m.textInput.Error()
 		if err != nil {
