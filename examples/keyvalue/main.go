@@ -25,8 +25,20 @@ type kvMetadata struct {
 var hashSuggestions = []input.Suggestion[kvMetadata]{
 	{Text: "clear", Metadata: kvMetadata{name: "HClear", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
 	{Text: "delete", Metadata: kvMetadata{name: "HDel", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<values...>")}, Level: 1}}},
-	{Text: "exists", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("[field]")}, Level: 1}}},
-	{Text: "expire", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<duration>")}, Level: 1}}},
+	{Text: "exists", Metadata: kvMetadata{name: "HExists", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("[field]")}, Level: 1}, eval: func(tx *flashdb.Tx, m completerModel) ([]string, error) {
+		parsed := m.textInput.ParsedValue()
+		args := parsed.Args.Value
+		if len(parsed.Args.Value) == 2 {
+			exists := tx.HKeyExists(args[1].Value)
+			return []string{strconv.FormatBool(exists)}, nil
+		} else if len(parsed.Args.Value) == 3 {
+			exists := tx.HExists(args[1].Value, args[2].Value)
+			return []string{strconv.FormatBool(exists)}, nil
+		} else {
+			return nil, fmt.Errorf("exists requires 2 or 3 args")
+		}
+	}}},
+	{Text: "expire", Metadata: kvMetadata{name: "HExpire", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<duration>")}, Level: 1}}},
 	{Text: "get", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("[field]")}, Level: 1}, eval: func(tx *flashdb.Tx, m completerModel) ([]string, error) {
 		parsed := m.textInput.ParsedValue()
 		key := parsed.Args.Value[1].Value
@@ -43,12 +55,11 @@ var hashSuggestions = []input.Suggestion[kvMetadata]{
 		val := tx.HGet(key, parsed.Args.Value[2].Value)
 		return []string{val}, nil
 	}}},
-	//{Text: "get-all", Metadata: commandinput.CmdMetadata{Level: 1}},
-	{Text: "keys", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
-	{Text: "len", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
+	{Text: "keys", Metadata: kvMetadata{name: "HKeys", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
+	{Text: "len", Metadata: kvMetadata{name: "HLen", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
 	{Text: "set", Metadata: kvMetadata{name: "HSet", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<field>"), commandinput.NewPositionalArg("<value>")}, Level: 1}}},
-	{Text: "ttl", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
-	{Text: "values", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
+	{Text: "ttl", Metadata: kvMetadata{name: "HTTL", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
+	{Text: "values", Metadata: kvMetadata{name: "HVals", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
 }
 
 func (kv kvMetadata) Create(args []commandinput.PositionalArg, placeholder commandinput.Placeholder) commandinput.CmdMetadataAccessor {
@@ -272,30 +283,6 @@ func (m completerModel) execMethod(tx *flashdb.Tx, suggestion *input.Suggestion[
 	if err != nil {
 		return "", err
 	}
-	// paramVals := []reflect.Value{reflect.ValueOf(tx)}
-	// for i, p := range params {
-	// 	var reflectVal any
-	// 	var err error
-	// 	methodParam := method.Type.In(i + 1)
-	// 	switch methodParam.Kind() {
-	// 	case reflect.Int64:
-	// 		reflectVal, err = strconv.ParseInt(p, 10, 64)
-	// 	case reflect.Float64:
-	// 		reflectVal, err = strconv.ParseFloat(p, 64)
-	// 	case reflect.String:
-	// 		reflectVal = p
-	// 	case reflect.Slice:
-	// 		for j := i; j < len(params); j++ {
-	// 			paramVals = append(paramVals, reflect.ValueOf(params[j]))
-	// 		}
-	// 		break
-	// 	}
-	// 	if err != nil {
-	// 		return "", err
-	// 	}
-	// 	paramVals = append(paramVals, reflect.ValueOf(reflectVal))
-
-	// }
 
 	out := method.Func.Call(paramVals)
 	retVals := []string{}
@@ -316,6 +303,9 @@ func (m completerModel) execMethod(tx *flashdb.Tx, suggestion *input.Suggestion[
 				retVals = append(retVals, strconv.FormatBool(ifaceVal))
 			case int64:
 				retVals = append(retVals, strconv.FormatInt(ifaceVal, 10))
+			case int:
+				retVals = append(retVals, strconv.FormatInt(int64(ifaceVal), 10))
+
 			}
 		} else {
 			retVals = append(retVals, outVal.String())
