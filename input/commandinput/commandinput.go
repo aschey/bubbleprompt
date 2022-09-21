@@ -674,7 +674,7 @@ func (m Model[T]) View(viewMode input.ViewMode) string {
 				}
 
 				if showPlaceholders && flag.Value == nil {
-					viewBuilder.RenderPlaceholder(m.currentFlag.Metadata.GetFlagPlaceholder().Text, viewBuilder.ViewLen(), m.currentFlag.Metadata.GetFlagPlaceholder().Style.Style)
+					viewBuilder.RenderPlaceholder(m.currentFlag.Metadata.GetFlagPlaceholder().Text, viewBuilder.ViewLen(), lipgloss.NewStyle().Foreground(lipgloss.Color("14")))
 				}
 
 			}
