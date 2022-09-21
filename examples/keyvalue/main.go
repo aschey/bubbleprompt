@@ -22,6 +22,33 @@ type kvMetadata struct {
 	name string
 }
 
+var baseSuggestions = []input.Suggestion[kvMetadata]{
+	{Text: "commit"},
+	{Text: "delete", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}}}},
+	{Text: "exists", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}}}},
+	{Text: "expire", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<duration>")}}}},
+	{Text: "get", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}}}},
+	{Text: "hash", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<subcommand>")}}}},
+	{Text: "rollback"},
+	{Text: "set"},
+	{Text: "set-key", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<value>")}, FlagPlaceholder: commandinput.Placeholder{Text: "expire"}}, eval: func(tx *flashdb.Tx, m completerModel) ([]string, error) {
+		parsed := m.textInput.ParsedValue()
+		key := parsed.Args.Value[0].Value
+		value := parsed.Args.Value[1].Value
+		for _, flag := range parsed.Flags.Value {
+			if flag.Name == "-t" {
+				intVal, _ := strconv.Atoi(flag.Value.Value)
+				err := tx.SetEx(key, value, int64(intVal))
+				return []string{}, err
+			}
+		}
+		err := tx.Set(key, value)
+		return []string{}, err
+	}}},
+	{Text: "ttl", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}}}},
+	{Text: "zset"},
+}
+
 var hashSuggestions = []input.Suggestion[kvMetadata]{
 	{Text: "clear", Metadata: kvMetadata{name: "HClear", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
 	{Text: "delete", Metadata: kvMetadata{name: "HDel", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<values...>")}, Level: 1}}},
@@ -52,6 +79,7 @@ var hashSuggestions = []input.Suggestion[kvMetadata]{
 		if len(parsed.Args.Value) < 3 {
 			return []string{}, fmt.Errorf("get requires two args or the --all flag")
 		}
+
 		val := tx.HGet(key, parsed.Args.Value[2].Value)
 		return []string{val}, nil
 	}}},
@@ -60,6 +88,37 @@ var hashSuggestions = []input.Suggestion[kvMetadata]{
 	{Text: "set", Metadata: kvMetadata{name: "HSet", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<field>"), commandinput.NewPositionalArg("<value>")}, Level: 1}}},
 	{Text: "ttl", Metadata: kvMetadata{name: "HTTL", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
 	{Text: "values", Metadata: kvMetadata{name: "HVals", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
+}
+
+var setSuggestions = []input.Suggestion[kvMetadata]{
+	{Text: "add", Metadata: kvMetadata{name: "SAdd", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<members...>")}, Level: 1}}},
+	{Text: "card", Metadata: kvMetadata{name: "SCard", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
+	{Text: "clear", Metadata: kvMetadata{name: "SClear", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
+	{Text: "diff", Metadata: kvMetadata{name: "SDiff", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<keys...>")}, Level: 1}}},
+	{Text: "exists", Metadata: kvMetadata{name: "SKeyExists", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
+	{Text: "expire", Metadata: kvMetadata{name: "SExpire", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<duration>")}, Level: 1}}},
+	{Text: "is-member", Metadata: kvMetadata{name: "SIsMember", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<member>")}, Level: 1}}},
+	{Text: "members", Metadata: kvMetadata{name: "SMembers", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
+	{Text: "move", Metadata: kvMetadata{name: "SMove", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<source>"), commandinput.NewPositionalArg("<destination>"), commandinput.NewPositionalArg("<member>")}, Level: 1}}},
+	{Text: "random", Metadata: kvMetadata{name: "SRandMember", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<count>")}, Level: 1}}},
+	{Text: "remove", Metadata: kvMetadata{name: "SRem", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<members...>")}, Level: 1}}},
+	{Text: "ttl", Metadata: kvMetadata{name: "STTL", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
+	{Text: "union", Metadata: kvMetadata{name: "SUnion", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<keys...>")}, Level: 1}}},
+}
+
+var zsetSuggestions = []input.Suggestion[kvMetadata]{
+	{Text: "add", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<score>"), commandinput.NewPositionalArg("<member>")}, Level: 1}}},
+	{Text: "card", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
+	{Text: "clear", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
+	{Text: "exists", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
+	{Text: "expire", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<duration>")}, Level: 1}}},
+	{Text: "get-by-rank", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<rank>")}, Level: 1}}},                                     //-reverse
+	{Text: "range", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<start>"), commandinput.NewPositionalArg("<stop>")}, Level: 1}}}, // -scores -reverse
+	{Text: "rank", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<member>")}, Level: 1}}},                                          // -reverse
+	{Text: "remove", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<member>")}, Level: 1}}},
+	{Text: "score", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<member>")}, Level: 1}}},
+	{Text: "score-range", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<min>"), commandinput.NewPositionalArg("<max>")}, Level: 1}}},
+	{Text: "ttl", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
 }
 
 func (kv kvMetadata) Create(args []commandinput.PositionalArg, placeholder commandinput.Placeholder) commandinput.CmdMetadataAccessor {
@@ -99,32 +158,7 @@ func (m completerModel) completer(document prompt.Document, promptModel prompt.M
 	filterSuggestions := true
 	m.db.View(func(tx *flashdb.Tx) error {
 		if !m.textInput.CommandCompleted() {
-			suggestions = []input.Suggestion[kvMetadata]{
-				{Text: "commit"},
-				{Text: "delete", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}}}},
-				{Text: "exists", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}}}},
-				{Text: "expire", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<duration>")}}}},
-				{Text: "get", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}}}},
-				{Text: "hash", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<subcommand>")}}}},
-				{Text: "rollback"},
-				{Text: "set"},
-				{Text: "set-key", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<value>")}, FlagPlaceholder: commandinput.Placeholder{Text: "expire"}}, eval: func(tx *flashdb.Tx, m completerModel) ([]string, error) {
-					parsed := m.textInput.ParsedValue()
-					key := parsed.Args.Value[0].Value
-					value := parsed.Args.Value[1].Value
-					for _, flag := range parsed.Flags.Value {
-						if flag.Name == "-t" {
-							intVal, _ := strconv.Atoi(flag.Value.Value)
-							err := tx.SetEx(key, value, int64(intVal))
-							return []string{}, err
-						}
-					}
-					err := tx.Set(key, value)
-					return []string{}, err
-				}}},
-				{Text: "ttl", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}}}},
-				{Text: "zset"},
-			}
+			suggestions = baseSuggestions
 		} else {
 			command := m.textInput.CommandBeforeCursor()
 			switch command {
@@ -162,20 +196,8 @@ func (m completerModel) completer(document prompt.Document, promptModel prompt.M
 				}
 
 			case "set":
-				suggestions = []input.Suggestion[kvMetadata]{
-					{Text: "add", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<members...>")}, Level: 1}}}, // variadic
-					{Text: "card", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
-					{Text: "clear", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
-					{Text: "diff", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<keys>")}, Level: 1}}},
-					{Text: "exists", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
-					{Text: "expire", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<duration>")}, Level: 1}}},
-					{Text: "is-member", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<member>")}, Level: 1}}},
-					{Text: "members", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
-					{Text: "move", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<source>"), commandinput.NewPositionalArg("<destination>"), commandinput.NewPositionalArg("<member>")}, Level: 1}}},
-					{Text: "random", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<count>")}, Level: 1}}},
-					{Text: "remove", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<members>")}, Level: 1}}},
-					{Text: "ttl", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
-					{Text: "union", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
+				if numArgs == 0 {
+					suggestions = setSuggestions
 				}
 			case "zset":
 				if numArgs > 0 {
@@ -192,20 +214,7 @@ func (m completerModel) completer(document prompt.Document, promptModel prompt.M
 						return nil
 					}
 				}
-				suggestions = []input.Suggestion[kvMetadata]{
-					{Text: "add", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<score>"), commandinput.NewPositionalArg("<member>")}, Level: 1}}},
-					{Text: "card", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
-					{Text: "clear", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
-					{Text: "exists", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
-					{Text: "expire", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<duration>")}, Level: 1}}},
-					{Text: "get-by-rank", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<rank>")}, Level: 1}}},                                     //-reverse
-					{Text: "range", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<start>"), commandinput.NewPositionalArg("<stop>")}, Level: 1}}}, // -scores -reverse
-					{Text: "rank", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<member>")}, Level: 1}}},                                          // -reverse
-					{Text: "remove", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<member>")}, Level: 1}}},
-					{Text: "score", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<member>")}, Level: 1}}},
-					{Text: "score-range", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<min>"), commandinput.NewPositionalArg("<max>")}, Level: 1}}},
-					{Text: "ttl", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
-				}
+				suggestions = zsetSuggestions
 			}
 		}
 
@@ -224,6 +233,9 @@ func (m completerModel) executor(input string, selectedSuggestion *input.Suggest
 	err := m.db.Update(func(tx *flashdb.Tx) error {
 		parsed := m.textInput.ParsedValue()
 		selectedCommand := m.textInput.SelectedCommand()
+		if selectedCommand == nil {
+			return nil
+		}
 		subcommand := ""
 
 		if len(parsed.Args.Value) > 0 {
@@ -232,6 +244,14 @@ func (m completerModel) executor(input string, selectedSuggestion *input.Suggest
 		switch selectedCommand.Text {
 		case "hash":
 			for _, suggestion := range hashSuggestions {
+				if suggestion.Text == subcommand {
+					text, err := m.execMethod(tx, &suggestion, m.textInput.AllValues()[2:])
+					outStr = text
+					return err
+				}
+			}
+		case "set":
+			for _, suggestion := range setSuggestions {
 				if suggestion.Text == subcommand {
 					text, err := m.execMethod(tx, &suggestion, m.textInput.AllValues()[2:])
 					outStr = text
@@ -294,7 +314,7 @@ func (m completerModel) execMethod(tx *flashdb.Tx, suggestion *input.Suggestion[
 			}
 			switch ifaceVal := iface.(type) {
 			case error:
-				retVals = append(retVals, ifaceVal.Error())
+				return "", fmt.Errorf(ifaceVal.Error())
 			case []string:
 				retVals = append(retVals, strings.Join(ifaceVal, ","))
 			case string:
@@ -322,8 +342,14 @@ func getReflectParams(params []string, tx *flashdb.Tx, methodType reflect.Type) 
 		var err error
 		methodParam := methodType.In(i + 1)
 		switch methodParam.Kind() {
+		case reflect.Int:
+			var intVal int64
+			intVal, err = strconv.ParseInt(p, 10, 32)
+			reflectVal = int(intVal)
 		case reflect.Int64:
 			reflectVal, err = strconv.ParseInt(p, 10, 64)
+		case reflect.Float32:
+			reflectVal, err = strconv.ParseFloat(p, 32)
 		case reflect.Float64:
 			reflectVal, err = strconv.ParseFloat(p, 64)
 		case reflect.String:
