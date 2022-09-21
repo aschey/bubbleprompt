@@ -2,12 +2,8 @@ package main
 
 import (
 	"fmt"
-	"go/ast"
-	"go/parser"
-	"go/token"
 	"os"
 	"reflect"
-	"runtime"
 	"strconv"
 	"strings"
 
@@ -20,15 +16,55 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type cmdMetadata = commandinput.CmdMetadata
+type kvMetadata struct {
+	commandinput.CmdMetadata
+	eval func(tx *flashdb.Tx, m completerModel) ([]string, error)
+	name string
+}
+
+var hashSuggestions = []input.Suggestion[kvMetadata]{
+	{Text: "clear", Metadata: kvMetadata{name: "HClear", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key")}, Level: 1}}},
+	{Text: "delete", Metadata: kvMetadata{name: "HDel", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key"), commandinput.NewPositionalArg("values")}, Level: 1}}},
+	{Text: "exists", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key"), commandinput.NewPositionalArg("[field]")}, Level: 1}}},
+	{Text: "expire", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key"), commandinput.NewPositionalArg("duration")}, Level: 1}}},
+	{Text: "get", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key"), commandinput.NewPositionalArg("[field]")}, Level: 1}, eval: func(tx *flashdb.Tx, m completerModel) ([]string, error) {
+		parsed := m.textInput.ParsedValue()
+		key := parsed.Args.Value[1].Value
+
+		for _, flag := range parsed.Flags.Value {
+			if flag.Name == "-a" || flag.Name == "--all" {
+				all := tx.HGetAll(key)
+				return all, nil
+			}
+		}
+		if len(parsed.Args.Value) < 3 {
+			return []string{}, fmt.Errorf("get requires two args or the --all flag")
+		}
+		val := tx.HGet(key, parsed.Args.Value[2].Value)
+		return []string{val}, nil
+	}}},
+	//{Text: "get-all", Metadata: commandinput.CmdMetadata{Level: 1}},
+	{Text: "keys", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key")}, Level: 1}}},
+	{Text: "len", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key")}, Level: 1}}},
+	{Text: "set", Metadata: kvMetadata{name: "HSet", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key"), commandinput.NewPositionalArg("field"), commandinput.NewPositionalArg("value")}, Level: 1}}},
+	{Text: "ttl", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key")}, Level: 1}}},
+	{Text: "values", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key")}, Level: 1}}},
+}
+
+func (kv kvMetadata) Create(args []commandinput.PositionalArg, placeholder commandinput.Placeholder) commandinput.CmdMetadataAccessor {
+	meta, _ := new(commandinput.CmdMetadata).Create(args, placeholder).(commandinput.CmdMetadata)
+	return kvMetadata{
+		CmdMetadata: meta,
+	}
+}
 
 type model struct {
-	prompt prompt.Model[cmdMetadata]
+	prompt prompt.Model[kvMetadata]
 }
 
 type completerModel struct {
 	db        *flashdb.FlashDB
-	textInput *commandinput.Model[cmdMetadata]
+	textInput *commandinput.Model[kvMetadata]
 }
 
 func (m model) Init() tea.Cmd {
@@ -45,129 +81,284 @@ func (m model) View() string {
 	return m.prompt.View()
 }
 
-func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
-	suggestions := []input.Suggestion[cmdMetadata]{}
+func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[kvMetadata]) ([]input.Suggestion[kvMetadata], error) {
+	suggestions := []input.Suggestion[kvMetadata]{}
+	args := m.textInput.CompletedArgsBeforeCursor()
+	numArgs := len(args)
+	filterSuggestions := true
 	m.db.View(func(tx *flashdb.Tx) error {
-
-		txType := reflect.TypeOf(tx)
-
-		for i := 0; i < txType.NumMethod(); i++ {
-			method := txType.Method(i)
-			funcN := runtime.FuncForPC(method.Func.Pointer())
-			fileName, _ := funcN.FileLine(method.Func.Pointer())
-			fset := token.NewFileSet()
-			parsedAst, _ := parser.ParseFile(fset, fileName, nil, parser.ParseComments)
-			desc := ""
-			args := []commandinput.PositionalArg{}
-			for _, dec := range parsedAst.Decls {
-				if funcDecl, ok := dec.(*ast.FuncDecl); ok {
-					if funcDecl.Name.Name == method.Name {
-						for _, arg := range funcDecl.Type.Params.List {
-							for _, name := range arg.Names {
-								args = append(args, commandinput.NewPositionalArg(name.Name))
-							}
-
+		if !m.textInput.CommandCompleted() {
+			suggestions = []input.Suggestion[kvMetadata]{
+				{Text: "commit"},
+				{Text: "delete", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key")}}}},
+				{Text: "exists", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key")}}}},
+				{Text: "expire", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key"), commandinput.NewPositionalArg("duration")}}}},
+				{Text: "get", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key")}}}},
+				{Text: "hash", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("op")}}}},
+				{Text: "rollback"},
+				{Text: "set"},
+				{Text: "set-key", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key"), commandinput.NewPositionalArg("value")}, FlagPlaceholder: commandinput.Placeholder{Text: "expire"}}, eval: func(tx *flashdb.Tx, m completerModel) ([]string, error) {
+					parsed := m.textInput.ParsedValue()
+					key := parsed.Args.Value[0].Value
+					value := parsed.Args.Value[1].Value
+					for _, flag := range parsed.Flags.Value {
+						if flag.Name == "-t" {
+							intVal, _ := strconv.Atoi(flag.Value.Value)
+							err := tx.SetEx(key, value, int64(intVal))
+							return []string{}, err
 						}
-						if funcDecl.Doc != nil {
-							desc = funcDecl.Doc.Text()
-							desc = strings.ReplaceAll(desc, "\n", " ")
-							if len(desc) > 80 {
-								desc = desc[:80]
-							}
+					}
+					err := tx.Set(key, value)
+					return []string{}, err
+				}}},
+				{Text: "ttl", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key")}}}},
+				{Text: "zset"},
+			}
+		} else {
+			command := m.textInput.CommandBeforeCursor()
+			switch command {
+			case "set-key":
+				if numArgs >= 2 {
+					filterSuggestions = false
+					suggestions = m.textInput.FlagSuggestions(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp), []commandinput.Flag{{
+						Short:       "t",
+						Long:        "ttl",
+						Description: "Key TTL",
+						Placeholder: "<ttl>",
+						RequiresArg: true,
+					}}, nil)
+				}
+
+			case "hash":
+				if numArgs == 2 {
+					switch args[0] {
+					case "get":
+						filterSuggestions = false
+						suggestions = []input.Suggestion[kvMetadata]{}
+						// suggestions = append(suggestions, input.Suggestion[kvMetadata]{Text: "test", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key")}, Level: 2}}})
+						suggestions = append(suggestions, m.textInput.FlagSuggestions(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp), []commandinput.Flag{{
+							Short:       "a",
+							Long:        "all",
+							Description: "Get all",
+						}}, func(f commandinput.Flag) kvMetadata {
+							return kvMetadata{name: "HGetAll", CmdMetadata: commandinput.CmdMetadata{FlagPlaceholder: commandinput.Placeholder{Text: f.Placeholder}, Level: 2, PreservePlaceholder: true}}
+						})...)
+
+						return nil
+					}
+				} else if numArgs == 0 {
+					suggestions = hashSuggestions
+				}
+
+			case "set":
+				suggestions = []input.Suggestion[kvMetadata]{
+					{Text: "add", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key"), commandinput.NewPositionalArg("members")}, Level: 1}}}, // variadic
+					{Text: "card", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key")}, Level: 1}}},
+					{Text: "clear", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key")}, Level: 1}}},
+					{Text: "diff", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("keys")}, Level: 1}}},
+					{Text: "exists", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key")}, Level: 1}}},
+					{Text: "expire", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key"), commandinput.NewPositionalArg("duration")}, Level: 1}}},
+					{Text: "is-member", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key"), commandinput.NewPositionalArg("member")}, Level: 1}}},
+					{Text: "members", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key")}, Level: 1}}},
+					{Text: "move", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("source"), commandinput.NewPositionalArg("destination"), commandinput.NewPositionalArg("member")}, Level: 1}}},
+					{Text: "random", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key"), commandinput.NewPositionalArg("count")}, Level: 1}}},
+					{Text: "remove", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key"), commandinput.NewPositionalArg("members")}, Level: 1}}},
+					{Text: "ttl", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key")}, Level: 1}}},
+					{Text: "union", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("keys")}, Level: 1}}},
+				}
+			case "zset":
+				if numArgs > 0 {
+					switch args[0] {
+					case "get-by-rank":
+						if numArgs >= 3 {
+							filterSuggestions = false
+							suggestions = m.textInput.FlagSuggestions(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp), []commandinput.Flag{{
+								Short:       "r",
+								Long:        "reverse",
+								Description: "Invert results",
+							}}, nil)
 						}
-						break
+						return nil
 					}
 				}
+				suggestions = []input.Suggestion[kvMetadata]{
+					{Text: "add", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key"), commandinput.NewPositionalArg("score"), commandinput.NewPositionalArg("member")}, Level: 1}}},
+					{Text: "card", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key")}, Level: 1}}},
+					{Text: "clear", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key")}, Level: 1}}},
+					{Text: "exists", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key")}, Level: 1}}},
+					{Text: "expire", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key"), commandinput.NewPositionalArg("duration")}, Level: 1}}},
+					{Text: "get-by-rank", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key"), commandinput.NewPositionalArg("rank")}, Level: 1}}},                                   //-reverse
+					{Text: "range", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key"), commandinput.NewPositionalArg("start"), commandinput.NewPositionalArg("stop")}, Level: 1}}}, // -scores -reverse
+					{Text: "rank", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key"), commandinput.NewPositionalArg("member")}, Level: 1}}},                                        // -reverse
+					{Text: "remove", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key"), commandinput.NewPositionalArg("member")}, Level: 1}}},
+					{Text: "score", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key"), commandinput.NewPositionalArg("member")}, Level: 1}}},
+					{Text: "score-range", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key"), commandinput.NewPositionalArg("min"), commandinput.NewPositionalArg("max")}, Level: 1}}},
+					{Text: "ttl", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("key")}, Level: 1}}},
+				}
 			}
-
-			suggestions = append(suggestions, input.Suggestion[cmdMetadata]{Text: method.Name, Description: desc, Metadata: commandinput.NewCmdMetadata(args, commandinput.Placeholder{})})
 		}
+
 		return nil
 	})
-	if m.textInput.CommandCompleted() {
-		return nil, nil
+	if filterSuggestions {
+		return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundDown), suggestions), nil
 	}
-	return completers.FilterHasPrefix(m.textInput.CommandBeforeCursor(), suggestions), nil
+	return suggestions, nil
 }
 
-func (m completerModel) executor(input string) (tea.Model, error) {
-	if len(input) > 0 {
-		input = strings.ToUpper(string(input[0])) + input[1:]
-	}
+func (m completerModel) executor(input string, selectedSuggestion *input.Suggestion[kvMetadata]) (tea.Model, error) {
+
 	outStr := ""
+
 	err := m.db.Update(func(tx *flashdb.Tx) error {
-		params := strings.Split(input, " ")
-		method, found := reflect.TypeOf(tx).MethodByName(params[0])
-		if !found {
-			return fmt.Errorf("command not found")
-		}
+		parsed := m.textInput.ParsedValue()
+		selectedCommand := m.textInput.SelectedCommand()
+		subcommand := ""
 
-		expectedParams := method.Type.NumIn()
-		if len(params) != expectedParams {
-			// Subtract one for the tx object
-			return fmt.Errorf("expected %d params but got %d", expectedParams-1, len(params)-1)
+		if len(parsed.Args.Value) > 0 {
+			subcommand = parsed.Args.Value[0].Value
 		}
-
-		paramVals := []reflect.Value{reflect.ValueOf(tx)}
-		if len(params) > 1 {
-			for i, p := range params[1:] {
-				var reflectVal any
-				var err error
-				methodParam := method.Type.In(i + 1)
-				switch methodParam.Kind() {
-				case reflect.Int64:
-					reflectVal, err = strconv.ParseInt(p, 10, 64)
-				case reflect.Float64:
-					reflectVal, err = strconv.ParseFloat(p, 64)
-				case reflect.String:
-					reflectVal = p
-				}
-				if err != nil {
+		switch selectedCommand.Text {
+		case "hash":
+			for _, suggestion := range hashSuggestions {
+				if suggestion.Text == subcommand {
+					text, err := m.execMethod(tx, &suggestion, m.textInput.AllValues()[2:])
+					outStr = text
 					return err
 				}
-				paramVals = append(paramVals, reflect.ValueOf(reflectVal))
-
 			}
+		default:
+			text, err := m.execMethod(tx, m.textInput.SelectedCommand(), m.textInput.AllValues()[1:])
+			outStr = text
+			return err
 		}
 
-		out := method.Func.Call(paramVals)
-		retVals := []string{}
-		for _, outVal := range out {
-			if outVal.CanInterface() {
-				iface := outVal.Interface()
-				if iface == nil {
-					outStr = ""
-				}
-				switch ifaceVal := iface.(type) {
-				case error:
-					retVals = append(retVals, ifaceVal.Error())
-				case []string:
-					retVals = append(retVals, strings.Join(ifaceVal, ","))
-				case string:
-					retVals = append(retVals, ifaceVal)
-				case bool:
-					retVals = append(retVals, strconv.FormatBool(ifaceVal))
-				case int64:
-					retVals = append(retVals, strconv.FormatInt(ifaceVal, 10))
-				}
-			} else {
-				retVals = append(retVals, outVal.String())
-			}
-
-		}
-		outStr = strings.Join(retVals, " ")
 		return nil
 	})
 
 	return executors.NewStringModel(outStr), err
 }
 
+func (m completerModel) execMethod(tx *flashdb.Tx, suggestion *input.Suggestion[kvMetadata], params []string) (string, error) {
+	methodName := ""
+	if suggestion != nil {
+
+		if suggestion.Metadata.eval != nil {
+			retVals, err := suggestion.Metadata.eval(tx, m)
+			outStr := strings.Join(retVals, " ")
+			return outStr, err
+		}
+		if len(suggestion.Metadata.name) > 0 {
+			methodName = suggestion.Metadata.name
+		} else {
+			methodName = strings.ToUpper(string(suggestion.Text[0])) + suggestion.Text[1:]
+		}
+	} else {
+		methodName = m.textInput.ParsedValue().Command.Value
+	}
+
+	method, found := reflect.TypeOf(tx).MethodByName(methodName)
+	if !found {
+		return "", fmt.Errorf("command not found")
+	}
+
+	expectedParams := method.Type.NumIn()
+	isVariadic := method.Type.In(expectedParams-1).Kind() == reflect.Slice
+	if (isVariadic && len(params) < expectedParams-1) || (!isVariadic && len(params) != expectedParams-1) {
+		// Subtract one for the tx object
+		return "", fmt.Errorf("expected %d params but got %d", expectedParams-1, len(params))
+	}
+	paramVals, err := getReflectParams(params, tx, method.Type)
+	if err != nil {
+		return "", err
+	}
+	// paramVals := []reflect.Value{reflect.ValueOf(tx)}
+	// for i, p := range params {
+	// 	var reflectVal any
+	// 	var err error
+	// 	methodParam := method.Type.In(i + 1)
+	// 	switch methodParam.Kind() {
+	// 	case reflect.Int64:
+	// 		reflectVal, err = strconv.ParseInt(p, 10, 64)
+	// 	case reflect.Float64:
+	// 		reflectVal, err = strconv.ParseFloat(p, 64)
+	// 	case reflect.String:
+	// 		reflectVal = p
+	// 	case reflect.Slice:
+	// 		for j := i; j < len(params); j++ {
+	// 			paramVals = append(paramVals, reflect.ValueOf(params[j]))
+	// 		}
+	// 		break
+	// 	}
+	// 	if err != nil {
+	// 		return "", err
+	// 	}
+	// 	paramVals = append(paramVals, reflect.ValueOf(reflectVal))
+
+	// }
+
+	out := method.Func.Call(paramVals)
+	retVals := []string{}
+	for _, outVal := range out {
+		if outVal.CanInterface() {
+			iface := outVal.Interface()
+			if iface == nil {
+				continue
+			}
+			switch ifaceVal := iface.(type) {
+			case error:
+				retVals = append(retVals, ifaceVal.Error())
+			case []string:
+				retVals = append(retVals, strings.Join(ifaceVal, ","))
+			case string:
+				retVals = append(retVals, ifaceVal)
+			case bool:
+				retVals = append(retVals, strconv.FormatBool(ifaceVal))
+			case int64:
+				retVals = append(retVals, strconv.FormatInt(ifaceVal, 10))
+			}
+		} else {
+			retVals = append(retVals, outVal.String())
+		}
+
+	}
+	return strings.Join(retVals, " "), nil
+}
+
+func getReflectParams(params []string, tx *flashdb.Tx, methodType reflect.Type) ([]reflect.Value, error) {
+	paramVals := []reflect.Value{reflect.ValueOf(tx)}
+	for i, p := range params {
+		var reflectVal any
+		var err error
+		methodParam := methodType.In(i + 1)
+		switch methodParam.Kind() {
+		case reflect.Int64:
+			reflectVal, err = strconv.ParseInt(p, 10, 64)
+		case reflect.Float64:
+			reflectVal, err = strconv.ParseFloat(p, 64)
+		case reflect.String:
+			reflectVal = p
+		case reflect.Slice:
+			for j := i; j < len(params); j++ {
+				paramVals = append(paramVals, reflect.ValueOf(params[j]))
+			}
+			return paramVals, nil
+		}
+		if err != nil {
+			return nil, err
+		}
+		paramVals = append(paramVals, reflect.ValueOf(reflectVal))
+
+	}
+	return paramVals, nil
+}
+
 func main() {
 	config := &flashdb.Config{}
 	db, _ := flashdb.New(config)
 
-	var textInput input.Input[cmdMetadata] = commandinput.New[cmdMetadata]()
-	completerModel := completerModel{db: db, textInput: textInput.(*commandinput.Model[cmdMetadata])}
+	var textInput input.Input[kvMetadata] = commandinput.New[kvMetadata]()
+	completerModel := completerModel{db: db, textInput: textInput.(*commandinput.Model[kvMetadata])}
 
 	m := model{prompt: prompt.New(
 		completerModel.completer,

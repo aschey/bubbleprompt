@@ -3,6 +3,7 @@ package commandinput
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/aschey/bubbleprompt/input"
@@ -51,30 +52,6 @@ func NewPositionalArg(placeholder string) PositionalArg {
 	}
 }
 
-type CmdMetadataAccessor interface {
-	PositionalArgs() []PositionalArg
-	FlagPlaceholder() Placeholder
-}
-
-type CmdMetadata struct {
-	positionalArgs  []PositionalArg
-	flagPlaceholder Placeholder
-}
-
-func NewCmdMetadata(positionalArgs []PositionalArg, flagPlaceholder Placeholder) CmdMetadata {
-	return CmdMetadata{
-		positionalArgs, flagPlaceholder,
-	}
-}
-
-func (m CmdMetadata) PositionalArgs() []PositionalArg {
-	return m.positionalArgs
-}
-
-func (m CmdMetadata) FlagPlaceholder() Placeholder {
-	return m.flagPlaceholder
-}
-
 type Model[T CmdMetadataAccessor] struct {
 	textinput         textinput.Model
 	Placeholder       string
@@ -84,6 +61,7 @@ type Model[T CmdMetadataAccessor] struct {
 	stringRegex       *regexp.Regexp
 	origArgs          []arg
 	args              []arg
+	argIndex          int
 	selectedCommand   *input.Suggestion[T]
 	currentFlag       *input.Suggestion[T]
 	PromptStyle       lipgloss.Style
@@ -202,6 +180,25 @@ func (m *Model[T]) ArgsBeforeCursor() []string {
 	return args
 }
 
+func (m *Model[T]) CompletedArgsBeforeCursor() []string {
+	args := []string{}
+	textBeforeCursor := m.Value()[:m.Cursor()]
+
+	expr, _ := m.parser.Parse(textBeforeCursor)
+
+	for _, arg := range expr.Args.Value {
+		args = append(args, arg.Value)
+	}
+
+	if len(expr.Flags.Value) == 0 && len(textBeforeCursor) > 0 && !m.delimiterRegex.MatchString(string(textBeforeCursor[len(textBeforeCursor)-1])) {
+		if len(args) > 0 {
+			args = args[:len(args)-1]
+		}
+
+	}
+	return args
+}
+
 func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
 	m.textinput, cmd = m.textinput.Update(msg)
@@ -216,7 +213,7 @@ func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	return cmd
 }
 
-func (m *Model[T]) FlagSuggestions(inputStr string, flags []Flag, suggestionFunc func(CmdMetadata, Flag) T) []input.Suggestion[T] {
+func (m *Model[T]) FlagSuggestions(inputStr string, flags []Flag, suggestionFunc func(Flag) T) []input.Suggestion[T] {
 	suggestions := []input.Suggestion[T]{}
 	isLong := strings.HasPrefix(inputStr, "--")
 	isMulti := !isLong && strings.HasPrefix(inputStr, "-") && len(inputStr) > 1
@@ -255,8 +252,15 @@ func (m *Model[T]) FlagSuggestions(inputStr string, flags []Flag, suggestionFunc
 			} else {
 				suggestion.Text = short
 			}
-			metadata := CmdMetadata{}
-			suggestion.Metadata = suggestionFunc(metadata, flag)
+
+			if suggestionFunc == nil {
+				if metadata, ok := (*new(T)).Create([]PositionalArg{}, Placeholder{Text: flag.Placeholder, Style: flag.PlaceholderStyle}).(T); ok {
+					suggestion.Metadata = metadata
+				}
+			} else {
+				suggestion.Metadata = suggestionFunc(flag)
+			}
+
 			suggestions = append(suggestions, suggestion)
 		}
 	}
@@ -264,12 +268,30 @@ func (m *Model[T]) FlagSuggestions(inputStr string, flags []Flag, suggestionFunc
 	return suggestions
 }
 
-func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T]) tea.Cmd {
+func (m *Model[T]) getPosArgs(metadata T) []arg {
+	args := []arg{}
+	for i := 0; i < metadata.GetLevel(); i++ {
+		args = append(args, arg{
+			text: strconv.FormatInt(int64(i), 10),
+		})
+	}
+	for _, posArg := range metadata.GetPositionalArgs() {
+		args = append(args, arg{
+			text:             posArg.Placeholder,
+			placeholderStyle: posArg.PlaceholderStyle.Style,
+			argStyle:         posArg.ArgStyle.Style,
+			persist:          false,
+		})
+	}
+	return args
+}
+
+func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T], isSelected bool) tea.Cmd {
 	if m.CommandCompleted() {
 		// If no suggestions, leave args alone
 		if suggestion == nil {
 			// Don't reset current flag yet so we can still render the placeholder until the arg gets typed
-			if m.currentFlag != nil && m.currentFlag.Metadata.FlagPlaceholder().Text == "" {
+			if m.currentFlag != nil && m.currentFlag.Metadata.GetFlagPlaceholder().Text == "" {
 				m.currentFlag = nil
 			}
 			// Clear any temporary placeholders
@@ -282,27 +304,27 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T]) 
 		} else {
 			m.currentFlag = nil
 		}
+		index := m.CurrentTokenPos(RoundUp).Index
 
-		m.args = []arg{}
-		m.origArgs = []arg{}
-		for _, posArg := range suggestion.Metadata.PositionalArgs() {
-			newArg := arg{
-				text:             posArg.Placeholder,
-				placeholderStyle: posArg.PlaceholderStyle.Style,
-				argStyle:         posArg.ArgStyle.Style,
-				persist:          false,
-			}
-			m.args = append(m.args, newArg)
-			m.origArgs = append(m.origArgs, newArg)
+		if len(suggestion.Metadata.GetPositionalArgs()) > 0 || index <= m.argIndex {
+			m.args = []arg{}
+			m.origArgs = []arg{}
+			m.argIndex = index
+
+			newArgs := m.getPosArgs(suggestion.Metadata)
+			m.args = append(m.args, newArgs...)
+			m.origArgs = append(m.origArgs, newArgs...)
+
+		} else {
+			m.args = append([]arg{}, m.origArgs...)
 		}
-
-		index := m.CurrentTokenPos(RoundUp).Index - 1
-		if index >= 0 && index < len(m.args) {
+		argIndex := index - 1
+		if argIndex >= 0 && argIndex < len(m.args) && !suggestion.Metadata.GetPreservePlaceholder() {
 			// Replace current arg with the suggestion
-			m.args[index] = arg{
+			m.args[argIndex] = arg{
 				text:             suggestion.Text,
 				placeholderStyle: m.PlaceholderStyle,
-				argStyle:         m.args[index].argStyle,
+				argStyle:         m.args[argIndex].argStyle,
 				persist:          true,
 			}
 		}
@@ -315,7 +337,7 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T]) 
 			m.Placeholder = ""
 		} else {
 			m.Placeholder = suggestion.Text
-			for _, posArg := range suggestion.Metadata.PositionalArgs() {
+			for _, posArg := range suggestion.Metadata.GetPositionalArgs() {
 				newArg := arg{
 					text:             posArg.Placeholder,
 					placeholderStyle: posArg.PlaceholderStyle.Style,
@@ -349,7 +371,7 @@ func (m *Model[T]) OnSuggestionChanged(suggestion input.Suggestion[T]) {
 				rest = text[cursor+1:]
 			}
 			m.SetValue(text[:cursor] + suggestion.Text + rest)
-		} else if strings.HasPrefix(token, "-") && !strings.HasPrefix(token, "--") && len(token) > 2 && suggestion.Metadata.FlagPlaceholder().Text == "" {
+		} else if strings.HasPrefix(token, "-") && !strings.HasPrefix(token, "--") && len(token) > 2 && suggestion.Metadata.GetFlagPlaceholder().Text == "" {
 			// handle multi flag like -ab
 			if cursor == tokenPos.Start {
 				// If cursor is on the leading dash, replace the first two characters of the token ([-ab]c)
@@ -646,13 +668,13 @@ func (m Model[T]) View(viewMode input.ViewMode) string {
 				}
 			}
 
-			if m.currentFlag != nil && len(m.currentFlag.Metadata.FlagPlaceholder().Text) > 0 && flag.Name[len(flag.Name)-1] != '-' {
+			if m.currentFlag != nil && len(m.currentFlag.Metadata.GetFlagPlaceholder().Text) > 0 && flag.Name[len(flag.Name)-1] != '-' {
 				if !m.isDelimiter(string(*viewBuilder.Last())) && *viewBuilder.Last() != '=' {
 					viewBuilder.Render(m.defaultDelimiter, viewBuilder.ViewLen(), lipgloss.NewStyle())
 				}
 
 				if showPlaceholders && flag.Value == nil {
-					viewBuilder.RenderPlaceholder(m.currentFlag.Metadata.FlagPlaceholder().Text, viewBuilder.ViewLen(), m.currentFlag.Metadata.FlagPlaceholder().Style.Style)
+					viewBuilder.RenderPlaceholder(m.currentFlag.Metadata.GetFlagPlaceholder().Text, viewBuilder.ViewLen(), m.currentFlag.Metadata.GetFlagPlaceholder().Style.Style)
 				}
 
 			}
@@ -662,7 +684,7 @@ func (m Model[T]) View(viewMode input.ViewMode) string {
 		}
 	}
 
-	if showPlaceholders && len(m.parsedText.Flags.Value) == 0 {
+	if showPlaceholders && len(m.parsedText.Flags.Value) == 0 && m.selectedCommand != nil && len(m.selectedCommand.Metadata.GetFlagPlaceholder().Text) > 0 {
 		m.args = append(m.args, arg{text: "[flags]", placeholderStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("14"))})
 	}
 

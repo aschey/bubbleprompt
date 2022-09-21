@@ -105,7 +105,6 @@ func (m *LexerModel) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	if msg, ok := msg.(tea.KeyMsg); ok {
 		err := m.updateTokens()
 		// Don't reset error on submit yet because we need to pass it to the view
-		// It will get reset during OnUpdateFinish
 		if msg.Type != tea.KeyEnter {
 			m.err = err
 		}
@@ -243,7 +242,7 @@ func (m *LexerModel) Tokens() []parser.Token {
 	return m.tokens
 }
 
-func (m *LexerModel) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[any]) tea.Cmd {
+func (m *LexerModel) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[any], isSelected bool) tea.Cmd {
 	return nil
 }
 

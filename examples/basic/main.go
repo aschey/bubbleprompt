@@ -52,7 +52,7 @@ func executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (
 
 func main() {
 	suggestions := []input.Suggestion[cmdMetadata]{
-		{Text: "first-option", Description: "test desc", Metadata: commandinput.NewCmdMetadata([]commandinput.PositionalArg{commandinput.NewPositionalArg("[test placeholder]")}, commandinput.Placeholder{})},
+		{Text: "first-option", Description: "test desc", Metadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("[test placeholder]")}}},
 		{Text: "second-option", Description: "test desc2"},
 		{Text: "third-option", Description: "test desc3"},
 		{Text: "fourth-option", Description: "test desc4"},

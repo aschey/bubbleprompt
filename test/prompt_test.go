@@ -211,7 +211,7 @@ var _ = Describe("Prompt", func() {
 			_, _ = console.WaitForDuration(func(state tuitest.TermState) bool {
 				secondLine := state.NthOutputLine(1)
 				return strings.Contains(secondLine, "selected suggestion is "+suggestions[0].Text) &&
-					!strings.Contains(secondLine, suggestions[0].Metadata.PositionalArgs()[0].Placeholder)
+					!strings.Contains(secondLine, suggestions[0].Metadata.GetPositionalArgs()[0].Placeholder)
 			}, 100*time.Millisecond)
 		})
 	})

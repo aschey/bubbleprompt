@@ -1,3 +1,7 @@
+github.com/aschey/flashdb v0.0.0-20220531093229-cc4605a9db90 h1:0j1Rl1VAvz03DAFgb13VM11bNp7qpb//0Og34jRSitk=
+github.com/aschey/flashdb v0.0.0-20220531093229-cc4605a9db90/go.mod h1:a85hbOVNwN9nTFBnl8pYB6qGqelfg/l1GSgxf9yB+Bk=
+github.com/aschey/flashdb v0.0.0-20220919214038-237f5561b34b h1:J1vqppIQvWRF2fOI+EWoZ1cyYWrQuOJwrWqPTyUQGYo=
+github.com/aschey/flashdb v0.0.0-20220919214038-237f5561b34b/go.mod h1:a85hbOVNwN9nTFBnl8pYB6qGqelfg/l1GSgxf9yB+Bk=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4/go.mod h1:jJ57K6gSWd91VN4djpZkiMVwK6gcyfeH4XE8wZrZaV4=
 golang.org/x/net v0.0.0-20220722155237-a158d28d115b/go.mod h1:XRhObCWvk6IyKnWLug+ECip1KBveYUHfp+8e9klMJ9c=

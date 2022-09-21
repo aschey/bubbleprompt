@@ -116,7 +116,8 @@ func (m *Model[I]) selectSingle() {
 
 func (m *Model[I]) finishUpdate(msg tea.Msg) tea.Cmd {
 	suggestion := m.completer.getSelectedSuggestion()
-	if suggestion == nil {
+	isSelected := suggestion != nil
+	if !isSelected {
 		// Nothing selected
 		// Select the first suggestion if it matches
 		m.selectSingle()
@@ -135,7 +136,7 @@ func (m *Model[I]) finishUpdate(msg tea.Msg) tea.Cmd {
 		}
 	}
 
-	return m.textInput.OnUpdateFinish(msg, suggestion)
+	return m.textInput.OnUpdateFinish(msg, suggestion, isSelected)
 }
 
 func (m *Model[I]) finalizeExecutor(executorModel *executorModel) {

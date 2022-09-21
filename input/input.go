@@ -27,7 +27,7 @@ type Input[T any] interface {
 	SetPrompt(prompt string)
 	ShouldSelectSuggestion(suggestion Suggestion[T]) bool
 	CompletionText(text string) string
-	OnUpdateFinish(msg tea.Msg, suggestion *Suggestion[T]) tea.Cmd
+	OnUpdateFinish(msg tea.Msg, suggestion *Suggestion[T], isSelected bool) tea.Cmd
 	OnSuggestionChanged(suggestion Suggestion[T])
 	OnExecutorFinished()
 	OnSuggestionUnselected()
