@@ -140,18 +140,105 @@ var zsetSuggestions = []input.Suggestion[kvMetadata]{
 			retVals = append(retVals, fmt.Sprintf("%v", ret))
 		}
 		return retVals, nil
-	}}}, //-reverse
-	{Text: "range", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<start>"), commandinput.NewPositionalArg("<stop>")}, Level: 1}, eval: func(tx *flashdb.Tx, m completerModel) ([]string, error) {
-		return nil, nil
-	}}}, // -scores -reverse
-	{Text: "rank", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<member>")}, Level: 1}, eval: func(tx *flashdb.Tx, m completerModel) ([]string, error) {
-		return nil, nil
+	}}},
+	{Text: "range", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<start>"), commandinput.NewPositionalArg("<stop>")}, Level: 1, HasFlags: true}, eval: func(tx *flashdb.Tx, m completerModel) ([]string, error) {
+		parsed := m.textInput.ParsedValue()
+		args := parsed.Args.Value
+		hasRev := false
+		hasScores := false
+		for _, flag := range parsed.Flags.Value {
+			if flag.Name == "-rs" || flag.Name == "-sr" {
+				hasRev = true
+				hasScores = true
+			}
+			if flag.Name == "-r" || flag.Name == "--reverse" {
+				hasRev = true
+			}
+			if flag.Name == "-s" || flag.Name == "--scores" {
+				hasScores = true
+			}
+		}
+		key := args[1].Value
+
+		intStart, err := strconv.ParseInt(args[2].Value, 10, 32)
+		if err != nil {
+			return nil, err
+		}
+		intStop, err := strconv.ParseInt(args[3].Value, 10, 32)
+		if err != nil {
+			return nil, err
+		}
+
+		var all []interface{}
+		if hasRev && hasScores {
+			all = tx.ZRevRangeWithScores(key, int(intStart), int(intStop))
+		} else if hasRev {
+
+			all = tx.ZRevRange(key, int(intStart), int(intStop))
+		} else if hasScores {
+
+			all = tx.ZRangeWithScores(key, int(intStart), int(intStop))
+		} else {
+
+			all = tx.ZRange(key, int(intStart), int(intStop))
+		}
+
+		retVals := []string{}
+		for _, ret := range all {
+			retVals = append(retVals, fmt.Sprintf("%v", ret))
+		}
+		return retVals, nil
+	}}},
+	{Text: "rank", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<member>")}, Level: 1, HasFlags: true}, eval: func(tx *flashdb.Tx, m completerModel) ([]string, error) {
+		parsed := m.textInput.ParsedValue()
+		args := parsed.Args.Value
+		for _, flag := range parsed.Flags.Value {
+			if flag.Name == "-r" || flag.Name == "--reverse" {
+				rank := tx.ZRevRank(args[1].Value, args[2].Value)
+
+				return []string{strconv.Itoa(int(rank))}, nil
+
+			}
+		}
+		rank := tx.ZRank(args[1].Value, args[2].Value)
+		return []string{strconv.Itoa(int(rank))}, nil
 	}}}, // -reverse
 	{Text: "remove", Metadata: kvMetadata{name: "ZRem", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<member>")}, Level: 1}}},
 	{Text: "score", Metadata: kvMetadata{name: "ZScore", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<member>")}, Level: 1}}},
-	{Text: "score-range", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<min>"), commandinput.NewPositionalArg("<max>")}, Level: 1}, eval: func(tx *flashdb.Tx, m completerModel) ([]string, error) {
-		return nil, nil
-	}}}, //-rev
+	{Text: "score-range", Metadata: kvMetadata{CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>"), commandinput.NewPositionalArg("<min>"), commandinput.NewPositionalArg("<max>")}, Level: 1, HasFlags: true}, eval: func(tx *flashdb.Tx, m completerModel) ([]string, error) {
+		parsed := m.textInput.ParsedValue()
+		args := parsed.Args.Value
+
+		floatMin, err := strconv.ParseFloat(args[2].Value, 64)
+		if err != nil {
+			return nil, err
+		}
+		floatMax, err := strconv.ParseFloat(args[3].Value, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, flag := range parsed.Flags.Value {
+
+			if flag.Name == "-r" || flag.Name == "--reverse" {
+				all := tx.ZRevScoreRange(args[1].Value, floatMax, floatMin)
+				retVals := []string{}
+				for _, ret := range all {
+					retVals = append(retVals, fmt.Sprintf("%v", ret))
+				}
+
+				return retVals, nil
+
+			}
+		}
+		all := tx.ZScoreRange(args[1].Value, floatMax, floatMin)
+		retVals := []string{}
+		for _, ret := range all {
+			retVals = append(retVals, fmt.Sprintf("%v", ret))
+		}
+
+		return retVals, nil
+	}}},
 	{Text: "ttl", Metadata: kvMetadata{name: "ZTTL", CmdMetadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("<key>")}, Level: 1}}},
 }
 
@@ -245,7 +332,38 @@ func (m completerModel) completer(document prompt.Document, promptModel prompt.M
 								Description: "Invert results",
 							}}, nil)
 						}
-						return nil
+
+					case "range":
+						if numArgs >= 4 {
+							filterSuggestions = false
+							suggestions = m.textInput.FlagSuggestions(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp), []commandinput.Flag{{
+								Short:       "r",
+								Long:        "reverse",
+								Description: "Invert results",
+							}, {
+								Short:       "s",
+								Long:        "scores",
+								Description: "Filter by scores",
+							}}, nil)
+						}
+					case "score-range":
+						if numArgs >= 4 {
+							filterSuggestions = false
+							suggestions = m.textInput.FlagSuggestions(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp), []commandinput.Flag{{
+								Short:       "r",
+								Long:        "reverse",
+								Description: "Invert results",
+							}}, nil)
+						}
+					case "rank":
+						if numArgs >= 3 {
+							filterSuggestions = false
+							suggestions = m.textInput.FlagSuggestions(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp), []commandinput.Flag{{
+								Short:       "r",
+								Long:        "reverse",
+								Description: "Invert results",
+							}}, nil)
+						}
 					}
 				} else {
 					suggestions = zsetSuggestions
