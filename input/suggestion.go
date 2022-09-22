@@ -13,7 +13,6 @@ const (
 
 type Suggestion[T any] struct {
 	Text           string
-	Level          int
 	CompletionText string
 	Description    string
 	Metadata       T

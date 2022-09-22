@@ -53,24 +53,27 @@ func NewPositionalArg(placeholder string) PositionalArg {
 }
 
 type Model[T CmdMetadataAccessor] struct {
-	textinput         textinput.Model
-	Placeholder       string
-	prompt            string
-	defaultDelimiter  string
-	delimiterRegex    *regexp.Regexp
-	stringRegex       *regexp.Regexp
-	origArgs          []arg
-	args              []arg
-	argIndex          int
-	selectedCommand   *input.Suggestion[T]
-	currentFlag       *input.Suggestion[T]
-	PromptStyle       lipgloss.Style
-	TextStyle         lipgloss.Style
-	SelectedTextStyle lipgloss.Style
-	CursorStyle       lipgloss.Style
-	PlaceholderStyle  lipgloss.Style
-	parser            parser.Parser[Statement]
-	parsedText        *Statement
+	textinput          textinput.Model
+	commandPlaceholder string
+	subcommandWithArgs string
+	suggestionLevel    int
+	prompt             string
+	defaultDelimiter   string
+	delimiterRegex     *regexp.Regexp
+	stringRegex        *regexp.Regexp
+	origArgs           []arg
+	args               []arg
+	hasFlags           bool
+	argIndex           int
+	selectedCommand    *input.Suggestion[T]
+	currentFlag        *input.Suggestion[T]
+	PromptStyle        lipgloss.Style
+	TextStyle          lipgloss.Style
+	SelectedTextStyle  lipgloss.Style
+	CursorStyle        lipgloss.Style
+	PlaceholderStyle   lipgloss.Style
+	parser             parser.Parser[Statement]
+	parsedText         *Statement
 }
 
 type TokenPos struct {
@@ -92,15 +95,16 @@ func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T] {
 	textinput := textinput.New()
 	textinput.Focus()
 	model := &Model[T]{
-		textinput:         textinput,
-		Placeholder:       "",
-		prompt:            "> ",
-		PlaceholderStyle:  textinput.PlaceholderStyle,
-		SelectedTextStyle: lipgloss.NewStyle().Foreground(lipgloss.Color(DefaultSelectedTextColor)),
-		parsedText:        &Statement{},
-		delimiterRegex:    regexp.MustCompile(`\s+`),
-		stringRegex:       regexp.MustCompile(`[^\-\s][^\s]*`),
-		defaultDelimiter:  " ",
+		textinput:          textinput,
+		commandPlaceholder: "",
+		subcommandWithArgs: "",
+		prompt:             "> ",
+		PlaceholderStyle:   textinput.PlaceholderStyle,
+		SelectedTextStyle:  lipgloss.NewStyle().Foreground(lipgloss.Color(DefaultSelectedTextColor)),
+		parsedText:         &Statement{},
+		delimiterRegex:     regexp.MustCompile(`\s+`),
+		stringRegex:        regexp.MustCompile(`[^\-\s][^\s]*`),
+		defaultDelimiter:   " ",
 	}
 	for _, opt := range opts {
 		if err := opt(model); err != nil {
@@ -302,6 +306,7 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T], 
 		if strings.HasPrefix(suggestion.Text, "-") {
 			m.currentFlag = suggestion
 		} else {
+			m.hasFlags = suggestion.Metadata.GetHasFlags()
 			m.currentFlag = nil
 		}
 		index := m.CurrentTokenPos(RoundUp).Index
@@ -310,6 +315,8 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T], 
 			m.args = []arg{}
 			m.origArgs = []arg{}
 			m.argIndex = index
+			m.subcommandWithArgs = suggestion.Text
+			m.suggestionLevel = suggestion.Metadata.GetLevel()
 
 			newArgs := m.getPosArgs(suggestion.Metadata)
 			m.args = append(m.args, newArgs...)
@@ -331,12 +338,19 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T], 
 	} else {
 		m.args = []arg{}
 		m.origArgs = []arg{}
-
+		m.suggestionLevel = 0
 		if suggestion == nil {
 			// Didn't find any matching suggestions, reset
-			m.Placeholder = ""
+			m.commandPlaceholder = ""
+			m.subcommandWithArgs = ""
 		} else {
-			m.Placeholder = suggestion.Text
+			if !strings.HasPrefix(suggestion.Text, "-") {
+				m.hasFlags = suggestion.Metadata.GetHasFlags()
+			}
+
+			m.commandPlaceholder = suggestion.Text
+			m.subcommandWithArgs = suggestion.Text
+
 			for _, posArg := range suggestion.Metadata.GetPositionalArgs() {
 				newArg := arg{
 					text:             posArg.Placeholder,
@@ -611,8 +625,8 @@ func (m Model[T]) View(viewMode input.ViewMode) string {
 	}
 
 	// Render prefix
-	if showPlaceholders && strings.HasPrefix(m.Placeholder, m.Value()) && m.Placeholder != command {
-		viewBuilder.Render(m.Placeholder[len(command):], m.parsedText.Command.Pos.Offset+len(command), m.PlaceholderStyle)
+	if showPlaceholders && strings.HasPrefix(m.commandPlaceholder, m.Value()) && m.commandPlaceholder != command {
+		viewBuilder.Render(m.commandPlaceholder[len(command):], m.parsedText.Command.Pos.Offset+len(command), m.PlaceholderStyle)
 	}
 
 	// Render args
@@ -684,20 +698,24 @@ func (m Model[T]) View(viewMode input.ViewMode) string {
 		}
 	}
 
-	if showPlaceholders && len(m.parsedText.Flags.Value) == 0 && m.selectedCommand != nil && len(m.selectedCommand.Metadata.GetFlagPlaceholder().Text) > 0 {
+	if showPlaceholders && len(m.parsedText.Flags.Value) == 0 && m.hasFlags {
 		m.args = append(m.args, arg{text: "[flags]", placeholderStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("14"))})
 	}
 
 	// Render arg placeholders
 	startPlaceholder := len(m.parsedText.Args.Value) + len(m.parsedText.Flags.Value)
-	if showPlaceholders && startPlaceholder < len(m.args) {
-		for _, arg := range m.args[startPlaceholder:] {
-			last := viewBuilder.Last()
-			if last == nil || !m.isDelimiter(string(*last)) {
-				viewBuilder.Render(m.defaultDelimiter, viewBuilder.ViewLen(), lipgloss.NewStyle())
-			}
+	// Don't show arg placeholders if the current arg doesn't match the arg we're about to show placeholders for (the user moved the cursor over to the left)
+	all := m.AllValues()
+	if m.suggestionLevel > len(all)-1 || strings.HasPrefix(m.subcommandWithArgs, all[m.suggestionLevel]) {
+		if showPlaceholders && startPlaceholder < len(m.args) {
+			for _, arg := range m.args[startPlaceholder:] {
+				last := viewBuilder.Last()
+				if last == nil || !m.isDelimiter(string(*last)) {
+					viewBuilder.Render(m.defaultDelimiter, viewBuilder.ViewLen(), lipgloss.NewStyle())
+				}
 
-			viewBuilder.Render(arg.text, viewBuilder.ViewLen(), arg.placeholderStyle)
+				viewBuilder.Render(arg.text, viewBuilder.ViewLen(), arg.placeholderStyle)
+			}
 		}
 	}
 

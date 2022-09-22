@@ -5,11 +5,13 @@ type CmdMetadataAccessor interface {
 	GetFlagPlaceholder() Placeholder
 	GetLevel() int
 	GetPreservePlaceholder() bool
+	GetHasFlags() bool
 	Create(args []PositionalArg, placeholder Placeholder) CmdMetadataAccessor
 }
 
 type CmdMetadata struct {
 	PositionalArgs      []PositionalArg
+	HasFlags            bool
 	FlagPlaceholder     Placeholder
 	Level               int
 	PreservePlaceholder bool
@@ -25,6 +27,10 @@ func (m CmdMetadata) GetPositionalArgs() []PositionalArg {
 
 func (m CmdMetadata) GetFlagPlaceholder() Placeholder {
 	return m.FlagPlaceholder
+}
+
+func (m CmdMetadata) GetHasFlags() bool {
+	return m.HasFlags
 }
 
 func (m CmdMetadata) GetLevel() int {
