@@ -36,6 +36,4 @@ require (
 
 replace github.com/aschey/bubbleprompt => ../
 
-replace github.com/arriqaaq/flashdb v0.1.7-0.20220531093229-cc4605a9db90 => github.com/aschey/flashdb v0.0.0-20220919214038-237f5561b34b
-
 replace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
