@@ -462,6 +462,22 @@ func (m Model[T]) AllTokens() []ident {
 	return m.allTokens(m.parsedText)
 }
 
+func (m Model[T]) AllTokensBeforeCursor() []ident {
+	textBeforeCursor := m.Value()[:m.Cursor()]
+
+	expr, _ := m.parser.Parse(textBeforeCursor)
+	return m.allTokens(expr)
+}
+
+func (m Model[T]) AllValuesBeforeCursor() []string {
+	tokens := m.AllTokensBeforeCursor()
+	values := []string{}
+	for _, t := range tokens {
+		values = append(values, t.Value)
+	}
+	return values
+}
+
 func (m Model[T]) allTokens(statement *Statement) []ident {
 	tokens := []ident{statement.Command}
 	tokens = append(tokens, statement.Args.Value...)
