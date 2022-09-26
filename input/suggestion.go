@@ -26,7 +26,7 @@ func (s Suggestion[T]) Render(selected bool, leftPadding string, maxNameLen int,
 	}
 	name := formatters.Name.Format(completionText, maxNameLen, selected)
 	description := ""
-	if len(s.Description) > 0 {
+	if maxDescLen > 0 {
 		description = formatters.Description.Format(s.Description, maxDescLen, selected)
 	}
 

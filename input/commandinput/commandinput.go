@@ -223,7 +223,10 @@ func (m *Model[T]) FlagSuggestions(inputStr string, flags []Flag, suggestionFunc
 	isMulti := !isLong && strings.HasPrefix(inputStr, "-") && len(inputStr) > 1
 	tokenIndex := m.CurrentTokenPos(RoundUp).Index
 	allTokens := m.AllTokens()
-	prevToken := allTokens[tokenIndex-1].Value
+	prevToken := ""
+	if tokenIndex > 0 {
+		prevToken = allTokens[tokenIndex-1].Value
+	}
 
 	currentIsFlag := false
 	currentToken := ""
