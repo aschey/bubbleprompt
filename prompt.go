@@ -39,7 +39,7 @@ type Model[I any] struct {
 	err                     error
 }
 
-func New[I any](completer Completer[I], executor Executor[I], textInput input.Input[I], opts ...Option[I]) Model[I] {
+func New[I any](completer Completer[I], executor Executor[I], textInput input.Input[I], opts ...Option[I]) (Model[I], error) {
 	formatters := input.DefaultFormatters()
 	model := Model[I]{
 		completer:  newCompleterModel(completer, textInput, formatters.ErrorText, 6),
@@ -52,11 +52,11 @@ func New[I any](completer Completer[I], executor Executor[I], textInput input.In
 	model.SetScrollbarThumbColor(lipgloss.Color(DefaultScrollbarThumbColor))
 	for _, opt := range opts {
 		if err := opt(&model); err != nil {
-			panic(err)
+			return Model[I]{}, err
 		}
 	}
 
-	return model
+	return model, nil
 }
 
 func (m *Model[I]) SetScrollbarColor(color lipgloss.TerminalColor) {

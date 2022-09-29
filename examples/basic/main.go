@@ -63,11 +63,15 @@ func main() {
 	var textInput input.Input[cmdMetadata] = commandinput.New[cmdMetadata]()
 	completerModel := completerModel{suggestions: suggestions, textInput: textInput.(*commandinput.Model[cmdMetadata])}
 
-	m := model{prompt: prompt.New(
+	prompt, err := prompt.New(
 		completerModel.completer,
 		executor,
 		textInput,
-	)}
+	)
+	if err != nil {
+		panic(err)
+	}
+	m := model{prompt}
 
 	if err := tea.NewProgram(m).Start(); err != nil {
 		fmt.Printf("Could not start program :(\n%v\n", err)

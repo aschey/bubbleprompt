@@ -159,12 +159,16 @@ func main() {
 		vm:          vm,
 	}
 
-	m := model{prompt: prompt.New(
+	prompt, err := prompt.New(
 		completerModel.completer,
 		completerModel.executor,
 		textInput,
 		prompt.WithViewportRenderer[any](),
-	), vm: vm}
+	)
+	if err != nil {
+		panic(err)
+	}
+	m := model{prompt, vm}
 
 	if err := tea.NewProgram(m).Start(); err != nil {
 		fmt.Printf("Could not start program :(\n%v\n", err)

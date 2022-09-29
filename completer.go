@@ -3,6 +3,7 @@ package prompt
 import (
 	"math"
 	"strings"
+	"time"
 
 	"github.com/aschey/bubbleprompt/input"
 	tea "github.com/charmbracelet/bubbletea"
@@ -23,12 +24,33 @@ type completionMsg[T any] struct {
 	err         error
 }
 
+type PeriodicCompleterMsg struct {
+	NextTrigger time.Duration
+}
+
+type OneShotCompleterMsg struct{}
+
+func PeriodicCompleter(nextTrigger time.Duration) tea.Cmd {
+	return func() tea.Msg {
+		time.Sleep(nextTrigger)
+		return PeriodicCompleterMsg{NextTrigger: nextTrigger}
+	}
+}
+
+func OneShotCompleter(nextTrigger time.Duration) tea.Cmd {
+	return func() tea.Msg {
+		time.Sleep(nextTrigger)
+		return OneShotCompleterMsg{}
+	}
+}
+
 type completerModel[I any] struct {
 	completerFunc  Completer[I]
 	state          completerState
 	textInput      input.Input[I]
 	suggestions    []input.Suggestion[I]
 	errorText      input.Text
+	lastKeyMsg     tea.KeyMsg
 	maxSuggestions int
 	scroll         int
 	prevScroll     int
@@ -81,13 +103,37 @@ func (c completerModel[I]) Update(msg tea.Msg, prompt Model[I]) (completerModel[
 				return c, c.updateCompletions(prompt)
 			}
 		}
+	case PeriodicCompleterMsg:
+		if !c.canUpdateCompletions() {
+			return c, PeriodicCompleter(msg.NextTrigger)
+		}
+		return c, tea.Batch(c.forceUpdateCompletions(prompt), PeriodicCompleter(msg.NextTrigger))
+	case OneShotCompleterMsg:
+		if !c.canUpdateCompletions() {
+			return c, nil
+		}
+		return c, c.forceUpdateCompletions(prompt)
 	case tea.KeyMsg:
+		c.lastKeyMsg = msg
 		if msg.Type == tea.KeyTab {
 			// Tab completion may have changed text so reset previous value
 			c.prevText = ""
 		}
 	}
 	return c, nil
+}
+
+func (c completerModel[I]) canUpdateCompletions() bool {
+	if len(c.textInput.CompletionText(c.textInput.Value()[:c.textInput.Cursor()])) == 0 {
+		return true
+	}
+
+	switch c.lastKeyMsg.Type {
+	case tea.KeyUp, tea.KeyDown, tea.KeyTab:
+		return false
+	default:
+		return true
+	}
 }
 
 func (c completerModel[I]) scrollbarBounds(windowHeight int) (int, int) {
@@ -161,6 +207,14 @@ func (c completerModel[I]) Render(paddingSize int, formatters input.Formatters,
 }
 
 func (c *completerModel[I]) updateCompletions(prompt Model[I]) tea.Cmd {
+	return c.updateCompletionsCmd(prompt, false)
+}
+
+func (c *completerModel[I]) forceUpdateCompletions(prompt Model[I]) tea.Cmd {
+	return c.updateCompletionsCmd(prompt, true)
+}
+
+func (c *completerModel[I]) updateCompletionsCmd(prompt Model[I], forceUpdate bool) tea.Cmd {
 	input := prompt.textInput
 	text := input.Value()
 	cursorPos := input.Cursor()

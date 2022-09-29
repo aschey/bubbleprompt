@@ -78,12 +78,13 @@ func TestApp(t *testing.T) {
 		textInput:   textInput.(*parserinput.ParserModel[Statement]),
 	}
 
-	m := model{prompt: prompt.New(
+	prompt, _ := prompt.New(
 		completerModel.completer,
 		completerModel.executor,
 		textInput,
 		prompt.WithViewportRenderer[any](),
-	)}
+	)
+	m := model{prompt}
 
 	if err := tea.NewProgram(m).Start(); err != nil {
 		fmt.Printf("Could not start program :(\n%v\n", err)
