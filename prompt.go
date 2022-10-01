@@ -75,6 +75,16 @@ func (m *Model[I]) SetRenderer(renderer renderer.Renderer) {
 	m.renderer = renderer
 }
 
+var shutdown bool = false
+
+func OnQuit() tea.QuitBehavior {
+	if shutdown {
+		return tea.Shutdown
+	} else {
+		return tea.PreventShutdown
+	}
+}
+
 func (m Model[I]) Init() tea.Cmd {
 	return tea.Batch(m.textInput.Init(), m.completer.Init())
 }

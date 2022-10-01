@@ -46,3 +46,5 @@ require (
 )
 
 replace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
+
+replace github.com/charmbracelet/bubbletea => github.com/aschey/bubbletea v0.20.1-0.20221001181920-e339dd2864de

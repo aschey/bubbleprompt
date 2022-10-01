@@ -31,17 +31,15 @@ type PeriodicCompleterMsg struct {
 type OneShotCompleterMsg struct{}
 
 func PeriodicCompleter(nextTrigger time.Duration) tea.Cmd {
-	return func() tea.Msg {
-		time.Sleep(nextTrigger)
+	return tea.Tick(nextTrigger, func(_ time.Time) tea.Msg {
 		return PeriodicCompleterMsg{NextTrigger: nextTrigger}
-	}
+	})
 }
 
 func OneShotCompleter(nextTrigger time.Duration) tea.Cmd {
-	return func() tea.Msg {
-		time.Sleep(nextTrigger)
+	return tea.Tick(nextTrigger, func(_ time.Time) tea.Msg {
 		return OneShotCompleterMsg{}
-	}
+	})
 }
 
 type completerModel[I any] struct {
@@ -226,7 +224,7 @@ func (c *completerModel[I]) updateCompletionsCmd(prompt Model[I], forceUpdate bo
 
 	// No need to queue another update if the text hasn't changed
 	// Don't trim whitespace here because cursor location affects suggestions
-	if textBeforeCursor == c.prevText {
+	if !forceUpdate && textBeforeCursor == c.prevText {
 		return nil
 	}
 

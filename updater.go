@@ -1,8 +1,6 @@
 package prompt
 
 import (
-	"reflect"
-
 	"github.com/aschey/bubbleprompt/completer"
 	"github.com/aschey/bubbleprompt/executor"
 	"github.com/aschey/bubbleprompt/input"
@@ -15,6 +13,7 @@ func (m Model[I]) Update(msg tea.Msg) (Model[I], tea.Cmd) {
 	if msg, ok := msg.(tea.KeyMsg); ok {
 		switch msg.Type {
 		case tea.KeyCtrlC, tea.KeyEsc:
+			shutdown = true
 			return m, tea.Quit
 		}
 	}
@@ -62,16 +61,14 @@ func (m *Model[I]) updateExecuting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool
 	executorModel, cmd := (*m.executorModel).Update(msg)
 	m.executorModel = &executorModel
 
+	switch msg.(type) {
 	// Check if the model sent the quit command
 	// When this happens we just want to quit the executor, not the entire program
-	// The only way to do this reliably without actually invoking the function is
-	// to use reflection to check that the address is equal to tea.Quit's address
-	if cmd != nil && reflect.ValueOf(cmd).Pointer() == reflect.ValueOf(tea.Quit).Pointer() {
+	case tea.QuitMsg:
 		m.finalizeExecutor(m.executorModel)
 		// Re-focus input when finished
 		return append(cmds, m.textInput.Focus()), true
-	} else {
-		// Don't process text input while executor is running
+	default:
 		if m.textInput.Focused() {
 			m.textInput.Blur()
 		}
@@ -85,7 +82,6 @@ func (m *Model[I]) updateCompleting(msg tea.Msg, cmds []tea.Cmd, prevText string
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.updateWindowSizeMsg(msg)
-
 	case tea.KeyMsg:
 		scrollToBottom = true
 		switch msg.Type {
