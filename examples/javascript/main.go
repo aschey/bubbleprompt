@@ -20,8 +20,8 @@ const arrayType = "[]interface {}"
 const objectType = "map[string]interface {}"
 
 type model struct {
-	prompt prompt.Model[any]
-	vm     *vm
+	promptModel prompt.Model[any]
+	vm          *vm
 }
 
 type completerModel struct {
@@ -31,17 +31,17 @@ type completerModel struct {
 }
 
 func (m model) Init() tea.Cmd {
-	return m.prompt.Init()
+	return m.promptModel.Init()
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	p, cmd := m.prompt.Update(msg)
-	m.prompt = p
+	p, cmd := m.promptModel.Update(msg)
+	m.promptModel = p
 	return m, cmd
 }
 
 func (m model) View() string {
-	return m.prompt.View()
+	return m.promptModel.View()
 }
 
 func (m completerModel) globalSuggestions() []input.Suggestion[any] {
@@ -159,7 +159,7 @@ func main() {
 		vm:          vm,
 	}
 
-	prompt, err := prompt.New(
+	promptModel, err := prompt.New(
 		completerModel.completer,
 		completerModel.executor,
 		textInput,
@@ -168,9 +168,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	m := model{prompt, vm}
+	m := model{promptModel, vm}
 
-	if err := tea.NewProgram(m).Start(); err != nil {
+	if err := tea.NewProgram(m, tea.WithOnQuit(prompt.OnQuit)).Start(); err != nil {
 		fmt.Printf("Could not start program :(\n%v\n", err)
 		os.Exit(1)
 	}

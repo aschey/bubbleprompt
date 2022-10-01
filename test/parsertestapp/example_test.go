@@ -20,7 +20,7 @@ var participleParser = participle.MustBuild[Statement](
 )
 
 type model struct {
-	prompt prompt.Model[any]
+	promptModel prompt.Model[any]
 }
 
 type Statement struct {
@@ -33,17 +33,17 @@ type completerModel struct {
 }
 
 func (m model) Init() tea.Cmd {
-	return m.prompt.Init()
+	return m.promptModel.Init()
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	p, cmd := m.prompt.Update(msg)
-	m.prompt = p
+	p, cmd := m.promptModel.Update(msg)
+	m.promptModel = p
 	return m, cmd
 }
 
 func (m model) View() string {
-	return m.prompt.View()
+	return m.promptModel.View()
 }
 
 func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
@@ -78,15 +78,15 @@ func TestApp(t *testing.T) {
 		textInput:   textInput.(*parserinput.ParserModel[Statement]),
 	}
 
-	prompt, _ := prompt.New(
+	promptModel, _ := prompt.New(
 		completerModel.completer,
 		completerModel.executor,
 		textInput,
 		prompt.WithViewportRenderer[any](),
 	)
-	m := model{prompt}
+	m := model{promptModel}
 
-	if err := tea.NewProgram(m).Start(); err != nil {
+	if err := tea.NewProgram(m, tea.WithOnQuit(prompt.OnQuit)).Start(); err != nil {
 		fmt.Printf("Could not start program :(\n%v\n", err)
 		os.Exit(1)
 	}
