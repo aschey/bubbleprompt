@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/internal"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -11,15 +12,13 @@ func (m Model[I]) renderExecuting() string {
 	executorModel := *m.executorModel
 	// Add a newline to ensure the text gets pushed up
 	// this ensures the text doesn't jump if the completer takes a while to finish
-	return executorModel.View() + "\n"
+	textView := executorModel.View()
+	return internal.AddNewlineIfMissing(textView)
 }
 
 func (m Model[I]) renderCompleting() string {
 	// If an item is selected, parse out the text portion and apply formatting
-	textView := m.textInput.View(input.Interactive)
-	if !strings.HasSuffix(textView, "\n") {
-		textView += "\n"
-	}
+	textView := internal.AddNewlineIfMissing(m.textInput.View(input.Interactive))
 
 	// Calculate left offset for suggestions
 	// Choosing a prompt via arrow keys or tab shouldn't change the prompt position

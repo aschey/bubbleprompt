@@ -1,6 +1,9 @@
 package executor
 
-import tea "github.com/charmbracelet/bubbletea"
+import (
+	"github.com/aschey/bubbleprompt/internal"
+	tea "github.com/charmbracelet/bubbletea"
+)
 
 type StringModel string
 
@@ -17,5 +20,5 @@ func (m StringModel) Update(tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m StringModel) View() string {
-	return string(m)
+	return internal.AddNewlineIfMissing(string(m))
 }

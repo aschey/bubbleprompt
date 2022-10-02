@@ -1,6 +1,7 @@
 package executor
 
 import (
+	"github.com/aschey/bubbleprompt/internal"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -44,7 +45,7 @@ func (m AsyncStringModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m AsyncStringModel) View() string {
 	if m.output == nil {
-		return m.spinner.View() + "Loading..."
+		return m.spinner.View() + "Loading...\n"
 	}
-	return *m.output
+	return internal.AddNewlineIfMissing(*m.output)
 }

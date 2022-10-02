@@ -1,6 +1,7 @@
 package renderer
 
 import (
+	"github.com/aschey/bubbleprompt/internal"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -31,9 +32,10 @@ func (u *UnmanagedRenderer) SetContent(content string) {
 
 func (u *UnmanagedRenderer) AddOutput(output string) {
 	if len(u.history) > 0 {
-		u.history += "\n"
+		u.history = internal.AddNewlineIfMissing(u.history)
 	}
-	u.history += output
+
+	u.history += internal.TrimNewline(output)
 }
 
 func (u *UnmanagedRenderer) GotoBottom(msg tea.Msg) {}

@@ -1,6 +1,7 @@
 package renderer
 
 import (
+	"github.com/aschey/bubbleprompt/internal"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -42,7 +43,7 @@ func (v *ViewportRenderer) SetContent(content string) {
 }
 
 func (v *ViewportRenderer) AddOutput(output string) {
-	v.history += (output + "\n")
+	v.history += internal.AddNewlineIfMissing(output)
 }
 
 func (v *ViewportRenderer) FinishUpdate() tea.Cmd {
