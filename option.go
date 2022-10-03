@@ -6,45 +6,45 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type Option[I any] func(model *Model[I]) error
+type Option[T any] func(model *Model[T]) error
 
-func WithFormatters[I any](formatters input.Formatters) Option[I] {
-	return func(model *Model[I]) error {
+func WithFormatters[T any](formatters input.Formatters) Option[T] {
+	return func(model *Model[T]) error {
 		model.Formatters = formatters
 		return nil
 	}
 }
 
-func WithScrollbar[I any](color lipgloss.TerminalColor) Option[I] {
-	return func(model *Model[I]) error {
+func WithScrollbar[T any](color lipgloss.TerminalColor) Option[T] {
+	return func(model *Model[T]) error {
 		model.SetScrollbarColor(color)
 		return nil
 	}
 }
 
-func WithScrollbarThumb[I any](color lipgloss.TerminalColor) Option[I] {
-	return func(model *Model[I]) error {
+func WithScrollbarThumb[T any](color lipgloss.TerminalColor) Option[T] {
+	return func(model *Model[T]) error {
 		model.SetScrollbarThumbColor(color)
 		return nil
 	}
 }
 
-func WithMaxSuggestions[I any](maxSuggestions int) Option[I] {
-	return func(model *Model[I]) error {
+func WithMaxSuggestions[T any](maxSuggestions int) Option[T] {
+	return func(model *Model[T]) error {
 		model.SetMaxSuggestions(maxSuggestions)
 		return nil
 	}
 }
 
-func WithUnmanagedRenderer[I any]() Option[I] {
-	return func(model *Model[I]) error {
+func WithUnmanagedRenderer[T any]() Option[T] {
+	return func(model *Model[T]) error {
 		model.SetRenderer(renderer.NewUnmanagedRenderer())
 		return nil
 	}
 }
 
-func WithViewportRenderer[I any]() Option[I] {
-	return func(model *Model[I]) error {
+func WithViewportRenderer[T any]() Option[T] {
+	return func(model *Model[T]) error {
 		model.SetRenderer(renderer.NewViewportRenderer())
 		return nil
 	}

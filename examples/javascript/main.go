@@ -143,7 +143,7 @@ func (m completerModel) executor(input string, selectedSuggestion *input.Suggest
 }
 
 func main() {
-	var textInput input.Input[any] = parserinput.NewParserModel[statement](
+	textInput := parserinput.NewParserModel[statement](
 		parser.NewParticipleParser(participleParser),
 		parserinput.WithDelimiterTokens("Punct", "Whitespace", "And", "Or", "Eq"),
 		parserinput.WithFormatter(parser.NewChromaFormatter(styles.SwapOff, styleLexer)),
@@ -155,7 +155,7 @@ func main() {
 
 	completerModel := completerModel{
 		suggestions: []input.Suggestion[any]{},
-		textInput:   textInput.(*parserinput.ParserModel[statement]),
+		textInput:   textInput,
 		vm:          vm,
 	}
 

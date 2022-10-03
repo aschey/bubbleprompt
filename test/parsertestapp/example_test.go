@@ -69,13 +69,13 @@ func (m completerModel) executor(input string, selectedSuggestion *input.Suggest
 }
 
 func TestApp(t *testing.T) {
-	var textInput input.Input[any] = parserinput.NewParserModel[Statement](
+	textInput := parserinput.NewParserModel[Statement](
 		parser.NewParticipleParser(participleParser),
 		parserinput.WithDelimiters(","))
 
 	completerModel := completerModel{
 		suggestions: []input.Suggestion[any]{},
-		textInput:   textInput.(*parserinput.ParserModel[Statement]),
+		textInput:   textInput,
 	}
 
 	promptModel, _ := prompt.New(

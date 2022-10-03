@@ -67,8 +67,8 @@ func main() {
 		{Text: "fifth-option", Description: "test description5"},
 	}
 
-	var textInput input.Input[cmdMetadata] = commandinput.New[cmdMetadata]()
-	completerModel := completerModel{suggestions: suggestions, textInput: textInput.(*commandinput.Model[cmdMetadata])}
+	textInput := commandinput.New[cmdMetadata]()
+	completerModel := completerModel{suggestions: suggestions, textInput: textInput}
 
 	promptModel, err := prompt.New(
 		completerModel.completer,

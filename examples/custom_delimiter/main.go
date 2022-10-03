@@ -70,10 +70,10 @@ func main() {
 		{Text: "fifth-option", Description: "test description5"},
 	}
 
-	var textInput input.Input[cmdMetadata] = commandinput.New(commandinput.WithPrompt[cmdMetadata](">>> "),
+	textInput := commandinput.New(commandinput.WithPrompt[cmdMetadata](">>> "),
 		commandinput.WithDelimiterRegex[cmdMetadata](regexp.MustCompile(`[\s\.]+`)),
 		commandinput.WithStringRegex[cmdMetadata](regexp.MustCompile(`[^\s\.]+`)))
-	completerModel := completerModel{suggestions: suggestions, textInput: textInput.(*commandinput.Model[cmdMetadata])}
+	completerModel := completerModel{suggestions: suggestions, textInput: textInput}
 
 	promptModel, err := prompt.New(
 		completerModel.completer,

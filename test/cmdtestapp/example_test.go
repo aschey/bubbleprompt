@@ -68,8 +68,8 @@ func executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (
 
 func TestApp(t *testing.T) {
 
-	var textInput input.Input[cmdMetadata] = commandinput.New[cmdMetadata]()
-	completerModel := completerModel{suggestions: suggestions, textInput: textInput.(*commandinput.Model[cmdMetadata])}
+	textInput := commandinput.New[cmdMetadata]()
+	completerModel := completerModel{suggestions: suggestions, textInput: textInput}
 
 	promptModel, _ := prompt.New(
 		completerModel.completer,
