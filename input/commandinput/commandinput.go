@@ -53,27 +53,27 @@ func NewPositionalArg(placeholder string) PositionalArg {
 }
 
 type Model[T CmdMetadataAccessor] struct {
-	textinput          textinput.Model
-	commandPlaceholder string
-	subcommandWithArgs string
-	suggestionLevel    int
-	prompt             string
-	defaultDelimiter   string
-	delimiterRegex     *regexp.Regexp
-	stringRegex        *regexp.Regexp
-	origArgs           []arg
-	args               []arg
-	hasFlags           bool
-	argIndex           int
-	selectedCommand    *input.Suggestion[T]
-	currentFlag        *input.Suggestion[T]
-	PromptStyle        lipgloss.Style
-	TextStyle          lipgloss.Style
-	SelectedTextStyle  lipgloss.Style
-	CursorStyle        lipgloss.Style
-	PlaceholderStyle   lipgloss.Style
-	parser             parser.Parser[Statement]
-	parsedText         *Statement
+	textinput           textinput.Model
+	commandPlaceholder  string
+	subcommandWithArgs  string
+	suggestionLevel     int
+	prompt              string
+	defaultDelimiter    string
+	delimiterRegex      *regexp.Regexp
+	stringRegex         *regexp.Regexp
+	origArgs            []arg
+	args                []arg
+	showFlagPlaceholder bool
+	argIndex            int
+	selectedCommand     *input.Suggestion[T]
+	currentFlag         *input.Suggestion[T]
+	PromptStyle         lipgloss.Style
+	TextStyle           lipgloss.Style
+	SelectedTextStyle   lipgloss.Style
+	CursorStyle         lipgloss.Style
+	PlaceholderStyle    lipgloss.Style
+	parser              parser.Parser[Statement]
+	parsedText          *Statement
 }
 
 type TokenPos struct {
@@ -309,7 +309,7 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T], 
 		if strings.HasPrefix(suggestion.Text, "-") {
 			m.currentFlag = suggestion
 		} else {
-			m.hasFlags = suggestion.Metadata.GetHasFlags()
+			m.showFlagPlaceholder = suggestion.Metadata.GetShowFlagPlaceholder()
 			m.currentFlag = nil
 		}
 		index := m.CurrentTokenPos(RoundUp).Index
@@ -348,7 +348,7 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T], 
 			m.subcommandWithArgs = ""
 		} else {
 			if !strings.HasPrefix(suggestion.Text, "-") {
-				m.hasFlags = suggestion.Metadata.GetHasFlags()
+				m.showFlagPlaceholder = suggestion.Metadata.GetShowFlagPlaceholder()
 			}
 
 			m.commandPlaceholder = suggestion.Text
@@ -717,7 +717,7 @@ func (m Model[T]) View(viewMode input.ViewMode) string {
 		}
 	}
 
-	if showPlaceholders && len(m.parsedText.Flags.Value) == 0 && m.hasFlags {
+	if showPlaceholders && len(m.parsedText.Flags.Value) == 0 && m.showFlagPlaceholder {
 		m.args = append(m.args, arg{text: "[flags]", placeholderStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("14"))})
 	}
 
