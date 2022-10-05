@@ -188,7 +188,7 @@ var _ = Describe("Prompt", func() {
 		It("applies the correct background for the suggestion name so it covers the longest name", func() {
 			maxNameLen := len("seventh-option")
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return fmt.Sprint(state.BgColor(1, leftPadding+maxNameLen+margin)) == input.DefaultNameBackground
+				return fmt.Sprint(state.BgColor(1, leftPadding+maxNameLen+margin)) == input.DefaultSelectedNameBackground
 			})
 		})
 
@@ -196,7 +196,7 @@ var _ = Describe("Prompt", func() {
 			maxNameLen := len("seventh-option")
 			maxDescLen := len("test desc2")
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return fmt.Sprint(state.BgColor(1, leftPadding+maxNameLen+2*margin+maxDescLen+margin)) == input.DefaultDescriptionBackground
+				return fmt.Sprint(state.BgColor(1, leftPadding+maxNameLen+2*margin+maxDescLen+margin)) == input.DefaultSelectedDescriptionBackground
 			})
 		})
 	})
