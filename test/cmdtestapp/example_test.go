@@ -67,6 +67,16 @@ func executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (
 }
 
 func TestApp(t *testing.T) {
+	input.DefaultNameForeground = "15"
+	input.DefaultSelectedNameForeground = "8"
+
+	input.DefaultDescriptionForeground = "15"
+	input.DefaultDescriptionBackground = "13"
+	input.DefaultSelectedDescriptionForeground = "8"
+	input.DefaultSelectedDescriptionBackground = "13"
+
+	prompt.DefaultScrollbarColor = "8"
+	prompt.DefaultScrollbarThumbColor = "15"
 
 	textInput := commandinput.New[cmdMetadata]()
 	completerModel := completerModel{suggestions: suggestions, textInput: textInput}

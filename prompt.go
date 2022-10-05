@@ -20,8 +20,8 @@ const (
 
 type Executor[T any] func(input string, selectedSuggestion *input.Suggestion[T]) (tea.Model, error)
 
-const DefaultScrollbarColor = "13"
-const DefaultScrollbarThumbColor = "14"
+var DefaultScrollbarColor = "250"
+var DefaultScrollbarThumbColor = "255"
 
 type Model[T any] struct {
 	completer               completerModel[T]

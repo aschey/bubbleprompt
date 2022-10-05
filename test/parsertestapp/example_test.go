@@ -69,6 +69,17 @@ func (m completerModel) executor(input string, selectedSuggestion *input.Suggest
 }
 
 func TestApp(t *testing.T) {
+	input.DefaultNameForeground = "15"
+	input.DefaultSelectedNameForeground = "8"
+
+	input.DefaultDescriptionForeground = "15"
+	input.DefaultDescriptionBackground = "13"
+	input.DefaultSelectedDescriptionForeground = "8"
+	input.DefaultSelectedDescriptionBackground = "13"
+
+	prompt.DefaultScrollbarColor = "8"
+	prompt.DefaultScrollbarThumbColor = "15"
+
 	textInput := parserinput.NewParserModel[Statement](
 		parser.NewParticipleParser(participleParser),
 		parserinput.WithDelimiters(","))

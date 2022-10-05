@@ -9,27 +9,36 @@ type Formatters struct {
 	ErrorText          Text
 }
 
-const DefaultNameBackground = "12"
-const DefaultDescriptionBackground = "13"
-const DefaultSelectedForeground = "8"
-const DefaultErrorTextBackground = "1"
+var DefaultNameForeground = "255"
+var DefaultNameBackground = "6"
+var DefaultSelectedNameForeground = "240"
+var DefaultSelectedNameBackground = "14"
+
+var DefaultDescriptionForeground = "255"
+var DefaultDescriptionBackground = "245"
+var DefaultSelectedDescriptionForeground = "240"
+var DefaultSelectedDescriptionBackground = "250"
+var DefaultErrorTextBackground = "1"
 
 func DefaultFormatters() Formatters {
 	return Formatters{
 		Name: SuggestionText{
 			SelectedStyle: lipgloss.
 				NewStyle().
-				Foreground(lipgloss.Color(DefaultSelectedForeground)).
+				Foreground(lipgloss.Color(DefaultSelectedNameForeground)).
+				Background(lipgloss.Color(DefaultSelectedNameBackground)),
+			Style: lipgloss.NewStyle().
+				Foreground(lipgloss.Color(DefaultNameForeground)).
 				Background(lipgloss.Color(DefaultNameBackground)),
-			Style: lipgloss.NewStyle().Background(lipgloss.Color(DefaultNameBackground)),
 		},
 		Description: SuggestionText{
 			SelectedStyle: lipgloss.
 				NewStyle().
-				Foreground(lipgloss.Color(DefaultSelectedForeground)).
-				Background(lipgloss.Color(DefaultDescriptionBackground)),
+				Foreground(lipgloss.Color(DefaultSelectedDescriptionForeground)).
+				Background(lipgloss.Color(DefaultSelectedDescriptionBackground)),
 			Style: lipgloss.
 				NewStyle().
+				Foreground(lipgloss.Color(DefaultDescriptionForeground)).
 				Background(lipgloss.Color(DefaultDescriptionBackground)),
 		},
 		DefaultPlaceholder: Text{

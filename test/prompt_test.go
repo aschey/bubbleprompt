@@ -311,7 +311,7 @@ var _ = Describe("Prompt", func() {
 		BeforeAll(func() {
 			console.SendString(tuitest.KeyDown)
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return fmt.Sprint(state.FgColor(1, leftPadding+margin)) == input.DefaultSelectedForeground
+				return fmt.Sprint(state.FgColor(1, leftPadding+margin)) == input.DefaultSelectedNameForeground
 			})
 			console.SendString(" ")
 		})
@@ -329,14 +329,14 @@ var _ = Describe("Prompt", func() {
 				console.SendString(tuitest.KeyDown)
 			}
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return fmt.Sprint(state.FgColor(6, leftPadding+margin)) == input.DefaultSelectedForeground
+				return fmt.Sprint(state.FgColor(6, leftPadding+margin)) == input.DefaultSelectedNameForeground
 			})
 			console.SendString(tuitest.KeyDown)
 		})
 
 		It("unselects the suggestion", func() {
 			_, _ = console.WaitForDuration(func(state tuitest.TermState) bool {
-				return state.FgColor(6, leftPadding+margin) == tuitest.DefaultFG
+				return fmt.Sprint(state.FgColor(6, leftPadding+margin)) == input.DefaultNameForeground
 			}, 100*time.Millisecond)
 		})
 	})
