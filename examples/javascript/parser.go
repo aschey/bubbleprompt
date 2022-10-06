@@ -80,7 +80,7 @@ type object struct {
 }
 
 type array struct {
-	Values []expression `parser:" '[' (@@ ( ',' @@ )*)* ']'? "`
+	Values []expression `parser:" '[' (@@ ( ',' @@? )*)* ']'? "`
 }
 
 type literal struct {
