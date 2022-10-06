@@ -14,7 +14,7 @@ import (
 )
 
 var _ = Describe("Completer", func() {
-	longestNameLength := len("seventh-option")
+	longestNameLength := len("completion text")
 	longestDescLength := len("test desc2")
 	promptWidth := leftPadding + margin + longestNameLength + 2*margin + longestDescLength + margin
 
@@ -92,17 +92,14 @@ var _ = Describe("Completer", func() {
 		})
 
 		It("applies the correct background for the suggestion name so it covers the longest name", func() {
-			maxNameLen := len("seventh-option")
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return fmt.Sprint(state.BgColor(1, leftPadding+maxNameLen+margin)) == input.DefaultSelectedNameBackground
+				return fmt.Sprint(state.BgColor(1, leftPadding+longestNameLength+margin)) == input.DefaultSelectedNameBackground
 			})
 		})
 
 		It("applies the correct background for the suggestion description so it covers the longest description", func() {
-			maxNameLen := len("seventh-option")
-			maxDescLen := len("test desc2")
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return fmt.Sprint(state.BgColor(1, leftPadding+maxNameLen+2*margin+maxDescLen+margin)) == input.DefaultSelectedDescriptionBackground
+				return fmt.Sprint(state.BgColor(1, leftPadding+longestNameLength+2*margin+longestDescLength+margin)) == input.DefaultSelectedDescriptionBackground
 			})
 		})
 	})

@@ -83,4 +83,29 @@ var _ = Describe("Filter", func() {
 		})
 	})
 
+	When("the user filters a suggestion with completion text override", Ordered, func() {
+		BeforeAll(func() {
+			console.SendString("completion")
+		})
+
+		It("filters the suggestions", func() {
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				return strings.Contains(state.NthOutputLine(1), suggestions[6].CompletionText)
+			})
+		})
+
+		When("the user chooses the suggestion", Ordered, func() {
+			BeforeAll(func() {
+				console.SendString(tuitest.KeyDown)
+			})
+
+			It("shows the regular text in the input", func() {
+				_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+					return strings.Contains(state.NthOutputLine(0), suggestions[6].Text)
+				})
+			})
+		})
+
+	})
+
 })

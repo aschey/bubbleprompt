@@ -17,4 +17,4 @@ var suggestions []input.Suggestion[cmdMetadata] = []input.Suggestion[cmdMetadata
 	{Text: "fourth-option", Description: "test desc4"},
 	{Text: "fifth-option", Description: "test desc5"},
 	{Text: "sixth-option", Description: "test desc6"},
-	{Text: "seventh-option", Description: "test desc7"}}
+	{Text: "seventh-option", CompletionText: "completion text", Description: "test desc7"}}

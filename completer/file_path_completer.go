@@ -66,7 +66,7 @@ func equalsSeparator(check byte) bool {
 }
 
 func (c *FilePathCompleter[T]) adjustCompletions(completions []input.Suggestion[T], sub string) []input.Suggestion[T] {
-	filteredCompletions := FilterCompletionTextHasPrefix(sub, completions)
+	filteredCompletions := FilterHasPrefix(sub, completions)
 
 	return filteredCompletions
 }

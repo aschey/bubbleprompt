@@ -100,7 +100,7 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[an
 		})
 	}
 
-	return completers.FilterCompletionTextHasPrefix(completable, suggestions)
+	return completers.FilterHasPrefix(completable, suggestions)
 }
 
 func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {

@@ -163,8 +163,9 @@ func (c completerModel[T]) Render(paddingSize int, formatters input.Formatters,
 
 	// Determine longest name and description to calculate padding
 	for _, cur := range c.suggestions {
-		if len(cur.Text) > maxNameLen {
-			maxNameLen = len(cur.Text)
+		completionText := cur.GetCompletionText()
+		if len(completionText) > maxNameLen {
+			maxNameLen = len(completionText)
 		}
 		if len(cur.Description) > maxDescLen {
 			maxDescLen = len(cur.Description)

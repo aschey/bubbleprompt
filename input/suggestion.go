@@ -19,12 +19,15 @@ type Suggestion[T any] struct {
 	CursorOffset   int
 }
 
-func (s Suggestion[T]) Render(selected bool, leftPadding string, maxNameLen int, maxDescLen int, formatters Formatters, scrollbar string) string {
-	completionText := s.CompletionText
-	if completionText == "" {
-		completionText = s.Text
+func (s Suggestion[T]) GetCompletionText() string {
+	if len(s.CompletionText) > 0 {
+		return s.CompletionText
 	}
-	name := formatters.Name.Format(completionText, maxNameLen, selected)
+	return s.Text
+}
+
+func (s Suggestion[T]) Render(selected bool, leftPadding string, maxNameLen int, maxDescLen int, formatters Formatters, scrollbar string) string {
+	name := formatters.Name.Format(s.GetCompletionText(), maxNameLen, selected)
 	description := ""
 	if maxDescLen > 0 {
 		description = formatters.Description.Format(s.Description, maxDescLen, selected)
