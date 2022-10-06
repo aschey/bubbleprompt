@@ -8,7 +8,7 @@ import (
 	//. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Prompt", func() {
+var _ = Describe("Parser", func() {
 	var console *tuitest.Console
 
 	BeforeEach(OncePerOrdered, func() {
