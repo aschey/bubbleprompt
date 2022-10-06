@@ -17,7 +17,7 @@ var DefaultSelectedNameBackground = "14"
 var DefaultDescriptionForeground = "255"
 var DefaultDescriptionBackground = "245"
 var DefaultSelectedDescriptionForeground = "240"
-var DefaultSelectedDescriptionBackground = "250"
+var DefaultSelectedDescriptionBackground = "249"
 var DefaultErrorTextBackground = "1"
 
 func DefaultFormatters() Formatters {

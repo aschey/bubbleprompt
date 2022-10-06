@@ -20,7 +20,7 @@ const (
 
 type Executor[T any] func(input string, selectedSuggestion *input.Suggestion[T]) (tea.Model, error)
 
-var DefaultScrollbarColor = "250"
+var DefaultScrollbarColor = "251"
 var DefaultScrollbarThumbColor = "255"
 
 type Model[T any] struct {
@@ -93,5 +93,10 @@ func (m Model[T]) View() string {
 	if !m.ready {
 		return "\n  Initializing..."
 	}
-	return m.renderer.View()
+	view := m.renderer.View()
+	if shutdown {
+		// For the final view, add one more newline so the terminal prompt doesn't cut off the last line
+		view += "\n"
+	}
+	return view
 }
