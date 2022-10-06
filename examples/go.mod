@@ -7,7 +7,7 @@ require (
 	github.com/alecthomas/participle/v2 v2.0.0-beta.5
 	github.com/aschey/bubbleprompt v0.0.0
 	github.com/charmbracelet/bubbletea v0.22.1
-	github.com/dop251/goja v0.0.0-20220915101355-d79e1b125a30
+	github.com/dop251/goja v0.0.0-20221003171542-5ea1285e6c91
 
 )
 
@@ -28,12 +28,10 @@ require (
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.13.0 // indirect
 	github.com/rivo/uniseg v0.4.2 // indirect
-	golang.org/x/exp v0.0.0-20220921164117-439092de6870 // indirect
-	golang.org/x/sys v0.0.0-20220919091848-fb04ddd9f9c8 // indirect
+	golang.org/x/exp v0.0.0-20221004215720-b9f4876ce741 // indirect
+	golang.org/x/sys v0.0.0-20220928140112-f11e5e49a4ec // indirect
 	golang.org/x/term v0.0.0-20220919170432-7a66f970e087 // indirect
 	golang.org/x/text v0.3.7 // indirect
 )
 
 replace github.com/aschey/bubbleprompt => ../
-
-replace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550

@@ -77,7 +77,7 @@ func (m *Model[T]) SetRenderer(renderer renderer.Renderer) {
 
 var shutdown bool = false
 
-func OnQuit() tea.QuitBehavior {
+func OnQuit(tea.Model) tea.QuitBehavior {
 	if shutdown {
 		return tea.Shutdown
 	} else {

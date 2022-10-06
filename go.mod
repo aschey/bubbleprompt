@@ -11,7 +11,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.6.0
 	github.com/onsi/ginkgo/v2 v2.2.0
 	github.com/onsi/gomega v1.20.2
-	golang.org/x/exp v0.0.0-20220921164117-439092de6870
+	golang.org/x/exp v0.0.0-20221004215720-b9f4876ce741
 )
 
 require (
@@ -36,8 +36,8 @@ require (
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.13.0 // indirect
 	github.com/rivo/uniseg v0.4.2 // indirect
-	golang.org/x/net v0.0.0-20220923203811-8be639271d50 // indirect
-	golang.org/x/sys v0.0.0-20220919091848-fb04ddd9f9c8 // indirect
+	golang.org/x/net v0.0.0-20221004154528-8021a29435af // indirect
+	golang.org/x/sys v0.0.0-20220928140112-f11e5e49a4ec // indirect
 	golang.org/x/term v0.0.0-20220919170432-7a66f970e087 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.12 // indirect
@@ -45,6 +45,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
-
-replace github.com/charmbracelet/bubbletea => github.com/aschey/bubbletea v0.20.1-0.20221001181920-e339dd2864de
+replace github.com/charmbracelet/bubbletea => github.com/aschey/bubbletea v0.20.1-0.20221005031422-8b90e8e97d55
