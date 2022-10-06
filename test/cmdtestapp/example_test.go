@@ -15,14 +15,15 @@ import (
 )
 
 type cmdMetadata = commandinput.CmdMetadata
+
 type model struct {
 	promptModel prompt.Model[cmdMetadata]
-}
-
-type completerModel struct {
 	suggestions []input.Suggestion[cmdMetadata]
 	textInput   *commandinput.Model[cmdMetadata]
+	doOneshot   bool
 }
+
+type changeTextMsg struct{}
 
 var suggestions []input.Suggestion[cmdMetadata] = []input.Suggestion[cmdMetadata]{
 	{Text: "first-option", Description: "test desc", Metadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("[test placeholder]")}}},
@@ -33,29 +34,46 @@ var suggestions []input.Suggestion[cmdMetadata] = []input.Suggestion[cmdMetadata
 	{Text: "sixth-option", Description: "test desc6"},
 	{Text: "seventh-option", Description: "test desc7"}}
 
-func (m model) Init() tea.Cmd {
+func (m *model) Init() tea.Cmd {
 	return m.promptModel.Init()
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	cmds := []tea.Cmd{}
 	p, cmd := m.promptModel.Update(msg)
+	cmds = append(cmds, cmd)
 	m.promptModel = p
-	return m, cmd
+	if _, ok := msg.(changeTextMsg); ok {
+		m.suggestions[0].Text = "changed text"
+	}
+	if m.doOneshot {
+		m.doOneshot = false
+		cmds = append(cmds,
+			tea.Sequence(
+				tea.Tick(100*time.Millisecond, func(t time.Time) tea.Msg { return changeTextMsg{} }),
+				prompt.OneShotCompleter(1),
+			),
+		)
+	}
+	return m, tea.Batch(cmds...)
 }
 
-func (m model) View() string {
+func (m *model) View() string {
 	return m.promptModel.View()
 }
 
-func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
+func (m *model) completer(document prompt.Document, promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
 	time.Sleep(100 * time.Millisecond)
 	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp), m.suggestions), nil
 }
 
-func executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (tea.Model, error) {
-
+func (m *model) executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (tea.Model, error) {
 	if input == "error" {
 		return nil, fmt.Errorf("bad things")
+	}
+	if input == "oneshot" {
+		m.doOneshot = true
+		return executors.NewStringModel(""), nil
 	}
 	return executors.NewAsyncStringModel(func() (string, error) {
 		time.Sleep(100 * time.Millisecond)
@@ -79,16 +97,16 @@ func TestApp(t *testing.T) {
 	prompt.DefaultScrollbarThumbColor = "15"
 
 	textInput := commandinput.New[cmdMetadata]()
-	completerModel := completerModel{suggestions: suggestions, textInput: textInput}
+	m := model{suggestions: suggestions, textInput: textInput}
 
 	promptModel, _ := prompt.New(
-		completerModel.completer,
-		executor,
+		m.completer,
+		m.executor,
 		textInput,
 	)
-	m := model{promptModel}
+	m.promptModel = promptModel
 
-	if err := tea.NewProgram(m, tea.WithOnQuit(prompt.OnQuit)).Start(); err != nil {
+	if err := tea.NewProgram(&m, tea.WithOnQuit(prompt.OnQuit)).Start(); err != nil {
 		fmt.Printf("Could not start program :(\n%v\n", err)
 		os.Exit(1)
 	}

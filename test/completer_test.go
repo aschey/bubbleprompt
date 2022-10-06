@@ -271,4 +271,17 @@ var _ = Describe("Completer", func() {
 			})
 		})
 	})
+
+	When("the update function sends a oneshot completer message", Ordered, func() {
+		BeforeAll(func() {
+			console.SendString("oneshot")
+			console.SendString(tuitest.KeyEnter)
+		})
+
+		It("Updates the completions", func() {
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				return strings.Contains(state.NthOutputLine(3), "changed text")
+			})
+		})
+	})
 })
