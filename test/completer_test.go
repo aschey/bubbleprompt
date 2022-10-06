@@ -68,34 +68,6 @@ var _ = Describe("Completer", func() {
 		})
 	})
 
-	When("the user types to filter the prompt", Ordered, func() {
-		var lines []string
-		_ = lines
-		BeforeAll(func() {
-			console.SendString("fi")
-		})
-
-		It("shows the typed filter", func() {
-			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return strings.Contains(state.NthOutputLine(0), "> fi")
-			})
-		})
-
-		It("filters the suggestions", func() {
-			state, _ := console.WaitFor(func(state tuitest.TermState) bool {
-				return state.NumLines() == 3 && strings.Contains(state.NthOutputLine(2), suggestions[4].Description)
-			})
-			lines = state.OutputLines()
-		})
-
-		It("shows the correct suggestions", func() {
-			Expect(lines[1]).To(ContainSubstring(suggestions[0].Text))
-			Expect(lines[1]).To(ContainSubstring(suggestions[0].Description))
-			Expect(lines[2]).To(ContainSubstring(suggestions[4].Text))
-			Expect(lines[2]).To(ContainSubstring(suggestions[4].Description))
-		})
-	})
-
 	When("the user presses the down arrow", Ordered, func() {
 		BeforeAll(func() {
 			console.SendString(tuitest.KeyDown)
@@ -132,31 +104,6 @@ var _ = Describe("Completer", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				return fmt.Sprint(state.BgColor(1, leftPadding+maxNameLen+2*margin+maxDescLen+margin)) == input.DefaultSelectedDescriptionBackground
 			})
-		})
-	})
-
-	When("the user filters all the prompts", Ordered, func() {
-		BeforeAll(func() {
-			console.SendString(tuitest.KeyDown)
-			console.SendString("a")
-		})
-
-		It("displays the input", func() {
-			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return strings.Contains(state.NthOutputLine(0), suggestions[0].Text+"a")
-			})
-		})
-
-		It("does not display any prompts", func() {
-			_, _ = console.WaitForDuration(func(state tuitest.TermState) bool {
-				return state.NumLines() == 1
-			}, 100*time.Millisecond)
-		})
-
-		It("removes the selected text styling", func() {
-			_, _ = console.WaitForDuration(func(state tuitest.TermState) bool {
-				return state.FgColor(0, 2) == tuitest.DefaultFG
-			}, 100*time.Millisecond)
 		})
 	})
 
