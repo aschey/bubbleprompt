@@ -117,15 +117,15 @@ func (m *LexerModel) Error() error {
 	return m.err
 }
 
-func (m *LexerModel) unstyledView(showCursor bool) string {
+func (m *LexerModel) unstyledView(text string, showCursor bool) string {
 	viewBuilder := input.NewViewBuilder(m.Cursor(), lipgloss.NewStyle(), " ", showCursor)
-	viewBuilder.Render(m.Value(), 0, lipgloss.NewStyle())
+	viewBuilder.Render(text, 0, lipgloss.NewStyle())
 	return m.prompt + viewBuilder.GetView()
 }
 
-func (m *LexerModel) styledView(showCursor bool) string {
+func (m *LexerModel) styledView(formatterTokens []parser.FormatterToken, showCursor bool) string {
 	viewBuilder := input.NewViewBuilder(m.Cursor(), lipgloss.NewStyle(), " ", showCursor)
-	for _, token := range m.formatterTokens {
+	for _, token := range formatterTokens {
 		viewBuilder.Render(strings.TrimRight(token.Value, "\n"), viewBuilder.ViewLen(), token.Style)
 	}
 
@@ -138,10 +138,18 @@ func (m *LexerModel) View(viewMode input.ViewMode) string {
 		showCursor = false
 	}
 	if m.formatter == nil {
-		return m.unstyledView(showCursor)
+		return m.unstyledView(m.Value(), showCursor)
 	}
 
-	return m.styledView(showCursor)
+	return m.styledView(m.formatterTokens, showCursor)
+}
+
+func (m *LexerModel) FormatText(text string) string {
+	if m.formatter == nil {
+		return m.unstyledView(text, false)
+	}
+	formatterTokens, _ := m.formatter.Lex(text)
+	return m.styledView(formatterTokens, false)
 }
 
 func (m *LexerModel) Focus() tea.Cmd {

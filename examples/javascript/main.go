@@ -133,11 +133,14 @@ func (m completerModel) executor(input string, selectedSuggestion *input.Suggest
 			switch exportType.String() {
 			case arrayType, objectType:
 				json, err := m.vm.ToObject(res).MarshalJSON()
-				return string(json), err
+				if err != nil {
+					return "", err
+				}
+				return m.textInput.FormatText(string(json)), err
 			}
 		}
 
-		return res.ToString().String(), nil
+		return m.textInput.FormatText(res.ToString().String()), nil
 
 	}), nil
 }
