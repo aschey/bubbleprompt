@@ -21,6 +21,8 @@ type model struct {
 	suggestions []input.Suggestion[cmdMetadata]
 	textInput   *commandinput.Model[cmdMetadata]
 	doOneshot   bool
+	doPeriodic  bool
+	inc         int
 }
 
 type changeTextMsg struct{}
@@ -43,15 +45,29 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	p, cmd := m.promptModel.Update(msg)
 	cmds = append(cmds, cmd)
 	m.promptModel = p
-	if _, ok := msg.(changeTextMsg); ok {
+
+	switch msg.(type) {
+	case changeTextMsg:
 		m.suggestions[0].Text = "changed text"
+	case prompt.PeriodicCompleterMsg:
+		m.suggestions[0].Text = "changed text" + fmt.Sprint(m.inc)
+		m.inc++
 	}
+
 	if m.doOneshot {
 		m.doOneshot = false
 		cmds = append(cmds,
 			tea.Sequence(
 				tea.Tick(100*time.Millisecond, func(t time.Time) tea.Msg { return changeTextMsg{} }),
-				prompt.OneShotCompleter(1),
+				prompt.OneShotCompleter(100*time.Millisecond),
+			),
+		)
+	} else if m.doPeriodic {
+		m.doPeriodic = false
+		cmds = append(cmds,
+			tea.Sequence(
+				tea.Tick(100*time.Millisecond, func(t time.Time) tea.Msg { return changeTextMsg{} }),
+				prompt.PeriodicCompleter(100*time.Millisecond),
 			),
 		)
 	}
@@ -68,13 +84,17 @@ func (m *model) completer(document prompt.Document, promptModel prompt.Model[cmd
 }
 
 func (m *model) executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (tea.Model, error) {
-	if input == "error" {
+	switch input {
+	case "error":
 		return nil, fmt.Errorf("bad things")
-	}
-	if input == "oneshot" {
+	case "oneshot":
 		m.doOneshot = true
 		return executors.NewStringModel(""), nil
+	case "periodic":
+		m.doPeriodic = true
+		return executors.NewStringModel(""), nil
 	}
+
 	return executors.NewAsyncStringModel(func() (string, error) {
 		time.Sleep(100 * time.Millisecond)
 		if selectedSuggestion == nil {

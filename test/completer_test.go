@@ -284,4 +284,17 @@ var _ = Describe("Completer", func() {
 			})
 		})
 	})
+
+	When("the update function sends a periodic completer message", Ordered, func() {
+		BeforeAll(func() {
+			console.SendString("periodic")
+			console.SendString(tuitest.KeyEnter)
+		})
+
+		It("Updates the completions", func() {
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				return strings.Contains(state.NthOutputLine(3), "changed text2")
+			})
+		})
+	})
 })
