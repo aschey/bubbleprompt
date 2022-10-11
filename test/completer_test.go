@@ -7,7 +7,6 @@ import (
 
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/input"
-	"github.com/aschey/bubbleprompt/input/commandinput"
 	tuitest "github.com/aschey/tui-tester"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -71,24 +70,6 @@ var _ = Describe("Completer", func() {
 	When("the user presses the down arrow", Ordered, func() {
 		BeforeAll(func() {
 			console.SendString(tuitest.KeyDown)
-		})
-
-		It("selects the first prompt", func() {
-			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return strings.Contains(state.NthOutputLine(0), suggestions[0].Text)
-			})
-		})
-
-		It("applies the selected text styling", func() {
-			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return fmt.Sprint(state.FgColor(0, leftPadding)) == commandinput.DefaultSelectedTextColor
-			})
-		})
-
-		It("applies the selected placeholder styling", func() {
-			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return fmt.Sprint(state.FgColor(0, leftPadding+margin+len(suggestions[0].Text))) == commandinput.DefaultPlaceholderForeground
-			})
 		})
 
 		It("applies the correct background for the suggestion name so it covers the longest name", func() {
@@ -198,18 +179,6 @@ var _ = Describe("Completer", func() {
 			_, _ = console.WaitForDuration(func(state tuitest.TermState) bool {
 				return fmt.Sprint(state.FgColor(6, leftPadding+margin)) == input.DefaultNameForeground
 			}, 100*time.Millisecond)
-		})
-	})
-
-	When("the user types the full suggestion", Ordered, func() {
-		BeforeAll(func() {
-			console.SendString(suggestions[0].Text)
-		})
-
-		It("selects the suggestion", func() {
-			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return fmt.Sprint(state.FgColor(0, leftPadding)) == commandinput.DefaultSelectedTextColor
-			})
 		})
 	})
 
