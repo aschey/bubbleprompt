@@ -125,30 +125,27 @@ var _ = Describe("Completer", func() {
 				return fmt.Sprint(state.BgColor(1, promptWidth)) == prompt.DefaultScrollbarColor
 			})
 		})
-	})
 
-	When("then user scrolls back up", Ordered, func() {
-		BeforeAll(func() {
-			for i := 0; i < 7; i++ {
-				console.SendString(tuitest.KeyDown)
-			}
-			for i := 0; i < 7; i++ {
-				console.SendString(tuitest.KeyUp)
-			}
-		})
-
-		It("updates the scrollbar", func() {
-			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				for i := 1; i < 6; i++ {
-					if fmt.Sprint(state.BgColor(1, promptWidth)) != prompt.DefaultScrollbarThumbColor {
-						return false
-					}
+		When("then user scrolls back up", Ordered, func() {
+			BeforeAll(func() {
+				for i := 0; i < 7; i++ {
+					console.SendString(tuitest.KeyUp)
 				}
-				return true
 			})
 
-			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return fmt.Sprint(state.BgColor(6, promptWidth)) == prompt.DefaultScrollbarColor
+			It("updates the scrollbar", func() {
+				_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+					for i := 1; i < 6; i++ {
+						if fmt.Sprint(state.BgColor(1, promptWidth)) != prompt.DefaultScrollbarThumbColor {
+							return false
+						}
+					}
+					return true
+				})
+
+				_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+					return fmt.Sprint(state.BgColor(6, promptWidth)) == prompt.DefaultScrollbarColor
+				})
 			})
 		})
 	})
