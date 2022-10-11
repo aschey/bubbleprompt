@@ -41,6 +41,12 @@ var _ = Describe("Command Input", func() {
 			})
 		})
 
+		It("renders the placeholder", func() {
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				return strings.Contains(state.NthOutputLine(0), suggestions[0].Text+" "+suggestions[0].Metadata.PositionalArgs[0].Placeholder)
+			})
+		})
+
 		It("applies the selected text styling", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				return fmt.Sprint(state.FgColor(0, leftPadding)) == commandinput.DefaultSelectedTextColor
