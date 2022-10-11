@@ -627,6 +627,15 @@ func (m *Model[T]) Blur() {
 
 func (m *Model[T]) OnExecutorFinished() {}
 
+func (m *Model[T]) flagValueStyle(value string) lipgloss.Style {
+	if _, err := strconv.ParseInt(value, 10, 32); err == nil {
+		return lipgloss.NewStyle().Foreground(lipgloss.Color("13"))
+	} else if _, err := strconv.ParseBool(value); err == nil {
+		return lipgloss.NewStyle().Foreground(lipgloss.Color("5"))
+	}
+	return lipgloss.NewStyle()
+}
+
 func (m Model[T]) View(viewMode input.ViewMode) string {
 	showCursor := !m.textinput.Blink()
 	if viewMode == input.Static {
@@ -673,7 +682,7 @@ func (m Model[T]) View(viewMode input.ViewMode) string {
 	currentPos := m.CurrentTokenPos(RoundDown).Start
 	currentToken := m.CurrentToken(RoundDown)
 	for i, flag := range m.parsedText.Flags.Value {
-		viewBuilder.Render(flag.Name, flag.Pos.Offset, lipgloss.NewStyle())
+		viewBuilder.Render(flag.Name, flag.Pos.Offset, lipgloss.NewStyle().Foreground(lipgloss.Color("245")))
 		// Render delimiter only once the full flag has been typed
 		if m.currentFlag == nil || len(flag.Name) >= len(m.currentFlag.Text) || flag.Value != nil {
 			if flag.Delim != nil {
@@ -683,7 +692,7 @@ func (m Model[T]) View(viewMode input.ViewMode) string {
 
 		if (flag.Pos.Offset != currentPos) && (currentPos < m.Cursor() || i < len(m.parsedText.Flags.Value)-1 || (len(currentToken) > 0 && !strings.HasPrefix(currentToken, "-"))) {
 			if flag.Value != nil {
-				viewBuilder.Render(flag.Value.Value, flag.Value.Pos.Offset, lipgloss.NewStyle())
+				viewBuilder.Render(flag.Value.Value, flag.Value.Pos.Offset, m.flagValueStyle(flag.Value.Value))
 			}
 
 		} else {
@@ -712,7 +721,7 @@ func (m Model[T]) View(viewMode input.ViewMode) string {
 
 			}
 			if flag.Value != nil {
-				viewBuilder.Render(flag.Value.Value, flag.Value.Pos.Offset, lipgloss.NewStyle())
+				viewBuilder.Render(flag.Value.Value, flag.Value.Pos.Offset, m.flagValueStyle(flag.Value.Value))
 			}
 		}
 	}
