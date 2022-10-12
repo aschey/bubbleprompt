@@ -1,7 +1,6 @@
 package test
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/aschey/bubbleprompt/input/commandinput"
@@ -50,13 +49,13 @@ var _ = Describe("Command Input", func() {
 
 		It("applies the selected text styling", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return fmt.Sprint(state.FgColor(0, leftPadding)) == commandinput.DefaultSelectedTextColor
+				return state.ForegroundColor(0, leftPadding).String() == commandinput.DefaultSelectedTextColor
 			})
 		})
 
 		It("applies the selected placeholder styling", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return fmt.Sprint(state.FgColor(0, leftPadding+margin+len(suggestions[0].Text))) == commandinput.DefaultPlaceholderForeground
+				return state.ForegroundColor(0, leftPadding+margin+len(suggestions[0].Text)).String() == commandinput.DefaultPlaceholderForeground
 			})
 		})
 
@@ -81,7 +80,7 @@ var _ = Describe("Command Input", func() {
 
 		It("selects the suggestion", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return fmt.Sprint(state.FgColor(0, leftPadding)) == commandinput.DefaultSelectedTextColor
+				return state.ForegroundColor(0, leftPadding).String() == commandinput.DefaultSelectedTextColor
 			})
 		})
 	})

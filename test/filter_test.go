@@ -78,7 +78,7 @@ var _ = Describe("Filter", func() {
 
 		It("removes the selected text styling", func() {
 			_, _ = console.WaitForDuration(func(state tuitest.TermState) bool {
-				return state.FgColor(0, 2) == tuitest.DefaultFG
+				return state.ForegroundColor(0, 2).Int() == tuitest.DefaultFG
 			}, 100*time.Millisecond)
 		})
 	})

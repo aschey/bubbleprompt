@@ -1,7 +1,6 @@
 package test
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -122,7 +121,7 @@ var _ = Describe("Executor", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				return strings.Contains(state.NthOutputLine(0), "> error") &&
 					strings.Contains(state.NthOutputLine(1), "bad things") &&
-					fmt.Sprint(state.BgColor(1, 0)) == input.DefaultErrorTextBackground
+					state.BackgroundColor(1, 0).String() == input.DefaultErrorTextBackground
 			})
 		})
 	})
