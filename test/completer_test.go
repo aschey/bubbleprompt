@@ -85,6 +85,31 @@ var _ = Describe("Completer", func() {
 		})
 	})
 
+	When("the user presses the tab key", Ordered, func() {
+		BeforeAll(func() {
+			console.SendString(tuitest.KeyTab)
+		})
+
+		It("selects the suggestion", func() {
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				return fmt.Sprint(state.BgColor(1, leftPadding)) == input.DefaultSelectedNameBackground
+			})
+		})
+
+		When("the user presses the space key", Ordered, func() {
+			BeforeAll(func() {
+				console.SendString(" ")
+			})
+
+			It("moves the suggestions over", func() {
+				_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+					return fmt.Sprint(state.BgColor(1, leftPadding+len(suggestions[0].Text)+1)) == input.DefaultNameBackground
+				})
+			})
+		})
+
+	})
+
 	When("the user scrolls down", Ordered, func() {
 		BeforeAll(func() {
 			for i := 0; i < 7; i++ {
@@ -144,6 +169,12 @@ var _ = Describe("Completer", func() {
 				return state.NumLines() == 3 &&
 					strings.Contains(state.NthOutputLine(1), suggestions[0].Text) &&
 					strings.Contains(state.NthOutputLine(2), suggestions[4].Text)
+			})
+		})
+
+		It("moves the suggestions to match the cursor", func() {
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				return state.BgColor(1, 3) == tuitest.DefaultBG && fmt.Sprint(state.BgColor(1, 4)) == input.DefaultNameBackground
 			})
 		})
 	})

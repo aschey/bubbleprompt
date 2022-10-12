@@ -43,7 +43,8 @@ var _ = Describe("Command Input", func() {
 
 		It("renders the placeholder", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return strings.Contains(state.NthOutputLine(0), suggestions[0].Text+" "+suggestions[0].Metadata.PositionalArgs[0].Placeholder)
+				return strings.Contains(state.NthOutputLine(0),
+					suggestions[0].Text+" "+suggestions[0].Metadata.PositionalArgs[0].Placeholder+" "+suggestions[0].Metadata.PositionalArgs[1].Placeholder)
 			})
 		})
 
@@ -58,6 +59,19 @@ var _ = Describe("Command Input", func() {
 				return fmt.Sprint(state.FgColor(0, leftPadding+margin+len(suggestions[0].Text))) == commandinput.DefaultPlaceholderForeground
 			})
 		})
+
+		When("the user presses the down arrow again", Ordered, func() {
+			BeforeAll(func() {
+				console.SendString(tuitest.KeyDown)
+			})
+
+			It("renders the updated suggestion with placeholders", func() {
+				_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+					return strings.Contains(state.NthOutputLine(0),
+						suggestions[1].Text+" "+suggestions[1].Metadata.PositionalArgs[0].Placeholder)
+				})
+			})
+		})
 	})
 
 	When("the user types the full suggestion", Ordered, func() {
@@ -68,6 +82,21 @@ var _ = Describe("Command Input", func() {
 		It("selects the suggestion", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				return fmt.Sprint(state.FgColor(0, leftPadding)) == commandinput.DefaultSelectedTextColor
+			})
+		})
+	})
+
+	When("the user views a subcommand suggestion", Ordered, func() {
+		BeforeAll(func() {
+			console.SendString(tuitest.KeyDown)
+			console.SendString(tuitest.KeyDown)
+			console.SendString(" ")
+		})
+
+		It("shows the subcommand suggestion", func() {
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				return strings.Contains(state.NthOutputLine(0),
+					suggestions[1].Text+" "+secondLevelSuggestions[0].Text+" "+secondLevelSuggestions[0].Metadata.PositionalArgs[0].Placeholder)
 			})
 		})
 	})

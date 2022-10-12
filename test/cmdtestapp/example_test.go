@@ -28,13 +28,29 @@ type model struct {
 type changeTextMsg struct{}
 
 var suggestions []input.Suggestion[cmdMetadata] = []input.Suggestion[cmdMetadata]{
-	{Text: "first-option", Description: "test desc", Metadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("[test placeholder]")}}},
-	{Text: "second-option", Description: "test desc2"},
+	{Text: "first-option", Description: "test desc", Metadata: commandinput.CmdMetadata{
+		PositionalArgs: []commandinput.PositionalArg{
+			commandinput.NewPositionalArg("[test placeholder1]"),
+			commandinput.NewPositionalArg("[test placeholder2]"),
+		},
+	}},
+	{Text: "second-option", Description: "test desc2", Metadata: commandinput.CmdMetadata{
+		PositionalArgs: []commandinput.PositionalArg{
+			commandinput.NewPositionalArg("[test placeholder]"),
+		},
+	}},
 	{Text: "third-option", Description: "test desc3"},
 	{Text: "fourth-option", Description: "test desc4"},
 	{Text: "fifth-option", Description: "test desc5"},
 	{Text: "sixth-option", Description: "test desc6"},
 	{Text: "seventh-option", CompletionText: "completion text", Description: "test desc7"}}
+
+var secondLevelSuggestions []input.Suggestion[cmdMetadata] = []input.Suggestion[cmdMetadata]{
+	{Text: "second-level", Description: "test desc", Metadata: commandinput.CmdMetadata{
+		PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("[placeholder2]")},
+		Level:          1,
+	}},
+}
 
 func (m *model) Init() tea.Cmd {
 	return m.promptModel.Init()
@@ -80,7 +96,11 @@ func (m *model) View() string {
 
 func (m *model) completer(document prompt.Document, promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
 	time.Sleep(100 * time.Millisecond)
-	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp), m.suggestions), nil
+	suggestions := m.suggestions
+	if m.textInput.CommandCompleted() {
+		suggestions = secondLevelSuggestions
+	}
+	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp), suggestions), nil
 }
 
 func (m *model) executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (tea.Model, error) {
