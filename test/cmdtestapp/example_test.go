@@ -39,7 +39,11 @@ var suggestions []input.Suggestion[cmdMetadata] = []input.Suggestion[cmdMetadata
 			commandinput.NewPositionalArg("[test placeholder]"),
 		},
 	}},
-	{Text: "third-option", Description: "test desc3"},
+	{Text: "third-option", Description: "test desc3", Metadata: commandinput.CmdMetadata{
+		PositionalArgs: []commandinput.PositionalArg{
+			commandinput.NewPositionalArg("[flags]"),
+		},
+	}},
 	{Text: "fourth-option", Description: "test desc4"},
 	{Text: "fifth-option", Description: "test desc5"},
 	{Text: "sixth-option", Description: "test desc6"},
@@ -50,6 +54,10 @@ var secondLevelSuggestions []input.Suggestion[cmdMetadata] = []input.Suggestion[
 		PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("[placeholder2]")},
 		Level:          1,
 	}},
+}
+
+var flags = []commandinput.Flag{
+	{Short: "t", Long: "test", Description: "test flag", RequiresArg: false},
 }
 
 func (m *model) Init() tea.Cmd {
@@ -98,6 +106,9 @@ func (m *model) completer(document prompt.Document, promptModel prompt.Model[cmd
 	time.Sleep(100 * time.Millisecond)
 	suggestions := m.suggestions
 	if m.textInput.CommandCompleted() {
+		if m.textInput.ParsedValue().Command.Value == suggestions[2].Text {
+			return m.textInput.FlagSuggestions(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp), flags, nil), nil
+		}
 		suggestions = secondLevelSuggestions
 	}
 	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp), suggestions), nil

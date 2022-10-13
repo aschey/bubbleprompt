@@ -34,3 +34,7 @@ var secondLevelSuggestions []input.Suggestion[cmdMetadata] = []input.Suggestion[
 		Level:          1,
 	}},
 }
+
+var flags = []commandinput.Flag{
+	{Short: "t", Long: "test", Description: "test flag", RequiresArg: false},
+}

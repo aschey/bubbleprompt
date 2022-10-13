@@ -110,4 +110,25 @@ var _ = Describe("Command Input", func() {
 			})
 		})
 	})
+
+	When("the user views a flag suggestion", Ordered, func() {
+		BeforeAll(func() {
+			console.SendString(tuitest.KeyDown)
+			console.SendString(tuitest.KeyDown)
+			console.SendString(tuitest.KeyDown)
+			console.SendString(" ")
+		})
+
+		It("shows the flag suggestion", func() {
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				return strings.Contains(state.NthOutputLine(1), "-"+flags[0].Short+"  "+flags[0].Description)
+			})
+		})
+
+		It("shows the flag placeholder", func() {
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				return strings.Contains(state.NthOutputLine(0), "-"+flags[0].Short)
+			})
+		})
+	})
 })

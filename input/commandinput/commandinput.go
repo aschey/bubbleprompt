@@ -257,6 +257,8 @@ func (m *Model[T]) FlagSuggestions(inputStr string, flags []Flag, suggestionFunc
 				suggestion.Text = long
 			} else if isMulti {
 				suggestion.Text = flag.Short
+				// Ensure the completion text still has the leading dash for consistency
+				suggestion.CompletionText = short
 			} else {
 				suggestion.Text = short
 			}
