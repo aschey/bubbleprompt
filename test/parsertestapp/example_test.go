@@ -10,6 +10,7 @@ import (
 	completers "github.com/aschey/bubbleprompt/completer"
 	executors "github.com/aschey/bubbleprompt/executor"
 	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/input/commandinput"
 	"github.com/aschey/bubbleprompt/input/parser"
 	"github.com/aschey/bubbleprompt/input/parserinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -76,6 +77,8 @@ func TestApp(t *testing.T) {
 	input.DefaultDescriptionBackground = "13"
 	input.DefaultSelectedDescriptionForeground = "8"
 	input.DefaultSelectedDescriptionBackground = "13"
+
+	commandinput.DefaultCurrentPlaceholderSuggestion = "8"
 
 	prompt.DefaultScrollbarColor = "8"
 	prompt.DefaultScrollbarThumbColor = "15"

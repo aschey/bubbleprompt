@@ -40,7 +40,8 @@ type Flag struct {
 	PlaceholderStyle input.Text
 }
 
-const DefaultPlaceholderForeground = "14"
+var DefaultPlaceholderForeground = "14"
+var DefaultCurrentPlaceholderSuggestion = "240"
 
 func NewPositionalArg(placeholder string) PositionalArg {
 	placeholderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(DefaultPlaceholderForeground))
@@ -99,7 +100,7 @@ func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T] {
 		commandPlaceholder: "",
 		subcommandWithArgs: "",
 		prompt:             "> ",
-		PlaceholderStyle:   textinput.PlaceholderStyle,
+		PlaceholderStyle:   lipgloss.NewStyle().Foreground(lipgloss.Color(DefaultCurrentPlaceholderSuggestion)),
 		SelectedTextStyle:  lipgloss.NewStyle().Foreground(lipgloss.Color(DefaultSelectedTextColor)),
 		parsedText:         &Statement{},
 		delimiterRegex:     regexp.MustCompile(`\s+`),

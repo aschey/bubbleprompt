@@ -136,6 +136,8 @@ func TestApp(t *testing.T) {
 	prompt.DefaultScrollbarColor = "8"
 	prompt.DefaultScrollbarThumbColor = "15"
 
+	commandinput.DefaultCurrentPlaceholderSuggestion = "8"
+
 	textInput := commandinput.New[cmdMetadata]()
 	m := model{suggestions: suggestions, textInput: textInput}
 

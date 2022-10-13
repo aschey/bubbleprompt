@@ -5,6 +5,7 @@ import (
 
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/input/commandinput"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -20,6 +21,8 @@ func TestBubbleprompt(t *testing.T) {
 
 	prompt.DefaultScrollbarColor = "8"
 	prompt.DefaultScrollbarThumbColor = "15"
+
+	commandinput.DefaultCurrentPlaceholderSuggestion = "8"
 
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Bubbleprompt Suite")

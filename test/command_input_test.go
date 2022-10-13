@@ -98,5 +98,16 @@ var _ = Describe("Command Input", func() {
 					suggestions[1].Text+" "+secondLevelSuggestions[0].Text+" "+secondLevelSuggestions[0].Metadata.PositionalArgs[0].Placeholder)
 			})
 		})
+
+		It("shows the correct styles", func() {
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				firstSuggestionLen := leftPadding + len(suggestions[1].Text) + margin
+				secondSuggestionLen := firstSuggestionLen + len(secondLevelSuggestions[0].Text) + margin
+
+				return state.ForegroundColor(0, leftPadding).String() == commandinput.DefaultSelectedTextColor &&
+					state.ForegroundColor(0, firstSuggestionLen).String() == commandinput.DefaultCurrentPlaceholderSuggestion &&
+					state.ForegroundColor(0, secondSuggestionLen).String() == commandinput.DefaultPlaceholderForeground
+			})
+		})
 	})
 })
