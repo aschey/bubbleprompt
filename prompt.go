@@ -77,12 +77,14 @@ func (m *Model[T]) SetRenderer(renderer renderer.Renderer) {
 
 var shutdown bool = false
 
-func OnQuit(tea.Model) tea.QuitBehavior {
-	if shutdown {
-		return tea.Shutdown
-	} else {
-		return tea.PreventShutdown
+type quitAttempted struct{}
+
+func MsgFilter(_ tea.Model, msg tea.Msg) tea.Msg {
+	if _, ok := msg.(tea.QuitMsg); ok && !shutdown {
+		return quitAttempted{}
 	}
+
+	return msg
 }
 
 func (m Model[T]) Init() tea.Cmd {

@@ -64,7 +64,7 @@ func (m *Model[T]) updateExecuting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool
 	switch msg.(type) {
 	// Check if the model sent the quit command
 	// When this happens we just want to quit the executor, not the entire program
-	case tea.QuitMsg:
+	case quitAttempted:
 		m.finalizeExecutor(m.executorModel)
 		// Re-focus input when finished
 		return append(cmds, m.textInput.Focus()), true

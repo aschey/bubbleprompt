@@ -7,7 +7,7 @@ require (
 	github.com/alecthomas/participle/v2 v2.0.0-beta.5
 	github.com/aschey/tui-tester v0.0.0-20221013025214-ee61efd9b285
 	github.com/charmbracelet/bubbles v0.14.0
-	github.com/charmbracelet/bubbletea v0.22.1
+	github.com/charmbracelet/bubbletea v0.22.2-0.20221013054030-9545e7cee210
 	github.com/charmbracelet/lipgloss v0.6.0
 	github.com/onsi/ginkgo/v2 v2.3.0
 	github.com/onsi/gomega v1.22.1
@@ -20,7 +20,7 @@ require (
 	github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2 // indirect
 	github.com/aschey/termtest v0.7.2-0.20220625211044-3c495615a51f // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
-	github.com/aymanbagabas/go-osc52 v1.0.3 // indirect
+	github.com/aymanbagabas/go-osc52 v1.2.0 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/creack/pty v1.1.18 // indirect
 	github.com/dlclark/regexp2 v1.7.0 // indirect
@@ -44,5 +44,3 @@ require (
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/charmbracelet/bubbletea => github.com/aschey/bubbletea v0.20.1-0.20221012023423-67a9e204d193

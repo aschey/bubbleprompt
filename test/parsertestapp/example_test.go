@@ -100,7 +100,7 @@ func TestApp(t *testing.T) {
 	)
 	m := model{promptModel}
 
-	if _, err := tea.NewProgram(m, tea.WithOnQuit(prompt.OnQuit)).Run(); err != nil {
+	if _, err := tea.NewProgram(m, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
 		fmt.Printf("Could not start program :(\n%v\n", err)
 		os.Exit(1)
 	}
