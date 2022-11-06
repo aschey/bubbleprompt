@@ -17,7 +17,7 @@ const (
 	running
 )
 
-type Completer[T any] func(document Document, prompt Model[T]) ([]input.Suggestion[T], error)
+type Completer[T any] func(prompt Model[T]) ([]input.Suggestion[T], error)
 
 type completionMsg[T any] struct {
 	suggestions []input.Suggestion[T]
@@ -238,13 +238,9 @@ func (c *completerModel[T]) updateCompletionsCmd(prompt Model[T], forceUpdate bo
 
 	c.state = running
 	c.prevText = textBeforeCursor
-	in := input.Value()
 
 	return func() tea.Msg {
-		filtered, err := c.completerFunc(Document{
-			Text:           in,
-			CursorPosition: cursorPos,
-		}, prompt)
+		filtered, err := c.completerFunc(prompt)
 		return completionMsg[T]{suggestions: filtered, err: err}
 	}
 }
@@ -260,10 +256,7 @@ func (c *completerModel[T]) resetCompletions(prompt Model[T]) tea.Cmd {
 	c.prevText = ""
 
 	return func() tea.Msg {
-		filtered, err := c.completerFunc(Document{
-			Text:           "",
-			CursorPosition: 0,
-		}, prompt)
+		filtered, err := c.completerFunc(prompt)
 		return completionMsg[T]{suggestions: filtered, err: err}
 	}
 }

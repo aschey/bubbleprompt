@@ -47,7 +47,7 @@ func (m model) View() string {
 	return m.promptModel.View()
 }
 
-func (m completerModel) completer(document prompt.Document, promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
+func (m completerModel) completer(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
 	current := m.textInput.CompletableTokenBeforeCursor()
 	suggestions := []input.Suggestion[any]{
 		{Text: "abcd"},

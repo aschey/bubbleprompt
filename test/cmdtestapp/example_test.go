@@ -102,7 +102,7 @@ func (m *model) View() string {
 	return m.promptModel.View()
 }
 
-func (m *model) completer(document prompt.Document, promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
+func (m *model) completer(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
 	time.Sleep(100 * time.Millisecond)
 	suggestions := m.suggestions
 	if m.textInput.CommandCompleted() {
