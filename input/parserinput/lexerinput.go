@@ -120,7 +120,7 @@ func (m *LexerModel) Error() error {
 func (m *LexerModel) unstyledView(text string, showCursor bool) string {
 	viewBuilder := input.NewViewBuilder(m.Cursor(), lipgloss.NewStyle(), " ", showCursor)
 	viewBuilder.Render(text, 0, lipgloss.NewStyle())
-	return m.prompt + viewBuilder.GetView()
+	return m.prompt + viewBuilder.View()
 }
 
 func (m *LexerModel) styledView(formatterTokens []parser.FormatterToken, showCursor bool) string {
@@ -129,7 +129,7 @@ func (m *LexerModel) styledView(formatterTokens []parser.FormatterToken, showCur
 		viewBuilder.Render(strings.TrimRight(token.Value, "\n"), viewBuilder.ViewLen(), token.Style)
 	}
 
-	return m.prompt + viewBuilder.GetView()
+	return m.prompt + viewBuilder.View()
 }
 
 func (m *LexerModel) View(viewMode input.ViewMode) string {

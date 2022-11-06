@@ -21,7 +21,7 @@ func NewViewBuilder(cursor int, cursorStyle lipgloss.Style, delimiter string, sh
 	return &ViewBuilder{cursor: cursor, cursorStyle: cursorStyle, delimiter: delimiter, showCursor: showCursor}
 }
 
-func (v ViewBuilder) GetView() string {
+func (v ViewBuilder) View() string {
 	if v.cursor == v.viewLen {
 		return v.view + v.cursorView(" ", lipgloss.NewStyle())
 	}
