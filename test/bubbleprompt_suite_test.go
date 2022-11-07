@@ -3,7 +3,6 @@ package test
 import (
 	"testing"
 
-	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/commandinput"
 	. "github.com/onsi/ginkgo/v2"
@@ -19,8 +18,8 @@ func TestBubbleprompt(t *testing.T) {
 	input.DefaultSelectedDescriptionForeground = "8"
 	input.DefaultSelectedDescriptionBackground = "13"
 
-	prompt.DefaultScrollbarColor = "8"
-	prompt.DefaultScrollbarThumbColor = "15"
+	input.DefaultScrollbarColor = "8"
+	input.DefaultScrollbarThumbColor = "15"
 
 	commandinput.DefaultCurrentPlaceholderSuggestion = "8"
 

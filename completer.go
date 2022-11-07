@@ -47,7 +47,7 @@ type completerModel[T any] struct {
 	state          completerState
 	textInput      input.Input[T]
 	suggestions    []input.Suggestion[T]
-	errorText      input.Text
+	errorText      lipgloss.Style
 	lastKeyMsg     tea.KeyMsg
 	maxSuggestions int
 	scroll         int
@@ -59,7 +59,7 @@ type completerModel[T any] struct {
 	err            error
 }
 
-func newCompleterModel[T any, I input.Input[T]](completerFunc Completer[T], textInput I, errorText input.Text, maxSuggestions int) completerModel[T] {
+func newCompleterModel[T any, I input.Input[T]](completerFunc Completer[T], textInput I, errorText lipgloss.Style, maxSuggestions int) completerModel[T] {
 	return completerModel[T]{
 		textInput:      textInput,
 		completerFunc:  completerFunc,
@@ -153,10 +153,9 @@ func (c completerModel[T]) scrollbarBounds(windowHeight int) (int, int) {
 	return scrollbarTop, scrollbarTop + scrollbarHeight
 }
 
-func (c completerModel[T]) Render(paddingSize int, formatters input.Formatters,
-	scrollbar string, scrollbarThumb string) string {
+func (c completerModel[T]) Render(paddingSize int, formatters input.Formatters) string {
 	if c.err != nil {
-		return c.errorText.Format(c.err.Error())
+		return c.errorText.Render(c.err.Error())
 	}
 	maxNameLen := 0
 	maxDescLen := 0
@@ -187,6 +186,8 @@ func (c completerModel[T]) Render(paddingSize int, formatters input.Formatters,
 
 	prompts := []string{}
 	listPosition := c.getSelectedIndex() - c.scroll
+	scrollbar := formatters.Scrollbar.Render(" ")
+	scrollbarThumb := formatters.ScrollbarThumb.Render(" ")
 	for i, cur := range visibleSuggestions {
 		selected := i == listPosition
 		scrollbarView := ""

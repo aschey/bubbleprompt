@@ -4,7 +4,6 @@ import (
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/renderer"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 // TODO: https://no-color.org/
@@ -20,9 +19,6 @@ const (
 
 type Executor[T any] func(input string, selectedSuggestion *input.Suggestion[T]) (tea.Model, error)
 
-var DefaultScrollbarColor = "251"
-var DefaultScrollbarThumbColor = "255"
-
 type Model[T any] struct {
 	completer               completerModel[T]
 	executor                Executor[T]
@@ -31,8 +27,6 @@ type Model[T any] struct {
 	Formatters              input.Formatters
 	executorModel           *executorModel
 	modelState              modelState
-	scrollbar               string
-	scrollbarThumb          string
 	lastTypedCursorPosition int
 	typedText               string
 	ready                   bool
@@ -48,8 +42,7 @@ func New[T any, I input.Input[T]](completer Completer[T], executor Executor[T], 
 		renderer:   &renderer.UnmanagedRenderer{},
 		Formatters: formatters,
 	}
-	model.SetScrollbarColor(lipgloss.Color(DefaultScrollbarColor))
-	model.SetScrollbarThumbColor(lipgloss.Color(DefaultScrollbarThumbColor))
+
 	for _, opt := range opts {
 		if err := opt(&model); err != nil {
 			return Model[T]{}, err
@@ -57,14 +50,6 @@ func New[T any, I input.Input[T]](completer Completer[T], executor Executor[T], 
 	}
 
 	return model, nil
-}
-
-func (m *Model[T]) SetScrollbarColor(color lipgloss.TerminalColor) {
-	m.scrollbar = lipgloss.NewStyle().Background(color).Render(" ")
-}
-
-func (m *Model[T]) SetScrollbarThumbColor(color lipgloss.TerminalColor) {
-	m.scrollbarThumb = lipgloss.NewStyle().Background(color).Render(" ")
 }
 
 func (m *Model[T]) SetMaxSuggestions(maxSuggestions int) {

@@ -22,13 +22,13 @@ type arg struct {
 
 type PositionalArg struct {
 	Placeholder      string
-	PlaceholderStyle input.Text
-	ArgStyle         input.Text
+	PlaceholderStyle lipgloss.Style
+	ArgStyle         lipgloss.Style
 }
 
 type Placeholder struct {
 	Text  string
-	Style input.Text
+	Style lipgloss.Style
 }
 
 type Flag struct {
@@ -37,7 +37,7 @@ type Flag struct {
 	Placeholder      string
 	Description      string
 	RequiresArg      bool
-	PlaceholderStyle input.Text
+	PlaceholderStyle lipgloss.Style
 }
 
 var DefaultPlaceholderForeground = "14"
@@ -46,10 +46,8 @@ var DefaultCurrentPlaceholderSuggestion = "240"
 func NewPositionalArg(placeholder string) PositionalArg {
 	placeholderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(DefaultPlaceholderForeground))
 	return PositionalArg{
-		Placeholder: placeholder,
-		PlaceholderStyle: input.Text{
-			Style: placeholderStyle,
-		},
+		Placeholder:      placeholder,
+		PlaceholderStyle: placeholderStyle,
 	}
 }
 
@@ -288,8 +286,8 @@ func (m *Model[T]) getPosArgs(metadata T) []arg {
 	for _, posArg := range metadata.GetPositionalArgs() {
 		args = append(args, arg{
 			text:             posArg.Placeholder,
-			placeholderStyle: posArg.PlaceholderStyle.Style,
-			argStyle:         posArg.ArgStyle.Style,
+			placeholderStyle: posArg.PlaceholderStyle,
+			argStyle:         posArg.ArgStyle,
 			persist:          false,
 		})
 	}
@@ -360,8 +358,8 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T], 
 			for _, posArg := range suggestion.Metadata.GetPositionalArgs() {
 				newArg := arg{
 					text:             posArg.Placeholder,
-					placeholderStyle: posArg.PlaceholderStyle.Style,
-					argStyle:         posArg.ArgStyle.Style,
+					placeholderStyle: posArg.PlaceholderStyle,
+					argStyle:         posArg.ArgStyle,
 					persist:          false,
 				}
 				m.args = append(m.args, newArg)

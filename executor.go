@@ -2,21 +2,21 @@ package prompt
 
 import (
 	"github.com/aschey/bubbleprompt/executor"
-	"github.com/aschey/bubbleprompt/input"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type executorModel struct {
-	inner     tea.Model
-	errorText input.Text
-	err       error
+	inner          tea.Model
+	errorTextStyle lipgloss.Style
+	err            error
 }
 
-func newExecutorModel(inner tea.Model, errorText input.Text, err error) *executorModel {
+func newExecutorModel(inner tea.Model, errorTextStyle lipgloss.Style, err error) *executorModel {
 	return &executorModel{
-		inner:     inner,
-		errorText: errorText,
-		err:       err,
+		inner:          inner,
+		errorTextStyle: errorTextStyle,
+		err:            err,
 	}
 }
 
@@ -38,7 +38,7 @@ func (m executorModel) Update(msg tea.Msg) (executorModel, tea.Cmd) {
 
 func (m executorModel) View() string {
 	if m.err != nil {
-		return m.errorText.Format(m.err.Error()) + "\n"
+		return m.errorTextStyle.Render(m.err.Error()) + "\n"
 	} else {
 		return m.inner.View()
 	}

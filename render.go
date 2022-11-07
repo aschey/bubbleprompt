@@ -24,7 +24,7 @@ func (m Model[T]) renderCompleting() string {
 	// Choosing a prompt via arrow keys or tab shouldn't change the prompt position
 	// so we use the last typed cursor position instead of the current position
 	paddingSize := len(m.textInput.Prompt()) + m.lastTypedCursorPosition
-	prompts := m.completer.Render(paddingSize, m.Formatters, m.scrollbar, m.scrollbarThumb)
+	prompts := m.completer.Render(paddingSize, m.Formatters)
 	textView += prompts
 
 	return textView

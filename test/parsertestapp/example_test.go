@@ -80,8 +80,8 @@ func TestApp(t *testing.T) {
 
 	commandinput.DefaultCurrentPlaceholderSuggestion = "8"
 
-	prompt.DefaultScrollbarColor = "8"
-	prompt.DefaultScrollbarThumbColor = "15"
+	input.DefaultScrollbarColor = "8"
+	input.DefaultScrollbarThumbColor = "15"
 
 	textInput := parserinput.NewParserModel[Statement](
 		parser.NewParticipleParser(participleParser),

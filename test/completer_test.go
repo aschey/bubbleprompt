@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/input"
 	tuitest "github.com/aschey/tui-tester"
 	. "github.com/onsi/ginkgo/v2"
@@ -53,7 +52,7 @@ var _ = Describe("Completer", func() {
 		It("shows the scrollbar", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				for i := 1; i < 6; i++ {
-					if state.BackgroundColor(1, promptWidth).String() != prompt.DefaultScrollbarThumbColor {
+					if state.BackgroundColor(1, promptWidth).String() != input.DefaultScrollbarThumbColor {
 						return false
 					}
 				}
@@ -61,7 +60,7 @@ var _ = Describe("Completer", func() {
 			})
 
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return state.BackgroundColor(6, promptWidth).String() == prompt.DefaultScrollbarColor
+				return state.BackgroundColor(6, promptWidth).String() == input.DefaultScrollbarColor
 			})
 
 		})
@@ -120,7 +119,7 @@ var _ = Describe("Completer", func() {
 		It("updates the scrollbar", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				for i := 2; i < 7; i++ {
-					if state.BackgroundColor(i, promptWidth).String() != prompt.DefaultScrollbarThumbColor {
+					if state.BackgroundColor(i, promptWidth).String() != input.DefaultScrollbarThumbColor {
 						return false
 					}
 				}
@@ -128,7 +127,7 @@ var _ = Describe("Completer", func() {
 			})
 
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return state.BackgroundColor(1, promptWidth).String() == prompt.DefaultScrollbarColor
+				return state.BackgroundColor(1, promptWidth).String() == input.DefaultScrollbarColor
 			})
 		})
 
@@ -142,7 +141,7 @@ var _ = Describe("Completer", func() {
 			It("updates the scrollbar", func() {
 				_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 					for i := 1; i < 6; i++ {
-						if state.BackgroundColor(1, promptWidth).String() != prompt.DefaultScrollbarThumbColor {
+						if state.BackgroundColor(1, promptWidth).String() != input.DefaultScrollbarThumbColor {
 							return false
 						}
 					}
@@ -150,7 +149,7 @@ var _ = Describe("Completer", func() {
 				})
 
 				_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-					return state.BackgroundColor(6, promptWidth).String() == prompt.DefaultScrollbarColor
+					return state.BackgroundColor(6, promptWidth).String() == input.DefaultScrollbarColor
 				})
 			})
 		})

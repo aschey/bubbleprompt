@@ -5,8 +5,10 @@ import "github.com/charmbracelet/lipgloss"
 type Formatters struct {
 	Name               SuggestionText
 	Description        SuggestionText
-	DefaultPlaceholder Text
-	ErrorText          Text
+	DefaultPlaceholder lipgloss.Style
+	ErrorText          lipgloss.Style
+	Scrollbar          lipgloss.Style
+	ScrollbarThumb     lipgloss.Style
 }
 
 var DefaultNameForeground = "255"
@@ -19,6 +21,9 @@ var DefaultDescriptionBackground = "245"
 var DefaultSelectedDescriptionForeground = "240"
 var DefaultSelectedDescriptionBackground = "249"
 var DefaultErrorTextBackground = "1"
+
+var DefaultScrollbarColor = "251"
+var DefaultScrollbarThumbColor = "255"
 
 func DefaultFormatters() Formatters {
 	return Formatters{
@@ -41,17 +46,19 @@ func DefaultFormatters() Formatters {
 				Foreground(lipgloss.Color(DefaultDescriptionForeground)).
 				Background(lipgloss.Color(DefaultDescriptionBackground)),
 		},
-		DefaultPlaceholder: Text{
-			Style: lipgloss.
-				NewStyle().
-				Foreground(lipgloss.Color("6")),
-		},
-		ErrorText: Text{
-			Style: lipgloss.
-				NewStyle().
-				PaddingLeft(1).
-				PaddingRight(1).
-				Background(lipgloss.Color(DefaultErrorTextBackground)),
-		},
+		DefaultPlaceholder: lipgloss.
+			NewStyle().
+			Foreground(lipgloss.Color("6")),
+		ErrorText: lipgloss.
+			NewStyle().
+			PaddingLeft(1).
+			PaddingRight(1).
+			Background(lipgloss.Color(DefaultErrorTextBackground)),
+		Scrollbar: lipgloss.
+			NewStyle().
+			Background(lipgloss.Color(DefaultScrollbarColor)),
+		ScrollbarThumb: lipgloss.
+			NewStyle().
+			Background(lipgloss.Color(DefaultScrollbarThumbColor)),
 	}
 }

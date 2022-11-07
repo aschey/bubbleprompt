@@ -144,8 +144,8 @@ func TestApp(t *testing.T) {
 	input.DefaultSelectedDescriptionForeground = "8"
 	input.DefaultSelectedDescriptionBackground = "13"
 
-	prompt.DefaultScrollbarColor = "8"
-	prompt.DefaultScrollbarThumbColor = "15"
+	input.DefaultScrollbarColor = "8"
+	input.DefaultScrollbarThumbColor = "15"
 
 	commandinput.DefaultCurrentPlaceholderSuggestion = "8"
 
