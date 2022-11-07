@@ -27,33 +27,37 @@ type model struct {
 
 type changeTextMsg struct{}
 
-var suggestions []input.Suggestion[cmdMetadata] = []input.Suggestion[cmdMetadata]{
-	{Text: "first-option", Description: "test desc", Metadata: commandinput.CmdMetadata{
-		PositionalArgs: []commandinput.PositionalArg{
-			commandinput.NewPositionalArg("[test placeholder1]"),
-			commandinput.NewPositionalArg("[test placeholder2]"),
-		},
-	}},
-	{Text: "second-option", Description: "test desc2", Metadata: commandinput.CmdMetadata{
-		PositionalArgs: []commandinput.PositionalArg{
-			commandinput.NewPositionalArg("[test placeholder]"),
-		},
-	}},
-	{Text: "third-option", Description: "test desc3", Metadata: commandinput.CmdMetadata{
-		PositionalArgs: []commandinput.PositionalArg{
-			commandinput.NewPositionalArg("[flags]"),
-		},
-	}},
-	{Text: "fourth-option", Description: "test desc4"},
-	{Text: "fifth-option", Description: "test desc5"},
-	{Text: "sixth-option", Description: "test desc6"},
-	{Text: "seventh-option", CompletionText: "completion text", Description: "test desc7"}}
+func suggestions(textInput *commandinput.Model[cmdMetadata]) []input.Suggestion[cmdMetadata] {
+	return []input.Suggestion[cmdMetadata]{
+		{Text: "first-option", Description: "test desc", Metadata: commandinput.CmdMetadata{
+			PositionalArgs: []commandinput.PositionalArg{
+				textInput.NewPositionalArg("[test placeholder1]"),
+				textInput.NewPositionalArg("[test placeholder2]"),
+			},
+		}},
+		{Text: "second-option", Description: "test desc2", Metadata: commandinput.CmdMetadata{
+			PositionalArgs: []commandinput.PositionalArg{
+				textInput.NewPositionalArg("[test placeholder]"),
+			},
+		}},
+		{Text: "third-option", Description: "test desc3", Metadata: commandinput.CmdMetadata{
+			PositionalArgs: []commandinput.PositionalArg{
+				textInput.NewPositionalArg("[flags]"),
+			},
+		}},
+		{Text: "fourth-option", Description: "test desc4"},
+		{Text: "fifth-option", Description: "test desc5"},
+		{Text: "sixth-option", Description: "test desc6"},
+		{Text: "seventh-option", CompletionText: "completion text", Description: "test desc7"}}
+}
 
-var secondLevelSuggestions []input.Suggestion[cmdMetadata] = []input.Suggestion[cmdMetadata]{
-	{Text: "second-level", Description: "test desc", Metadata: commandinput.CmdMetadata{
-		PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("[placeholder2]")},
-		Level:          1,
-	}},
+func secondLevelSuggestions(textInput *commandinput.Model[cmdMetadata]) []input.Suggestion[cmdMetadata] {
+	return []input.Suggestion[cmdMetadata]{
+		{Text: "second-level", Description: "test desc", Metadata: commandinput.CmdMetadata{
+			PositionalArgs: []commandinput.PositionalArg{textInput.NewPositionalArg("[placeholder2]")},
+			Level:          1,
+		}},
+	}
 }
 
 var flags = []commandinput.Flag{
@@ -109,7 +113,7 @@ func (m *model) completer(promptModel prompt.Model[cmdMetadata]) ([]input.Sugges
 		if m.textInput.ParsedValue().Command.Value == suggestions[2].Text {
 			return m.textInput.FlagSuggestions(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp), flags, nil), nil
 		}
-		suggestions = secondLevelSuggestions
+		suggestions = secondLevelSuggestions(m.textInput)
 	}
 	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp), suggestions), nil
 }
@@ -150,7 +154,7 @@ func TestApp(t *testing.T) {
 	commandinput.DefaultCurrentPlaceholderSuggestion = "8"
 
 	textInput := commandinput.New[cmdMetadata]()
-	m := model{suggestions: suggestions, textInput: textInput}
+	m := model{suggestions: suggestions(textInput), textInput: textInput}
 
 	promptModel, _ := prompt.New(
 		m.completer,

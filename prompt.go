@@ -24,7 +24,7 @@ type Model[T any] struct {
 	executor                Executor[T]
 	textInput               input.Input[T]
 	renderer                renderer.Renderer
-	Formatters              input.Formatters
+	formatters              input.Formatters
 	executorModel           *executorModel
 	modelState              modelState
 	lastTypedCursorPosition int
@@ -40,7 +40,7 @@ func New[T any, I input.Input[T]](completer Completer[T], executor Executor[T], 
 		executor:   executor,
 		textInput:  textInput,
 		renderer:   &renderer.UnmanagedRenderer{},
-		Formatters: formatters,
+		formatters: formatters,
 	}
 
 	for _, opt := range opts {
@@ -58,6 +58,14 @@ func (m *Model[T]) SetMaxSuggestions(maxSuggestions int) {
 
 func (m *Model[T]) SetRenderer(renderer renderer.Renderer) {
 	m.renderer = renderer
+}
+
+func (m Model[T]) Formatters() input.Formatters {
+	return m.formatters
+}
+
+func (m *Model[T]) SetFormatters(formatters input.Formatters) {
+	m.formatters = formatters
 }
 
 var shutdown bool = false

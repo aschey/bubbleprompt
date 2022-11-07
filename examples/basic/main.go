@@ -51,16 +51,16 @@ func executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (
 }
 
 func main() {
+
+	textInput := commandinput.New[cmdMetadata]()
 	suggestions := []input.Suggestion[cmdMetadata]{
-		{Text: "first-option", Description: "test desc", Metadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{commandinput.NewPositionalArg("[test placeholder]")}}},
+		{Text: "first-option", Description: "test desc", Metadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{textInput.NewPositionalArg("[test placeholder]")}}},
 		{Text: "second-option", Description: "test desc2"},
 		{Text: "third-option", Description: "test desc3"},
 		{Text: "fourth-option", Description: "test desc4"},
 		{Text: "fifth-option", Description: "test desc5"},
 		{Text: "sixth-option", Description: "test desc6"},
 		{Text: "seventh-option", Description: "test desc7"}}
-
-	textInput := commandinput.New[cmdMetadata]()
 	completerModel := completerModel{suggestions: suggestions, textInput: textInput}
 
 	promptModel, err := prompt.New(

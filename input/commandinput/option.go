@@ -11,6 +11,13 @@ func WithPrompt[T CmdMetadataAccessor](prompt string) Option[T] {
 	}
 }
 
+func WithFormatters[T CmdMetadataAccessor](formatters Formatters) Option[T] {
+	return func(model *Model[T]) error {
+		model.SetFormatters(formatters)
+		return nil
+	}
+}
+
 func WithDelimiterRegex[T CmdMetadataAccessor](delimiterRegex *regexp.Regexp) Option[T] {
 	return func(model *Model[T]) error {
 		model.SetDelimiterRegex(delimiterRegex)

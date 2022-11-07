@@ -1,6 +1,7 @@
 package commandinput
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/aschey/bubbleprompt/input"
@@ -20,7 +21,7 @@ func newCmdViewBuilder[T CmdMetadataAccessor](model Model[T], viewMode input.Vie
 		showCursor = false
 	}
 	showPlaceholders := viewMode == input.Interactive
-	viewBuilder := input.NewViewBuilder(model.Cursor(), model.CursorStyle, model.defaultDelimiter, showCursor)
+	viewBuilder := input.NewViewBuilder(model.Cursor(), model.formatters.Cursor, model.defaultDelimiter, showCursor)
 	return cmdViewBuilder[T]{
 		model, viewBuilder, showPlaceholders, showCursor,
 	}
@@ -35,22 +36,22 @@ func (b cmdViewBuilder[T]) View() string {
 	b.renderFlagPlaceholders()
 	b.renderTrailingText()
 
-	return b.model.PromptStyle.Render(b.model.prompt) + b.viewBuilder.View()
+	return b.model.formatters.Prompt.Render(b.model.prompt) + b.viewBuilder.View()
 }
 
 func (b cmdViewBuilder[T]) renderCommand() {
 	command := b.model.parsedText.Command.Value
 	if b.model.selectedCommand == nil {
-		b.viewBuilder.Render(command, b.model.parsedText.Command.Pos.Offset, b.model.TextStyle)
+		b.viewBuilder.Render(command, b.model.parsedText.Command.Pos.Offset, b.model.formatters.Text)
 	} else {
-		b.viewBuilder.Render(command, b.model.parsedText.Command.Pos.Offset, b.model.SelectedTextStyle)
+		b.viewBuilder.Render(command, b.model.parsedText.Command.Pos.Offset, b.model.formatters.SelectedText)
 	}
 }
 
 func (b cmdViewBuilder[T]) renderPrefix() {
 	command := b.model.parsedText.Command.Value
 	if b.showPlaceholders && strings.HasPrefix(b.model.commandPlaceholder, b.model.Value()) && b.model.commandPlaceholder != command {
-		b.viewBuilder.Render(b.model.commandPlaceholder[len(command):], b.model.parsedText.Command.Pos.Offset+len(command), b.model.PlaceholderStyle)
+		b.viewBuilder.Render(b.model.commandPlaceholder[len(command):], b.model.parsedText.Command.Pos.Offset+len(command), b.model.formatters.Placeholder)
 	}
 }
 
@@ -82,7 +83,7 @@ func (b cmdViewBuilder[T]) renderFlags() {
 	currentPos := b.model.CurrentTokenPos(RoundDown).Start
 	currentToken := b.model.CurrentToken(RoundDown)
 	for i, flag := range b.model.parsedText.Flags.Value {
-		b.viewBuilder.Render(flag.Name, flag.Pos.Offset, lipgloss.NewStyle().Foreground(lipgloss.Color("245")))
+		b.viewBuilder.Render(flag.Name, flag.Pos.Offset, b.model.formatters.Flag.Flag)
 		// Render delimiter only once the full flag has been typed
 		if b.model.currentFlag == nil || len(flag.Name) >= len(b.model.currentFlag.Text) || flag.Value != nil {
 			if flag.Delim != nil {
@@ -92,7 +93,7 @@ func (b cmdViewBuilder[T]) renderFlags() {
 
 		if (flag.Pos.Offset != currentPos) && (currentPos < b.model.Cursor() || i < len(b.model.parsedText.Flags.Value)-1 || (len(currentToken) > 0 && !strings.HasPrefix(currentToken, "-"))) {
 			if flag.Value != nil {
-				b.viewBuilder.Render(flag.Value.Value, flag.Value.Pos.Offset, b.model.flagValueStyle(flag.Value.Value))
+				b.viewBuilder.Render(flag.Value.Value, flag.Value.Pos.Offset, b.flagValueStyle(flag.Value.Value))
 			}
 
 		} else {
@@ -106,22 +107,22 @@ func (b cmdViewBuilder[T]) renderFlags() {
 				// Render the rest of the arg placeholder only if the prefix matches
 				if b.showPlaceholders && strings.HasPrefix(b.model.currentFlag.Text, argVal) {
 					tokenPos := len(argVal)
-					b.viewBuilder.Render(b.model.currentFlag.Text[tokenPos:], b.viewBuilder.ViewLen(), b.model.PlaceholderStyle)
+					b.viewBuilder.Render(b.model.currentFlag.Text[tokenPos:], b.viewBuilder.ViewLen(), b.model.formatters.Placeholder)
 				}
 			}
 
-			if b.model.currentFlag != nil && len(b.model.currentFlag.Metadata.GetFlagPlaceholder().Text) > 0 && flag.Name[len(flag.Name)-1] != '-' {
+			if b.model.currentFlag != nil && len(b.model.currentFlag.Metadata.GetFlagPlaceholder().text) > 0 && flag.Name[len(flag.Name)-1] != '-' {
 				if !b.model.isDelimiter(string(*b.viewBuilder.Last())) && *b.viewBuilder.Last() != '=' {
 					b.viewBuilder.Render(b.model.defaultDelimiter, b.viewBuilder.ViewLen(), lipgloss.NewStyle())
 				}
 
 				if b.showPlaceholders && flag.Value == nil {
-					b.viewBuilder.RenderPlaceholder(b.model.currentFlag.Metadata.GetFlagPlaceholder().Text, b.viewBuilder.ViewLen(), lipgloss.NewStyle().Foreground(lipgloss.Color("14")))
+					b.viewBuilder.RenderPlaceholder(b.model.currentFlag.Metadata.GetFlagPlaceholder().text, b.viewBuilder.ViewLen(), b.model.formatters.Flag.Placeholder)
 				}
 
 			}
 			if flag.Value != nil {
-				b.viewBuilder.Render(flag.Value.Value, flag.Value.Pos.Offset, b.model.flagValueStyle(flag.Value.Value))
+				b.viewBuilder.Render(flag.Value.Value, flag.Value.Pos.Offset, b.flagValueStyle(flag.Value.Value))
 			}
 		}
 	}
@@ -130,7 +131,7 @@ func (b cmdViewBuilder[T]) renderFlags() {
 func (b cmdViewBuilder[T]) renderFlagPlaceholders() {
 	args := b.model.args
 	if b.showPlaceholders && len(b.model.parsedText.Flags.Value) == 0 && b.model.showFlagPlaceholder {
-		args = append(args, arg{text: "[flags]", placeholderStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("14"))})
+		args = append(args, arg{text: "[flags]", placeholderStyle: b.model.formatters.Flag.Placeholder})
 	}
 
 	// Render arg placeholders
@@ -158,4 +159,13 @@ func (b cmdViewBuilder[T]) renderTrailingText() {
 		b.viewBuilder.Render(value[b.viewBuilder.ViewLen():], b.viewBuilder.ViewLen(), lipgloss.NewStyle())
 	}
 
+}
+
+func (b cmdViewBuilder[T]) flagValueStyle(value string) lipgloss.Style {
+	if _, err := strconv.ParseInt(value, 10, 32); err == nil {
+		return b.model.formatters.FlagValue.Number
+	} else if _, err := strconv.ParseBool(value); err == nil {
+		return b.model.formatters.FlagValue.Bool
+	}
+	return b.model.formatters.FlagValue.String
 }

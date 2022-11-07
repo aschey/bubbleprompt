@@ -9,7 +9,7 @@ type Option[T any] func(model *Model[T]) error
 
 func WithFormatters[T any](formatters input.Formatters) Option[T] {
 	return func(model *Model[T]) error {
-		model.Formatters = formatters
+		model.formatters = formatters
 		return nil
 	}
 }

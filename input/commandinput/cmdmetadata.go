@@ -2,22 +2,22 @@ package commandinput
 
 type CmdMetadataAccessor interface {
 	GetPositionalArgs() []PositionalArg
-	GetFlagPlaceholder() Placeholder
+	GetFlagPlaceholder() FlagPlaceholder
 	GetLevel() int
 	GetPreservePlaceholder() bool
 	GetShowFlagPlaceholder() bool
-	Create(args []PositionalArg, placeholder Placeholder) CmdMetadataAccessor
+	Create(args []PositionalArg, placeholder FlagPlaceholder) CmdMetadataAccessor
 }
 
 type CmdMetadata struct {
 	PositionalArgs      []PositionalArg
 	ShowFlagPlaceholder bool
-	FlagPlaceholder     Placeholder
+	FlagPlaceholder     FlagPlaceholder
 	Level               int
 	PreservePlaceholder bool
 }
 
-func (m CmdMetadata) Create(args []PositionalArg, placeholder Placeholder) CmdMetadataAccessor {
+func (m CmdMetadata) Create(args []PositionalArg, placeholder FlagPlaceholder) CmdMetadataAccessor {
 	return CmdMetadata{PositionalArgs: args, FlagPlaceholder: placeholder}
 }
 
@@ -25,7 +25,7 @@ func (m CmdMetadata) GetPositionalArgs() []PositionalArg {
 	return m.PositionalArgs
 }
 
-func (m CmdMetadata) GetFlagPlaceholder() Placeholder {
+func (m CmdMetadata) GetFlagPlaceholder() FlagPlaceholder {
 	return m.FlagPlaceholder
 }
 

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/input/commandinput"
 	tuitest "github.com/aschey/tui-tester"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -15,10 +16,11 @@ var _ = Describe("Completer", func() {
 	longestNameLength := len("completion text")
 	longestDescLength := len("test desc2")
 	promptWidth := leftPadding + margin + longestNameLength + 2*margin + longestDescLength + margin
+	textInput := commandinput.New[cmdMetadata]()
+	suggestions := suggestions(textInput)
 
 	var console *tuitest.Console
 	var initialLines []string
-	_ = initialLines
 
 	BeforeEach(OncePerOrdered, func() {
 		console, _ = cmdTester.CreateConsole()

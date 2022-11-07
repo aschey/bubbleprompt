@@ -10,18 +10,18 @@ import (
 
 var _ = Describe("Command Input", func() {
 	var console *tuitest.Console
-	var initialLines []string
-	_ = initialLines
+	textInput := commandinput.New[cmdMetadata]()
+	suggestions := suggestions(textInput)
+	secondLevelSuggestions := secondLevelSuggestions(textInput)
 
 	BeforeEach(OncePerOrdered, func() {
 		console, _ = cmdTester.CreateConsole()
 
 		// Wait for prompt to initialize
 		console.TrimOutput = true
-		state, _ := console.WaitFor(func(state tuitest.TermState) bool {
+		_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 			return strings.Contains(state.NthOutputLine(6), suggestions[5].Description)
 		})
-		initialLines = state.OutputLines()
 	})
 
 	AfterEach(OncePerOrdered, func() {
@@ -43,7 +43,7 @@ var _ = Describe("Command Input", func() {
 		It("renders the placeholder", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				return strings.Contains(state.NthOutputLine(0),
-					suggestions[0].Text+" "+suggestions[0].Metadata.PositionalArgs[0].Placeholder+" "+suggestions[0].Metadata.PositionalArgs[1].Placeholder)
+					suggestions[0].Text+" "+suggestions[0].Metadata.PositionalArgs[0].Placeholder()+" "+suggestions[0].Metadata.PositionalArgs[1].Placeholder())
 			})
 		})
 
@@ -67,7 +67,7 @@ var _ = Describe("Command Input", func() {
 			It("renders the updated suggestion with placeholders", func() {
 				_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 					return strings.Contains(state.NthOutputLine(0),
-						suggestions[1].Text+" "+suggestions[1].Metadata.PositionalArgs[0].Placeholder)
+						suggestions[1].Text+" "+suggestions[1].Metadata.PositionalArgs[0].Placeholder())
 				})
 			})
 		})
@@ -95,7 +95,7 @@ var _ = Describe("Command Input", func() {
 		It("shows the subcommand suggestion", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				return strings.Contains(state.NthOutputLine(0),
-					suggestions[1].Text+" "+secondLevelSuggestions[0].Text+" "+secondLevelSuggestions[0].Metadata.PositionalArgs[0].Placeholder)
+					suggestions[1].Text+" "+secondLevelSuggestions[0].Text+" "+secondLevelSuggestions[0].Metadata.PositionalArgs[0].Placeholder())
 			})
 		})
 

@@ -4,6 +4,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aschey/bubbleprompt/input/commandinput"
 	tuitest "github.com/aschey/tui-tester"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -11,18 +12,17 @@ import (
 
 var _ = Describe("Filter", func() {
 	var console *tuitest.Console
-	var initialLines []string
-	_ = initialLines
+	textInput := commandinput.New[cmdMetadata]()
+	suggestions := suggestions(textInput)
 
 	BeforeEach(OncePerOrdered, func() {
 		console, _ = cmdTester.CreateConsole()
 
 		// Wait for prompt to initialize
 		console.TrimOutput = true
-		state, _ := console.WaitFor(func(state tuitest.TermState) bool {
+		_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 			return strings.Contains(state.NthOutputLine(6), suggestions[5].Description)
 		})
-		initialLines = state.OutputLines()
 	})
 
 	AfterEach(OncePerOrdered, func() {

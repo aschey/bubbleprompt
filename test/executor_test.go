@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/input/commandinput"
 	tuitest "github.com/aschey/tui-tester"
 	. "github.com/onsi/ginkgo/v2"
 )
@@ -37,18 +38,17 @@ func testExecutor(console *tuitest.Console, in *string, backspace bool, doubleEn
 
 var _ = Describe("Executor", func() {
 	var console *tuitest.Console
-	var initialLines []string
-	_ = initialLines
+	textInput := commandinput.New[cmdMetadata]()
+	suggestions := suggestions(textInput)
 
 	BeforeEach(OncePerOrdered, func() {
 		console, _ = cmdTester.CreateConsole()
 
 		// Wait for prompt to initialize
 		console.TrimOutput = true
-		state, _ := console.WaitFor(func(state tuitest.TermState) bool {
+		_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 			return strings.Contains(state.NthOutputLine(6), suggestions[5].Description)
 		})
-		initialLines = state.OutputLines()
 	})
 
 	AfterEach(OncePerOrdered, func() {
@@ -106,7 +106,7 @@ var _ = Describe("Executor", func() {
 			_, _ = console.WaitForDuration(func(state tuitest.TermState) bool {
 				secondLine := state.NthOutputLine(1)
 				return strings.Contains(secondLine, "selected suggestion is "+suggestions[0].Text) &&
-					!strings.Contains(secondLine, suggestions[0].Metadata.GetPositionalArgs()[0].Placeholder)
+					!strings.Contains(secondLine, suggestions[0].Metadata.GetPositionalArgs()[0].Placeholder())
 			}, 100*time.Millisecond)
 		})
 	})

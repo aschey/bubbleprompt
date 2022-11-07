@@ -206,7 +206,7 @@ func (m *Model[T]) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	m.renderer.AddOutput(m.textInput.View(input.Static))
 	m.textInput.ResetValue()
 
-	executorModel := newExecutorModel(innerExecutor, m.Formatters.ErrorText, err)
+	executorModel := newExecutorModel(innerExecutor, m.formatters.ErrorText, err)
 
 	// Performance optimization: if this is a string model, we don't need to go through the whole update cycle
 	// Just call the view method once and finalize the result
