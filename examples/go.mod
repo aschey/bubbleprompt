@@ -1,13 +1,13 @@
 module examples
 
-go 1.18
+go 1.19
 
 require (
 	github.com/alecthomas/chroma/v2 v2.3.0
 	github.com/alecthomas/participle/v2 v2.0.0-beta.5
 	github.com/aschey/bubbleprompt v0.0.0
 	github.com/charmbracelet/bubbletea v0.22.2-0.20221013054030-9545e7cee210
-	github.com/dop251/goja v0.0.0-20221025165401-cb5011b539fe
+	github.com/dop251/goja v0.0.0-20221106173738-3b8a68ca89b4
 
 )
 
