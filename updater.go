@@ -72,8 +72,8 @@ func (m *Model[T]) updateExecuting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool
 		if m.textInput.Focused() {
 			m.textInput.Blur()
 		}
-		return append(cmds, cmd), true
 	}
+	return append(cmds, cmd), true
 }
 
 func (m *Model[T]) updateCompleting(msg tea.Msg, cmds []tea.Cmd, prevText string) ([]tea.Cmd, bool) {

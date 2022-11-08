@@ -10,6 +10,7 @@ import (
 type AsyncStringModel struct {
 	outputFunc func() (string, error)
 	output     *string
+	LoadingMsg string
 	spinner    spinner.Model
 }
 
@@ -19,7 +20,8 @@ func NewAsyncStringModel(outputFunc func() (string, error)) AsyncStringModel {
 	spin := spinner.New()
 	spin.Spinner = spinner.Dot
 	spin.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("69"))
-	return AsyncStringModel{outputFunc: outputFunc, spinner: spin}
+
+	return AsyncStringModel{outputFunc: outputFunc, spinner: spin, LoadingMsg: "Loading..."}
 }
 
 func (m AsyncStringModel) Init() tea.Cmd {
@@ -45,7 +47,7 @@ func (m AsyncStringModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m AsyncStringModel) View() string {
 	if m.output == nil {
-		return m.spinner.View() + "Loading...\n"
+		return m.spinner.View() + m.LoadingMsg + "\n"
 	}
 	return internal.AddNewlineIfMissing(*m.output)
 }

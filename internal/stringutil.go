@@ -13,3 +13,13 @@ func AddNewlineIfMissing(s string) string {
 func TrimNewline(s string) string {
 	return strings.TrimRight(s, "\n")
 }
+
+func CountNewlines(s string) int {
+	count := 0
+	for _, c := range s {
+		if c == '\n' {
+			count++
+		}
+	}
+	return count
+}

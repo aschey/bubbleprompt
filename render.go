@@ -31,25 +31,27 @@ func (m Model[T]) renderCompleting() string {
 }
 
 func (m Model[T]) render() string {
-	suggestionLength := len(m.completer.suggestions)
-	if suggestionLength < 1 {
-		// Always add at least one empty line
-		suggestionLength = 1
-	}
 	lines := ""
+	contentHeight := 0
 	switch m.modelState {
 	case executing:
 		// Executor is running, render next executor view
-		// We're not going to render suggestions here, so set the length to 0 to apply the appropriate padding below the output
-		suggestionLength = 0
 		lines = m.renderExecuting()
 
+		// Add one line to account for the prompt + suggestions
+		contentHeight = internal.CountNewlines(lines) + 1
+
 	case completing:
+		contentHeight = len(m.completer.suggestions)
+		if contentHeight < 1 {
+			// Always add at least one empty line
+			contentHeight = 1
+		}
 		lines = m.renderCompleting()
 	}
 
-	// Reserve height for prompts that were filtered out
-	extraHeight := m.completer.maxSuggestions - suggestionLength
+	// Reserve height for the max number of suggestions so the output height stays consistent
+	extraHeight := m.completer.maxSuggestions - contentHeight
 	if extraHeight > 0 {
 		lines += strings.Repeat("\n", extraHeight)
 	}
