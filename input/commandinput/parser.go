@@ -12,7 +12,7 @@ func (m *Model[T]) buildParser() {
 		{Name: "ShortFlag", Pattern: `\-[^\s=\-]*`},
 		{Name: "Eq", Pattern: "="},
 		{Name: "QuotedString", Pattern: `"[^"]*"`},
-		{Name: `String`, Pattern: m.stringRegex.String()},
+		{Name: `String`, Pattern: `[^\-\s][^\s]*`},
 		{Name: "whitespace", Pattern: m.delimiterRegex.String()},
 	})
 	participleParser := participle.MustBuild[Statement](participle.Lexer(lexer))

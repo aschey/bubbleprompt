@@ -17,6 +17,12 @@ type CmdMetadata struct {
 	PreservePlaceholder bool
 }
 
+func MetadataFromPositionalArgs(positionalArgs ...PositionalArg) CmdMetadata {
+	return CmdMetadata{
+		PositionalArgs: positionalArgs,
+	}
+}
+
 func (m CmdMetadata) Create(args []PositionalArg, placeholder FlagPlaceholder) CmdMetadataAccessor {
 	return CmdMetadata{PositionalArgs: args, FlagPlaceholder: placeholder}
 }

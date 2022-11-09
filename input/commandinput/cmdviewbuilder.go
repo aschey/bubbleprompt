@@ -80,8 +80,8 @@ func (b cmdViewBuilder[T]) renderCurrentArg() {
 }
 
 func (b cmdViewBuilder[T]) renderFlags() {
-	currentPos := b.model.CurrentTokenPos(RoundDown).Start
-	currentToken := b.model.CurrentToken(RoundDown)
+	currentPos := b.model.CurrentTokenPosRoundDown().Start
+	currentToken := b.model.CurrentTokenRoundDown()
 	for i, flag := range b.model.parsedText.Flags.Value {
 		b.viewBuilder.Render(flag.Name, flag.Pos.Offset, b.model.formatters.Flag.Flag)
 		// Render delimiter only once the full flag has been typed

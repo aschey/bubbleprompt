@@ -44,11 +44,11 @@ func (m completerModel) completer(promptModel prompt.Model[cmdMetadata]) ([]inpu
 		filepath := ""
 		parsed := m.textInput.ParsedValue()
 		if len(parsed.Args.Value) > 0 {
-			filepath = m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp)
+			filepath = m.textInput.CurrentTokenBeforeCursor()
 		}
 		return m.filepathCompleter.Complete(filepath), nil
 	}
-	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp), m.suggestions), nil
+	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
 }
 
 func executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (tea.Model, error) {

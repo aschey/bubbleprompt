@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"time"
 
 	prompt "github.com/aschey/bubbleprompt"
 	completers "github.com/aschey/bubbleprompt/completer"
@@ -11,6 +10,7 @@ import (
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/commandinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type cmdMetadata = commandinput.CmdMetadata
@@ -39,40 +39,42 @@ func (m model) View() string {
 }
 
 func (m completerModel) completer(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
-	time.Sleep(100 * time.Millisecond)
-	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp), m.suggestions), nil
+	if m.textInput.CommandCompleted() {
+		return nil, nil
+	}
+
+	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
 }
 
-func executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (tea.Model, error) {
-	return executors.NewAsyncStringModel(func() (string, error) {
-		time.Sleep(100 * time.Millisecond)
-		return "result is " + input, nil
-	}), nil
+func (m completerModel) executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (tea.Model, error) {
+	return executors.NewStringModel(lipgloss.NewStyle().Foreground(lipgloss.Color("10")).Render("You picked: " + input)), nil
 }
 
 func main() {
-
 	textInput := commandinput.New[cmdMetadata]()
 	suggestions := []input.Suggestion[cmdMetadata]{
-		{Text: "first-option", Description: "test desc", Metadata: commandinput.CmdMetadata{PositionalArgs: []commandinput.PositionalArg{textInput.NewPositionalArg("[test placeholder]")}}},
-		{Text: "second-option", Description: "test desc2"},
-		{Text: "third-option", Description: "test desc3"},
-		{Text: "fourth-option", Description: "test desc4"},
-		{Text: "fifth-option", Description: "test desc5"},
-		{Text: "sixth-option", Description: "test desc6"},
-		{Text: "seventh-option", Description: "test desc7"}}
+		{Text: "apples", Description: "spherical...ish"},
+		{Text: "bananas", Description: "good with peanut butter"},
+		{Text: "jackfruit", Description: "the jack of all fruits"},
+		{Text: "snozzberries", Description: "tastes like snozzberries"},
+		{Text: "lychee", Description: "better than leeches"},
+		{Text: "mangosteen", Description: "it's not a mango"},
+		{Text: "durian", Description: "stinky"},
+	}
+
 	completerModel := completerModel{suggestions: suggestions, textInput: textInput}
 
 	promptModel, err := prompt.New(
 		completerModel.completer,
-		executor,
+		completerModel.executor,
 		textInput,
 	)
 	if err != nil {
 		panic(err)
 	}
 	m := model{promptModel}
-
+	fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Render("pick a fruit!"))
+	fmt.Println()
 	if _, err := tea.NewProgram(m, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
 		fmt.Printf("Could not start program :(\n%v\n", err)
 		os.Exit(1)

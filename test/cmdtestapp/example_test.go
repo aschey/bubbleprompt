@@ -111,11 +111,11 @@ func (m *model) completer(promptModel prompt.Model[cmdMetadata]) ([]input.Sugges
 	suggestions := m.suggestions
 	if m.textInput.CommandCompleted() {
 		if m.textInput.ParsedValue().Command.Value == suggestions[2].Text {
-			return m.textInput.FlagSuggestions(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp), flags, nil), nil
+			return m.textInput.FlagSuggestions(m.textInput.CurrentTokenBeforeCursor(), flags, nil), nil
 		}
 		suggestions = secondLevelSuggestions(m.textInput)
 	}
-	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(commandinput.RoundUp), suggestions), nil
+	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), suggestions), nil
 }
 
 func (m *model) executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (tea.Model, error) {

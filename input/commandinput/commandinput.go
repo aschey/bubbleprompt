@@ -51,7 +51,6 @@ type Model[T CmdMetadataAccessor] struct {
 	prompt              string
 	defaultDelimiter    string
 	delimiterRegex      *regexp.Regexp
-	stringRegex         *regexp.Regexp
 	origArgs            []arg
 	args                []arg
 	showFlagPlaceholder bool
@@ -72,8 +71,8 @@ type TokenPos struct {
 type RoundingBehavior int
 
 const (
-	RoundUp RoundingBehavior = iota
-	RoundDown
+	roundUp RoundingBehavior = iota
+	roundDown
 )
 
 func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T] {
@@ -88,7 +87,6 @@ func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T] {
 		formatters:         formatters,
 		parsedText:         &Statement{},
 		delimiterRegex:     regexp.MustCompile(`\s+`),
-		stringRegex:        regexp.MustCompile(`[^\-\s][^\s]*`),
 		defaultDelimiter:   " ",
 	}
 	for _, opt := range opts {
@@ -103,20 +101,6 @@ func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T] {
 
 func (m *Model[T]) Init() tea.Cmd {
 	return textinput.Blink
-}
-
-func (m *Model[T]) SetDelimiterRegex(delimiterRegex *regexp.Regexp) {
-	m.delimiterRegex = delimiterRegex
-	m.buildParser()
-}
-
-func (m *Model[T]) SetStringRegex(stringRegex *regexp.Regexp) {
-	m.stringRegex = stringRegex
-	m.buildParser()
-}
-
-func (m *Model[T]) SetDefaultDelimiter(defaultDelimiter string) {
-	m.defaultDelimiter = defaultDelimiter
 }
 
 func (m *Model[T]) SetFormatters(formatters Formatters) {
@@ -139,8 +123,8 @@ func (m *Model[T]) NewFlagPlaceholder(placeholder string) FlagPlaceholder {
 }
 
 func (m *Model[T]) ShouldSelectSuggestion(suggestion input.Suggestion[T]) bool {
-	currentTokenPos := m.CurrentTokenPos(RoundUp)
-	currentToken := m.CurrentToken(RoundUp)
+	currentTokenPos := m.CurrentTokenPos()
+	currentToken := m.CurrentToken()
 	// Only select if cursor is at the end of the token or the input will cut off the part after the cursor
 	return m.Cursor() == currentTokenPos.End && currentToken == suggestion.Text
 }
@@ -159,7 +143,7 @@ func (m *Model[T]) ShouldUnselectSuggestion(prevText string, msg tea.KeyMsg) boo
 			tokens := m.AllTokens()
 			token = tokens[len(tokens)-1].Value
 		} else {
-			token = m.CurrentToken(RoundDown)
+			token = m.CurrentTokenRoundDown()
 		}
 		// Don't unselect if the current token is a flag and we're adding an = delimiter
 		return !strings.HasPrefix(token, "-")
@@ -225,7 +209,7 @@ func (m *Model[T]) FlagSuggestions(inputStr string, flags []Flag, suggestionFunc
 	suggestions := []input.Suggestion[T]{}
 	isLong := strings.HasPrefix(inputStr, "--")
 	isMulti := !isLong && strings.HasPrefix(inputStr, "-") && len(inputStr) > 1
-	tokenIndex := m.CurrentTokenPos(RoundUp).Index
+	tokenIndex := m.CurrentTokenPos().Index
 	allTokens := m.AllTokens()
 	prevToken := ""
 	if tokenIndex > 0 {
@@ -321,7 +305,7 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T], 
 			m.showFlagPlaceholder = suggestion.Metadata.GetShowFlagPlaceholder()
 			m.currentFlag = nil
 		}
-		index := m.CurrentTokenPos(RoundUp).Index
+		index := m.CurrentTokenPos().Index
 
 		if len(suggestion.Metadata.GetPositionalArgs()) > 0 || index <= m.argIndex {
 			m.args = []arg{}
@@ -380,8 +364,8 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T], 
 }
 
 func (m *Model[T]) OnSuggestionChanged(suggestion input.Suggestion[T]) {
-	token := m.CurrentToken(RoundUp)
-	tokenPos := m.CurrentTokenPos(RoundUp)
+	token := m.CurrentToken()
+	tokenPos := m.CurrentTokenPos()
 	if tokenPos.Index == 0 {
 		m.selectedCommand = &suggestion
 	}
@@ -426,7 +410,7 @@ func (m *Model[T]) OnSuggestionUnselected() {
 func (m *Model[T]) CompletionText(text string) string {
 	expr, _ := m.parser.Parse(text)
 	tokens := m.allTokens(expr)
-	token := m.currentToken(tokens, RoundUp)
+	token := m.currentToken(tokens, roundUp)
 
 	return token
 }
@@ -537,7 +521,7 @@ func (m Model[T]) cursorInToken(tokens []ident, pos int, roundingBehavior Roundi
 	if isInToken {
 		return true
 	}
-	if roundingBehavior == RoundDown {
+	if roundingBehavior == roundDown {
 		if pos == len(tokens)-1 {
 			return true
 		}
@@ -551,8 +535,12 @@ func (m Model[T]) cursorInToken(tokens []ident, pos int, roundingBehavior Roundi
 
 }
 
-func (m Model[T]) CurrentTokenPos(roundingBehavior RoundingBehavior) TokenPos {
-	return m.currentTokenPos(m.AllTokens(), roundingBehavior)
+func (m Model[T]) CurrentTokenPos() TokenPos {
+	return m.currentTokenPos(m.AllTokens(), roundUp)
+}
+
+func (m Model[T]) CurrentTokenPosRoundDown() TokenPos {
+	return m.currentTokenPos(m.AllTokens(), roundDown)
 }
 
 func (m Model[T]) currentTokenPos(tokens []ident, roundingBehavior RoundingBehavior) TokenPos {
@@ -561,7 +549,7 @@ func (m Model[T]) currentTokenPos(tokens []ident, roundingBehavior RoundingBehav
 		last := tokens[len(tokens)-1]
 		index := len(tokens) - 1
 		value := m.Value()
-		if roundingBehavior == RoundUp && cursor > 0 && (m.isDelimiter(string(value[cursor-1])) || (strings.HasPrefix(last.Value, "-") && string(value[cursor-1]) == "=")) {
+		if roundingBehavior == roundUp && cursor > 0 && (m.isDelimiter(string(value[cursor-1])) || (strings.HasPrefix(last.Value, "-") && string(value[cursor-1]) == "=")) {
 			// Haven't started a new token yet, but we have added a delimiter
 			// so we'll consider the current token finished
 			index++
@@ -592,8 +580,16 @@ func (m Model[T]) currentTokenPos(tokens []ident, roundingBehavior RoundingBehav
 	}
 }
 
-func (m Model[T]) CurrentTokenBeforeCursor(roundingBehavior RoundingBehavior) string {
-	start := m.CurrentTokenPos(roundingBehavior).Start
+func (m Model[T]) CurrentTokenBeforeCursor() string {
+	return m.currentTokenBeforeCursor(roundUp)
+}
+
+func (m Model[T]) CurrentTokenBeforeCursorroundDown() string {
+	return m.currentTokenBeforeCursor(roundDown)
+}
+
+func (m Model[T]) currentTokenBeforeCursor(roundingBehavior RoundingBehavior) string {
+	start := m.currentTokenPos(m.AllTokens(), roundingBehavior).Start
 	cursor := m.Cursor()
 	if start > cursor {
 		return ""
@@ -606,8 +602,12 @@ func (m Model[T]) HasArgs() bool {
 	return len(m.parsedText.Args.Value) > 0
 }
 
-func (m Model[T]) CurrentToken(roundingBehavior RoundingBehavior) string {
-	return m.currentToken(m.AllTokens(), roundingBehavior)
+func (m Model[T]) CurrentToken() string {
+	return m.currentToken(m.AllTokens(), roundUp)
+}
+
+func (m Model[T]) CurrentTokenRoundDown() string {
+	return m.currentToken(m.AllTokens(), roundDown)
 }
 
 func (m Model[T]) currentToken(tokens []ident, roundingBehavior RoundingBehavior) string {

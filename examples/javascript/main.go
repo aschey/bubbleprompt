@@ -153,8 +153,8 @@ func main() {
 	)
 
 	vm := newVm()
-	_, _ = vm.RunString(`obj = {a: 2, secondVal: 3, blah: {arg: 1, b: '2'}}`)
-	_, _ = vm.RunString(`arr = [1, 2, obj]`)
+	_, _ = vm.RunString(`pizza = {mushroom: 'magic', cheese: true, meat: {pepperoni: 1, sausage: 2 }}`)
+	_, _ = vm.RunString(`food = ['hummus', 'wine', {pizza: pizza}]`)
 
 	completerModel := completerModel{
 		suggestions: []input.Suggestion[any]{},
