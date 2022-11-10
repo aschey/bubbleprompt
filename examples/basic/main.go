@@ -8,20 +8,19 @@ import (
 	completers "github.com/aschey/bubbleprompt/completer"
 	executors "github.com/aschey/bubbleprompt/executor"
 	"github.com/aschey/bubbleprompt/input"
-	"github.com/aschey/bubbleprompt/input/commandinput"
+	"github.com/aschey/bubbleprompt/input/simpleinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
-type cmdMetadata = commandinput.CmdMetadata
-
 type model struct {
-	promptModel prompt.Model[cmdMetadata]
+	promptModel prompt.Model[any]
 }
 
 type completerModel struct {
-	suggestions []input.Suggestion[cmdMetadata]
-	textInput   *commandinput.Model[cmdMetadata]
+	suggestions []input.Suggestion[any]
+	textInput   *simpleinput.Model
+	outputStyle lipgloss.Style
 }
 
 func (m model) Init() tea.Cmd {
@@ -38,31 +37,35 @@ func (m model) View() string {
 	return m.promptModel.View()
 }
 
-func (m completerModel) completer(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
-	if m.textInput.CommandCompleted() {
+func (m completerModel) completer(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
+	if len(m.textInput.AllTokens()) > 1 {
 		return nil, nil
 	}
 
 	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
 }
 
-func (m completerModel) executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (tea.Model, error) {
-	return executors.NewStringModel(lipgloss.NewStyle().Foreground(lipgloss.Color("10")).Render("You picked: " + input)), nil
+func (m completerModel) executor(input string, selectedSuggestion *input.Suggestion[any]) (tea.Model, error) {
+	return executors.NewStringModel(m.outputStyle.Render("You picked: " + input)), nil
 }
 
 func main() {
-	textInput := commandinput.New[cmdMetadata]()
-	suggestions := []input.Suggestion[cmdMetadata]{
-		{Text: "apples", Description: "spherical...ish"},
-		{Text: "bananas", Description: "good with peanut butter"},
+	textInput := simpleinput.New()
+	suggestions := []input.Suggestion[any]{
+		{Text: "apple", Description: "spherical...ish"},
+		{Text: "banana", Description: "good with peanut butter"},
 		{Text: "jackfruit", Description: "the jack of all fruits"},
-		{Text: "snozzberries", Description: "tastes like snozzberries"},
+		{Text: "snozzberry", Description: "tastes like snozzberries"},
 		{Text: "lychee", Description: "better than leeches"},
 		{Text: "mangosteen", Description: "it's not a mango"},
 		{Text: "durian", Description: "stinky"},
 	}
 
-	completerModel := completerModel{suggestions: suggestions, textInput: textInput}
+	completerModel := completerModel{
+		suggestions: suggestions,
+		textInput:   textInput,
+		outputStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("11")),
+	}
 
 	promptModel, err := prompt.New(
 		completerModel.completer,
@@ -72,8 +75,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	m := model{promptModel}
-	fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Render("pick a fruit!"))
+	fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Render("Pick a fruit!"))
 	fmt.Println()
 	if _, err := tea.NewProgram(m, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
 		fmt.Printf("Could not start program :(\n%v\n", err)

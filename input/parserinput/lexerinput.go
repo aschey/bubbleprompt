@@ -15,6 +15,7 @@ type LexerModel struct {
 	textinput        textinput.Model
 	lexer            parser.Lexer
 	formatter        parser.Formatter
+	selectedToken    *parser.Token
 	tokens           []parser.Token
 	formatterTokens  []parser.FormatterToken
 	delimiterTokens  []string
@@ -64,7 +65,7 @@ func (m *LexerModel) updateTokens() error {
 	}
 
 	if m.formatter != nil {
-		m.formatterTokens, err = m.formatter.Lex(m.Value())
+		m.formatterTokens, err = m.formatter.Lex(m.Value(), m.selectedToken)
 		if err != nil {
 			return err
 		}
@@ -148,7 +149,7 @@ func (m *LexerModel) FormatText(text string) string {
 	if m.formatter == nil {
 		return m.unstyledView(text, false)
 	}
-	formatterTokens, _ := m.formatter.Lex(text)
+	formatterTokens, _ := m.formatter.Lex(text, nil)
 	return m.styledView(formatterTokens, false)
 }
 
@@ -172,6 +173,11 @@ func (m *LexerModel) ResetValue() {
 func (m *LexerModel) SetValue(value string) {
 	m.textinput.SetValue(value)
 	m.err = m.updateTokens()
+}
+
+func (m *LexerModel) setSelectedToken(token *parser.Token) {
+	m.selectedToken = token
+	_ = m.updateTokens()
 }
 
 func (m *LexerModel) Blur() {
@@ -250,6 +256,14 @@ func (m *LexerModel) Tokens() []parser.Token {
 	return m.tokens
 }
 
+func (m *LexerModel) TokenValues() []string {
+	tokens := []string{}
+	for _, token := range m.tokens {
+		tokens = append(tokens, token.Value)
+	}
+	return tokens
+}
+
 func (m *LexerModel) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[any], isSelected bool) tea.Cmd {
 	return nil
 }
@@ -274,7 +288,7 @@ func (m *LexerModel) OnSuggestionChanged(suggestion input.Suggestion[any]) {
 			}
 		}
 	}
-
+	m.setSelectedToken(&token)
 	value := m.Value()
 	newVal := value[:token.Start] + suggestion.Text
 	if token.End() < len(value) {
@@ -285,7 +299,9 @@ func (m *LexerModel) OnSuggestionChanged(suggestion input.Suggestion[any]) {
 
 }
 
-func (m *LexerModel) OnSuggestionUnselected() {}
+func (m *LexerModel) OnSuggestionUnselected() {
+	m.setSelectedToken(nil)
+}
 
 func (m *LexerModel) ShouldClearSuggestions(prevText string, msg tea.KeyMsg) bool {
 	return false

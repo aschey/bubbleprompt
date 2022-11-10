@@ -14,7 +14,7 @@ func NewChromaFormatter(style *chroma.Style, lexer chroma.Lexer) *ChromaFormatte
 	return &ChromaFormatter{style: style, lexer: lexer}
 }
 
-func (c *ChromaFormatter) Lex(input string) ([]FormatterToken, error) {
+func (c *ChromaFormatter) Lex(input string, _ *Token) ([]FormatterToken, error) {
 	theme := clearBackground(c.style)
 	iter, err := c.lexer.Tokenise(nil, input)
 	if err != nil {

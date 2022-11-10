@@ -1,5 +1,5 @@
 package parser
 
 type Formatter interface {
-	Lex(input string) ([]FormatterToken, error)
+	Lex(input string, selectedToken *Token) ([]FormatterToken, error)
 }
