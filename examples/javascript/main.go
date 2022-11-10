@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -16,8 +18,9 @@ import (
 	"github.com/dop251/goja"
 )
 
-const arrayType = "[]interface {}"
-const objectType = "map[string]interface {}"
+const arrayType = "array"
+const objectType = "object"
+const stringType = "string"
 
 type model struct {
 	promptModel prompt.Model[any]
@@ -72,9 +75,10 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[an
 	}
 
 	keyWrap := ""
-	datatype := objectVar.ExportType().String()
+	datatype := strings.ToLower(objectVar.ClassName())
+
 	// Can't use dot notation with arrays
-	if datatype == arrayType && currentBeforeCursor == "." {
+	if (datatype == arrayType || datatype == stringType) && currentBeforeCursor == "." {
 		return nil
 	}
 
@@ -128,19 +132,24 @@ func (m completerModel) executor(input string, selectedSuggestion *input.Suggest
 			return "", err
 		}
 
-		exportType := res.ExportType()
-		if exportType != nil {
-			switch exportType.String() {
-			case arrayType, objectType:
-				json, err := m.vm.ToObject(res).MarshalJSON()
-				if err != nil {
-					return "", err
-				}
-				return m.textInput.FormatText(string(json)), err
-			}
-		}
+		object := m.vm.ToObject(res)
+		datatype := strings.ToLower(object.ClassName())
 
-		return m.textInput.FormatText(res.ToString().String()), nil
+		switch datatype {
+		case arrayType, objectType:
+			jsonData, err := object.MarshalJSON()
+			if err != nil {
+				return "", err
+			}
+			buf := bytes.Buffer{}
+			err = json.Indent(&buf, jsonData, "", "  ")
+			if err != nil {
+				return "", err
+			}
+			return m.textInput.FormatText(buf.String()), err
+		default:
+			return m.textInput.FormatText(res.ToString().String()), nil
+		}
 
 	}), nil
 }

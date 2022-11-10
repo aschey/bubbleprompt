@@ -33,5 +33,12 @@ func (v *vm) ToObject(val goja.Value) *goja.Object {
 func (v *vm) RunString(str string) (goja.Value, error) {
 	v.mutex.Lock()
 	defer v.mutex.Unlock()
-	return v.runtime.RunString(str)
+	val, err := v.runtime.RunString(str)
+	if err != nil {
+		return nil, err
+	}
+	if val != nil && (val.String() == "null" || val.String() == "undefined") {
+		return nil, nil
+	}
+	return val, nil
 }
