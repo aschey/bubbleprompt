@@ -69,7 +69,16 @@ func (m model) View() string {
 }
 
 func (m completerModel) completer(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
-	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
+	if !m.textInput.CommandCompleted() {
+		return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
+	}
+
+	cmd := m.textInput.SelectedCommand()
+	if cmd != nil && len(cmd.Metadata.PositionalArgs) > 0 && len(m.textInput.CompletedArgsBeforeCursor()) == 0 {
+		pathCompleter := completers.PathCompleter[cmdMetadata]{}
+		return pathCompleter.Complete(m.textInput.CurrentTokenBeforeCursor()), nil
+	}
+	return nil, nil
 }
 
 func (m completerModel) executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (tea.Model, error) {
@@ -89,11 +98,18 @@ func (m completerModel) executor(input string, selectedSuggestion *input.Suggest
 }
 
 func main() {
+	fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.
+		Color("6")).
+		Render("Run an external command without exiting bubbleprompt.\nCurrently this only works well with commands that produce fullscreen output."))
+	fmt.Println()
+
 	textInput := commandinput.New[cmdMetadata]()
+	filenameArg := commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("[filename]"))
 	suggestions := []input.Suggestion[cmdMetadata]{
-		{Text: "vim"},
-		{Text: "emacs"},
-		{Text: "nano"},
+		{Text: "vim", Metadata: filenameArg},
+		{Text: "emacs", Metadata: filenameArg},
+		{Text: "nano", Metadata: filenameArg},
+		{Text: "top"},
 		{Text: "htop"},
 	}
 	completerModel := completerModel{suggestions: suggestions, textInput: textInput}
