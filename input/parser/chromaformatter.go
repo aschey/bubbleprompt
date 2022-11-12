@@ -2,6 +2,7 @@ package parser
 
 import (
 	"github.com/alecthomas/chroma/v2"
+	"github.com/aschey/bubbleprompt/input"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -14,7 +15,7 @@ func NewChromaFormatter(style *chroma.Style, lexer chroma.Lexer) *ChromaFormatte
 	return &ChromaFormatter{style: style, lexer: lexer}
 }
 
-func (c *ChromaFormatter) Lex(input string, _ *Token) ([]FormatterToken, error) {
+func (c *ChromaFormatter) Lex(input string, _ *input.Token) ([]FormatterToken, error) {
 	theme := clearBackground(c.style)
 	iter, err := c.lexer.Tokenise(nil, input)
 	if err != nil {

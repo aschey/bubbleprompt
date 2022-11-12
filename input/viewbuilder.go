@@ -28,28 +28,33 @@ func (v ViewBuilder) View() string {
 	return v.view
 }
 
-func (v *ViewBuilder) Render(newText string, offset int, style lipgloss.Style) {
+func (v *ViewBuilder) Render(newRunes []rune, column int, style lipgloss.Style) {
+	offset := column - 1
+	if offset < 0 {
+		offset = 0
+	}
+
 	cursorPos := v.cursor
 	if offset+v.extraOffset > v.viewLen {
-		newText = strings.Repeat(v.delimiter, offset+v.extraOffset-v.viewLen) + newText
+		newRunes = append([]rune(strings.Repeat(string(v.delimiter), offset+v.extraOffset-v.viewLen)), newRunes...)
 	}
-	if cursorPos >= v.viewLen && cursorPos < v.viewLen+len(newText) {
-		v.view += v.renderAllWithCursor(newText, cursorPos-v.viewLen, style)
+	if cursorPos >= v.viewLen && cursorPos < v.viewLen+len(newRunes) {
+		v.view += v.renderAllWithCursor(newRunes, cursorPos-v.viewLen, style)
 	} else {
-		v.view += style.Render(newText)
+		v.view += style.Render(string(newRunes))
 	}
-	v.rawView += newText
-	v.viewLen += len(newText)
+	v.rawView += string(newRunes)
+	v.viewLen += len(newRunes)
 }
 
 func (v *ViewBuilder) ViewLen() int {
 	return v.viewLen
 }
 
-func (v *ViewBuilder) RenderPlaceholder(newText string, offset int, style lipgloss.Style) {
-	v.Render(newText, offset, style)
+func (v *ViewBuilder) RenderPlaceholder(newRunes []rune, offset int, style lipgloss.Style) {
+	v.Render(newRunes, offset, style)
 	// Add offset to account for the extra characters we added to the view that aren't part of what the user typed
-	v.extraOffset += len(newText)
+	v.extraOffset += len(newRunes)
 }
 
 func (v ViewBuilder) Last() *byte {
@@ -60,16 +65,16 @@ func (v ViewBuilder) Last() *byte {
 	return &last
 }
 
-func (v ViewBuilder) renderWithCursor(text string, cursorPos int, s lipgloss.Style) string {
-	view := v.cursorView(string(text[cursorPos]), s)
-	view += s.Render(text[cursorPos+1:])
+func (v ViewBuilder) renderWithCursor(runes []rune, cursorPos int, s lipgloss.Style) string {
+	view := v.cursorView(string(runes[cursorPos]), s)
+	view += s.Render(string(runes[cursorPos+1:]))
 	return view
 }
 
-func (v ViewBuilder) renderAllWithCursor(text string, cursorPos int, s lipgloss.Style) string {
+func (v ViewBuilder) renderAllWithCursor(runes []rune, cursorPos int, s lipgloss.Style) string {
 	view := ""
-	view += s.Render(text[:cursorPos])
-	view += v.renderWithCursor(text, cursorPos, s)
+	view += s.Render(string(runes[:cursorPos]))
+	view += v.renderWithCursor(runes, cursorPos, s)
 	return view
 }
 

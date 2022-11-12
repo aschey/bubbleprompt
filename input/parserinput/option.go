@@ -4,24 +4,24 @@ import (
 	"github.com/aschey/bubbleprompt/input/parser"
 )
 
-type Option func(model *LexerModel) error
+type Option[T any] func(model *LexerModel[T]) error
 
-func WithDelimiterTokens(tokens ...string) Option {
-	return func(model *LexerModel) error {
+func WithDelimiterTokens[T any](tokens ...string) Option[T] {
+	return func(model *LexerModel[T]) error {
 		model.delimiterTokens = tokens
 		return nil
 	}
 }
 
-func WithDelimiters(delimiters ...string) Option {
-	return func(model *LexerModel) error {
+func WithDelimiters[T any](delimiters ...string) Option[T] {
+	return func(model *LexerModel[T]) error {
 		model.delimiters = delimiters
 		return nil
 	}
 }
 
-func WithFormatter(formatter parser.Formatter) Option {
-	return func(model *LexerModel) error {
+func WithFormatter[T any](formatter parser.Formatter) Option[T] {
+	return func(model *LexerModel[T]) error {
 		model.formatter = formatter
 		return nil
 	}

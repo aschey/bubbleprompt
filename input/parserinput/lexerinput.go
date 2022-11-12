@@ -8,15 +8,16 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mattn/go-runewidth"
 	"golang.org/x/exp/slices"
 )
 
-type LexerModel struct {
+type LexerModel[T any] struct {
 	textinput        textinput.Model
 	lexer            parser.Lexer
 	formatter        parser.Formatter
-	selectedToken    *parser.Token
-	tokens           []parser.Token
+	selectedToken    *input.Token
+	tokens           []input.Token
 	formatterTokens  []parser.FormatterToken
 	delimiterTokens  []string
 	delimiters       []string
@@ -25,14 +26,14 @@ type LexerModel struct {
 	err              error
 }
 
-func NewLexerModel(lexer parser.Lexer, options ...Option) *LexerModel {
+func NewLexerModel[T any](lexer parser.Lexer, options ...Option[T]) *LexerModel[T] {
 	textinput := textinput.New()
 	textinput.Focus()
-	model := &LexerModel{
+	model := &LexerModel[T]{
 		lexer:            lexer,
 		textinput:        textinput,
 		prompt:           "> ",
-		tokens:           []parser.Token{},
+		tokens:           []input.Token{},
 		formatterTokens:  []parser.FormatterToken{},
 		whitespaceTokens: make(map[int]bool),
 	}
@@ -44,13 +45,13 @@ func NewLexerModel(lexer parser.Lexer, options ...Option) *LexerModel {
 	return model
 }
 
-func (m *LexerModel) Init() tea.Cmd {
+func (m *LexerModel[T]) Init() tea.Cmd {
 	return textinput.Blink
 }
 
-func (m *LexerModel) createWhitespaceToken(start int, end int, index int) parser.Token {
-	token := parser.Token{
-		Value: m.Value()[start:end],
+func (m *LexerModel[T]) createWhitespaceToken(start int, end int, index int) input.Token {
+	token := input.Token{
+		Value: string(m.Runes()[start:end]),
 		Start: start,
 		Index: index,
 	}
@@ -58,7 +59,7 @@ func (m *LexerModel) createWhitespaceToken(start int, end int, index int) parser
 	return token
 }
 
-func (m *LexerModel) updateTokens() error {
+func (m *LexerModel[T]) updateTokens() error {
 	tokens, err := m.lexer.Lex(m.Value())
 	if err != nil {
 		return err
@@ -71,7 +72,7 @@ func (m *LexerModel) updateTokens() error {
 		}
 	}
 
-	fullTokens := []parser.Token{}
+	fullTokens := []input.Token{}
 	m.whitespaceTokens = make(map[int]bool)
 	last := 0
 	index := 0
@@ -92,15 +93,15 @@ func (m *LexerModel) updateTokens() error {
 	}
 
 	// Check for trailing whitespace
-	if m.Cursor() > last {
-		fullTokens = append(fullTokens, m.createWhitespaceToken(last, m.Cursor(), index))
+	if m.CursorIndex() > last {
+		fullTokens = append(fullTokens, m.createWhitespaceToken(last, m.CursorIndex(), index))
 	}
 	m.tokens = fullTokens
 
 	return nil
 }
 
-func (m *LexerModel) OnUpdateStart(msg tea.Msg) tea.Cmd {
+func (m *LexerModel[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
 	m.textinput, cmd = m.textinput.Update(msg)
 	if msg, ok := msg.(tea.KeyMsg); ok {
@@ -114,101 +115,111 @@ func (m *LexerModel) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	return cmd
 }
 
-func (m *LexerModel) Error() error {
+func (m *LexerModel[T]) Error() error {
 	return m.err
 }
 
-func (m *LexerModel) unstyledView(text string, showCursor bool) string {
-	viewBuilder := input.NewViewBuilder(m.Cursor(), lipgloss.NewStyle(), " ", showCursor)
+func (m *LexerModel[T]) unstyledView(text []rune, showCursor bool) string {
+	viewBuilder := input.NewViewBuilder(m.CursorIndex(), lipgloss.NewStyle(), " ", showCursor)
 	viewBuilder.Render(text, 0, lipgloss.NewStyle())
 	return m.prompt + viewBuilder.View()
 }
 
-func (m *LexerModel) styledView(formatterTokens []parser.FormatterToken, showCursor bool) string {
-	viewBuilder := input.NewViewBuilder(m.Cursor(), lipgloss.NewStyle(), " ", showCursor)
+func (m *LexerModel[T]) styledView(formatterTokens []parser.FormatterToken, showCursor bool) string {
+	viewBuilder := input.NewViewBuilder(m.CursorIndex(), lipgloss.NewStyle(), " ", showCursor)
 	for _, token := range formatterTokens {
-		viewBuilder.Render(strings.TrimRight(token.Value, "\n"), viewBuilder.ViewLen(), token.Style)
+		viewBuilder.Render([]rune(strings.TrimRight(token.Value, "\n")), viewBuilder.ViewLen(), token.Style)
 	}
 
 	return m.prompt + viewBuilder.View()
 }
 
-func (m *LexerModel) View(viewMode input.ViewMode) string {
+func (m *LexerModel[T]) View(viewMode input.ViewMode) string {
 	showCursor := !m.textinput.Blink()
 	if viewMode == input.Static {
 		showCursor = false
 	}
 	if m.formatter == nil {
-		return m.unstyledView(m.Value(), showCursor)
+		return m.unstyledView(m.Runes(), showCursor)
 	}
 
 	return m.styledView(m.formatterTokens, showCursor)
 }
 
-func (m *LexerModel) FormatText(text string) string {
+func (m *LexerModel[T]) FormatText(text string) string {
 	if m.formatter == nil {
-		return m.unstyledView(text, false)
+		return m.unstyledView([]rune(text), false)
 	}
 	formatterTokens, _ := m.formatter.Lex(text, nil)
 	return m.styledView(formatterTokens, false)
 }
 
-func (m *LexerModel) Focus() tea.Cmd {
+func (m *LexerModel[T]) Focus() tea.Cmd {
 	return m.textinput.Focus()
 }
 
-func (m *LexerModel) Focused() bool {
+func (m *LexerModel[T]) Focused() bool {
 	return m.textinput.Focused()
 }
 
-func (m *LexerModel) Value() string {
+func (m *LexerModel[T]) Value() string {
 	return m.textinput.Value()
 }
 
-func (m *LexerModel) ResetValue() {
+func (m *LexerModel[T]) Runes() []rune {
+	return []rune(m.textinput.Value())
+}
+
+func (m *LexerModel[T]) ResetValue() {
 	m.textinput.SetValue("")
 	_ = m.updateTokens()
 }
 
-func (m *LexerModel) SetValue(value string) {
+func (m *LexerModel[T]) SetValue(value string) {
 	m.textinput.SetValue(value)
 	m.err = m.updateTokens()
 }
 
-func (m *LexerModel) setSelectedToken(token *parser.Token) {
+func (m *LexerModel[T]) setSelectedToken(token *input.Token) {
 	m.selectedToken = token
 	_ = m.updateTokens()
 }
 
-func (m *LexerModel) Blur() {
+func (m *LexerModel[T]) Blur() {
 	m.textinput.Blur()
 }
 
-func (m *LexerModel) Cursor() int {
+func (m *LexerModel[T]) CursorIndex() int {
 	return m.textinput.Cursor()
 }
 
-func (m *LexerModel) SetCursor(cursor int) {
+func (m *LexerModel[T]) CursorOffset() int {
+	cursorIndex := m.CursorIndex()
+	runesBeforeCursor := m.Runes()[:cursorIndex]
+	return runewidth.StringWidth(string(runesBeforeCursor))
+}
+
+func (m *LexerModel[T]) SetCursor(cursor int) {
 	m.textinput.SetCursor(cursor)
 }
 
-func (m *LexerModel) Prompt() string {
+func (m *LexerModel[T]) Prompt() string {
 	return m.prompt
 }
 
-func (m *LexerModel) SetPrompt(prompt string) {
+func (m *LexerModel[T]) SetPrompt(prompt string) {
 	m.prompt = prompt
 }
 
-func (m *LexerModel) ShouldSelectSuggestion(suggestion input.Suggestion[any]) bool {
+func (m *LexerModel[T]) ShouldSelectSuggestion(suggestion input.Suggestion[T]) bool {
 	token := m.CurrentToken()
 	tokenStr := token.Value
-	return m.Cursor() == token.End() && tokenStr == suggestion.Text
+	return m.CursorIndex() == token.End() && tokenStr == suggestion.Text
 }
 
-func (m *LexerModel) currentToken(text string, tokenPos int) parser.Token {
+func (m *LexerModel[T]) currentToken(runes []rune, tokenPos int) input.Token {
 	if len(m.tokens) == 0 {
-		return parser.Token{Index: -1}
+		return input.Token{Index: -1}
 	}
 	if len(m.Value()) == 0 {
 		return m.tokens[0]
@@ -219,14 +230,14 @@ func (m *LexerModel) currentToken(text string, tokenPos int) parser.Token {
 			return token
 		}
 	}
-	return parser.Token{Index: -1}
+	return input.Token{Index: -1}
 }
 
-func (m *LexerModel) CurrentToken() parser.Token {
-	return m.currentToken(m.Value(), m.Cursor()-1)
+func (m *LexerModel[T]) CurrentToken() input.Token {
+	return m.currentToken(m.Runes(), m.CursorIndex()-1)
 }
 
-func (m *LexerModel) FindLast(filter func(token parser.Token, symbol string) bool) *parser.Token {
+func (m *LexerModel[T]) FindLast(filter func(token input.Token, symbol string) bool) *input.Token {
 	currentToken := m.CurrentToken()
 	for i := currentToken.Index; i >= 0; i-- {
 		token := m.tokens[i]
@@ -239,7 +250,7 @@ func (m *LexerModel) FindLast(filter func(token parser.Token, symbol string) boo
 	return nil
 }
 
-func (m *LexerModel) PreviousToken() *parser.Token {
+func (m *LexerModel[T]) PreviousToken() *input.Token {
 	currentToken := m.CurrentToken()
 	if currentToken.Index <= 0 {
 		return nil
@@ -247,16 +258,35 @@ func (m *LexerModel) PreviousToken() *parser.Token {
 	return &m.tokens[currentToken.Index-1]
 }
 
-func (m *LexerModel) CompletionText(text string) string {
-	token := m.currentToken(text, m.Cursor()-1)
-	return token.Value
+func (m *LexerModel[T]) CompletionRunes(runes []rune) []rune {
+	token := m.currentToken(runes, m.CursorIndex()-1)
+	return []rune(token.Value)
 }
 
-func (m *LexerModel) Tokens() []parser.Token {
+func (m *LexerModel[T]) Tokens() []input.Token {
 	return m.tokens
 }
 
-func (m *LexerModel) TokenValues() []string {
+func (m *LexerModel[T]) TokensBeforeCursor() []input.Token {
+	tokens := []input.Token{}
+	cursor := m.CursorIndex()
+	for _, token := range m.tokens {
+		if token.End() <= cursor {
+			tokens = append(tokens, token)
+		} else {
+			tokens = append(tokens, input.Token{
+				Value: string([]rune(token.Value)[:cursor-token.Start]),
+				Start: token.Start,
+				Index: token.Index,
+				Type:  token.Type,
+			})
+			break
+		}
+	}
+	return tokens
+}
+
+func (m *LexerModel[T]) TokenValues() []string {
 	tokens := []string{}
 	for _, token := range m.tokens {
 		tokens = append(tokens, token.Value)
@@ -264,78 +294,80 @@ func (m *LexerModel) TokenValues() []string {
 	return tokens
 }
 
-func (m *LexerModel) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[any], isSelected bool) tea.Cmd {
+func (m *LexerModel[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T], isSelected bool) tea.Cmd {
 	return nil
 }
 
-func (m *LexerModel) IsDelimiterToken(token parser.Token) bool {
+func (m *LexerModel[T]) IsDelimiterToken(token input.Token) bool {
 	// Dummy whitespace tokens won't be registered with the lexer so check them separately
 	return slices.Contains(m.delimiters, token.Value) || slices.Contains(m.delimiterTokens, token.Type) || m.whitespaceTokens[token.Start]
 }
 
-func (m *LexerModel) OnSuggestionChanged(suggestion input.Suggestion[any]) {
-	token := m.currentToken(m.Value(), m.Cursor())
+func (m *LexerModel[T]) OnSuggestionChanged(suggestion input.Suggestion[T]) {
+	runes := m.Runes()
+	token := m.currentToken(runes, m.CursorIndex())
 
 	if m.IsDelimiterToken(token) {
-		if m.Cursor() < len(m.Value()) {
+		if m.CursorIndex() < len(runes) {
 			token = m.tokens[token.Index-1]
 			if m.IsDelimiterToken(token) {
-				token = parser.Token{Start: token.End()}
+				token = input.Token{Start: token.End()}
 			}
 		} else {
-			token = parser.Token{
+			token = input.Token{
 				Start: token.End(),
 			}
 		}
 	}
 	m.setSelectedToken(&token)
-	value := m.Value()
-	newVal := value[:token.Start] + suggestion.Text
-	if token.End() < len(value) {
-		newVal += value[token.End():]
+
+	suggestionRunes := []rune(suggestion.Text)
+	newVal := append(m.Runes()[:token.Start], suggestionRunes...)
+	if token.End() < len(runes) {
+		newVal = append(newVal, runes[token.End():]...)
 	}
-	m.SetValue(newVal)
-	m.SetCursor(token.Start + len(suggestion.Text) - suggestion.CursorOffset)
+	m.SetValue(string(newVal))
+	m.SetCursor(token.Start + len(suggestionRunes) - suggestion.CursorOffset)
 
 }
 
-func (m *LexerModel) OnSuggestionUnselected() {
+func (m *LexerModel[T]) OnSuggestionUnselected() {
 	m.setSelectedToken(nil)
 }
 
-func (m *LexerModel) ShouldClearSuggestions(prevText string, msg tea.KeyMsg) bool {
+func (m *LexerModel[T]) ShouldClearSuggestions(prevText []rune, msg tea.KeyMsg) bool {
 	return false
 }
 
-func (m *LexerModel) ShouldUnselectSuggestion(prevText string, msg tea.KeyMsg) bool {
+func (m *LexerModel[T]) ShouldUnselectSuggestion(prevText []rune, msg tea.KeyMsg) bool {
 	return true
 }
 
-func (m *LexerModel) CompletableTokenBeforeCursor() string {
+func (m *LexerModel[T]) CompletableTokenBeforeCursor() string {
 	token := m.CurrentToken()
 	if m.IsDelimiterToken(token) {
 		// Don't filter suggestions on delimiters
 		return ""
 	}
-	return m.currentTokenBeforeCursor(token)
+	return string(m.currentTokenBeforeCursor(token))
 }
 
-func (m *LexerModel) CurrentTokenBeforeCursor() string {
+func (m *LexerModel[T]) CurrentTokenBeforeCursor() string {
 	token := m.CurrentToken()
-	return m.currentTokenBeforeCursor(token)
+	return string(m.currentTokenBeforeCursor(token))
 }
 
-func (m *LexerModel) currentTokenBeforeCursor(token parser.Token) string {
+func (m *LexerModel[T]) currentTokenBeforeCursor(token input.Token) []rune {
 	start := token.Start
-	cursor := m.Cursor()
+	cursor := m.CursorIndex()
 	if start > cursor {
-		return ""
+		return []rune("")
 	}
-	val := m.Value()[start:cursor]
+	val := m.Runes()[start:cursor]
 	return val
 }
 
-func (m *LexerModel) OnExecutorFinished() {
+func (m *LexerModel[T]) OnExecutorFinished() {
 	// Clear out error once input text is reset
 	m.err = nil
 }

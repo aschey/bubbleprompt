@@ -28,7 +28,7 @@ type model struct {
 }
 
 type completerModel struct {
-	textInput   *parserinput.ParserModel[statement]
+	textInput   *parserinput.ParserModel[any, statement]
 	suggestions []input.Suggestion[any]
 	vm          *vm
 }
@@ -83,7 +83,7 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[an
 	}
 
 	completable := m.textInput.CompletableTokenBeforeCursor()
-	prev := m.textInput.FindLast(func(token parser.Token, symbol string) bool {
+	prev := m.textInput.FindLast(func(token input.Token, symbol string) bool {
 		return token.Start < currentToken.Start && symbol != "Whitespace"
 	})
 	prevToken := ""
@@ -155,10 +155,10 @@ func (m completerModel) executor(input string, selectedSuggestion *input.Suggest
 }
 
 func main() {
-	textInput := parserinput.NewParserModel[statement](
+	textInput := parserinput.NewParserModel[any, statement](
 		parser.NewParticipleParser(participleParser),
-		parserinput.WithDelimiterTokens("Punct", "Whitespace", "And", "Or", "Eq"),
-		parserinput.WithFormatter(parser.NewChromaFormatter(styles.SwapOff, styleLexer)),
+		parserinput.WithDelimiterTokens[any]("Punct", "Whitespace", "And", "Or", "Eq"),
+		parserinput.WithFormatter[any](parser.NewChromaFormatter(styles.SwapOff, styleLexer)),
 	)
 
 	vm := newVm()

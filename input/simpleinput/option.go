@@ -1,8 +1,6 @@
 package simpleinput
 
 import (
-	"regexp"
-
 	"github.com/aschey/bubbleprompt/input/parser"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -16,16 +14,16 @@ type settings struct {
 
 type Option func(settings *settings) error
 
-func WithDelimiterRegex(delimiterRegex regexp.Regexp) Option {
+func WithDelimiterRegex(delimiterRegex string) Option {
 	return func(settings *settings) error {
-		settings.delimiterRegex = delimiterRegex.String()
+		settings.delimiterRegex = delimiterRegex
 		return nil
 	}
 }
 
-func WithTokenRegex(tokenRegex regexp.Regexp) Option {
+func WithTokenRegex(tokenRegex string) Option {
 	return func(settings *settings) error {
-		settings.tokenRegex = tokenRegex.String()
+		settings.tokenRegex = tokenRegex
 		return nil
 	}
 }

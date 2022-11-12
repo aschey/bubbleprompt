@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/alecthomas/participle/v2/lexer"
+	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/parser"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -13,7 +14,7 @@ type simpleFormatter struct {
 	selectedTextStyle lipgloss.Style
 }
 
-func (f simpleFormatter) Lex(input string, selectedToken *parser.Token) ([]parser.FormatterToken, error) {
+func (f simpleFormatter) Lex(input string, selectedToken *input.Token) ([]parser.FormatterToken, error) {
 	tokens, err := f.lexer.Lex("", strings.NewReader(input))
 	if err != nil {
 		return nil, err
@@ -25,7 +26,7 @@ func (f simpleFormatter) Lex(input string, selectedToken *parser.Token) ([]parse
 	formatterTokens := []parser.FormatterToken{}
 	for _, token := range lexerTokens {
 		formatterToken := parser.FormatterToken{Value: token.Value}
-		if selectedToken != nil && selectedToken.Start == token.Pos.Offset {
+		if selectedToken != nil && selectedToken.Start == token.Pos.Column-1 {
 			formatterToken.Style = f.selectedTextStyle
 		}
 		formatterTokens = append(formatterTokens, formatterToken)

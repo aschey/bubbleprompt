@@ -22,7 +22,7 @@ type model struct {
 type completerModel struct {
 	suggestions       []input.Suggestion[cmdMetadata]
 	textInput         *commandinput.Model[cmdMetadata]
-	filepathCompleter completers.FilePathCompleter[cmdMetadata]
+	filepathCompleter completers.PathCompleter[cmdMetadata]
 }
 
 func (m model) Init() tea.Cmd {

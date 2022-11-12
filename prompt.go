@@ -28,7 +28,7 @@ type Model[T any] struct {
 	executorModel           *executorModel
 	modelState              modelState
 	lastTypedCursorPosition int
-	typedText               string
+	typedRunes              []rune
 	ready                   bool
 	err                     error
 }
@@ -66,6 +66,10 @@ func (m Model[T]) Formatters() input.Formatters {
 
 func (m *Model[T]) SetFormatters(formatters input.Formatters) {
 	m.formatters = formatters
+}
+
+func (m *Model[T]) GetSelectedSuggestion() *input.Suggestion[T] {
+	return m.completer.getSelectedSuggestion()
 }
 
 var shutdown bool = false

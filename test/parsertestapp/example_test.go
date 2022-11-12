@@ -29,7 +29,7 @@ type Statement struct {
 }
 
 type completerModel struct {
-	textInput   *parserinput.ParserModel[Statement]
+	textInput   *parserinput.ParserModel[any, Statement]
 	suggestions []input.Suggestion[any]
 }
 
@@ -83,9 +83,9 @@ func TestApp(t *testing.T) {
 	input.DefaultScrollbarColor = "8"
 	input.DefaultScrollbarThumbColor = "15"
 
-	textInput := parserinput.NewParserModel[Statement](
+	textInput := parserinput.NewParserModel[any, Statement](
 		parser.NewParticipleParser(participleParser),
-		parserinput.WithDelimiters(","))
+		parserinput.WithDelimiters[any](","))
 
 	completerModel := completerModel{
 		suggestions: []input.Suggestion[any]{},

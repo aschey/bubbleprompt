@@ -8,6 +8,7 @@ import (
 	"github.com/aschey/bubbleprompt/input"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mattn/go-runewidth"
 )
 
 type completerState int
@@ -53,7 +54,7 @@ type completerModel[T any] struct {
 	scroll         int
 	prevScroll     int
 	selectedKey    *string
-	prevText       string
+	prevRunes      []rune
 	queueNext      bool
 	ignoreCount    int
 	err            error
@@ -66,7 +67,7 @@ func newCompleterModel[T any, I input.Input[T]](completerFunc Completer[T], text
 		state:          idle,
 		maxSuggestions: maxSuggestions,
 		errorText:      errorText,
-		prevText:       " ", // Need to set the previous text to something in order to force the initial render
+		prevRunes:      []rune(" "), // Need to set the previous text to something in order to force the initial render
 	}
 }
 
@@ -115,14 +116,15 @@ func (c completerModel[T]) Update(msg tea.Msg, prompt Model[T]) (completerModel[
 		c.lastKeyMsg = msg
 		if msg.Type == tea.KeyTab {
 			// Tab completion may have changed text so reset previous value
-			c.prevText = ""
+			c.prevRunes = []rune("")
 		}
 	}
 	return c, nil
 }
 
 func (c completerModel[T]) canUpdateCompletions() bool {
-	if len(c.textInput.CompletionText(c.textInput.Value()[:c.textInput.Cursor()])) == 0 {
+	runes := c.textInput.Runes()
+	if len(c.textInput.CompletionRunes(runes[:c.textInput.CursorIndex()])) == 0 {
 		return true
 	}
 
@@ -163,11 +165,14 @@ func (c completerModel[T]) Render(paddingSize int, formatters input.Formatters) 
 	// Determine longest name and description to calculate padding
 	for _, cur := range c.suggestions {
 		completionText := cur.GetCompletionText()
-		if len(completionText) > maxNameLen {
-			maxNameLen = len(completionText)
+		textWidth := runewidth.StringWidth(completionText)
+		if textWidth > maxNameLen {
+			maxNameLen = textWidth
 		}
-		if len(cur.Description) > maxDescLen {
-			maxDescLen = len(cur.Description)
+
+		descWidth := runewidth.StringWidth(cur.Description)
+		if descWidth > maxDescLen {
+			maxDescLen = descWidth
 		}
 	}
 	numSuggestions := len(c.suggestions)
@@ -216,17 +221,17 @@ func (c *completerModel[T]) forceUpdateCompletions(prompt Model[T]) tea.Cmd {
 
 func (c *completerModel[T]) updateCompletionsCmd(prompt Model[T], forceUpdate bool) tea.Cmd {
 	input := prompt.textInput
-	text := input.Value()
-	cursorPos := input.Cursor()
+	runes := input.Runes()
+	cursorPos := input.CursorIndex()
 
-	textBeforeCursor := text
-	if cursorPos < len(text) {
-		textBeforeCursor = text[:cursorPos]
+	runesBeforeCursor := runes
+	if cursorPos < len(runes) {
+		runesBeforeCursor = runes[:cursorPos]
 	}
 
 	// No need to queue another update if the text hasn't changed
 	// Don't trim whitespace here because cursor location affects suggestions
-	if !forceUpdate && textBeforeCursor == c.prevText {
+	if !forceUpdate && string(runesBeforeCursor) == string(c.prevRunes) {
 		return nil
 	}
 
@@ -238,7 +243,7 @@ func (c *completerModel[T]) updateCompletionsCmd(prompt Model[T], forceUpdate bo
 	}
 
 	c.state = running
-	c.prevText = textBeforeCursor
+	c.prevRunes = runesBeforeCursor
 
 	return func() tea.Msg {
 		filtered, err := c.completerFunc(prompt)
@@ -254,7 +259,7 @@ func (c *completerModel[T]) resetCompletions(prompt Model[T]) tea.Cmd {
 	}
 
 	c.state = running
-	c.prevText = ""
+	c.prevRunes = []rune("")
 
 	return func() tea.Msg {
 		filtered, err := c.completerFunc(prompt)

@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/alecthomas/participle/v2/lexer"
+	"github.com/aschey/bubbleprompt/input"
 )
 
 type ParticipleLexer struct {
@@ -14,8 +15,8 @@ func NewParticipleLexer(definition lexer.Definition) *ParticipleLexer {
 	return &ParticipleLexer{definition: definition}
 }
 
-func (p *ParticipleLexer) Lex(input string) ([]Token, error) {
-	lex, err := p.definition.Lex("", strings.NewReader(input))
+func (p *ParticipleLexer) Lex(inputStr string) ([]input.Token, error) {
+	lex, err := p.definition.Lex("", strings.NewReader(inputStr))
 	if err != nil {
 		return nil, err
 	}
@@ -28,14 +29,9 @@ func (p *ParticipleLexer) Lex(input string) ([]Token, error) {
 		lexerTokens = lexerTokens[:len(lexerTokens)-1]
 	}
 	symbols := lexer.SymbolsByRune(p.definition)
-	tokens := make([]Token, len(lexerTokens))
+	tokens := make([]input.Token, len(lexerTokens))
 	for i, token := range lexerTokens {
-		tokens[i] = Token{
-			Start: token.Pos.Offset,
-			Value: token.Value,
-			Type:  symbols[token.Type],
-			Index: i,
-		}
+		tokens[i] = input.TokenFromPos(token.Value, symbols[token.Type], i, token.Pos)
 	}
 
 	return tokens, nil

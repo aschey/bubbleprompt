@@ -26,7 +26,7 @@ func (m Model[T]) Update(msg tea.Msg) (Model[T], tea.Cmd) {
 	m.renderer, cmd = m.renderer.Update(msg)
 	cmds = append(cmds, cmd)
 
-	prevText := m.textInput.Value()
+	prevText := m.textInput.Runes()
 	cmd = m.textInput.OnUpdateStart(msg)
 	cmds = append(cmds, cmd)
 
@@ -76,7 +76,7 @@ func (m *Model[T]) updateExecuting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool
 	return append(cmds, cmd), true
 }
 
-func (m *Model[T]) updateCompleting(msg tea.Msg, cmds []tea.Cmd, prevText string) ([]tea.Cmd, bool) {
+func (m *Model[T]) updateCompleting(msg tea.Msg, cmds []tea.Cmd, prevRunes []rune) ([]tea.Cmd, bool) {
 	scrollToBottom := false
 
 	switch msg := msg.(type) {
@@ -93,7 +93,7 @@ func (m *Model[T]) updateCompleting(msg tea.Msg, cmds []tea.Cmd, prevText string
 			cmds = m.submit(msg, cmds)
 
 		case tea.KeyBackspace, tea.KeyDelete, tea.KeyRunes, tea.KeySpace, tea.KeyLeft, tea.KeyRight:
-			cmds = m.updateKeypress(msg, cmds, prevText)
+			cmds = m.updateKeypress(msg, cmds, prevRunes)
 		}
 
 	case errMsg:
@@ -118,14 +118,14 @@ func (m *Model[T]) finishUpdate(msg tea.Msg) tea.Cmd {
 		// Select the first suggestion if it matches
 		m.selectSingle()
 
-		cursor := m.textInput.Cursor()
-		text := m.typedText
+		cursor := m.textInput.CursorIndex()
+		runes := m.typedRunes
 		// Get completion text before the cursor
-		if cursor < len(text) {
-			text = text[:cursor]
+		if cursor < len(runes) {
+			runes = runes[:cursor]
 		}
-		typedCompletionText := m.textInput.CompletionText(text)
-		filteredSuggestions := completer.FilterHasPrefix(typedCompletionText, m.completer.suggestions)
+		typedCompletionRunes := m.textInput.CompletionRunes(runes)
+		filteredSuggestions := completer.FilterHasPrefix(string(typedCompletionRunes), m.completer.suggestions)
 		// Show placeholders for the first matching suggestion, but don't actually select it
 		if len(filteredSuggestions) > 0 {
 			suggestion = &filteredSuggestions[0]
@@ -158,10 +158,10 @@ func (m *Model[T]) updateChosenListEntry(msg tea.KeyMsg, cmds []tea.Cmd) []tea.C
 	if !m.completer.isSuggestionSelected() {
 		// No suggestion currently suggested, store the last cursor position before selecting
 		// so we can restore it later
-		m.lastTypedCursorPosition = m.textInput.Cursor()
+		m.lastTypedCursorPosition = m.textInput.CursorOffset()
 	}
 	// Set the text back to the last thing the user typed in case the current suggestion changed the text length
-	m.textInput.SetValue(m.typedText)
+	m.textInput.SetValue(string(m.typedRunes))
 	// Make sure to set the cursor AFTER setting the value or it may get overwritten
 	m.textInput.SetCursor(m.lastTypedCursorPosition)
 
@@ -196,7 +196,7 @@ func (m *Model[T]) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 		innerExecutor = executor.NewStringModel("")
 	}
 	// Reset all text and selection state
-	m.typedText = ""
+	m.typedRunes = []rune("")
 	m.lastTypedCursorPosition = 0
 	m.completer.unselectSuggestion()
 
@@ -221,11 +221,11 @@ func (m *Model[T]) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	return append(cmds, m.completer.resetCompletions(*m))
 }
 
-func (m *Model[T]) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd, prevText string) []tea.Cmd {
+func (m *Model[T]) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd, prevRunes []rune) []tea.Cmd {
 	cmds = m.updatePosition(msg, cmds)
-	if m.textInput.ShouldClearSuggestions(prevText, msg) {
+	if m.textInput.ShouldClearSuggestions(prevRunes, msg) {
 		m.completer.clearSuggestions()
-	} else if m.textInput.ShouldUnselectSuggestion(prevText, msg) {
+	} else if m.textInput.ShouldUnselectSuggestion(prevRunes, msg) {
 		// Unselect selected item since user has changed the input
 		m.completer.unselectSuggestion()
 	}
@@ -235,8 +235,8 @@ func (m *Model[T]) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd, prevText strin
 }
 
 func (m *Model[T]) updatePosition(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
-	m.lastTypedCursorPosition = m.textInput.Cursor()
-	m.typedText = m.textInput.Value()
+	m.lastTypedCursorPosition = m.textInput.CursorOffset()
+	m.typedRunes = m.textInput.Runes()
 	cmds = append(cmds, m.completer.updateCompletions(*m))
 
 	return cmds

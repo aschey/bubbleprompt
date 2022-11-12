@@ -3,6 +3,7 @@ package commandinput
 import (
 	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
+	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/parser"
 )
 
@@ -53,4 +54,8 @@ type delim struct {
 type ident struct {
 	Pos   lexer.Position
 	Value string `parser:"( @QuotedString | @String )"`
+}
+
+func (i ident) ToToken(index int, tokenType string) input.Token {
+	return input.TokenFromPos(i.Value, tokenType, index, i.Pos)
 }

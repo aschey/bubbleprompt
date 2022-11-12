@@ -1,5 +1,7 @@
 package parser
 
+import "github.com/aschey/bubbleprompt/input"
+
 type Lexer interface {
-	Lex(input string) ([]Token, error)
+	Lex(input string) ([]input.Token, error)
 }

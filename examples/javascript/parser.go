@@ -9,7 +9,7 @@ import (
 var rules = []lexerbuilder.Rule{
 	{Name: "Whitespace", Pattern: `\s+`, Type: chroma.Whitespace},
 	{Name: "Grouping", Pattern: `[\(\)]`, Type: chroma.Punctuation},
-	{Name: "String", Pattern: `"([^"]*"?)|('[^']*'?)`, Type: chroma.String},
+	{Name: "String", Pattern: `"("[^"]*"?)|('[^']*'?)`, Type: chroma.String},
 	{Name: "Number", Pattern: `\-?[0-9]+(\.[0-9]*)*`, Type: chroma.LiteralNumber},
 	{Name: "Punct", Pattern: `[-\[!@#$%^&*+_=\{\}\|:;"'<,>.?\/\]|]`, Type: chroma.Punctuation},
 	{Name: "Ident", Pattern: `[_a-zA-Z]+[_a-zA-Z0-9]*`, Type: chroma.Text},

@@ -11,6 +11,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mattn/go-runewidth"
 )
 
 type arg struct {
@@ -45,7 +46,7 @@ type Flag struct {
 
 type Model[T CmdMetadataAccessor] struct {
 	textinput           textinput.Model
-	commandPlaceholder  string
+	commandPlaceholder  []rune
 	subcommandWithArgs  string
 	suggestionLevel     int
 	prompt              string
@@ -81,7 +82,7 @@ func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T] {
 	formatters := DefaultFormatters()
 	model := &Model[T]{
 		textinput:          textinput,
-		commandPlaceholder: "",
+		commandPlaceholder: []rune(""),
 		subcommandWithArgs: "",
 		prompt:             "> ",
 		formatters:         formatters,
@@ -126,21 +127,21 @@ func (m *Model[T]) ShouldSelectSuggestion(suggestion input.Suggestion[T]) bool {
 	currentTokenPos := m.CurrentTokenPos()
 	currentToken := m.CurrentToken()
 	// Only select if cursor is at the end of the token or the input will cut off the part after the cursor
-	return m.Cursor() == currentTokenPos.End && currentToken == suggestion.Text
+	return m.CursorIndex() == currentTokenPos.End && currentToken == suggestion.Text
 }
 
-func (m *Model[T]) ShouldUnselectSuggestion(prevText string, msg tea.KeyMsg) bool {
-	pos := m.Cursor()
+func (m *Model[T]) ShouldUnselectSuggestion(prevRunes []rune, msg tea.KeyMsg) bool {
+	pos := m.CursorIndex()
 	switch msg.Type {
 	case tea.KeyBackspace, tea.KeyDelete:
-		return pos < len(prevText) && !m.isDelimiter(string(prevText[pos]))
+		return pos < len(prevRunes) && !m.isDelimiter(string(prevRunes[pos]))
 	case tea.KeyRunes, tea.KeySpace:
 		if msg.String() != "=" {
 			return true
 		}
 		token := ""
-		if m.Cursor() == len(m.Value()) {
-			tokens := m.AllTokens()
+		if m.CursorIndex() == len(m.Runes()) {
+			tokens := m.Tokens()
 			token = tokens[len(tokens)-1].Value
 		} else {
 			token = m.CurrentTokenRoundDown()
@@ -152,7 +153,7 @@ func (m *Model[T]) ShouldUnselectSuggestion(prevText string, msg tea.KeyMsg) boo
 	}
 }
 
-func (m *Model[T]) ShouldClearSuggestions(prevText string, msg tea.KeyMsg) bool {
+func (m *Model[T]) ShouldClearSuggestions(prevText []rune, msg tea.KeyMsg) bool {
 	return m.isDelimiter(msg.String())
 }
 
@@ -162,9 +163,9 @@ func (m *Model[T]) SelectedCommand() *input.Suggestion[T] {
 
 func (m *Model[T]) ArgsBeforeCursor() []string {
 	args := []string{}
-	textBeforeCursor := m.Value()[:m.Cursor()]
+	runesBeforeCursor := m.Runes()[:m.CursorIndex()]
 
-	expr, _ := m.parser.Parse(textBeforeCursor)
+	expr, _ := m.parser.Parse(string(runesBeforeCursor))
 
 	for _, arg := range expr.Args.Value {
 		args = append(args, arg.Value)
@@ -174,15 +175,15 @@ func (m *Model[T]) ArgsBeforeCursor() []string {
 
 func (m *Model[T]) CompletedArgsBeforeCursor() []string {
 	args := []string{}
-	textBeforeCursor := m.Value()[:m.Cursor()]
+	runesBeforeCursor := m.Runes()[:m.CursorIndex()]
 
-	expr, _ := m.parser.Parse(textBeforeCursor)
+	expr, _ := m.parser.Parse(string(runesBeforeCursor))
 
 	for _, arg := range expr.Args.Value {
 		args = append(args, arg.Value)
 	}
 
-	if len(expr.Flags.Value) == 0 && len(textBeforeCursor) > 0 && !m.delimiterRegex.MatchString(string(textBeforeCursor[len(textBeforeCursor)-1])) {
+	if len(expr.Flags.Value) == 0 && len(runesBeforeCursor) > 0 && !m.isDelimiter(string(runesBeforeCursor[len(runesBeforeCursor)-1])) {
 		if len(args) > 0 {
 			args = args[:len(args)-1]
 		}
@@ -206,11 +207,12 @@ func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 }
 
 func (m *Model[T]) FlagSuggestions(inputStr string, flags []Flag, suggestionFunc func(Flag) T) []input.Suggestion[T] {
+	inputRunes := []rune(inputStr)
 	suggestions := []input.Suggestion[T]{}
 	isLong := strings.HasPrefix(inputStr, "--")
-	isMulti := !isLong && strings.HasPrefix(inputStr, "-") && len(inputStr) > 1
+	isMulti := !isLong && strings.HasPrefix(inputStr, "-") && len(inputRunes) > 1
 	tokenIndex := m.CurrentTokenPos().Index
-	allTokens := m.AllTokens()
+	allTokens := m.Tokens()
 	prevToken := ""
 	if tokenIndex > 0 {
 		prevToken = allTokens[tokenIndex-1].Value
@@ -225,7 +227,7 @@ func (m *Model[T]) FlagSuggestions(inputStr string, flags []Flag, suggestionFunc
 
 	curFlagText := ""
 	if isMulti {
-		curFlagText = string(inputStr[len(inputStr)-1])
+		curFlagText = string(inputRunes[len(inputRunes)-1])
 	}
 
 	for _, flag := range flags {
@@ -337,14 +339,14 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T], 
 		m.suggestionLevel = 0
 		if suggestion == nil {
 			// Didn't find any matching suggestions, reset
-			m.commandPlaceholder = ""
+			m.commandPlaceholder = []rune("")
 			m.subcommandWithArgs = ""
 		} else {
 			if !strings.HasPrefix(suggestion.Text, "-") {
 				m.showFlagPlaceholder = suggestion.Metadata.GetShowFlagPlaceholder()
 			}
 
-			m.commandPlaceholder = suggestion.Text
+			m.commandPlaceholder = []rune(suggestion.Text)
 			m.subcommandWithArgs = suggestion.Text
 
 			for _, posArg := range suggestion.Metadata.GetPositionalArgs() {
@@ -365,35 +367,38 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T], 
 
 func (m *Model[T]) OnSuggestionChanged(suggestion input.Suggestion[T]) {
 	token := m.CurrentToken()
+	tokenRunes := []rune(token)
+	suggestionRunes := []rune(suggestion.Text)
 	tokenPos := m.CurrentTokenPos()
+
 	if tokenPos.Index == 0 {
 		m.selectedCommand = &suggestion
 	}
 
-	text := m.Value()
+	textRunes := m.Runes()
 	if tokenPos.Start > -1 {
-		cursor := m.Cursor()
-		if strings.HasPrefix(token, "-") && !strings.HasPrefix(suggestion.Text, "-") {
+		cursor := m.CursorIndex()
+		if strings.HasPrefix(token, "-") && strings.HasPrefix(suggestion.Text, "-") {
 			// Adding an additional flag to the flag group, don't replace the entire token
-			rest := ""
-			if cursor < len(text) {
+			trailingRunes := []rune("")
+			if cursor < len(textRunes) {
 				// Add trailing text if we're not at the end of the line
-				rest = text[cursor+1:]
+				trailingRunes = textRunes[cursor+1:]
 			}
-			m.SetValue(text[:cursor] + suggestion.Text + rest)
-		} else if strings.HasPrefix(token, "-") && !strings.HasPrefix(token, "--") && len(token) > 2 && suggestion.Metadata.GetFlagPlaceholder().text == "" {
+			m.SetValue(string(textRunes[:cursor]) + suggestion.Text + string(trailingRunes))
+		} else if strings.HasPrefix(token, "-") && !strings.HasPrefix(token, "--") && len(tokenRunes) > 2 && suggestion.Metadata.GetFlagPlaceholder().text == "" {
 			// handle multi flag like -ab
 			if cursor == tokenPos.Start {
 				// If cursor is on the leading dash, replace the first two characters of the token ([-ab]c)
-				m.SetValue(text[:cursor] + suggestion.Text + text[cursor+2:])
+				m.SetValue(string(textRunes[:cursor]) + suggestion.Text + string(textRunes[cursor+2:]))
 			} else {
 				// If the cursor is after the dash, trim the dash from the suggestion and replace the single character on the cursor
-				m.SetValue(text[:cursor] + suggestion.Text[1:] + text[cursor+1:])
+				m.SetValue(string(textRunes[:cursor]) + string(suggestionRunes[1:]) + string(textRunes[cursor+1:]))
 			}
 		} else {
-			m.SetValue(text[:tokenPos.Start] + suggestion.Text + text[tokenPos.End:])
+			m.SetValue(string(textRunes[:tokenPos.Start]) + suggestion.Text + string(textRunes[tokenPos.End:]))
 			// Sometimes SetValue moves the cursor to the end of the line so we need to move it back to the current token
-			m.SetCursor(len(text[:tokenPos.Start]+suggestion.Text) - suggestion.CursorOffset)
+			m.SetCursor(len(textRunes[:tokenPos.Start]) + len(suggestionRunes) - suggestion.CursorOffset)
 		}
 
 	} else {
@@ -407,8 +412,8 @@ func (m *Model[T]) OnSuggestionUnselected() {
 	}
 }
 
-func (m *Model[T]) CompletionText(text string) string {
-	expr, _ := m.parser.Parse(text)
+func (m *Model[T]) CompletionRunes(runes []rune) []rune {
+	expr, _ := m.parser.Parse(string(runes))
 	tokens := m.allTokens(expr)
 	token := m.currentToken(tokens, roundUp)
 
@@ -423,16 +428,21 @@ func (m *Model[T]) Value() string {
 	return m.textinput.Value()
 }
 
+func (m *Model[T]) Runes() []rune {
+	return []rune(m.textinput.Value())
+}
+
 func (m *Model[T]) ParsedValue() Statement {
 	return *m.parsedText
 }
 
 func (m *Model[T]) CommandBeforeCursor() string {
 	parsed := m.ParsedValue()
-	if m.Cursor() >= len(parsed.Command.Value) {
+	commandRunes := []rune(parsed.Command.Value)
+	if m.CursorIndex() >= len(commandRunes) {
 		return parsed.Command.Value
 	}
-	return parsed.Command.Value[:m.Cursor()]
+	return string(commandRunes[:m.CursorIndex()])
 }
 
 func (m *Model[T]) SetValue(s string) {
@@ -454,14 +464,14 @@ func (m *Model[T]) isDelimiter(s string) bool {
 	return m.delimiterRegex.MatchString(s)
 }
 
-func (m Model[T]) AllTokens() []ident {
+func (m Model[T]) Tokens() []input.Token {
 	return m.allTokens(m.parsedText)
 }
 
-func (m Model[T]) AllTokensBeforeCursor() []ident {
-	textBeforeCursor := m.Value()[:m.Cursor()]
+func (m Model[T]) AllTokensBeforeCursor() []input.Token {
+	textBeforeCursor := m.Runes()[:m.CursorIndex()]
 
-	expr, _ := m.parser.Parse(textBeforeCursor)
+	expr, _ := m.parser.Parse(string(textBeforeCursor))
 	return m.allTokens(expr)
 }
 
@@ -474,20 +484,22 @@ func (m Model[T]) AllValuesBeforeCursor() []string {
 	return values
 }
 
-func (m Model[T]) allTokens(statement *Statement) []ident {
-	tokens := []ident{statement.Command}
-	tokens = append(tokens, statement.Args.Value...)
+func (m Model[T]) allTokens(statement *Statement) []input.Token {
+	tokens := []input.Token{statement.Command.ToToken(0, "command")}
+	for i, arg := range statement.Args.Value {
+		tokens = append(tokens, arg.ToToken(i+1, "arg"))
+	}
 	for _, flag := range statement.Flags.Value {
-		tokens = append(tokens, ident{Pos: flag.Pos, Value: flag.Name})
+		tokens = append(tokens, input.TokenFromPos(flag.Name, "flag", len(tokens), flag.Pos))
 		if flag.Value != nil {
-			tokens = append(tokens, *flag.Value)
+			tokens = append(tokens, (*flag.Value).ToToken(len(tokens), "flagValue"))
 		}
 	}
 	return tokens
 }
 
 func (m Model[T]) AllValues() []string {
-	tokens := m.AllTokens()
+	tokens := m.Tokens()
 	values := []string{}
 	for _, t := range tokens {
 		values = append(values, t.Value)
@@ -495,8 +507,14 @@ func (m Model[T]) AllValues() []string {
 	return values
 }
 
-func (m Model[T]) Cursor() int {
+func (m Model[T]) CursorIndex() int {
 	return m.textinput.Cursor()
+}
+
+func (m Model[T]) CursorOffset() int {
+	cursorIndex := m.CursorIndex()
+	runesBeforeCursor := m.Runes()[:cursorIndex]
+	return runewidth.StringWidth(string(runesBeforeCursor))
 }
 
 func (m *Model[T]) SetCursor(pos int) {
@@ -508,16 +526,16 @@ func (m Model[T]) Focused() bool {
 }
 
 func (m *Model[T]) Prompt() string {
-	return m.prompt
+	return string(m.prompt)
 }
 
 func (m *Model[T]) SetPrompt(prompt string) {
 	m.prompt = prompt
 }
 
-func (m Model[T]) cursorInToken(tokens []ident, pos int, roundingBehavior RoundingBehavior) bool {
-	cursor := m.Cursor()
-	isInToken := cursor >= tokens[pos].Pos.Offset && cursor <= tokens[pos].Pos.Offset+len(tokens[pos].Value)
+func (m Model[T]) cursorInToken(tokens []input.Token, pos int, roundingBehavior RoundingBehavior) bool {
+	cursor := m.CursorIndex()
+	isInToken := cursor >= tokens[pos].Start && cursor <= tokens[pos].End()
 	if isInToken {
 		return true
 	}
@@ -525,37 +543,37 @@ func (m Model[T]) cursorInToken(tokens []ident, pos int, roundingBehavior Roundi
 		if pos == len(tokens)-1 {
 			return true
 		}
-		return cursor < tokens[pos+1].Pos.Offset
+		return cursor < tokens[pos+1].Start
 	} else {
 		if pos == 0 {
 			return false
 		}
-		return cursor > tokens[pos-1].Pos.Offset+len(tokens[pos-1].Value) && cursor < tokens[pos].Pos.Offset
+		return cursor > tokens[pos-1].End() && cursor < tokens[pos].Start
 	}
 
 }
 
 func (m Model[T]) CurrentTokenPos() TokenPos {
-	return m.currentTokenPos(m.AllTokens(), roundUp)
+	return m.currentTokenPos(m.Tokens(), roundUp)
 }
 
 func (m Model[T]) CurrentTokenPosRoundDown() TokenPos {
-	return m.currentTokenPos(m.AllTokens(), roundDown)
+	return m.currentTokenPos(m.Tokens(), roundDown)
 }
 
-func (m Model[T]) currentTokenPos(tokens []ident, roundingBehavior RoundingBehavior) TokenPos {
-	cursor := m.Cursor()
+func (m Model[T]) currentTokenPos(tokens []input.Token, roundingBehavior RoundingBehavior) TokenPos {
+	cursor := m.CursorIndex()
 	if len(tokens) > 0 {
 		last := tokens[len(tokens)-1]
 		index := len(tokens) - 1
-		value := m.Value()
-		if roundingBehavior == roundUp && cursor > 0 && (m.isDelimiter(string(value[cursor-1])) || (strings.HasPrefix(last.Value, "-") && string(value[cursor-1]) == "=")) {
+		runes := m.Runes()
+		if roundingBehavior == roundUp && cursor > 0 && (m.isDelimiter(string(runes[cursor-1])) || (strings.HasPrefix(last.Value, "-") && string(runes[cursor-1]) == "=")) {
 			// Haven't started a new token yet, but we have added a delimiter
 			// so we'll consider the current token finished
 			index++
 		}
 		// Check if cursor is at the end
-		if cursor > last.Pos.Offset+len(last.Value) {
+		if cursor > last.End() {
 			return TokenPos{
 				Start: cursor,
 				End:   cursor,
@@ -566,8 +584,8 @@ func (m Model[T]) currentTokenPos(tokens []ident, roundingBehavior RoundingBehav
 	for i := 0; i < len(tokens); i++ {
 		if m.cursorInToken(tokens, i, roundingBehavior) {
 			return TokenPos{
-				Start: tokens[i].Pos.Offset,
-				End:   tokens[i].Pos.Offset + len(tokens[i].Value),
+				Start: tokens[i].Start,
+				End:   tokens[i].End(),
 				Index: i,
 			}
 		}
@@ -581,20 +599,20 @@ func (m Model[T]) currentTokenPos(tokens []ident, roundingBehavior RoundingBehav
 }
 
 func (m Model[T]) CurrentTokenBeforeCursor() string {
-	return m.currentTokenBeforeCursor(roundUp)
+	return string(m.currentTokenBeforeCursor(roundUp))
 }
 
-func (m Model[T]) CurrentTokenBeforeCursorroundDown() string {
-	return m.currentTokenBeforeCursor(roundDown)
+func (m Model[T]) CurrentTokenBeforeCursorRoundDown() string {
+	return string(m.currentTokenBeforeCursor(roundDown))
 }
 
-func (m Model[T]) currentTokenBeforeCursor(roundingBehavior RoundingBehavior) string {
-	start := m.currentTokenPos(m.AllTokens(), roundingBehavior).Start
-	cursor := m.Cursor()
+func (m Model[T]) currentTokenBeforeCursor(roundingBehavior RoundingBehavior) []rune {
+	start := m.currentTokenPos(m.Tokens(), roundingBehavior).Start
+	cursor := m.CursorIndex()
 	if start > cursor {
-		return ""
+		return []rune("")
 	}
-	val := m.Value()[start:cursor]
+	val := m.Runes()[start:cursor]
 	return val
 }
 
@@ -603,16 +621,16 @@ func (m Model[T]) HasArgs() bool {
 }
 
 func (m Model[T]) CurrentToken() string {
-	return m.currentToken(m.AllTokens(), roundUp)
+	return string(m.currentToken(m.Tokens(), roundUp))
 }
 
 func (m Model[T]) CurrentTokenRoundDown() string {
-	return m.currentToken(m.AllTokens(), roundDown)
+	return string(m.currentToken(m.Tokens(), roundDown))
 }
 
-func (m Model[T]) currentToken(tokens []ident, roundingBehavior RoundingBehavior) string {
+func (m Model[T]) currentToken(tokens []input.Token, roundingBehavior RoundingBehavior) []rune {
 	pos := m.currentTokenPos(tokens, roundingBehavior)
-	return m.Value()[pos.Start:pos.End]
+	return m.Runes()[pos.Start:pos.End]
 }
 
 func (m Model[T]) LastArg() *ident {
@@ -624,10 +642,11 @@ func (m Model[T]) LastArg() *ident {
 }
 
 func (m Model[T]) CommandCompleted() bool {
-	if m.parsedText == nil {
+	commandRunes := []rune(m.parsedText.Command.Value)
+	if m.parsedText == nil || len(commandRunes) == 0 {
 		return false
 	}
-	return m.Cursor() > m.parsedText.Command.Pos.Offset+len(m.parsedText.Command.Value)
+	return m.CursorIndex() > m.parsedText.Command.Pos.Column-1+len(commandRunes)
 }
 
 func (m *Model[T]) Blur() {

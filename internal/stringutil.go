@@ -1,6 +1,8 @@
 package internal
 
-import "strings"
+import (
+	"strings"
+)
 
 func AddNewlineIfMissing(s string) string {
 	if strings.HasSuffix(s, "\n") {

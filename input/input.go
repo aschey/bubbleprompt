@@ -18,19 +18,22 @@ type Input[T any] interface {
 	Focus() tea.Cmd
 	Focused() bool
 	Value() string
+	Runes() []rune
 	ResetValue()
 	SetValue(value string)
 	Blur()
-	Cursor() int
+	CursorIndex() int
+	CursorOffset() int
 	SetCursor(cursor int)
 	Prompt() string
 	SetPrompt(prompt string)
+	Tokens() []Token
 	ShouldSelectSuggestion(suggestion Suggestion[T]) bool
-	CompletionText(text string) string
+	CompletionRunes(runes []rune) []rune
 	OnUpdateFinish(msg tea.Msg, suggestion *Suggestion[T], isSelected bool) tea.Cmd
 	OnSuggestionChanged(suggestion Suggestion[T])
 	OnExecutorFinished()
 	OnSuggestionUnselected()
-	ShouldClearSuggestions(prevText string, msg tea.KeyMsg) bool
-	ShouldUnselectSuggestion(prevText string, msg tea.KeyMsg) bool
+	ShouldClearSuggestions(prevRunes []rune, msg tea.KeyMsg) bool
+	ShouldUnselectSuggestion(prevRunes []rune, msg tea.KeyMsg) bool
 }

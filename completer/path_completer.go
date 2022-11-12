@@ -11,7 +11,7 @@ import (
 	"github.com/aschey/bubbleprompt/input"
 )
 
-type FilePathCompleter[T any] struct {
+type PathCompleter[T any] struct {
 	Filter        func(de fs.DirEntry) bool
 	IgnoreCase    bool
 	fileListCache map[string][]input.Suggestion[T]
@@ -65,13 +65,13 @@ func equalsSeparator(check byte) bool {
 	return strings.ContainsAny(string(check), "/\\")
 }
 
-func (c *FilePathCompleter[T]) adjustCompletions(completions []input.Suggestion[T], sub string) []input.Suggestion[T] {
+func (c *PathCompleter[T]) adjustCompletions(completions []input.Suggestion[T], sub string) []input.Suggestion[T] {
 	filteredCompletions := FilterHasPrefix(sub, completions)
 
 	return filteredCompletions
 }
 
-func (c *FilePathCompleter[T]) Complete(path string) []input.Suggestion[T] {
+func (c *PathCompleter[T]) Complete(path string) []input.Suggestion[T] {
 	path = strings.ReplaceAll(path, "\"", "")
 	if c.fileListCache == nil {
 		c.fileListCache = make(map[string][]input.Suggestion[T], 4)

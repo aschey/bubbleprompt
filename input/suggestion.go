@@ -1,6 +1,8 @@
 package input
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"github.com/charmbracelet/lipgloss"
+)
 
 type Datatype int
 

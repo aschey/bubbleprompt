@@ -21,7 +21,7 @@ func newCmdViewBuilder[T CmdMetadataAccessor](model Model[T], viewMode input.Vie
 		showCursor = false
 	}
 	showPlaceholders := viewMode == input.Interactive
-	viewBuilder := input.NewViewBuilder(model.Cursor(), model.formatters.Cursor, model.defaultDelimiter, showCursor)
+	viewBuilder := input.NewViewBuilder(model.CursorIndex(), model.formatters.Cursor, model.defaultDelimiter, showCursor)
 	return cmdViewBuilder[T]{
 		model, viewBuilder, showPlaceholders, showCursor,
 	}
@@ -36,22 +36,22 @@ func (b cmdViewBuilder[T]) View() string {
 	b.renderFlagPlaceholders()
 	b.renderTrailingText()
 
-	return b.model.formatters.Prompt.Render(b.model.prompt) + b.viewBuilder.View()
+	return b.model.formatters.Prompt.Render(string(b.model.prompt)) + b.viewBuilder.View()
 }
 
 func (b cmdViewBuilder[T]) renderCommand() {
-	command := b.model.parsedText.Command.Value
+	commandRunes := []rune(b.model.parsedText.Command.Value)
 	if b.model.selectedCommand == nil {
-		b.viewBuilder.Render(command, b.model.parsedText.Command.Pos.Offset, b.model.formatters.Text)
+		b.viewBuilder.Render(commandRunes, b.model.parsedText.Command.Pos.Column, b.model.formatters.Text)
 	} else {
-		b.viewBuilder.Render(command, b.model.parsedText.Command.Pos.Offset, b.model.formatters.SelectedText)
+		b.viewBuilder.Render(commandRunes, b.model.parsedText.Command.Pos.Column, b.model.formatters.SelectedText)
 	}
 }
 
 func (b cmdViewBuilder[T]) renderPrefix() {
-	command := b.model.parsedText.Command.Value
-	if b.showPlaceholders && strings.HasPrefix(b.model.commandPlaceholder, b.model.Value()) && b.model.commandPlaceholder != command {
-		b.viewBuilder.Render(b.model.commandPlaceholder[len(command):], b.model.parsedText.Command.Pos.Offset+len(command), b.model.formatters.Placeholder)
+	commandRunes := []rune(b.model.parsedText.Command.Value)
+	if b.showPlaceholders && strings.HasPrefix(string(b.model.commandPlaceholder), b.model.Value()) && string(b.model.commandPlaceholder) != string(commandRunes) {
+		b.viewBuilder.Render(b.model.commandPlaceholder[len(commandRunes):], b.model.parsedText.Command.Pos.Column+len(commandRunes), b.model.formatters.Placeholder)
 	}
 }
 
@@ -61,7 +61,7 @@ func (b cmdViewBuilder[T]) renderArgs() {
 		if i < len(b.model.args) {
 			argStyle = b.model.args[i].argStyle
 		}
-		b.viewBuilder.Render(arg.Value, arg.Pos.Offset, argStyle)
+		b.viewBuilder.Render([]rune(arg.Value), arg.Pos.Column, argStyle)
 	}
 }
 
@@ -73,8 +73,8 @@ func (b cmdViewBuilder[T]) renderCurrentArg() {
 		argVal := b.model.parsedText.Args.Value[currentArg].Value
 		// Render the rest of the arg placeholder only if the prefix matches
 		if arg.persist && strings.HasPrefix(arg.text, argVal) {
-			tokenPos := len(argVal)
-			b.viewBuilder.Render(arg.text[tokenPos:], b.viewBuilder.ViewLen(), arg.placeholderStyle)
+			tokenPos := len([]rune(argVal))
+			b.viewBuilder.Render([]rune(arg.text)[tokenPos:], b.viewBuilder.ViewLen(), arg.placeholderStyle)
 		}
 	}
 }
@@ -83,17 +83,17 @@ func (b cmdViewBuilder[T]) renderFlags() {
 	currentPos := b.model.CurrentTokenPosRoundDown().Start
 	currentToken := b.model.CurrentTokenRoundDown()
 	for i, flag := range b.model.parsedText.Flags.Value {
-		b.viewBuilder.Render(flag.Name, flag.Pos.Offset, b.model.formatters.Flag.Flag)
+		b.viewBuilder.Render([]rune(flag.Name), flag.Pos.Column, b.model.formatters.Flag.Flag)
 		// Render delimiter only once the full flag has been typed
 		if b.model.currentFlag == nil || len(flag.Name) >= len(b.model.currentFlag.Text) || flag.Value != nil {
 			if flag.Delim != nil {
-				b.viewBuilder.Render(flag.Delim.Value, flag.Delim.Pos.Offset, lipgloss.NewStyle())
+				b.viewBuilder.Render([]rune(flag.Delim.Value), flag.Delim.Pos.Column, lipgloss.NewStyle())
 			}
 		}
 
-		if (flag.Pos.Offset != currentPos) && (currentPos < b.model.Cursor() || i < len(b.model.parsedText.Flags.Value)-1 || (len(currentToken) > 0 && !strings.HasPrefix(currentToken, "-"))) {
+		if (flag.Pos.Column-1 != currentPos) && (currentPos < b.model.CursorIndex() || i < len(b.model.parsedText.Flags.Value)-1 || (len(currentToken) > 0 && !strings.HasPrefix(currentToken, "-"))) {
 			if flag.Value != nil {
-				b.viewBuilder.Render(flag.Value.Value, flag.Value.Pos.Offset, b.flagValueStyle(flag.Value.Value))
+				b.viewBuilder.Render([]rune(flag.Value.Value), flag.Value.Pos.Column, b.flagValueStyle(flag.Value.Value))
 			}
 
 		} else {
@@ -107,22 +107,22 @@ func (b cmdViewBuilder[T]) renderFlags() {
 				// Render the rest of the arg placeholder only if the prefix matches
 				if b.showPlaceholders && strings.HasPrefix(b.model.currentFlag.Text, argVal) {
 					tokenPos := len(argVal)
-					b.viewBuilder.Render(b.model.currentFlag.Text[tokenPos:], b.viewBuilder.ViewLen(), b.model.formatters.Placeholder)
+					b.viewBuilder.Render([]rune(b.model.currentFlag.Text)[tokenPos:], b.viewBuilder.ViewLen(), b.model.formatters.Placeholder)
 				}
 			}
 
-			if b.model.currentFlag != nil && len(b.model.currentFlag.Metadata.GetFlagPlaceholder().text) > 0 && flag.Name[len(flag.Name)-1] != '-' {
+			if b.model.currentFlag != nil && len(b.model.currentFlag.Metadata.GetFlagPlaceholder().text) > 0 && []rune(flag.Name)[len(flag.Name)-1] != '-' {
 				if !b.model.isDelimiter(string(*b.viewBuilder.Last())) && *b.viewBuilder.Last() != '=' {
-					b.viewBuilder.Render(b.model.defaultDelimiter, b.viewBuilder.ViewLen(), lipgloss.NewStyle())
+					b.viewBuilder.Render([]rune(b.model.defaultDelimiter), b.viewBuilder.ViewLen(), lipgloss.NewStyle())
 				}
 
 				if b.showPlaceholders && flag.Value == nil {
-					b.viewBuilder.RenderPlaceholder(b.model.currentFlag.Metadata.GetFlagPlaceholder().text, b.viewBuilder.ViewLen(), b.model.formatters.Flag.Placeholder)
+					b.viewBuilder.RenderPlaceholder([]rune(b.model.currentFlag.Metadata.GetFlagPlaceholder().text), b.viewBuilder.ViewLen(), b.model.formatters.Flag.Placeholder)
 				}
 
 			}
 			if flag.Value != nil {
-				b.viewBuilder.Render(flag.Value.Value, flag.Value.Pos.Offset, b.flagValueStyle(flag.Value.Value))
+				b.viewBuilder.Render([]rune(flag.Value.Value), flag.Value.Pos.Column, b.flagValueStyle(flag.Value.Value))
 			}
 		}
 	}
@@ -138,22 +138,22 @@ func (b cmdViewBuilder[T]) renderFlagPlaceholders() {
 	startPlaceholder := len(b.model.parsedText.Args.Value) + len(b.model.parsedText.Flags.Value)
 	// Don't show arg placeholders if the current arg doesn't match the arg we're about to show placeholders for (the user moved the cursor over to the left)
 	all := b.model.AllValues()
-	if b.model.suggestionLevel > len(all)-1 || strings.HasPrefix(b.model.subcommandWithArgs, all[b.model.suggestionLevel]) {
+	if b.model.suggestionLevel > len(all)-1 || strings.HasPrefix(string(b.model.subcommandWithArgs), all[b.model.suggestionLevel]) {
 		if b.showPlaceholders && startPlaceholder < len(args) {
 			for _, arg := range args[startPlaceholder:] {
 				last := b.viewBuilder.Last()
 				if last == nil || !b.model.isDelimiter(string(*last)) {
-					b.viewBuilder.Render(b.model.defaultDelimiter, b.viewBuilder.ViewLen(), lipgloss.NewStyle())
+					b.viewBuilder.Render([]rune(b.model.defaultDelimiter), b.viewBuilder.ViewLen(), lipgloss.NewStyle())
 				}
 
-				b.viewBuilder.Render(arg.text, b.viewBuilder.ViewLen(), arg.placeholderStyle)
+				b.viewBuilder.Render([]rune(arg.text), b.viewBuilder.ViewLen(), arg.placeholderStyle)
 			}
 		}
 	}
 }
 
 func (b cmdViewBuilder[T]) renderTrailingText() {
-	value := b.model.Value()
+	value := []rune(b.model.Value())
 	viewLen := b.viewBuilder.ViewLen()
 	if len(value) > viewLen {
 		b.viewBuilder.Render(value[b.viewBuilder.ViewLen():], b.viewBuilder.ViewLen(), lipgloss.NewStyle())
