@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
@@ -24,6 +25,7 @@ func (c cmdMetadata) Children() []input.Suggestion[cmdMetadata] {
 type completerModel struct {
 	suggestions []input.Suggestion[cmdMetadata]
 	textInput   *commandinput.Model[cmdMetadata]
+	secret      string
 }
 
 func (m completerModel) completer(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
@@ -43,12 +45,48 @@ func (m completerModel) completer(promptModel prompt.Model[cmdMetadata]) ([]inpu
 	return completer.GetRecursiveCompletions(m.textInput.Tokens(), m.textInput.CursorIndex(), m.suggestions), nil
 }
 
-func (m completerModel) executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (tea.Model, error) {
+func (m *completerModel) executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (tea.Model, error) {
 	parsed := m.textInput.ParsedValue()
-	if len(parsed.Args.Value) != 1 {
+	args := parsed.Args.Value
+	flags := parsed.Flags.Value
+	if len(args) == 0 {
 		return nil, fmt.Errorf("1 argument required")
 	}
-	return executor.NewStringModel("test"), nil
+	arg := args[0].Value
+	switch parsed.Command.Value {
+	case "get":
+		switch arg {
+		case "weather":
+			days := int64(1)
+			if len(flags) > 0 {
+				flag := flags[0]
+				if flag.Name == "-d" || flag.Name == "--days" {
+					if flag.Value == nil {
+						return nil, fmt.Errorf("flag value required")
+					}
+					parsedDays, err := strconv.ParseInt(flag.Value.Value, 10, 64)
+					if err != nil {
+						return nil, fmt.Errorf("flag value must be a valid int")
+					}
+					days = parsedDays
+				}
+			}
+			return executor.NewStringModel(fmt.Sprintf("the weather for the next %d days is nice", days)), nil
+		case "secret":
+			return executor.NewStringModel("the secret is " + m.secret), nil
+		}
+	case "set":
+		switch arg {
+		case "secret":
+			if len(args) < 2 {
+				return nil, fmt.Errorf("secret value required")
+			}
+			secretVal := args[1].Value
+			m.secret = secretVal
+			return executor.NewStringModel("Secret updated"), nil
+		}
+	}
+	return nil, fmt.Errorf("Invalid input")
 }
 
 func main() {
@@ -72,7 +110,10 @@ func main() {
 						Text:        "weather",
 						Description: "get the weather",
 						Metadata: cmdMetadata{
-							CmdMetadata: commandinput.CmdMetadata{Level: 1, ShowFlagPlaceholder: true},
+							CmdMetadata: commandinput.CmdMetadata{
+								Level:               1,
+								ShowFlagPlaceholder: true,
+							},
 						},
 					},
 				},
@@ -88,14 +129,21 @@ func main() {
 						Text:        "secret",
 						Description: "update the secret",
 						Metadata: cmdMetadata{
-							CmdMetadata: commandinput.CmdMetadata{Level: 1},
+							CmdMetadata: commandinput.CmdMetadata{
+								Level:          1,
+								PositionalArgs: textInput.NewPositionalArgs("<secret>"),
+							},
 						},
 					},
 				},
 			},
 		},
 	}
-	completerModel := completerModel{suggestions: suggestions, textInput: textInput}
+	completerModel := completerModel{
+		suggestions: suggestions,
+		textInput:   textInput,
+		secret:      "shhh",
+	}
 
 	promptModel, err := prompt.New(
 		completerModel.completer,

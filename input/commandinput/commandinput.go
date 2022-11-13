@@ -120,6 +120,14 @@ func (m *Model[T]) NewPositionalArg(placeholder string) PositionalArg {
 	}
 }
 
+func (m *Model[T]) NewPositionalArgs(placeholders ...string) []PositionalArg {
+	args := []PositionalArg{}
+	for _, placeholder := range placeholders {
+		args = append(args, m.NewPositionalArg(placeholder))
+	}
+	return args
+}
+
 func (m *Model[T]) NewFlagPlaceholder(placeholder string) FlagPlaceholder {
 	return FlagPlaceholder{
 		text:  placeholder,
@@ -385,15 +393,21 @@ func (m *Model[T]) OnSuggestionChanged(suggestion input.Suggestion[T]) {
 	textRunes := m.Runes()
 	if tokenPos.Start > -1 {
 		cursor := m.CursorIndex()
-		if strings.HasPrefix(token, "-") && strings.HasPrefix(suggestion.Text, "-") {
-			// Adding an additional flag to the flag group, don't replace the entire token
+		// Check if we're adding an additional flag to the flag group
+		// If so, don't replace the entire token
+		// Make sure the token already has at least one flag value appended to it first
+		if strings.HasPrefix(token, "-") &&
+			string(tokenRunes[len(tokenRunes)-1]) != "-" &&
+			strings.HasPrefix(suggestion.Text, "-") {
 			trailingRunes := []rune("")
 			if cursor < len(textRunes) {
 				// Add trailing text if we're not at the end of the line
 				trailingRunes = textRunes[cursor+1:]
 			}
 			m.SetValue(string(textRunes[:cursor]) + suggestion.Text + string(trailingRunes))
-		} else if strings.HasPrefix(token, "-") && !strings.HasPrefix(token, "--") && len(tokenRunes) > 2 && suggestion.Metadata.GetFlagPlaceholder().text == "" {
+		} else if strings.HasPrefix(token, "-") &&
+			!strings.HasPrefix(token, "--") && len(tokenRunes) > 2 &&
+			suggestion.Metadata.GetFlagPlaceholder().text == "" {
 			// handle multi flag like -ab
 			if cursor == tokenPos.Start {
 				// If cursor is on the leading dash, replace the first two characters of the token ([-ab]c)
