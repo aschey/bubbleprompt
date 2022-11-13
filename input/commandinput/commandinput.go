@@ -2,6 +2,7 @@ package commandinput
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -41,7 +42,10 @@ type Flag struct {
 	Long        string
 	Placeholder FlagPlaceholder
 	Description string
-	RequiresArg bool
+}
+
+func (f Flag) RequiresArg() bool {
+	return len(f.Placeholder.text) > 0
 }
 
 type Model[T CmdMetadataAccessor] struct {
@@ -234,14 +238,14 @@ func (m *Model[T]) FlagSuggestions(inputStr string, flags []Flag, suggestionFunc
 		// Don't show any flag suggestions if the current flag requires an arg unless the user skipped the arg and is now typing another flag that does not require an arg
 		if ((isMulti && flag.Short == curFlagText) ||
 			prevToken == "-"+flag.Short ||
-			prevToken == "--"+flag.Long) && flag.RequiresArg && (!currentIsFlag || currentToken == "-"+flag.Short || currentToken == "--"+flag.Long) {
+			prevToken == "--"+flag.Long) && flag.RequiresArg() && (!currentIsFlag || currentToken == "-"+flag.Short || currentToken == "--"+flag.Long) {
 			return []input.Suggestion[T]{}
 		}
 
 		long := "--" + flag.Long
 		short := "-" + flag.Short
 		if ((isLong || flag.Short == "") && strings.HasPrefix(long, inputStr)) ||
-			strings.HasPrefix(short, inputStr) || (isMulti && !flag.RequiresArg) {
+			strings.HasPrefix(short, inputStr) || (isMulti && !flag.RequiresArg()) {
 			suggestion := input.Suggestion[T]{
 				Description: flag.Description,
 			}
@@ -256,7 +260,10 @@ func (m *Model[T]) FlagSuggestions(inputStr string, flags []Flag, suggestionFunc
 			}
 
 			if suggestionFunc == nil {
-				if metadata, ok := (*new(T)).Create([]PositionalArg{}, flag.Placeholder).(T); ok {
+				metadata := *new(T)
+				placeholderField := reflect.ValueOf(&metadata).Elem().FieldByName("FlagPlaceholder")
+				if placeholderField.IsValid() {
+					placeholderField.Set(reflect.ValueOf(flag.Placeholder))
 					suggestion.Metadata = metadata
 				}
 			} else {

@@ -6,7 +6,6 @@ type CmdMetadataAccessor interface {
 	GetLevel() int
 	GetPreservePlaceholder() bool
 	GetShowFlagPlaceholder() bool
-	Create(args []PositionalArg, placeholder FlagPlaceholder) CmdMetadataAccessor
 }
 
 type CmdMetadata struct {
@@ -21,10 +20,6 @@ func MetadataFromPositionalArgs(positionalArgs ...PositionalArg) CmdMetadata {
 	return CmdMetadata{
 		PositionalArgs: positionalArgs,
 	}
-}
-
-func (m CmdMetadata) Create(args []PositionalArg, placeholder FlagPlaceholder) CmdMetadataAccessor {
-	return CmdMetadata{PositionalArgs: args, FlagPlaceholder: placeholder}
 }
 
 func (m CmdMetadata) GetPositionalArgs() []PositionalArg {

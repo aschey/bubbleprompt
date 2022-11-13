@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	prompt "github.com/aschey/bubbleprompt"
-	completers "github.com/aschey/bubbleprompt/completer"
-	executors "github.com/aschey/bubbleprompt/executor"
+	"github.com/aschey/bubbleprompt/completer"
+	"github.com/aschey/bubbleprompt/executor"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/simpleinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -15,20 +15,20 @@ import (
 )
 
 type metadata struct {
-	children []input.Suggestion[completers.Metadata]
+	children []input.Suggestion[metadata]
 }
 
-func (m metadata) Children() []input.Suggestion[completers.Metadata] {
+func (m metadata) Children() []input.Suggestion[metadata] {
 	return m.children
 }
 
 type model struct {
-	promptModel prompt.Model[completers.Metadata]
+	promptModel prompt.Model[metadata]
 }
 
 type completerModel struct {
-	suggestions []input.Suggestion[completers.Metadata]
-	textInput   *simpleinput.Model[completers.Metadata]
+	suggestions []input.Suggestion[metadata]
+	textInput   *simpleinput.Model[metadata]
 	outputStyle lipgloss.Style
 }
 
@@ -46,27 +46,27 @@ func (m model) View() string {
 	return m.promptModel.View()
 }
 
-func (m *completerModel) completer(promptModel prompt.Model[completers.Metadata]) ([]input.Suggestion[completers.Metadata], error) {
-	return completers.GetRecursiveCompletions(m.textInput.Tokens(), m.textInput.CursorIndex(), m.suggestions), nil
+func (m *completerModel) completer(promptModel prompt.Model[metadata]) ([]input.Suggestion[metadata], error) {
+	return completer.GetRecursiveCompletions(m.textInput.Tokens(), m.textInput.CursorIndex(), m.suggestions), nil
 }
 
-func (m *completerModel) executor(input string, selectedSuggestion *input.Suggestion[completers.Metadata]) (tea.Model, error) {
+func (m *completerModel) executor(input string, selectedSuggestion *input.Suggestion[metadata]) (tea.Model, error) {
 	allValues := strings.Join(m.textInput.TokenValues(), " → ")
-	return executors.NewStringModel("You picked: " + m.outputStyle.Render(allValues)), nil
+	return executor.NewStringModel("You picked: " + m.outputStyle.Render(allValues)), nil
 }
 
 func main() {
-	textInput := simpleinput.New[completers.Metadata](
+	textInput := simpleinput.New[metadata](
 		simpleinput.WithDelimiterRegex(`\s*\.\s*`),
 		simpleinput.WithTokenRegex(`[^\s\.]+`))
-	suggestions := []input.Suggestion[completers.Metadata]{
+	suggestions := []input.Suggestion[metadata]{
 		{Text: "germany",
 			Metadata: metadata{
-				children: []input.Suggestion[completers.Metadata]{
+				children: []input.Suggestion[metadata]{
 					{
 						Text: "bavaria",
 						Metadata: metadata{
-							children: []input.Suggestion[completers.Metadata]{
+							children: []input.Suggestion[metadata]{
 								{Text: "munich"},
 								{Text: "dachau"},
 								{Text: "würzburg"},
@@ -76,7 +76,7 @@ func main() {
 					{
 						Text: "saxony",
 						Metadata: metadata{
-							children: []input.Suggestion[completers.Metadata]{
+							children: []input.Suggestion[metadata]{
 								{Text: "leipzig"},
 								{Text: "dresden"},
 								{Text: "freiberg"},
@@ -86,7 +86,7 @@ func main() {
 					{
 						Text: "baden-württemberg",
 						Metadata: metadata{
-							children: []input.Suggestion[completers.Metadata]{
+							children: []input.Suggestion[metadata]{
 								{Text: "stuttgart"},
 								{Text: "mannheim"},
 								{Text: "heidelberg"},
@@ -97,11 +97,11 @@ func main() {
 			}},
 		{Text: "canada",
 			Metadata: metadata{
-				children: []input.Suggestion[completers.Metadata]{
+				children: []input.Suggestion[metadata]{
 					{
 						Text: "ontario",
 						Metadata: metadata{
-							children: []input.Suggestion[completers.Metadata]{
+							children: []input.Suggestion[metadata]{
 								{Text: "toronto"},
 								{Text: "ottowa"},
 								{Text: "windsor"},
@@ -111,7 +111,7 @@ func main() {
 					{
 						Text: "quebec",
 						Metadata: metadata{
-							children: []input.Suggestion[completers.Metadata]{
+							children: []input.Suggestion[metadata]{
 								{Text: "montreal"},
 								{Text: "gatineau"},
 								{Text: "alma"},
@@ -121,7 +121,7 @@ func main() {
 					{
 						Text: "alberta",
 						Metadata: metadata{
-							children: []input.Suggestion[completers.Metadata]{
+							children: []input.Suggestion[metadata]{
 								{Text: "calgary"},
 								{Text: "edmonton"},
 								{Text: "leduc"},
@@ -132,11 +132,11 @@ func main() {
 			}},
 		{Text: "italy",
 			Metadata: metadata{
-				children: []input.Suggestion[completers.Metadata]{
+				children: []input.Suggestion[metadata]{
 					{
 						Text: "lombardy",
 						Metadata: metadata{
-							children: []input.Suggestion[completers.Metadata]{
+							children: []input.Suggestion[metadata]{
 								{Text: "milan"},
 								{Text: "brescia"},
 								{Text: "varese"},
@@ -146,7 +146,7 @@ func main() {
 					{
 						Text: "campania",
 						Metadata: metadata{
-							children: []input.Suggestion[completers.Metadata]{
+							children: []input.Suggestion[metadata]{
 								{Text: "naples"},
 								{Text: "pompeii"},
 								{Text: "salerno"},
@@ -156,7 +156,7 @@ func main() {
 					{
 						Text: "sicily",
 						Metadata: metadata{
-							children: []input.Suggestion[completers.Metadata]{
+							children: []input.Suggestion[metadata]{
 								{Text: "palermo"},
 								{Text: "catania"},
 								{Text: "ragusa"},

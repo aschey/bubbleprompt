@@ -7,7 +7,7 @@ import (
 	"time"
 
 	prompt "github.com/aschey/bubbleprompt"
-	completers "github.com/aschey/bubbleprompt/completer"
+	"github.com/aschey/bubbleprompt/completer"
 	executors "github.com/aschey/bubbleprompt/executor"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/commandinput"
@@ -61,7 +61,7 @@ func secondLevelSuggestions(textInput *commandinput.Model[cmdMetadata]) []input.
 }
 
 var flags = []commandinput.Flag{
-	{Short: "t", Long: "test", Description: "test flag", RequiresArg: false},
+	{Short: "t", Long: "test", Description: "test flag"},
 }
 
 func (m *model) Init() tea.Cmd {
@@ -115,7 +115,7 @@ func (m *model) completer(promptModel prompt.Model[cmdMetadata]) ([]input.Sugges
 		}
 		suggestions = secondLevelSuggestions(m.textInput)
 	}
-	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), suggestions), nil
+	return completer.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), suggestions), nil
 }
 
 func (m *model) executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (tea.Model, error) {

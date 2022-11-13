@@ -5,8 +5,8 @@ import (
 	"os"
 
 	prompt "github.com/aschey/bubbleprompt"
-	completers "github.com/aschey/bubbleprompt/completer"
-	executors "github.com/aschey/bubbleprompt/executor"
+	"github.com/aschey/bubbleprompt/completer"
+	"github.com/aschey/bubbleprompt/executor"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/simpleinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -42,15 +42,15 @@ func (m completerModel) completer(promptModel prompt.Model[any]) ([]input.Sugges
 		return nil, nil
 	}
 
-	return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
+	return completer.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
 }
 
 func (m completerModel) executor(input string, selectedSuggestion *input.Suggestion[any]) (tea.Model, error) {
 	tokens := m.textInput.TokenValues()
 	if len(tokens) == 0 {
-		return executors.NewStringModel("No selection"), nil
+		return executor.NewStringModel("No selection"), nil
 	}
-	return executors.NewStringModel("You picked: " + m.outputStyle.Render(tokens[0])), nil
+	return executor.NewStringModel("You picked: " + m.outputStyle.Render(tokens[0])), nil
 }
 
 func main() {

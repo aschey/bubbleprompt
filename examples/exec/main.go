@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	prompt "github.com/aschey/bubbleprompt"
-	completers "github.com/aschey/bubbleprompt/completer"
+	"github.com/aschey/bubbleprompt/completer"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/commandinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -70,12 +70,12 @@ func (m model) View() string {
 
 func (m completerModel) completer(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
 	if !m.textInput.CommandCompleted() {
-		return completers.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
+		return completer.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
 	}
 
 	cmd := m.textInput.SelectedCommand()
 	if cmd != nil && len(cmd.Metadata.PositionalArgs) > 0 && len(m.textInput.CompletedArgsBeforeCursor()) == 0 {
-		pathCompleter := completers.PathCompleter[cmdMetadata]{}
+		pathCompleter := completer.PathCompleter[cmdMetadata]{}
 		return pathCompleter.Complete(m.textInput.CurrentTokenBeforeCursor()), nil
 	}
 	return nil, nil

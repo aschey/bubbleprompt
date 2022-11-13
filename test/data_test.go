@@ -44,5 +44,5 @@ func secondLevelSuggestions(textInput *commandinput.Model[cmdMetadata]) []input.
 }
 
 var flags = []commandinput.Flag{
-	{Short: "t", Long: "test", Description: "test flag", RequiresArg: false},
+	{Short: "t", Long: "test", Description: "test flag"},
 }

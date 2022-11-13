@@ -9,8 +9,8 @@ import (
 
 	"github.com/alecthomas/chroma/v2/styles"
 	prompt "github.com/aschey/bubbleprompt"
-	completers "github.com/aschey/bubbleprompt/completer"
-	executors "github.com/aschey/bubbleprompt/executor"
+	"github.com/aschey/bubbleprompt/completer"
+	"github.com/aschey/bubbleprompt/executor"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/parser"
 	"github.com/aschey/bubbleprompt/input/parserinput"
@@ -55,7 +55,7 @@ func (m completerModel) globalSuggestions() []input.Suggestion[any] {
 		suggestions = append(suggestions, input.Suggestion[any]{Text: v})
 	}
 
-	return completers.FilterHasPrefix(currentBeforeCursor, suggestions)
+	return completer.FilterHasPrefix(currentBeforeCursor, suggestions)
 }
 
 func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[any] {
@@ -104,7 +104,7 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[an
 		})
 	}
 
-	return completers.FilterHasPrefix(completable, suggestions)
+	return completer.FilterHasPrefix(completable, suggestions)
 }
 
 func (m completerModel) completer(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
@@ -121,7 +121,7 @@ func (m completerModel) completer(promptModel prompt.Model[any]) ([]input.Sugges
 }
 
 func (m completerModel) executor(input string, selectedSuggestion *input.Suggestion[any]) (tea.Model, error) {
-	return executors.NewAsyncStringModel(func() (string, error) {
+	return executor.NewAsyncStringModel(func() (string, error) {
 		err := m.textInput.Error()
 		if err != nil {
 			return "", err

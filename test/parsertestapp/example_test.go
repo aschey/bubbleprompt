@@ -7,8 +7,8 @@ import (
 
 	"github.com/alecthomas/participle/v2"
 	prompt "github.com/aschey/bubbleprompt"
-	completers "github.com/aschey/bubbleprompt/completer"
-	executors "github.com/aschey/bubbleprompt/executor"
+	"github.com/aschey/bubbleprompt/completer"
+	"github.com/aschey/bubbleprompt/executor"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/commandinput"
 	"github.com/aschey/bubbleprompt/input/parser"
@@ -54,11 +54,11 @@ func (m completerModel) completer(promptModel prompt.Model[any]) ([]input.Sugges
 		{Text: "def"},
 		{Text: "abcdef"},
 	}
-	return completers.FilterHasPrefix(current, suggestions), nil
+	return completer.FilterHasPrefix(current, suggestions), nil
 }
 
 func (m completerModel) executor(input string, selectedSuggestion *input.Suggestion[any]) (tea.Model, error) {
-	return executors.NewAsyncStringModel(func() (string, error) {
+	return executor.NewAsyncStringModel(func() (string, error) {
 		err := m.textInput.Error()
 		if err != nil {
 			return "", err
