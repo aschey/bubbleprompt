@@ -72,7 +72,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmds := []tea.Cmd{}
 	p, cmd := m.promptModel.Update(msg)
 	cmds = append(cmds, cmd)
-	m.promptModel = p
+	m.promptModel = p.(prompt.Model[commandinput.CmdMetadata])
 
 	switch msg.(type) {
 	case changeTextMsg:

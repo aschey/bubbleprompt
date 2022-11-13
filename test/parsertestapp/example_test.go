@@ -20,10 +20,6 @@ var participleParser = participle.MustBuild[Statement](
 	participle.UseLookahead(20),
 )
 
-type model struct {
-	promptModel prompt.Model[any]
-}
-
 type Statement struct {
 	Words []string `parser:" (@Ident ( ',' @Ident )*)* "`
 }
@@ -31,20 +27,6 @@ type Statement struct {
 type completerModel struct {
 	textInput   *parserinput.ParserModel[any, Statement]
 	suggestions []input.Suggestion[any]
-}
-
-func (m model) Init() tea.Cmd {
-	return m.promptModel.Init()
-}
-
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	p, cmd := m.promptModel.Update(msg)
-	m.promptModel = p
-	return m, cmd
-}
-
-func (m model) View() string {
-	return m.promptModel.View()
 }
 
 func (m completerModel) completer(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
@@ -98,9 +80,8 @@ func TestApp(t *testing.T) {
 		textInput,
 		prompt.WithViewportRenderer[any](),
 	)
-	m := model{promptModel}
 
-	if _, err := tea.NewProgram(m, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
+	if _, err := tea.NewProgram(promptModel, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
 		fmt.Printf("Could not start program :(\n%v\n", err)
 		os.Exit(1)
 	}

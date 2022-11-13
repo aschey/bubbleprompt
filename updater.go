@@ -7,7 +7,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func (m Model[T]) Update(msg tea.Msg) (Model[T], tea.Cmd) {
+func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Check for exit signals before anything else
 	// to reduce chance of program becoming frozen
 	if msg, ok := msg.(tea.KeyMsg); ok {

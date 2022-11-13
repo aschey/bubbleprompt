@@ -22,28 +22,10 @@ func (m metadata) Children() []input.Suggestion[metadata] {
 	return m.children
 }
 
-type model struct {
-	promptModel prompt.Model[metadata]
-}
-
 type completerModel struct {
 	suggestions []input.Suggestion[metadata]
 	textInput   *simpleinput.Model[metadata]
 	outputStyle lipgloss.Style
-}
-
-func (m model) Init() tea.Cmd {
-	return m.promptModel.Init()
-}
-
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	p, cmd := m.promptModel.Update(msg)
-	m.promptModel = p
-	return m, cmd
-}
-
-func (m model) View() string {
-	return m.promptModel.View()
 }
 
 func (m *completerModel) completer(promptModel prompt.Model[metadata]) ([]input.Suggestion[metadata], error) {
@@ -182,10 +164,9 @@ func main() {
 		panic(err)
 	}
 
-	m := model{promptModel}
 	fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Render("Pick a fruit!"))
 	fmt.Println()
-	if _, err := tea.NewProgram(m, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
+	if _, err := tea.NewProgram(promptModel, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
 		fmt.Printf("Could not start program :(\n%v\n", err)
 		os.Exit(1)
 	}

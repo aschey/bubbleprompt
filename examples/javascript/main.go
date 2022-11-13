@@ -22,29 +22,10 @@ const arrayType = "array"
 const objectType = "object"
 const stringType = "string"
 
-type model struct {
-	promptModel prompt.Model[any]
-	vm          *vm
-}
-
 type completerModel struct {
 	textInput   *parserinput.ParserModel[any, statement]
 	suggestions []input.Suggestion[any]
 	vm          *vm
-}
-
-func (m model) Init() tea.Cmd {
-	return m.promptModel.Init()
-}
-
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	p, cmd := m.promptModel.Update(msg)
-	m.promptModel = p
-	return m, cmd
-}
-
-func (m model) View() string {
-	return m.promptModel.View()
 }
 
 func (m completerModel) globalSuggestions() []input.Suggestion[any] {
@@ -180,9 +161,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	m := model{promptModel, vm}
 
-	if _, err := tea.NewProgram(m, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
+	if _, err := tea.NewProgram(promptModel, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
 		fmt.Printf("Could not start program :(\n%v\n", err)
 		os.Exit(1)
 	}

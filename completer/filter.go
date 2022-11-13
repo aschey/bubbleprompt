@@ -12,7 +12,7 @@ func FilterHasPrefix[T any](search string, suggestions []input.Suggestion[T]) []
 	filtered := []input.Suggestion[T]{}
 	for _, s := range suggestions {
 		completionText := strings.ToLower(s.GetCompletionText())
-		if strings.HasPrefix(completionText, cleanedSearch) {
+		if strings.HasPrefix(completionText, cleanedSearch) || strings.HasPrefix(s.Text, cleanedSearch) {
 			filtered = append(filtered, s)
 		}
 	}
