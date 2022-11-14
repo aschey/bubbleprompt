@@ -397,8 +397,7 @@ func (m *Model[T]) OnSuggestionChanged(suggestion input.Suggestion[T]) {
 		// If so, don't replace the entire token
 		// Make sure the token already has at least one flag value appended to it first
 		if strings.HasPrefix(token, "-") &&
-			string(tokenRunes[len(tokenRunes)-1]) != "-" &&
-			strings.HasPrefix(suggestion.Text, "-") {
+			!strings.HasPrefix(suggestion.Text, "-") {
 			trailingRunes := []rune("")
 			if cursor < len(textRunes) {
 				// Add trailing text if we're not at the end of the line

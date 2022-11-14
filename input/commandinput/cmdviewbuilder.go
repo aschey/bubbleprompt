@@ -82,47 +82,66 @@ func (b cmdViewBuilder[T]) renderCurrentArg() {
 func (b cmdViewBuilder[T]) renderFlags() {
 	currentPos := b.model.CurrentTokenPosRoundDown().Start
 	currentToken := b.model.CurrentTokenRoundDown()
-	for i, flag := range b.model.parsedText.Flags.Value {
-		b.viewBuilder.Render([]rune(flag.Name), flag.Pos.Column, b.model.formatters.Flag.Flag)
+	flags := b.model.parsedText.Flags.Value
+	currentFlagRunes := []rune{}
+	currentFlagPlaceholderRunes := []rune{}
+	if b.model.currentFlag != nil {
+		currentFlagRunes = []rune(b.model.currentFlag.Text)
+		currentFlagPlaceholderRunes = []rune(b.model.currentFlag.Metadata.GetFlagPlaceholder().text)
+	}
+
+	for i, flag := range flags {
+		flagNameRunes := []rune(flag.Name)
+		flagValueRunes := []rune{}
+		if flag.Value != nil {
+			flagValueRunes = []rune(flag.Value.Value)
+		}
+		b.viewBuilder.Render(flagNameRunes, flag.Pos.Column, b.model.formatters.Flag.Flag)
 		// Render delimiter only once the full flag has been typed
-		if b.model.currentFlag == nil || len(flag.Name) >= len(b.model.currentFlag.Text) || flag.Value != nil {
+		if b.model.currentFlag == nil ||
+			len(flagNameRunes) >= len(currentFlagRunes) ||
+			flag.Value != nil {
 			if flag.Delim != nil {
 				b.viewBuilder.Render([]rune(flag.Delim.Value), flag.Delim.Pos.Column, lipgloss.NewStyle())
 			}
 		}
 
-		if (flag.Pos.Column-1 != currentPos) && (currentPos < b.model.CursorIndex() || i < len(b.model.parsedText.Flags.Value)-1 || (len(currentToken) > 0 && !strings.HasPrefix(currentToken, "-"))) {
+		if (flag.Pos.Column-1 != currentPos) &&
+			(currentPos < b.model.CursorIndex() || i < len(flags)-1 || (len(currentToken) > 0 && !strings.HasPrefix(currentToken, "-"))) {
 			if flag.Value != nil {
-				b.viewBuilder.Render([]rune(flag.Value.Value), flag.Value.Pos.Column, b.flagValueStyle(flag.Value.Value))
+				b.viewBuilder.Render(flagValueRunes, flag.Value.Pos.Column, b.flagValueStyle(flag.Value.Value))
 			}
 
 		} else {
-			// Render current flag
-			if b.model.currentFlag != nil {
+			// Render current flag with placeholder info only if it's the last flag
+			if b.model.currentFlag != nil &&
+				i == len(flags)-1 &&
+				currentPos >= flag.Pos.Column-1 {
 				argVal := ""
-				if len(b.model.parsedText.Flags.Value) > 0 {
-					argVal = b.model.parsedText.Flags.Value[len(b.model.parsedText.Flags.Value)-1].Name
+				if len(flags) > 0 {
+					argVal = flags[len(flags)-1].Name
 				}
 
 				// Render the rest of the arg placeholder only if the prefix matches
 				if b.showPlaceholders && strings.HasPrefix(b.model.currentFlag.Text, argVal) {
 					tokenPos := len(argVal)
-					b.viewBuilder.Render([]rune(b.model.currentFlag.Text)[tokenPos:], b.viewBuilder.ViewLen(), b.model.formatters.Placeholder)
+					b.viewBuilder.Render(currentFlagRunes[tokenPos:], b.viewBuilder.ViewLen(), b.model.formatters.Placeholder)
+				}
+
+				if len(currentFlagPlaceholderRunes) > 0 &&
+					flagNameRunes[len(flagNameRunes)-1] != '-' {
+					if !b.model.isDelimiter(string(*b.viewBuilder.Last())) && *b.viewBuilder.Last() != '=' {
+						b.viewBuilder.Render([]rune(b.model.defaultDelimiter), b.viewBuilder.ViewLen(), lipgloss.NewStyle())
+					}
+
+					if b.showPlaceholders && flag.Value == nil {
+						b.viewBuilder.RenderPlaceholder(currentFlagPlaceholderRunes, b.viewBuilder.ViewLen(), b.model.formatters.Flag.Placeholder)
+					}
 				}
 			}
 
-			if b.model.currentFlag != nil && len(b.model.currentFlag.Metadata.GetFlagPlaceholder().text) > 0 && []rune(flag.Name)[len(flag.Name)-1] != '-' {
-				if !b.model.isDelimiter(string(*b.viewBuilder.Last())) && *b.viewBuilder.Last() != '=' {
-					b.viewBuilder.Render([]rune(b.model.defaultDelimiter), b.viewBuilder.ViewLen(), lipgloss.NewStyle())
-				}
-
-				if b.showPlaceholders && flag.Value == nil {
-					b.viewBuilder.RenderPlaceholder([]rune(b.model.currentFlag.Metadata.GetFlagPlaceholder().text), b.viewBuilder.ViewLen(), b.model.formatters.Flag.Placeholder)
-				}
-
-			}
 			if flag.Value != nil {
-				b.viewBuilder.Render([]rune(flag.Value.Value), flag.Value.Pos.Column, b.flagValueStyle(flag.Value.Value))
+				b.viewBuilder.Render(flagValueRunes, flag.Value.Pos.Column, b.flagValueStyle(flag.Value.Value))
 			}
 		}
 	}

@@ -6,7 +6,7 @@ var DefaultPlaceholderForeground = "14"
 var DefaultCurrentPlaceholderSuggestion = "240"
 var DefaultSelectedTextColor = "10"
 var DefaultFlagForeground = "245"
-var DefaultFlagPlaceholderForeground = "245"
+var DefaultFlagPlaceholderForeground = "14"
 var DefaultBoolFlagForeground = "13"
 var DefaultNumberFlagForeground = "5"
 
