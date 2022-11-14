@@ -82,7 +82,7 @@ const (
 
 func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T] {
 	textinput := textinput.New()
-	textinput.Focus()
+
 	formatters := DefaultFormatters()
 	model := &Model[T]{
 		textinput:          textinput,
@@ -105,7 +105,7 @@ func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T] {
 }
 
 func (m *Model[T]) Init() tea.Cmd {
-	return textinput.Blink
+	return m.textinput.Focus()
 }
 
 func (m *Model[T]) SetFormatters(formatters Formatters) {
@@ -539,6 +539,10 @@ func (m Model[T]) CursorOffset() int {
 
 func (m *Model[T]) SetCursor(pos int) {
 	m.textinput.SetCursor(pos)
+}
+
+func (m *Model[T]) SetCursorMode(cursorMode textinput.CursorMode) tea.Cmd {
+	return m.textinput.SetCursorMode(cursorMode)
 }
 
 func (m Model[T]) Focused() bool {

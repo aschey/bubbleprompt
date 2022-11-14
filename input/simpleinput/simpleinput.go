@@ -5,6 +5,7 @@ import (
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/parser"
 	"github.com/aschey/bubbleprompt/input/parserinput"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -144,6 +145,10 @@ func (m *Model[T]) CursorIndex() int {
 
 func (m *Model[T]) SetCursor(cursor int) {
 	m.lexerModel.SetCursor(cursor)
+}
+
+func (m *Model[T]) SetCursorMode(cursorMode textinput.CursorMode) tea.Cmd {
+	return m.lexerModel.SetCursorMode(cursorMode)
 }
 
 func (m *Model[T]) Prompt() string {

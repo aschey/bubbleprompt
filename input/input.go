@@ -1,6 +1,7 @@
 package input
 
 import (
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -25,6 +26,7 @@ type Input[T any] interface {
 	CursorIndex() int
 	CursorOffset() int
 	SetCursor(cursor int)
+	SetCursorMode(cursorMode textinput.CursorMode) tea.Cmd
 	Prompt() string
 	SetPrompt(prompt string)
 	Tokens() []Token

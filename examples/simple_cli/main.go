@@ -11,6 +11,7 @@ import (
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/commandinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type cmdMetadata struct {
@@ -23,9 +24,10 @@ func (c cmdMetadata) Children() []input.Suggestion[cmdMetadata] {
 }
 
 type completerModel struct {
-	suggestions []input.Suggestion[cmdMetadata]
-	textInput   *commandinput.Model[cmdMetadata]
-	secret      string
+	suggestions        []input.Suggestion[cmdMetadata]
+	textInput          *commandinput.Model[cmdMetadata]
+	secret             string
+	executorValueStyle lipgloss.Style
 }
 
 func (m completerModel) completer(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
@@ -57,23 +59,25 @@ func (m *completerModel) executor(input string, selectedSuggestion *input.Sugges
 	case "get":
 		switch arg {
 		case "weather":
-			days := int64(1)
+			days := "1"
 			if len(flags) > 0 {
 				flag := flags[0]
 				if flag.Name == "-d" || flag.Name == "--days" {
 					if flag.Value == nil {
 						return nil, fmt.Errorf("flag value required")
 					}
-					parsedDays, err := strconv.ParseInt(flag.Value.Value, 10, 64)
+					_, err := strconv.ParseInt(flag.Value.Value, 10, 64)
 					if err != nil {
 						return nil, fmt.Errorf("flag value must be a valid int")
 					}
-					days = parsedDays
+					days = flag.Value.Value
 				}
 			}
-			return executor.NewStringModel(fmt.Sprintf("the weather for the next %d days is nice", days)), nil
+			days = m.executorValueStyle.Render(days)
+			value := m.executorValueStyle.Render("cloudy with a chance of meatballs")
+			return executor.NewStringModel(fmt.Sprintf("weather for the next %s day(s) is: %s", days, value)), nil
 		case "secret":
-			return executor.NewStringModel("the secret is " + m.secret), nil
+			return executor.NewStringModel("the secret is: " + m.executorValueStyle.Render(m.secret)), nil
 		}
 	case "set":
 		switch arg {
@@ -91,7 +95,11 @@ func (m *completerModel) executor(input string, selectedSuggestion *input.Sugges
 
 func main() {
 	textInput := commandinput.New[cmdMetadata]()
+	secretArgs := textInput.NewPositionalArgs("<secret value>")
+	secretArgs[0].ArgStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("6"))
+
 	commandMetadata := commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<command>"))
+
 	suggestions := []input.Suggestion[cmdMetadata]{
 		{
 			Text:        "get",
@@ -131,7 +139,7 @@ func main() {
 						Metadata: cmdMetadata{
 							CmdMetadata: commandinput.CmdMetadata{
 								Level:          1,
-								PositionalArgs: textInput.NewPositionalArgs("<secret>"),
+								PositionalArgs: secretArgs,
 							},
 						},
 					},
@@ -140,9 +148,10 @@ func main() {
 		},
 	}
 	completerModel := completerModel{
-		suggestions: suggestions,
-		textInput:   textInput,
-		secret:      "shhh",
+		suggestions:        suggestions,
+		textInput:          textInput,
+		secret:             "hunter2",
+		executorValueStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("13")),
 	}
 
 	promptModel, err := prompt.New(

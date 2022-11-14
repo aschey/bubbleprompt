@@ -28,7 +28,7 @@ type LexerModel[T any] struct {
 
 func NewLexerModel[T any](lexer parser.Lexer, options ...Option[T]) *LexerModel[T] {
 	textinput := textinput.New()
-	textinput.Focus()
+
 	model := &LexerModel[T]{
 		lexer:            lexer,
 		textinput:        textinput,
@@ -46,7 +46,7 @@ func NewLexerModel[T any](lexer parser.Lexer, options ...Option[T]) *LexerModel[
 }
 
 func (m *LexerModel[T]) Init() tea.Cmd {
-	return textinput.Blink
+	return m.textinput.Focus()
 }
 
 func (m *LexerModel[T]) createWhitespaceToken(start int, end int, index int) input.Token {
@@ -201,6 +201,10 @@ func (m *LexerModel[T]) CursorOffset() int {
 
 func (m *LexerModel[T]) SetCursor(cursor int) {
 	m.textinput.SetCursor(cursor)
+}
+
+func (m *LexerModel[T]) SetCursorMode(cursorMode textinput.CursorMode) tea.Cmd {
+	return m.textinput.SetCursorMode(cursorMode)
 }
 
 func (m *LexerModel[T]) Prompt() string {

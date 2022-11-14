@@ -6,6 +6,7 @@ require (
 	github.com/alecthomas/chroma/v2 v2.3.0
 	github.com/alecthomas/participle/v2 v2.0.0-beta.5
 	github.com/aschey/bubbleprompt v0.0.0
+	github.com/charmbracelet/bubbles v0.14.0
 	github.com/charmbracelet/bubbletea v0.22.2-0.20221013054030-9545e7cee210
 	github.com/charmbracelet/lipgloss v0.6.0
 	github.com/dop251/goja v0.0.0-20221106173738-3b8a68ca89b4
@@ -15,7 +16,6 @@ require (
 require (
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52 v1.2.1 // indirect
-	github.com/charmbracelet/bubbles v0.14.0 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.3+incompatible // indirect
