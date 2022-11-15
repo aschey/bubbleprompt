@@ -16,7 +16,7 @@ import (
 
 type cmdMetadata = commandinput.CmdMetadata
 
-type completerModel struct {
+type appModel struct {
 	suggestions []input.Suggestion[cmdMetadata]
 	textInput   *commandinput.Model[cmdMetadata]
 }
@@ -50,7 +50,7 @@ func (m cmdModel) View() string {
 
 type processFinishedMsg struct{ err error }
 
-func (m completerModel) completer(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
+func (m appModel) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
 	if !m.textInput.CommandCompleted() {
 		return completer.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
 	}
@@ -63,7 +63,7 @@ func (m completerModel) completer(promptModel prompt.Model[cmdMetadata]) ([]inpu
 	return nil, nil
 }
 
-func (m completerModel) executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (tea.Model, error) {
+func (m appModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
 	allValues := m.textInput.AllValues()
 	cmd := ""
 	args := []string{}
@@ -77,6 +77,10 @@ func (m completerModel) executor(input string, selectedSuggestion *input.Suggest
 	}
 
 	return cmdModel{cmd: exec.Command(cmd, args...)}, nil
+}
+
+func (m appModel) Update(msg tea.Msg) (prompt.AppModel[cmdMetadata], tea.Cmd) {
+	return m, nil
 }
 
 func main() {
@@ -94,11 +98,10 @@ func main() {
 		{Text: "top"},
 		{Text: "htop"},
 	}
-	completerModel := completerModel{suggestions: suggestions, textInput: textInput}
+	appModel := appModel{suggestions: suggestions, textInput: textInput}
 
-	promptModel, err := prompt.New(
-		completerModel.completer,
-		completerModel.executor,
+	promptModel, err := prompt.New[cmdMetadata](
+		appModel,
 		textInput,
 	)
 	if err != nil {

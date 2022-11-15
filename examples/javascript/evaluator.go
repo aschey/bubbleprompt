@@ -15,7 +15,7 @@ func getString(value goja.Value) string {
 	return value.String()
 }
 
-func (m completerModel) evaluateStatement(statement statement) goja.Value {
+func (m appModel) evaluateStatement(statement statement) goja.Value {
 	parent := m.vm.GlobalObject()
 	switch {
 	case statement.Expression != nil:
@@ -26,7 +26,7 @@ func (m completerModel) evaluateStatement(statement statement) goja.Value {
 	return parent
 }
 
-func (m completerModel) evaluateExpressionInitial(parent *goja.Object, expression expression) goja.Value {
+func (m appModel) evaluateExpressionInitial(parent *goja.Object, expression expression) goja.Value {
 	if expression.Token != nil {
 		if expression.Expression == nil {
 			// If this is a token, show completions against global object
@@ -38,14 +38,14 @@ func (m completerModel) evaluateExpressionInitial(parent *goja.Object, expressio
 	return m.evaluateExpression(parent, expression)
 }
 
-func (m completerModel) evaluateAssignment(parent *goja.Object, assignment assignment) goja.Value {
+func (m appModel) evaluateAssignment(parent *goja.Object, assignment assignment) goja.Value {
 	if assignment.Expression != nil {
 		return m.evaluateExpressionInitial(parent, *assignment.Expression)
 	}
 	return parent
 }
 
-func (m completerModel) evaluateExpression(parent *goja.Object, expression expression) goja.Value {
+func (m appModel) evaluateExpression(parent *goja.Object, expression expression) goja.Value {
 	var value goja.Value = nil
 	switch {
 	case expression.PropAccessor != nil:
@@ -70,7 +70,7 @@ func (m completerModel) evaluateExpression(parent *goja.Object, expression expre
 	return value
 }
 
-func (m completerModel) evaluateArray(parent *goja.Object, array array) goja.Value {
+func (m appModel) evaluateArray(parent *goja.Object, array array) goja.Value {
 	values := array.Values
 	if len(values) > 0 {
 		last := values[len(values)-1]
@@ -86,7 +86,7 @@ func (m completerModel) evaluateArray(parent *goja.Object, array array) goja.Val
 	return parent
 }
 
-func (m completerModel) evaluateObject(parent *goja.Object, object object) goja.Value {
+func (m appModel) evaluateObject(parent *goja.Object, object object) goja.Value {
 	props := object.Properties
 	if len(props) > 0 {
 		last := props[len(props)-1]
@@ -95,7 +95,7 @@ func (m completerModel) evaluateObject(parent *goja.Object, object object) goja.
 	return goja.Null()
 }
 
-func (m completerModel) evaluateKeyValuePair(parent *goja.Object, keyValuePair keyValuePair) goja.Value {
+func (m appModel) evaluateKeyValuePair(parent *goja.Object, keyValuePair keyValuePair) goja.Value {
 	if keyValuePair.Delim != nil {
 		if keyValuePair.Value == nil || keyValuePair.Value.Token != nil {
 			return parent
@@ -106,7 +106,7 @@ func (m completerModel) evaluateKeyValuePair(parent *goja.Object, keyValuePair k
 	return goja.Null()
 }
 
-func (m completerModel) evaluateToken(parent *goja.Object, token token) goja.Value {
+func (m appModel) evaluateToken(parent *goja.Object, token token) goja.Value {
 	switch {
 	case token.Literal != nil:
 		return m.evaluateLiteral(*token.Literal)
@@ -116,7 +116,7 @@ func (m completerModel) evaluateToken(parent *goja.Object, token token) goja.Val
 	return goja.Null()
 }
 
-func (m completerModel) evaluateLiteral(literal literal) goja.Value {
+func (m appModel) evaluateLiteral(literal literal) goja.Value {
 	literalVal := ""
 	switch {
 	case literal.Str != nil:
@@ -139,12 +139,12 @@ func (m completerModel) evaluateLiteral(literal literal) goja.Value {
 	return val
 }
 
-func (m completerModel) evaluatePropAccessor(parent *goja.Object, propAccessor propAccessor) goja.Value {
+func (m appModel) evaluatePropAccessor(parent *goja.Object, propAccessor propAccessor) goja.Value {
 	curVal := parent.Get(propAccessor.Identifier)
 	return m.evaluateAccessor(m.vm.ToObject(curVal), propAccessor.Accessor)
 }
 
-func (m completerModel) evaluateAccessor(parent *goja.Object, accessor accessor) goja.Value {
+func (m appModel) evaluateAccessor(parent *goja.Object, accessor accessor) goja.Value {
 	var value goja.Value
 	switch {
 	case accessor.Indexer != nil:
@@ -172,7 +172,7 @@ func (m completerModel) evaluateAccessor(parent *goja.Object, accessor accessor)
 	return value
 }
 
-func (m completerModel) evaluateIndexer(parent *goja.Object, indexer indexer) goja.Value {
+func (m appModel) evaluateIndexer(parent *goja.Object, indexer indexer) goja.Value {
 	val := m.evaluateExpression(parent, *indexer.Expression)
 	return parent.Get(val.String())
 }

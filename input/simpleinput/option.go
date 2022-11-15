@@ -2,42 +2,51 @@ package simpleinput
 
 import (
 	"github.com/aschey/bubbleprompt/input/parser"
+	"github.com/aschey/bubbleprompt/input/parserinput"
 	"github.com/charmbracelet/lipgloss"
 )
 
-type settings struct {
+type settings[T any] struct {
 	delimiterRegex    string
 	tokenRegex        string
 	selectedTextStyle lipgloss.Style
 	formatter         *parser.Formatter
+	lexerOptions      []parserinput.Option[T]
 }
 
-type Option func(settings *settings) error
+type Option[T any] func(settings *settings[T]) error
 
-func WithDelimiterRegex(delimiterRegex string) Option {
-	return func(settings *settings) error {
+func WithDelimiterRegex[T any](delimiterRegex string) Option[T] {
+	return func(settings *settings[T]) error {
 		settings.delimiterRegex = delimiterRegex
 		return nil
 	}
 }
 
-func WithTokenRegex(tokenRegex string) Option {
-	return func(settings *settings) error {
+func WithTokenRegex[T any](tokenRegex string) Option[T] {
+	return func(settings *settings[T]) error {
 		settings.tokenRegex = tokenRegex
 		return nil
 	}
 }
 
-func WithSelectedTextStyle(style lipgloss.Style) Option {
-	return func(settings *settings) error {
+func WithSelectedTextStyle[T any](style lipgloss.Style) Option[T] {
+	return func(settings *settings[T]) error {
 		settings.selectedTextStyle = style
 		return nil
 	}
 }
 
-func WithFormatter(formatter parser.Formatter) Option {
-	return func(settings *settings) error {
+func WithFormatter[T any](formatter parser.Formatter) Option[T] {
+	return func(settings *settings[T]) error {
 		settings.formatter = &formatter
+		return nil
+	}
+}
+
+func WithLexerOptions[T any](options ...parserinput.Option[T]) Option[T] {
+	return func(settings *settings[T]) error {
+		settings.lexerOptions = options
 		return nil
 	}
 }

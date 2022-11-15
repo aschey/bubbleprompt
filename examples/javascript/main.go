@@ -22,13 +22,13 @@ const arrayType = "array"
 const objectType = "object"
 const stringType = "string"
 
-type completerModel struct {
+type appModel struct {
 	textInput   *parserinput.ParserModel[any, statement]
 	suggestions []input.Suggestion[any]
 	vm          *vm
 }
 
-func (m completerModel) globalSuggestions() []input.Suggestion[any] {
+func (m appModel) globalSuggestions() []input.Suggestion[any] {
 	currentBeforeCursor := m.textInput.CurrentTokenBeforeCursor()
 	vars := m.vm.GlobalObject().Keys()
 	suggestions := []input.Suggestion[any]{}
@@ -39,7 +39,7 @@ func (m completerModel) globalSuggestions() []input.Suggestion[any] {
 	return completer.FilterHasPrefix(currentBeforeCursor, suggestions)
 }
 
-func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[any] {
+func (m appModel) valueSuggestions(value goja.Value) []input.Suggestion[any] {
 	if value == nil {
 		return nil
 	}
@@ -88,7 +88,7 @@ func (m completerModel) valueSuggestions(value goja.Value) []input.Suggestion[an
 	return completer.FilterHasPrefix(completable, suggestions)
 }
 
-func (m completerModel) completer(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
+func (m appModel) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
 	parsed, err := m.textInput.ParsedBeforeCursor()
 	if err != nil {
 		return nil, err
@@ -101,7 +101,7 @@ func (m completerModel) completer(promptModel prompt.Model[any]) ([]input.Sugges
 	return m.globalSuggestions(), nil
 }
 
-func (m completerModel) executor(input string, selectedSuggestion *input.Suggestion[any]) (tea.Model, error) {
+func (m appModel) Execute(input string, promptModel *prompt.Model[any]) (tea.Model, error) {
 	return executor.NewAsyncStringModel(func() (string, error) {
 		err := m.textInput.Error()
 		if err != nil {
@@ -135,6 +135,10 @@ func (m completerModel) executor(input string, selectedSuggestion *input.Suggest
 	}), nil
 }
 
+func (m appModel) Update(msg tea.Msg) (prompt.AppModel[any], tea.Cmd) {
+	return m, nil
+}
+
 func main() {
 	textInput := parserinput.NewParserModel[any, statement](
 		parser.NewParticipleParser(participleParser),
@@ -146,17 +150,16 @@ func main() {
 	_, _ = vm.RunString(`pizza = {mushroom: 'magic', cheese: true, meat: {pepperoni: 1, sausage: 2 }}`)
 	_, _ = vm.RunString(`food = ['hummus', 'wine', {pizza: pizza}]`)
 
-	completerModel := completerModel{
+	appModel := appModel{
 		suggestions: []input.Suggestion[any]{},
 		textInput:   textInput,
 		vm:          vm,
 	}
 
-	promptModel, err := prompt.New(
-		completerModel.completer,
-		completerModel.executor,
+	promptModel, err := prompt.New[any](
+		appModel,
 		textInput,
-		prompt.WithViewportRenderer[any](),
+		prompt.WithViewportRenderer[any](1),
 	)
 	if err != nil {
 		panic(err)

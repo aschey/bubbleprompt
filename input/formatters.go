@@ -3,12 +3,11 @@ package input
 import "github.com/charmbracelet/lipgloss"
 
 type Formatters struct {
-	Name               SuggestionText
-	Description        SuggestionText
-	DefaultPlaceholder lipgloss.Style
-	ErrorText          lipgloss.Style
-	Scrollbar          lipgloss.Style
-	ScrollbarThumb     lipgloss.Style
+	Name           SuggestionText
+	Description    SuggestionText
+	ErrorText      lipgloss.Style
+	Scrollbar      lipgloss.Style
+	ScrollbarThumb lipgloss.Style
 }
 
 var DefaultNameForeground = "255"
@@ -46,9 +45,6 @@ func DefaultFormatters() Formatters {
 				Foreground(lipgloss.Color(DefaultDescriptionForeground)).
 				Background(lipgloss.Color(DefaultDescriptionBackground)),
 		},
-		DefaultPlaceholder: lipgloss.
-			NewStyle().
-			Foreground(lipgloss.Color("6")),
 		ErrorText: lipgloss.
 			NewStyle().
 			PaddingLeft(1).

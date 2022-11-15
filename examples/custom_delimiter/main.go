@@ -22,25 +22,29 @@ func (m metadata) Children() []input.Suggestion[metadata] {
 	return m.children
 }
 
-type completerModel struct {
+type appModel struct {
 	suggestions []input.Suggestion[metadata]
 	textInput   *simpleinput.Model[metadata]
 	outputStyle lipgloss.Style
 }
 
-func (m *completerModel) completer(promptModel prompt.Model[metadata]) ([]input.Suggestion[metadata], error) {
+func (m appModel) Complete(promptModel prompt.Model[metadata]) ([]input.Suggestion[metadata], error) {
 	return completer.GetRecursiveCompletions(m.textInput.Tokens(), m.textInput.CursorIndex(), m.suggestions), nil
 }
 
-func (m *completerModel) executor(input string, selectedSuggestion *input.Suggestion[metadata]) (tea.Model, error) {
+func (m appModel) Execute(input string, promptModel *prompt.Model[metadata]) (tea.Model, error) {
 	allValues := strings.Join(m.textInput.TokenValues(), " → ")
 	return executor.NewStringModel("You picked: " + m.outputStyle.Render(allValues)), nil
 }
 
+func (m appModel) Update(cmd tea.Msg) (prompt.AppModel[metadata], tea.Cmd) {
+	return m, nil
+}
+
 func main() {
-	textInput := simpleinput.New[metadata](
-		simpleinput.WithDelimiterRegex(`\s*\.\s*`),
-		simpleinput.WithTokenRegex(`[^\s\.]+`))
+	textInput := simpleinput.New(
+		simpleinput.WithDelimiterRegex[metadata](`\s*\.\s*`),
+		simpleinput.WithTokenRegex[metadata](`[^\s\.]+`))
 	suggestions := []input.Suggestion[metadata]{
 		{Text: "germany",
 			Metadata: metadata{
@@ -149,15 +153,14 @@ func main() {
 			}},
 	}
 
-	completerModel := completerModel{
+	appModel := appModel{
 		suggestions: suggestions,
 		textInput:   textInput,
 		outputStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("13")),
 	}
 
-	promptModel, err := prompt.New(
-		completerModel.completer,
-		completerModel.executor,
+	promptModel, err := prompt.New[metadata](
+		appModel,
 		textInput,
 	)
 	if err != nil {

@@ -222,7 +222,7 @@ var _ = Describe("Completer", func() {
 
 		It("Updates the completions", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return strings.Contains(state.NthOutputLine(3), "changed text")
+				return strings.Contains(state.NthOutputLine(2), "changed text")
 			})
 		})
 	})
@@ -235,7 +235,7 @@ var _ = Describe("Completer", func() {
 
 		It("Updates the completions", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return strings.Contains(state.NthOutputLine(3), "changed text2")
+				return strings.Contains(state.NthOutputLine(2), "changed text2")
 			})
 		})
 	})

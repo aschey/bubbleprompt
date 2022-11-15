@@ -13,4 +13,6 @@ type Renderer interface {
 	SetContent(content string)
 	AddOutput(output string)
 	GotoBottom(msg tea.Msg)
+	GetHistory() string
+	SetHistory(history string) tea.Cmd
 }

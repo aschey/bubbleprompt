@@ -112,6 +112,10 @@ func (m *Model[T]) SetFormatters(formatters Formatters) {
 	m.formatters = formatters
 }
 
+func (m Model[T]) Formatters() Formatters {
+	return m.formatters
+}
+
 func (m *Model[T]) NewPositionalArg(placeholder string) PositionalArg {
 	return PositionalArg{
 		placeholder:      placeholder,

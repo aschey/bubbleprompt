@@ -1,6 +1,8 @@
 package prompt
 
 import (
+	"reflect"
+
 	"github.com/aschey/bubbleprompt/completer"
 	"github.com/aschey/bubbleprompt/executor"
 	"github.com/aschey/bubbleprompt/input"
@@ -8,18 +10,33 @@ import (
 )
 
 func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	// Check for exit signals before anything else
-	// to reduce chance of program becoming frozen
-	if msg, ok := msg.(tea.KeyMsg); ok {
+	var cmd tea.Cmd
+	var cmds []tea.Cmd
+
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyCtrlC, tea.KeyEsc:
 			shutdown = true
 			return m, tea.Quit
 		}
+	case rendererMsg:
+		// No need to switch renderers if they're the same type
+		if reflect.TypeOf(m.renderer) != reflect.TypeOf(msg.renderer) {
+			currentHistory := m.renderer.GetHistory()
+
+			m.renderer = msg.renderer
+			m.renderer.Initialize(m.size)
+
+			if msg.retainHistory {
+				cmds = append(cmds, m.renderer.SetHistory(currentHistory))
+			}
+		}
+
 	}
 
-	var cmd tea.Cmd
-	var cmds []tea.Cmd
+	m.app, cmd = m.app.Update(msg)
+	cmds = append(cmds, cmd)
 
 	// Order is important here, there's some strange freezing behavior
 	// that happens if we update the text input before the viewport
@@ -146,6 +163,7 @@ func (m *Model[T]) finalizeExecutor(executorModel *executorModel) {
 }
 
 func (m *Model[T]) updateWindowSizeMsg(msg tea.WindowSizeMsg) {
+	m.size = msg
 	if !m.ready {
 		m.renderer.Initialize(msg)
 		m.ready = true
@@ -190,7 +208,7 @@ func (m *Model[T]) updateExecutor(executor *executorModel) {
 }
 
 func (m *Model[T]) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
-	innerExecutor, err := m.executor(m.textInput.Value(), m.completer.getSelectedSuggestion())
+	innerExecutor, err := m.app.Execute(m.textInput.Value(), m)
 	if innerExecutor == nil {
 		// No executor returned, default to empty model to prevent nil reference errors
 		innerExecutor = executor.NewStringModel("")

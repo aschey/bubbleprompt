@@ -8,15 +8,16 @@ import (
 	"github.com/aschey/bubbleprompt/completer"
 	"github.com/aschey/bubbleprompt/executor"
 	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/input/parserinput"
 	"github.com/aschey/bubbleprompt/input/simpleinput"
+	"github.com/aschey/bubbleprompt/renderer"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 type appModel struct {
 	suggestions []input.Suggestion[any]
 	textInput   *simpleinput.Model[any]
-	outputStyle lipgloss.Style
 }
 
 func (m appModel) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
@@ -32,7 +33,13 @@ func (m appModel) Execute(input string, promptModel *prompt.Model[any]) (tea.Mod
 	if len(tokens) == 0 {
 		return executor.NewStringModel("No selection"), nil
 	}
-	return executor.NewStringModel("You picked: " + m.outputStyle.Render(tokens[0])), nil
+	switch tokens[0] {
+	case "viewport":
+		return executor.NewCmdModel("set viewport renderer", prompt.SetRenderer(renderer.NewViewportRenderer(0), true)), nil
+	case "unmanaged":
+		return executor.NewCmdModel("set unmanaged renderer", prompt.SetRenderer(renderer.NewUnmanagedRenderer(), true)), nil
+	}
+	return executor.NewStringModel("You selected " + tokens[0]), nil
 }
 
 func (m appModel) Update(msg tea.Msg) (prompt.AppModel[any], tea.Cmd) {
@@ -40,21 +47,15 @@ func (m appModel) Update(msg tea.Msg) (prompt.AppModel[any], tea.Cmd) {
 }
 
 func main() {
-	textInput := simpleinput.New[any]()
+	textInput := simpleinput.New(simpleinput.WithLexerOptions(parserinput.WithCursorMode[any](textinput.CursorStatic)))
 	suggestions := []input.Suggestion[any]{
-		{Text: "banana", Description: "good with peanut butter"},
-		{Text: "\"sugar apple\"", CompletionText: "sugar apple", Description: "spherical...ish"},
-		{Text: "jackfruit", Description: "the jack of all fruits"},
-		{Text: "snozzberry", Description: "tastes like snozzberries"},
-		{Text: "lychee", Description: "better than leeches"},
-		{Text: "mangosteen", Description: "it's not a mango"},
-		{Text: "durian", Description: "stinky"},
+		{Text: "unmanaged", Description: "use the unmanaged renderer"},
+		{Text: "viewport", Description: "use the viewport renderer"},
 	}
 
 	appModel := appModel{
 		suggestions: suggestions,
 		textInput:   textInput,
-		outputStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("13")),
 	}
 
 	promptModel, err := prompt.New[any](
@@ -65,8 +66,6 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Render("Pick a fruit!"))
-	fmt.Println()
 	if _, err := tea.NewProgram(promptModel, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
 		fmt.Printf("Could not start program :(\n%v\n", err)
 		os.Exit(1)

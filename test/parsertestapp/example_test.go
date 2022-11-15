@@ -24,12 +24,12 @@ type Statement struct {
 	Words []string `parser:" (@Ident ( ',' @Ident )*)* "`
 }
 
-type completerModel struct {
+type appModel struct {
 	textInput   *parserinput.ParserModel[any, Statement]
 	suggestions []input.Suggestion[any]
 }
 
-func (m completerModel) completer(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
+func (m appModel) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
 	current := m.textInput.CompletableTokenBeforeCursor()
 	suggestions := []input.Suggestion[any]{
 		{Text: "abcd"},
@@ -39,7 +39,7 @@ func (m completerModel) completer(promptModel prompt.Model[any]) ([]input.Sugges
 	return completer.FilterHasPrefix(current, suggestions), nil
 }
 
-func (m completerModel) executor(input string, selectedSuggestion *input.Suggestion[any]) (tea.Model, error) {
+func (m appModel) Execute(input string, promptModel *prompt.Model[any]) (tea.Model, error) {
 	return executor.NewAsyncStringModel(func() (string, error) {
 		err := m.textInput.Error()
 		if err != nil {
@@ -49,6 +49,10 @@ func (m completerModel) executor(input string, selectedSuggestion *input.Suggest
 		return "", nil
 
 	}), nil
+}
+
+func (m appModel) Update(msg tea.Msg) (prompt.AppModel[any], tea.Cmd) {
+	return m, nil
 }
 
 func TestApp(t *testing.T) {
@@ -69,16 +73,15 @@ func TestApp(t *testing.T) {
 		parser.NewParticipleParser(participleParser),
 		parserinput.WithDelimiters[any](","))
 
-	completerModel := completerModel{
+	appModel := appModel{
 		suggestions: []input.Suggestion[any]{},
 		textInput:   textInput,
 	}
 
-	promptModel, _ := prompt.New(
-		completerModel.completer,
-		completerModel.executor,
+	promptModel, _ := prompt.New[any](
+		appModel,
 		textInput,
-		prompt.WithViewportRenderer[any](),
+		prompt.WithViewportRenderer[any](1),
 	)
 
 	if _, err := tea.NewProgram(promptModel, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {

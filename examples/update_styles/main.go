@@ -23,19 +23,27 @@ func (c cmdMetadata) Children() []input.Suggestion[cmdMetadata] {
 	return c.children
 }
 
-type completerModel struct {
+type appModel struct {
 	suggestions []input.Suggestion[cmdMetadata]
 	textInput   *commandinput.Model[cmdMetadata]
 }
 
-func (m completerModel) completer(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
+func (m appModel) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
 	return completer.GetRecursiveCompletions(m.textInput.Tokens(), m.textInput.CursorIndex(), m.suggestions), nil
 }
 
-func (m *completerModel) executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (tea.Model, error) {
+func (m appModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
 	parsed := m.textInput.ParsedValue()
-	if parsed.Command.Value == "cursor-mode" {
-		switch parsed.Args.Value[0].Value {
+	args := parsed.Args.Value
+	if len(args) == 0 {
+		return nil, fmt.Errorf("At least one argument is required")
+	}
+	inputFormatters := m.textInput.Formatters()
+	promptFormatters := promptModel.Formatters()
+
+	switch parsed.Command.Value {
+	case "cursor-mode":
+		switch args[0].Value {
 		case "blink":
 			return executor.NewCmdModel("blinking cursor", m.textInput.SetCursorMode(textinput.CursorBlink)), nil
 		case "static":
@@ -43,17 +51,55 @@ func (m *completerModel) executor(input string, selectedSuggestion *input.Sugges
 		case "hide":
 			return executor.NewCmdModel("blinking cursor", m.textInput.SetCursorMode(textinput.CursorHide)), nil
 		}
+	case "suggestion":
+		if len(args) < 2 {
+			return nil, fmt.Errorf("At least two arguments are required")
+		}
+		color := args[1].Value
 
+		switch args[0].Value {
+		case "name":
+			promptFormatters.Name.Style = promptFormatters.Name.Style.Background(lipgloss.Color(color))
+		case "description":
+			promptFormatters.Description.Style = promptFormatters.Description.Style.Background(lipgloss.Color(color))
+		}
+
+	case "input":
+		if len(args) < 2 {
+			return nil, fmt.Errorf("At least two arguments are required")
+		}
+		color := args[1].Value
+
+		switch args[0].Value {
+		case "selected":
+			inputFormatters.SelectedText = inputFormatters.SelectedText.Foreground(lipgloss.Color(color))
+		case "cursor":
+			inputFormatters.Cursor = inputFormatters.Cursor.Foreground(lipgloss.Color(color))
+		}
+
+	case "prompt":
+		promptValue := args[0].Value
+		m.textInput.SetPrompt(promptValue + " ")
+		if len(args) > 1 {
+			inputFormatters.Prompt = inputFormatters.Prompt.Foreground(lipgloss.Color(args[1].Value))
+		}
 	}
-	return nil, fmt.Errorf("Invalid input")
+
+	m.textInput.SetFormatters(inputFormatters)
+	promptModel.SetFormatters(promptFormatters)
+	return executor.NewStringModel("input updated"), nil
+}
+
+func (m appModel) Update(msg tea.Msg) (prompt.AppModel[cmdMetadata], tea.Cmd) {
+	return m, nil
 }
 
 func main() {
 	textInput := commandinput.New[cmdMetadata]()
-	secretArgs := textInput.NewPositionalArgs("<secret value>")
-	secretArgs[0].ArgStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("6"))
 
 	commandMetadata := commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<command>"))
+	colorMetadata := commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<color>"))
+	colorMetadata.Level = 1
 
 	suggestions := []input.Suggestion[cmdMetadata]{
 		{
@@ -92,15 +138,67 @@ func main() {
 				},
 			},
 		},
+		{
+			Text:        "suggestion",
+			Description: "set suggestion styles",
+			Metadata: cmdMetadata{
+				CmdMetadata: commandMetadata,
+				children: []input.Suggestion[cmdMetadata]{
+					{
+						Text:        "name",
+						Description: "set suggestion name background",
+						Metadata: cmdMetadata{
+							CmdMetadata: colorMetadata,
+						},
+					},
+					{
+						Text:        "description",
+						Description: "set suggestion description background",
+						Metadata: cmdMetadata{
+							CmdMetadata: colorMetadata,
+						},
+					},
+				},
+			},
+		},
+		{
+			Text:        "input",
+			Description: "set input style",
+			Metadata: cmdMetadata{
+				CmdMetadata: commandMetadata,
+				children: []input.Suggestion[cmdMetadata]{
+					{
+						Text:        "selected",
+						Description: "set selected suggestion foreground",
+						Metadata: cmdMetadata{
+							CmdMetadata: colorMetadata,
+						},
+					},
+					{
+						Text:        "cursor",
+						Description: "set cursor foreground",
+						Metadata: cmdMetadata{
+							CmdMetadata: colorMetadata,
+						},
+					},
+				},
+			},
+		},
+		{
+			Text:        "prompt",
+			Description: "set prompt text and foreground",
+			Metadata: cmdMetadata{
+				CmdMetadata: commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<value>"), textInput.NewPositionalArg("[color]")),
+			},
+		},
 	}
-	completerModel := completerModel{
+	appModel := appModel{
 		suggestions: suggestions,
 		textInput:   textInput,
 	}
 
-	promptModel, err := prompt.New(
-		completerModel.completer,
-		completerModel.executor,
+	promptModel, err := prompt.New[cmdMetadata](
+		appModel,
 		textInput,
 	)
 	if err != nil {

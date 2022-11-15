@@ -60,7 +60,7 @@ type completerModel[T any] struct {
 	err            error
 }
 
-func newCompleterModel[T any, I input.Input[T]](completerFunc Completer[T], textInput I, errorText lipgloss.Style, maxSuggestions int) completerModel[T] {
+func newCompleterModel[T any](completerFunc Completer[T], textInput input.Input[T], errorText lipgloss.Style, maxSuggestions int) completerModel[T] {
 	return completerModel[T]{
 		textInput:      textInput,
 		completerFunc:  completerFunc,

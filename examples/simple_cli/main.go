@@ -19,18 +19,20 @@ type cmdMetadata struct {
 	children []input.Suggestion[cmdMetadata]
 }
 
+type secretMsg string
+
 func (c cmdMetadata) Children() []input.Suggestion[cmdMetadata] {
 	return c.children
 }
 
-type completerModel struct {
+type appModel struct {
 	suggestions        []input.Suggestion[cmdMetadata]
 	textInput          *commandinput.Model[cmdMetadata]
 	secret             string
 	executorValueStyle lipgloss.Style
 }
 
-func (m completerModel) completer(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
+func (m appModel) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
 	parsed := m.textInput.ParsedValue()
 	completed := m.textInput.CompletedArgsBeforeCursor()
 	if len(completed) == 1 && parsed.Command.Value == "get" && parsed.Args.Value[0].Value == "weather" {
@@ -47,7 +49,7 @@ func (m completerModel) completer(promptModel prompt.Model[cmdMetadata]) ([]inpu
 	return completer.GetRecursiveCompletions(m.textInput.Tokens(), m.textInput.CursorIndex(), m.suggestions), nil
 }
 
-func (m *completerModel) executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (tea.Model, error) {
+func (m appModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
 	parsed := m.textInput.ParsedValue()
 	args := parsed.Args.Value
 	flags := parsed.Flags.Value
@@ -86,11 +88,20 @@ func (m *completerModel) executor(input string, selectedSuggestion *input.Sugges
 				return nil, fmt.Errorf("secret value required")
 			}
 			secretVal := args[1].Value
-			m.secret = secretVal
-			return executor.NewStringModel("Secret updated"), nil
+
+			return executor.NewCmdModel("Secret updated", func() tea.Msg {
+				return secretMsg(secretVal)
+			}), nil
 		}
 	}
 	return nil, fmt.Errorf("Invalid input")
+}
+
+func (m appModel) Update(msg tea.Msg) (prompt.AppModel[cmdMetadata], tea.Cmd) {
+	if msg, ok := msg.(secretMsg); ok {
+		m.secret = string(msg)
+	}
+	return m, nil
 }
 
 func main() {
@@ -147,16 +158,15 @@ func main() {
 			},
 		},
 	}
-	completerModel := completerModel{
+	appModel := appModel{
 		suggestions:        suggestions,
 		textInput:          textInput,
 		secret:             "hunter2",
 		executorValueStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("13")),
 	}
 
-	promptModel, err := prompt.New(
-		completerModel.completer,
-		completerModel.executor,
+	promptModel, err := prompt.New[cmdMetadata](
+		appModel,
 		textInput,
 	)
 	if err != nil {

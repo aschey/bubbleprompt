@@ -8,12 +8,13 @@ import (
 )
 
 type ViewportRenderer struct {
-	viewport viewport.Model
-	history  string
+	viewport  viewport.Model
+	history   string
+	skipLines int
 }
 
-func NewViewportRenderer() *ViewportRenderer {
-	return &ViewportRenderer{}
+func NewViewportRenderer(skipLines int) *ViewportRenderer {
+	return &ViewportRenderer{skipLines: skipLines}
 }
 
 func (v *ViewportRenderer) View() string {
@@ -21,14 +22,14 @@ func (v *ViewportRenderer) View() string {
 }
 
 func (v *ViewportRenderer) Initialize(msg tea.WindowSizeMsg) {
-	v.viewport = viewport.New(msg.Width, msg.Height-1)
+	v.viewport = viewport.New(msg.Width, msg.Height-v.skipLines)
 	v.viewport.KeyMap.Up = key.NewBinding(key.WithKeys("ctrl+up"))
 	v.viewport.KeyMap.Down = key.NewBinding(key.WithKeys("ctrl+down"))
 }
 
 func (v *ViewportRenderer) SetSize(msg tea.WindowSizeMsg) {
 	v.viewport.Width = msg.Width
-	v.viewport.Height = msg.Height - 1
+	v.viewport.Height = msg.Height - v.skipLines
 }
 
 func (v *ViewportRenderer) Update(msg tea.Msg) (Renderer, tea.Cmd) {
@@ -40,6 +41,15 @@ func (v *ViewportRenderer) Update(msg tea.Msg) (Renderer, tea.Cmd) {
 
 func (v *ViewportRenderer) SetContent(content string) {
 	v.viewport.SetContent(v.history + content)
+}
+
+func (v *ViewportRenderer) GetHistory() string {
+	return v.history
+}
+
+func (v *ViewportRenderer) SetHistory(history string) tea.Cmd {
+	v.history = internal.AddNewlineIfMissing(history)
+	return nil
 }
 
 func (v *ViewportRenderer) AddOutput(output string) {

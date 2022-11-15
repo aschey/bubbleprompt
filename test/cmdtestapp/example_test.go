@@ -8,7 +8,7 @@ import (
 
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
-	executors "github.com/aschey/bubbleprompt/executor"
+	"github.com/aschey/bubbleprompt/executor"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/commandinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -16,12 +16,9 @@ import (
 
 type cmdMetadata = commandinput.CmdMetadata
 
-type model struct {
-	promptModel prompt.Model[cmdMetadata]
+type appModel struct {
 	suggestions []input.Suggestion[cmdMetadata]
 	textInput   *commandinput.Model[cmdMetadata]
-	doOneshot   bool
-	doPeriodic  bool
 	inc         int
 }
 
@@ -57,16 +54,7 @@ var flags = []commandinput.Flag{
 	{Short: "t", Long: "test", Description: "test flag"},
 }
 
-func (m *model) Init() tea.Cmd {
-	return m.promptModel.Init()
-}
-
-func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	cmds := []tea.Cmd{}
-	p, cmd := m.promptModel.Update(msg)
-	cmds = append(cmds, cmd)
-	m.promptModel = p.(prompt.Model[commandinput.CmdMetadata])
-
+func (m appModel) Update(msg tea.Msg) (prompt.AppModel[cmdMetadata], tea.Cmd) {
 	switch msg.(type) {
 	case changeTextMsg:
 		m.suggestions[0].Text = "changed text"
@@ -75,31 +63,10 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.inc++
 	}
 
-	if m.doOneshot {
-		m.doOneshot = false
-		cmds = append(cmds,
-			tea.Sequence(
-				tea.Tick(100*time.Millisecond, func(t time.Time) tea.Msg { return changeTextMsg{} }),
-				prompt.OneShotCompleter(100*time.Millisecond),
-			),
-		)
-	} else if m.doPeriodic {
-		m.doPeriodic = false
-		cmds = append(cmds,
-			tea.Sequence(
-				tea.Tick(100*time.Millisecond, func(t time.Time) tea.Msg { return changeTextMsg{} }),
-				prompt.PeriodicCompleter(100*time.Millisecond),
-			),
-		)
-	}
-	return m, tea.Batch(cmds...)
+	return m, nil
 }
 
-func (m *model) View() string {
-	return m.promptModel.View()
-}
-
-func (m *model) completer(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
+func (m appModel) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
 	time.Sleep(100 * time.Millisecond)
 	suggestions := m.suggestions
 	if m.textInput.CommandCompleted() {
@@ -111,19 +78,25 @@ func (m *model) completer(promptModel prompt.Model[cmdMetadata]) ([]input.Sugges
 	return completer.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), suggestions), nil
 }
 
-func (m *model) executor(input string, selectedSuggestion *input.Suggestion[cmdMetadata]) (tea.Model, error) {
+func (m appModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
 	switch input {
 	case "error":
 		return nil, fmt.Errorf("bad things")
 	case "oneshot":
-		m.doOneshot = true
-		return executors.NewStringModel(""), nil
+		return executor.NewCmdModel("", tea.Sequence(
+			tea.Tick(100*time.Millisecond, func(t time.Time) tea.Msg { return changeTextMsg{} }),
+			prompt.OneShotCompleter(100*time.Millisecond),
+		)), nil
 	case "periodic":
-		m.doPeriodic = true
-		return executors.NewStringModel(""), nil
-	}
+		return executor.NewCmdModel("", tea.Sequence(
+			tea.Tick(100*time.Millisecond, func(t time.Time) tea.Msg { return changeTextMsg{} }),
+			prompt.PeriodicCompleter(100*time.Millisecond),
+		)), nil
 
-	return executors.NewAsyncStringModel(func() (string, error) {
+	}
+	selectedSuggestion := promptModel.SelectedSuggestion()
+
+	return executor.NewAsyncStringModel(func() (string, error) {
 		time.Sleep(100 * time.Millisecond)
 		if selectedSuggestion == nil {
 			return "result is " + input, nil
@@ -147,16 +120,14 @@ func TestApp(t *testing.T) {
 	commandinput.DefaultCurrentPlaceholderSuggestion = "8"
 
 	textInput := commandinput.New[cmdMetadata]()
-	m := model{suggestions: suggestions(textInput), textInput: textInput}
+	m := appModel{suggestions: suggestions(textInput), textInput: textInput}
 
-	promptModel, _ := prompt.New(
-		m.completer,
-		m.executor,
+	promptModel, _ := prompt.New[cmdMetadata](
+		m,
 		textInput,
 	)
-	m.promptModel = promptModel
 
-	if _, err := tea.NewProgram(&m, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
+	if _, err := tea.NewProgram(promptModel, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
 		fmt.Printf("Could not start program :(\n%v\n", err)
 		os.Exit(1)
 	}

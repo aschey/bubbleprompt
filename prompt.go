@@ -17,11 +17,15 @@ const (
 	executing
 )
 
-type Executor[T any] func(input string, selectedSuggestion *input.Suggestion[T]) (tea.Model, error)
+type AppModel[T any] interface {
+	Update(msg tea.Msg) (AppModel[T], tea.Cmd)
+	Execute(input string, prompt *Model[T]) (tea.Model, error)
+	Complete(prompt Model[T]) ([]input.Suggestion[T], error)
+}
 
 type Model[T any] struct {
 	completer               completerModel[T]
-	executor                Executor[T]
+	app                     AppModel[T]
 	textInput               input.Input[T]
 	renderer                renderer.Renderer
 	formatters              input.Formatters
@@ -30,14 +34,15 @@ type Model[T any] struct {
 	lastTypedCursorPosition int
 	typedRunes              []rune
 	ready                   bool
+	size                    tea.WindowSizeMsg
 	err                     error
 }
 
-func New[T any, I input.Input[T]](completer Completer[T], executor Executor[T], textInput I, opts ...Option[T]) (Model[T], error) {
+func New[T any](app AppModel[T], textInput input.Input[T], opts ...Option[T]) (Model[T], error) {
 	formatters := input.DefaultFormatters()
 	model := Model[T]{
-		completer:  newCompleterModel(completer, textInput, formatters.ErrorText, 6),
-		executor:   executor,
+		completer:  newCompleterModel(app.Complete, textInput, formatters.ErrorText, 6),
+		app:        app,
 		textInput:  textInput,
 		renderer:   &renderer.UnmanagedRenderer{},
 		formatters: formatters,
@@ -56,10 +61,6 @@ func (m *Model[T]) SetMaxSuggestions(maxSuggestions int) {
 	m.completer.maxSuggestions = maxSuggestions
 }
 
-func (m *Model[T]) SetRenderer(renderer renderer.Renderer) {
-	m.renderer = renderer
-}
-
 func (m Model[T]) Formatters() input.Formatters {
 	return m.formatters
 }
@@ -68,8 +69,26 @@ func (m *Model[T]) SetFormatters(formatters input.Formatters) {
 	m.formatters = formatters
 }
 
-func (m *Model[T]) GetSelectedSuggestion() *input.Suggestion[T] {
+func (m Model[T]) SelectedSuggestion() *input.Suggestion[T] {
 	return m.completer.getSelectedSuggestion()
+}
+
+func (m Model[T]) TextInput() input.Input[T] {
+	return m.textInput
+}
+
+type rendererMsg struct {
+	renderer      renderer.Renderer
+	retainHistory bool
+}
+
+func SetRenderer(r renderer.Renderer, retainHistory bool) tea.Cmd {
+	return func() tea.Msg {
+		return rendererMsg{
+			renderer:      r,
+			retainHistory: retainHistory,
+		}
+	}
 }
 
 var shutdown bool = false

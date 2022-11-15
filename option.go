@@ -23,14 +23,21 @@ func WithMaxSuggestions[T any](maxSuggestions int) Option[T] {
 
 func WithUnmanagedRenderer[T any]() Option[T] {
 	return func(model *Model[T]) error {
-		model.SetRenderer(renderer.NewUnmanagedRenderer())
+		model.renderer = renderer.NewUnmanagedRenderer()
 		return nil
 	}
 }
 
-func WithViewportRenderer[T any]() Option[T] {
+func WithViewportRenderer[T any](skipLines int) Option[T] {
 	return func(model *Model[T]) error {
-		model.SetRenderer(renderer.NewViewportRenderer())
+		model.renderer = renderer.NewViewportRenderer(skipLines)
+		return nil
+	}
+}
+
+func WithRenderer[T any](r renderer.Renderer) Option[T] {
+	return func(model *Model[T]) error {
+		model.renderer = r
 		return nil
 	}
 }

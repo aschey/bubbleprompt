@@ -14,11 +14,12 @@ type Model[T any] struct {
 	lexerModel *parserinput.LexerModel[T]
 }
 
-func New[T any](options ...Option) *Model[T] {
-	settings := &settings{
+func New[T any](options ...Option[T]) *Model[T] {
+	settings := &settings[T]{
 		delimiterRegex:    `\s+`,
 		tokenRegex:        `("[^"]*"?)|('[^']*'?)|[^\s]+`,
 		selectedTextStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("10")),
+		lexerOptions:      []parserinput.Option[T]{},
 	}
 	for _, option := range options {
 		if err := option(settings); err != nil {
@@ -44,9 +45,10 @@ func New[T any](options ...Option) *Model[T] {
 
 	m := &Model[T]{
 		parserinput.NewLexerModel(lexer,
-			parserinput.WithDelimiterTokens[T]("Delimiter"),
-			parserinput.WithFormatter[T](formatter),
-		),
+			append(settings.lexerOptions,
+				parserinput.WithDelimiterTokens[T]("Delimiter"),
+				parserinput.WithFormatter[T](formatter),
+			)...),
 	}
 
 	return m
