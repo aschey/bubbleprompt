@@ -50,7 +50,7 @@ func secondLevelSuggestions(textInput *commandinput.Model[cmdMetadata]) []input.
 	}
 }
 
-var flags = []commandinput.Flag{
+var flags = []commandinput.FlagInput{
 	{Short: "t", Long: "test", Description: "test flag"},
 }
 
@@ -70,7 +70,7 @@ func (m appModel) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Sugge
 	time.Sleep(100 * time.Millisecond)
 	suggestions := m.suggestions
 	if m.textInput.CommandCompleted() {
-		if m.textInput.ParsedValue().Command.Value == suggestions[2].Text {
+		if m.textInput.ParsedValue().Command.Value() == suggestions[2].Text {
 			return m.textInput.FlagSuggestions(m.textInput.CurrentTokenBeforeCursor(), flags, nil), nil
 		}
 		suggestions = secondLevelSuggestions(m.textInput)

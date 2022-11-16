@@ -28,9 +28,9 @@ func WithUnmanagedRenderer[T any]() Option[T] {
 	}
 }
 
-func WithViewportRenderer[T any](skipLines int) Option[T] {
+func WithViewportRenderer[T any](offset renderer.ViewportOffset) Option[T] {
 	return func(model *Model[T]) error {
-		model.renderer = renderer.NewViewportRenderer(skipLines)
+		model.renderer = renderer.NewViewportRenderer(offset)
 		return nil
 	}
 }

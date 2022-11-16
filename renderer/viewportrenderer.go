@@ -8,13 +8,18 @@ import (
 )
 
 type ViewportRenderer struct {
-	viewport  viewport.Model
-	history   string
-	skipLines int
+	viewport viewport.Model
+	history  string
+	offset   ViewportOffset
 }
 
-func NewViewportRenderer(skipLines int) *ViewportRenderer {
-	return &ViewportRenderer{skipLines: skipLines}
+type ViewportOffset struct {
+	WidthOffset  int
+	HeightOffset int
+}
+
+func NewViewportRenderer(offset ViewportOffset) *ViewportRenderer {
+	return &ViewportRenderer{offset: offset}
 }
 
 func (v *ViewportRenderer) View() string {
@@ -22,14 +27,14 @@ func (v *ViewportRenderer) View() string {
 }
 
 func (v *ViewportRenderer) Initialize(msg tea.WindowSizeMsg) {
-	v.viewport = viewport.New(msg.Width, msg.Height-v.skipLines)
+	v.SetSize(msg)
 	v.viewport.KeyMap.Up = key.NewBinding(key.WithKeys("ctrl+up"))
 	v.viewport.KeyMap.Down = key.NewBinding(key.WithKeys("ctrl+down"))
 }
 
 func (v *ViewportRenderer) SetSize(msg tea.WindowSizeMsg) {
-	v.viewport.Width = msg.Width
-	v.viewport.Height = msg.Height - v.skipLines
+	v.viewport.Width = msg.Width - v.offset.WidthOffset
+	v.viewport.Height = msg.Height - v.offset.HeightOffset
 }
 
 func (v *ViewportRenderer) Update(msg tea.Msg) (Renderer, tea.Cmd) {

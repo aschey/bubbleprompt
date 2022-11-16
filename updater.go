@@ -16,7 +16,9 @@ func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.Type {
-		case tea.KeyCtrlC, tea.KeyEsc:
+		// Ctrl+C should always shutdown the whole program regardless
+		//of what the executor is doing
+		case tea.KeyCtrlC:
 			shutdown = true
 			return m, tea.Quit
 		}
@@ -82,7 +84,7 @@ func (m *Model[T]) updateExecuting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool
 	// Check if the model sent the quit command
 	// When this happens we just want to quit the executor, not the entire program
 	case quitAttempted:
-		m.finalizeExecutor(m.executorModel)
+		cmds = append(cmds, m.finalizeExecutor(m.executorModel))
 		// Re-focus input when finished
 		return append(cmds, m.textInput.Focus()), true
 	default:
@@ -102,6 +104,11 @@ func (m *Model[T]) updateCompleting(msg tea.Msg, cmds []tea.Cmd, prevRunes []run
 	case tea.KeyMsg:
 		scrollToBottom = true
 		switch msg.Type {
+		case tea.KeyEscape:
+			// Escape should only shutdown the program in completer mode, otherwise this could interfere
+			// with the executor model
+			shutdown = true
+			return append(cmds, tea.Quit), scrollToBottom
 		// Select next/previous list entry
 		case tea.KeyUp, tea.KeyDown, tea.KeyTab:
 			cmds = m.updateChosenListEntry(msg, cmds)
@@ -152,7 +159,7 @@ func (m *Model[T]) finishUpdate(msg tea.Msg) tea.Cmd {
 	return m.textInput.OnUpdateFinish(msg, suggestion, isSelected)
 }
 
-func (m *Model[T]) finalizeExecutor(executorModel *executorModel) {
+func (m *Model[T]) finalizeExecutor(executorModel *executorModel) tea.Cmd {
 	m.completer.unselectSuggestion()
 	// Store the final executor view in the history
 	// Need to store previous lines in a string instead of a []string in order to handle newlines from the tea.Model's View value properly
@@ -160,6 +167,7 @@ func (m *Model[T]) finalizeExecutor(executorModel *executorModel) {
 	m.renderer.AddOutput(executorModel.View())
 	m.textInput.OnExecutorFinished()
 	m.updateExecutor(nil)
+	return func() tea.Msg { return ExecutorFinishedMsg(executorModel.inner) }
 }
 
 func (m *Model[T]) updateWindowSizeMsg(msg tea.WindowSizeMsg) {
@@ -230,7 +238,7 @@ func (m *Model[T]) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	// Just call the view method once and finalize the result
 	// This makes the output a little cleaner if the completer function is slow
 	if _, ok := innerExecutor.(executor.StringModel); ok {
-		m.finalizeExecutor(executorModel)
+		cmds = append(cmds, m.finalizeExecutor(executorModel))
 	} else {
 		m.updateExecutor(executorModel)
 		cmds = append(cmds, executorModel.Init())

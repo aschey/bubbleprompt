@@ -3,12 +3,14 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
 	"github.com/aschey/bubbleprompt/executor"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/commandinput"
+	"github.com/aschey/bubbleprompt/renderer"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -34,16 +36,16 @@ func (m appModel) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Sugge
 
 func (m appModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
 	parsed := m.textInput.ParsedValue()
-	args := parsed.Args.Value
+	args := parsed.Args
 	if len(args) == 0 {
 		return nil, fmt.Errorf("At least one argument is required")
 	}
 	inputFormatters := m.textInput.Formatters()
 	promptFormatters := promptModel.Formatters()
 
-	switch parsed.Command.Value {
+	switch parsed.Command.Value() {
 	case "cursor-mode":
-		switch args[0].Value {
+		switch args[0].Value() {
 		case "blink":
 			return executor.NewCmdModel("blinking cursor", m.textInput.SetCursorMode(textinput.CursorBlink)), nil
 		case "static":
@@ -55,9 +57,9 @@ func (m appModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]) 
 		if len(args) < 2 {
 			return nil, fmt.Errorf("At least two arguments are required")
 		}
-		color := args[1].Value
+		color := args[1].Value()
 
-		switch args[0].Value {
+		switch args[0].Value() {
 		case "name":
 			promptFormatters.Name.Style = promptFormatters.Name.Style.Background(lipgloss.Color(color))
 		case "description":
@@ -68,9 +70,9 @@ func (m appModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]) 
 		if len(args) < 2 {
 			return nil, fmt.Errorf("At least two arguments are required")
 		}
-		color := args[1].Value
+		color := args[1].Value()
 
-		switch args[0].Value {
+		switch args[0].Value() {
 		case "selected":
 			inputFormatters.SelectedText = inputFormatters.SelectedText.Foreground(lipgloss.Color(color))
 		case "cursor":
@@ -78,10 +80,25 @@ func (m appModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]) 
 		}
 
 	case "prompt":
-		promptValue := args[0].Value
+		promptValue := args[0].Value()
 		m.textInput.SetPrompt(promptValue + " ")
 		if len(args) > 1 {
-			inputFormatters.Prompt = inputFormatters.Prompt.Foreground(lipgloss.Color(args[1].Value))
+			inputFormatters.Prompt = inputFormatters.Prompt.Foreground(lipgloss.Color(args[1].Value()))
+		}
+
+	case "max-suggestions":
+		maxSuggestions, err := strconv.ParseInt(args[0].Value(), 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		promptModel.SetMaxSuggestions(int(maxSuggestions))
+
+	case "renderer":
+		switch args[0].Value() {
+		case "viewport":
+			return executor.NewCmdModel("set viewport renderer", prompt.SetRenderer(renderer.NewViewportRenderer(renderer.ViewportOffset{}), true)), nil
+		case "unmanaged":
+			return executor.NewCmdModel("set unmanaged renderer", prompt.SetRenderer(renderer.NewUnmanagedRenderer(), true)), nil
 		}
 	}
 
@@ -189,6 +206,24 @@ func main() {
 			Description: "set prompt text and foreground",
 			Metadata: cmdMetadata{
 				CmdMetadata: commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<value>"), textInput.NewPositionalArg("[color]")),
+			},
+		},
+		{
+			Text:        "max-suggestions",
+			Description: "set max suggestions",
+			Metadata: cmdMetadata{
+				CmdMetadata: commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<number of suggestions>")),
+			},
+		},
+		{
+			Text:        "renderer",
+			Description: "change the renderer",
+			Metadata: cmdMetadata{
+				CmdMetadata: commandMetadata,
+				children: []input.Suggestion[cmdMetadata]{
+					{Text: "unmanaged", Description: "use the unmanaged renderer"},
+					{Text: "viewport", Description: "use the viewport renderer"},
+				},
 			},
 		},
 	}

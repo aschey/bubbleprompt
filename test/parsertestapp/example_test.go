@@ -13,6 +13,7 @@ import (
 	"github.com/aschey/bubbleprompt/input/commandinput"
 	"github.com/aschey/bubbleprompt/input/parser"
 	"github.com/aschey/bubbleprompt/input/parserinput"
+	"github.com/aschey/bubbleprompt/renderer"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -81,7 +82,7 @@ func TestApp(t *testing.T) {
 	promptModel, _ := prompt.New[any](
 		appModel,
 		textInput,
-		prompt.WithViewportRenderer[any](1),
+		prompt.WithViewportRenderer[any](renderer.ViewportOffset{HeightOffset: 1}),
 	)
 
 	if _, err := tea.NewProgram(promptModel, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {

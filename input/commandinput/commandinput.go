@@ -37,14 +37,14 @@ type FlagPlaceholder struct {
 	Style lipgloss.Style
 }
 
-type Flag struct {
+type FlagInput struct {
 	Short       string
 	Long        string
 	Placeholder FlagPlaceholder
 	Description string
 }
 
-func (f Flag) RequiresArg() bool {
+func (f FlagInput) RequiresArg() bool {
 	return len(f.Placeholder.text) > 0
 }
 
@@ -63,8 +63,8 @@ type Model[T CmdMetadataAccessor] struct {
 	selectedCommand     *input.Suggestion[T]
 	currentFlag         *input.Suggestion[T]
 	formatters          Formatters
-	parser              parser.Parser[Statement]
-	parsedText          *Statement
+	parser              parser.Parser[statement]
+	parsedText          *statement
 }
 
 type TokenPos struct {
@@ -90,7 +90,7 @@ func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T] {
 		subcommandWithArgs: "",
 		prompt:             "> ",
 		formatters:         formatters,
-		parsedText:         &Statement{},
+		parsedText:         &statement{},
 		delimiterRegex:     regexp.MustCompile(`\s+`),
 		defaultDelimiter:   " ",
 	}
@@ -222,7 +222,7 @@ func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	return cmd
 }
 
-func (m *Model[T]) FlagSuggestions(inputStr string, flags []Flag, suggestionFunc func(Flag) T) []input.Suggestion[T] {
+func (m *Model[T]) FlagSuggestions(inputStr string, flags []FlagInput, suggestionFunc func(FlagInput) T) []input.Suggestion[T] {
 	inputRunes := []rune(inputStr)
 	suggestions := []input.Suggestion[T]{}
 	isLong := strings.HasPrefix(inputStr, "--")
@@ -457,11 +457,11 @@ func (m *Model[T]) Runes() []rune {
 }
 
 func (m *Model[T]) ParsedValue() Statement {
-	return *m.parsedText
+	return (*m.parsedText).toStatement()
 }
 
 func (m *Model[T]) CommandBeforeCursor() string {
-	parsed := m.ParsedValue()
+	parsed := m.parsedText
 	commandRunes := []rune(parsed.Command.Value)
 	if m.CursorIndex() >= len(commandRunes) {
 		return parsed.Command.Value
@@ -481,7 +481,7 @@ func (m *Model[T]) SetValue(s string) {
 
 func (m *Model[T]) ResetValue() {
 	m.textinput.SetValue("")
-	m.parsedText = &Statement{}
+	m.parsedText = &statement{}
 }
 
 func (m *Model[T]) isDelimiter(s string) bool {
@@ -508,7 +508,7 @@ func (m Model[T]) AllValuesBeforeCursor() []string {
 	return values
 }
 
-func (m Model[T]) allTokens(statement *Statement) []input.Token {
+func (m Model[T]) allTokens(statement *statement) []input.Token {
 	tokens := []input.Token{statement.Command.ToToken(0, "command")}
 	for i, arg := range statement.Args.Value {
 		tokens = append(tokens, arg.ToToken(i+1, "arg"))

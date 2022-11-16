@@ -6,6 +6,8 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+type ExecutorFinishedMsg tea.Model
+
 type executorModel struct {
 	inner          tea.Model
 	errorTextStyle lipgloss.Style

@@ -35,8 +35,8 @@ type appModel struct {
 func (m appModel) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
 	parsed := m.textInput.ParsedValue()
 	completed := m.textInput.CompletedArgsBeforeCursor()
-	if len(completed) == 1 && parsed.Command.Value == "get" && parsed.Args.Value[0].Value == "weather" {
-		flags := []commandinput.Flag{
+	if len(completed) == 1 && parsed.Command.Value() == "get" && parsed.Args[0].Value() == "weather" {
+		flags := []commandinput.FlagInput{
 			{
 				Short:       "d",
 				Long:        "days",
@@ -51,15 +51,15 @@ func (m appModel) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Sugge
 
 func (m appModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
 	parsed := m.textInput.ParsedValue()
-	args := parsed.Args.Value
-	flags := parsed.Flags.Value
+	args := parsed.Args
+	flags := parsed.Flags
 	if len(args) == 0 {
 		return nil, fmt.Errorf("1 argument required")
 	}
-	arg := args[0].Value
-	switch parsed.Command.Value {
+	arg := args[0]
+	switch parsed.Command.Value() {
 	case "get":
-		switch arg {
+		switch arg.Value() {
 		case "weather":
 			days := "1"
 			if len(flags) > 0 {
@@ -68,11 +68,11 @@ func (m appModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]) 
 					if flag.Value == nil {
 						return nil, fmt.Errorf("flag value required")
 					}
-					_, err := strconv.ParseInt(flag.Value.Value, 10, 64)
+					_, err := strconv.ParseInt(flag.Value.Value(), 10, 64)
 					if err != nil {
 						return nil, fmt.Errorf("flag value must be a valid int")
 					}
-					days = flag.Value.Value
+					days = flag.Value.Value()
 				}
 			}
 			days = m.executorValueStyle.Render(days)
@@ -82,15 +82,15 @@ func (m appModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]) 
 			return executor.NewStringModel("the secret is: " + m.executorValueStyle.Render(m.secret)), nil
 		}
 	case "set":
-		switch arg {
+		switch arg.Value() {
 		case "secret":
 			if len(args) < 2 {
 				return nil, fmt.Errorf("secret value required")
 			}
-			secretVal := args[1].Value
+			secretVal := args[1]
 
 			return executor.NewCmdModel("Secret updated", func() tea.Msg {
-				return secretMsg(secretVal)
+				return secretMsg(secretVal.Value())
 			}), nil
 		}
 	}

@@ -14,6 +14,7 @@ import (
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/parser"
 	"github.com/aschey/bubbleprompt/input/parserinput"
+	"github.com/aschey/bubbleprompt/renderer"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/dop251/goja"
 )
@@ -159,7 +160,7 @@ func main() {
 	promptModel, err := prompt.New[any](
 		appModel,
 		textInput,
-		prompt.WithViewportRenderer[any](1),
+		prompt.WithViewportRenderer[any](renderer.ViewportOffset{HeightOffset: 1}),
 	)
 	if err != nil {
 		panic(err)
