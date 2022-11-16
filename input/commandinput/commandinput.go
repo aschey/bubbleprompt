@@ -60,8 +60,8 @@ type Model[T CmdMetadataAccessor] struct {
 	args                []arg
 	showFlagPlaceholder bool
 	argIndex            int
-	selectedCommand     *input.Suggestion[T]
 	currentFlag         *input.Suggestion[T]
+	selectedTokenPos    *TokenPos
 	formatters          Formatters
 	parser              parser.Parser[statement]
 	parsedText          *statement
@@ -171,10 +171,6 @@ func (m *Model[T]) ShouldUnselectSuggestion(prevRunes []rune, msg tea.KeyMsg) bo
 
 func (m *Model[T]) ShouldClearSuggestions(prevText []rune, msg tea.KeyMsg) bool {
 	return m.isDelimiter(msg.String())
-}
-
-func (m *Model[T]) SelectedCommand() *input.Suggestion[T] {
-	return m.selectedCommand
 }
 
 func (m *Model[T]) ArgsBeforeCursor() []string {
@@ -389,10 +385,7 @@ func (m *Model[T]) OnSuggestionChanged(suggestion input.Suggestion[T]) {
 	tokenRunes := []rune(token)
 	suggestionRunes := []rune(suggestion.Text)
 	tokenPos := m.CurrentTokenPos()
-
-	if tokenPos.Index == 0 {
-		m.selectedCommand = &suggestion
-	}
+	m.selectedTokenPos = &tokenPos
 
 	textRunes := m.Runes()
 	if tokenPos.Start > -1 {
@@ -431,9 +424,7 @@ func (m *Model[T]) OnSuggestionChanged(suggestion input.Suggestion[T]) {
 }
 
 func (m *Model[T]) OnSuggestionUnselected() {
-	if !m.CommandCompleted() {
-		m.selectedCommand = nil
-	}
+	m.selectedTokenPos = nil
 }
 
 func (m *Model[T]) CompletionRunes(runes []rune) []rune {

@@ -99,16 +99,21 @@ var _ = Describe("Command Input", func() {
 			})
 		})
 
-		It("shows the correct styles", func() {
-			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				firstSuggestionLen := leftPadding + len(suggestions[1].Text) + margin
-				secondSuggestionLen := firstSuggestionLen + len(secondLevelSuggestions[0].Text) + margin
+		When("the user selects a subcommand suggestion", Ordered, func() {
+			BeforeAll(func() {
+				console.SendString(tuitest.KeyDown)
+			})
 
-				return state.ForegroundColor(0, leftPadding).String() == commandinput.DefaultSelectedTextColor &&
-					state.ForegroundColor(0, firstSuggestionLen).String() == commandinput.DefaultCurrentPlaceholderSuggestion &&
-					state.ForegroundColor(0, secondSuggestionLen).String() == commandinput.DefaultPlaceholderForeground
+			It("shows the correct styles", func() {
+				_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+					secondSuggestionStart := leftPadding + len(suggestions[1].Text) + margin
+
+					return state.ForegroundColor(0, leftPadding).Int() == tuitest.DefaultFG &&
+						state.ForegroundColor(0, secondSuggestionStart).String() == commandinput.DefaultSelectedTextColor
+				})
 			})
 		})
+
 	})
 
 	When("the user views a flag suggestion", Ordered, func() {

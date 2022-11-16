@@ -55,8 +55,8 @@ func (m appModel) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Sugge
 		return completer.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
 	}
 
-	cmd := m.textInput.SelectedCommand()
-	if cmd != nil && len(cmd.Metadata.PositionalArgs) > 0 && len(m.textInput.CompletedArgsBeforeCursor()) == 0 {
+	parsed := m.textInput.ParsedValue()
+	if len(parsed.Args) > 0 && len(m.textInput.CompletedArgsBeforeCursor()) == 0 {
 		pathCompleter := completer.PathCompleter[cmdMetadata]{}
 		return pathCompleter.Complete(m.textInput.CurrentTokenBeforeCursor()), nil
 	}

@@ -39,18 +39,24 @@ func (b cmdViewBuilder[T]) View() string {
 	return b.model.formatters.Prompt.Render(string(b.model.prompt)) + b.viewBuilder.View()
 }
 
+func (b cmdViewBuilder[T]) render(runes []rune, column int, style lipgloss.Style) {
+	if b.model.selectedTokenPos != nil && b.model.selectedTokenPos.Start == column-1 {
+		b.viewBuilder.Render(runes, column, b.model.formatters.SelectedText)
+	} else {
+		b.viewBuilder.Render(runes, column, style)
+	}
+}
+
 func (b cmdViewBuilder[T]) renderCommand() {
 	commandRunes := []rune(b.model.parsedText.Command.Value)
-	if b.model.selectedCommand == nil {
-		b.viewBuilder.Render(commandRunes, b.model.parsedText.Command.Pos.Column, b.model.formatters.Text)
-	} else {
-		b.viewBuilder.Render(commandRunes, b.model.parsedText.Command.Pos.Column, b.model.formatters.SelectedText)
-	}
+	b.render(commandRunes, b.model.parsedText.Command.Pos.Column, b.model.formatters.Text)
 }
 
 func (b cmdViewBuilder[T]) renderPrefix() {
 	commandRunes := []rune(b.model.parsedText.Command.Value)
-	if b.showPlaceholders && strings.HasPrefix(string(b.model.commandPlaceholder), b.model.Value()) && string(b.model.commandPlaceholder) != string(commandRunes) {
+	if b.showPlaceholders &&
+		strings.HasPrefix(string(b.model.commandPlaceholder), b.model.Value()) &&
+		string(b.model.commandPlaceholder) != string(commandRunes) {
 		b.viewBuilder.Render(b.model.commandPlaceholder[len(commandRunes):], b.model.parsedText.Command.Pos.Column+len(commandRunes), b.model.formatters.Placeholder)
 	}
 }
@@ -61,7 +67,8 @@ func (b cmdViewBuilder[T]) renderArgs() {
 		if i < len(b.model.args) {
 			argStyle = b.model.args[i].argStyle
 		}
-		b.viewBuilder.Render([]rune(arg.Value), arg.Pos.Column, argStyle)
+		b.render([]rune(arg.Value), arg.Pos.Column, argStyle)
+
 	}
 }
 
@@ -74,7 +81,7 @@ func (b cmdViewBuilder[T]) renderCurrentArg() {
 		// Render the rest of the arg placeholder only if the prefix matches
 		if arg.persist && strings.HasPrefix(arg.text, argVal) {
 			tokenPos := len([]rune(argVal))
-			b.viewBuilder.Render([]rune(arg.text)[tokenPos:], b.viewBuilder.ViewLen(), arg.placeholderStyle)
+			b.render([]rune(arg.text)[tokenPos:], b.viewBuilder.ViewLen(), arg.placeholderStyle)
 		}
 	}
 }
@@ -96,7 +103,7 @@ func (b cmdViewBuilder[T]) renderFlags() {
 		if flag.Value != nil {
 			flagValueRunes = []rune(flag.Value.Value)
 		}
-		b.viewBuilder.Render(flagNameRunes, flag.Pos.Column, b.model.formatters.Flag.Flag)
+		b.render(flagNameRunes, flag.Pos.Column, b.model.formatters.Flag.Flag)
 		// Render delimiter only once the full flag has been typed
 		if b.model.currentFlag == nil ||
 			len(flagNameRunes) >= len(currentFlagRunes) ||
@@ -109,7 +116,7 @@ func (b cmdViewBuilder[T]) renderFlags() {
 		if (flag.Pos.Column-1 != currentPos) &&
 			(currentPos < b.model.CursorIndex() || i < len(flags)-1 || (len(currentToken) > 0 && !strings.HasPrefix(currentToken, "-"))) {
 			if flag.Value != nil {
-				b.viewBuilder.Render(flagValueRunes, flag.Value.Pos.Column, b.flagValueStyle(flag.Value.Value))
+				b.render(flagValueRunes, flag.Value.Pos.Column, b.flagValueStyle(flag.Value.Value))
 			}
 
 		} else {
@@ -125,7 +132,7 @@ func (b cmdViewBuilder[T]) renderFlags() {
 				// Render the rest of the arg placeholder only if the prefix matches
 				if b.showPlaceholders && strings.HasPrefix(b.model.currentFlag.Text, argVal) {
 					tokenPos := len(argVal)
-					b.viewBuilder.Render(currentFlagRunes[tokenPos:], b.viewBuilder.ViewLen(), b.model.formatters.Placeholder)
+					b.render(currentFlagRunes[tokenPos:], b.viewBuilder.ViewLen(), b.model.formatters.Placeholder)
 				}
 
 				if len(currentFlagPlaceholderRunes) > 0 &&
@@ -141,7 +148,7 @@ func (b cmdViewBuilder[T]) renderFlags() {
 			}
 
 			if flag.Value != nil {
-				b.viewBuilder.Render(flagValueRunes, flag.Value.Pos.Column, b.flagValueStyle(flag.Value.Value))
+				b.render(flagValueRunes, flag.Value.Pos.Column, b.flagValueStyle(flag.Value.Value))
 			}
 		}
 	}
