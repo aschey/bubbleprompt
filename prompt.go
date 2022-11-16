@@ -41,7 +41,7 @@ type Model[T any] struct {
 func New[T any](app AppModel[T], textInput input.Input[T], opts ...Option[T]) (Model[T], error) {
 	formatters := input.DefaultFormatters()
 	model := Model[T]{
-		completer:  newCompleterModel(app.Complete, textInput, formatters.ErrorText, 6),
+		completer:  newCompleterModel(textInput, formatters.ErrorText, 6),
 		app:        app,
 		textInput:  textInput,
 		renderer:   &renderer.UnmanagedRenderer{},
@@ -104,7 +104,7 @@ func MsgFilter(_ tea.Model, msg tea.Msg) tea.Msg {
 }
 
 func (m Model[T]) Init() tea.Cmd {
-	return tea.Batch(m.textInput.Init(), m.completer.Init())
+	return tea.Batch(m.textInput.Init(), m.completer.Init(m))
 }
 
 func (m Model[T]) View() string {

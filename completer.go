@@ -18,8 +18,6 @@ const (
 	running
 )
 
-type Completer[T any] func(prompt Model[T]) ([]input.Suggestion[T], error)
-
 type completionMsg[T any] struct {
 	suggestions []input.Suggestion[T]
 	err         error
@@ -44,7 +42,6 @@ func OneShotCompleter(nextTrigger time.Duration) tea.Cmd {
 }
 
 type completerModel[T any] struct {
-	completerFunc  Completer[T]
 	state          completerState
 	textInput      input.Input[T]
 	suggestions    []input.Suggestion[T]
@@ -60,10 +57,9 @@ type completerModel[T any] struct {
 	err            error
 }
 
-func newCompleterModel[T any](completerFunc Completer[T], textInput input.Input[T], errorText lipgloss.Style, maxSuggestions int) completerModel[T] {
+func newCompleterModel[T any](textInput input.Input[T], errorText lipgloss.Style, maxSuggestions int) completerModel[T] {
 	return completerModel[T]{
 		textInput:      textInput,
-		completerFunc:  completerFunc,
 		state:          idle,
 		maxSuggestions: maxSuggestions,
 		errorText:      errorText,
@@ -71,9 +67,9 @@ func newCompleterModel[T any](completerFunc Completer[T], textInput input.Input[
 	}
 }
 
-func (c completerModel[T]) Init() tea.Cmd {
+func (c completerModel[T]) Init(prompt Model[T]) tea.Cmd {
 	// Since the user hasn't typed anything on init, call the completer with empty text
-	return c.resetCompletions(Model[T]{})
+	return c.resetCompletions(prompt)
 }
 
 func (c completerModel[T]) Update(msg tea.Msg, prompt Model[T]) (completerModel[T], tea.Cmd) {
@@ -246,7 +242,7 @@ func (c *completerModel[T]) updateCompletionsCmd(prompt Model[T], forceUpdate bo
 	c.prevRunes = runesBeforeCursor
 
 	return func() tea.Msg {
-		filtered, err := c.completerFunc(prompt)
+		filtered, err := prompt.app.Complete(prompt)
 		return completionMsg[T]{suggestions: filtered, err: err}
 	}
 }
@@ -262,7 +258,7 @@ func (c *completerModel[T]) resetCompletions(prompt Model[T]) tea.Cmd {
 	c.prevRunes = []rune("")
 
 	return func() tea.Msg {
-		filtered, err := c.completerFunc(prompt)
+		filtered, err := prompt.app.Complete(prompt)
 		return completionMsg[T]{suggestions: filtered, err: err}
 	}
 }
