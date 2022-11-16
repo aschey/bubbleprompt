@@ -21,6 +21,7 @@ type appModel struct {
 }
 
 func (m appModel) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
+	time.Sleep(time.Second)
 	return m.suggestions, nil
 }
 
@@ -59,19 +60,9 @@ func (m appModel) Update(msg tea.Msg) (prompt.AppModel[any], tea.Cmd) {
 
 func main() {
 	textInput := simpleinput.New[any]()
-	suggestions := []input.Suggestion[any]{
-		{Text: "banana", Description: "good with peanut butter"},
-		{Text: "\"sugar apple\"", CompletionText: "sugar apple", Description: "spherical...ish"},
-		{Text: "jackfruit", Description: "the jack of all fruits"},
-		{Text: "snozzberry", Description: "tastes like snozzberries"},
-		{Text: "lychee", Description: "better than leeches"},
-		{Text: "mangosteen", Description: "it's not a mango"},
-		{Text: "durian", Description: "stinky"},
-	}
 
 	appModel := appModel{
-		suggestions: suggestions,
-		textInput:   textInput,
+		textInput: textInput,
 	}
 
 	promptModel, err := prompt.New[any](
