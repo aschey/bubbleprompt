@@ -1,14 +1,14 @@
 package completer
 
 import (
-	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/editor"
 )
 
 type Metadata[T any] interface {
-	Children() []input.Suggestion[T]
+	Children() []editor.Suggestion[T]
 }
 
-func GetRecursiveCompletions[T Metadata[T]](tokens []input.Token, cursor int, completions []input.Suggestion[T]) []input.Suggestion[T] {
+func GetRecursiveCompletions[T Metadata[T]](tokens []editor.Token, cursor int, completions []editor.Suggestion[T]) []editor.Suggestion[T] {
 	if len(tokens) == 0 {
 		return completions
 	}
@@ -17,7 +17,7 @@ func GetRecursiveCompletions[T Metadata[T]](tokens []input.Token, cursor int, co
 	if cursor <= token.End() {
 		prefixEnd := cursor - token.Start
 		if prefixEnd < 0 {
-			return []input.Suggestion[T]{}
+			return []editor.Suggestion[T]{}
 		}
 		return FilterHasPrefix(string([]rune(token.Value)[:cursor-token.Start]), completions)
 	}
@@ -29,8 +29,8 @@ func GetRecursiveCompletions[T Metadata[T]](tokens []input.Token, cursor int, co
 					return GetRecursiveCompletions(tokens[1:], cursor, children)
 				}
 			}
-			return []input.Suggestion[T]{}
+			return []editor.Suggestion[T]{}
 		}
 	}
-	return []input.Suggestion[T]{}
+	return []editor.Suggestion[T]{}
 }

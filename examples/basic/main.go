@@ -6,20 +6,20 @@ import (
 
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
+	"github.com/aschey/bubbleprompt/editor"
+	"github.com/aschey/bubbleprompt/editor/simpleinput"
 	"github.com/aschey/bubbleprompt/executor"
-	"github.com/aschey/bubbleprompt/input"
-	"github.com/aschey/bubbleprompt/input/simpleinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
-type appModel struct {
-	suggestions []input.Suggestion[any]
+type model struct {
+	suggestions []editor.Suggestion[any]
 	textInput   *simpleinput.Model[any]
 	outputStyle lipgloss.Style
 }
 
-func (m appModel) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
+func (m model) Complete(promptModel prompt.Model[any]) ([]editor.Suggestion[any], error) {
 	if len(m.textInput.AllTokens()) > 1 {
 		return nil, nil
 	}
@@ -27,7 +27,7 @@ func (m appModel) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[an
 	return completer.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
 }
 
-func (m appModel) Execute(input string, promptModel *prompt.Model[any]) (tea.Model, error) {
+func (m model) Execute(input string, promptModel *prompt.Model[any]) (tea.Model, error) {
 	tokens := m.textInput.TokenValues()
 	if len(tokens) == 0 {
 		return executor.NewStringModel("No selection"), nil
@@ -35,13 +35,13 @@ func (m appModel) Execute(input string, promptModel *prompt.Model[any]) (tea.Mod
 	return executor.NewStringModel("You picked: " + m.outputStyle.Render(tokens[0])), nil
 }
 
-func (m appModel) Update(msg tea.Msg) (prompt.AppModel[any], tea.Cmd) {
+func (m model) Update(msg tea.Msg) (prompt.InputHandler[any], tea.Cmd) {
 	return m, nil
 }
 
 func main() {
 	textInput := simpleinput.New[any]()
-	suggestions := []input.Suggestion[any]{
+	suggestions := []editor.Suggestion[any]{
 		{Text: "banana", Description: "good with peanut butter"},
 		{Text: "\"sugar apple\"", CompletionText: "sugar apple", Description: "spherical...ish"},
 		{Text: "jackfruit", Description: "the jack of all fruits"},
@@ -51,14 +51,14 @@ func main() {
 		{Text: "durian", Description: "stinky"},
 	}
 
-	appModel := appModel{
+	model := model{
 		suggestions: suggestions,
 		textInput:   textInput,
 		outputStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("13")),
 	}
 
 	promptModel, err := prompt.New[any](
-		appModel,
+		model,
 		textInput,
 	)
 	if err != nil {

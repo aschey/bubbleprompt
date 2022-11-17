@@ -10,10 +10,10 @@ import (
 	"github.com/alecthomas/chroma/v2/styles"
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
+	"github.com/aschey/bubbleprompt/editor"
+	"github.com/aschey/bubbleprompt/editor/parser"
+	"github.com/aschey/bubbleprompt/editor/parserinput"
 	"github.com/aschey/bubbleprompt/executor"
-	"github.com/aschey/bubbleprompt/input"
-	"github.com/aschey/bubbleprompt/input/parser"
-	"github.com/aschey/bubbleprompt/input/parserinput"
 	"github.com/aschey/bubbleprompt/renderer"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/dop251/goja"
@@ -23,24 +23,24 @@ const arrayType = "array"
 const objectType = "object"
 const stringType = "string"
 
-type appModel struct {
+type model struct {
 	textInput   *parserinput.ParserModel[any, statement]
-	suggestions []input.Suggestion[any]
+	suggestions []editor.Suggestion[any]
 	vm          *vm
 }
 
-func (m appModel) globalSuggestions() []input.Suggestion[any] {
+func (m model) globalSuggestions() []editor.Suggestion[any] {
 	currentBeforeCursor := m.textInput.CurrentTokenBeforeCursor()
 	vars := m.vm.GlobalObject().Keys()
-	suggestions := []input.Suggestion[any]{}
+	suggestions := []editor.Suggestion[any]{}
 	for _, v := range vars {
-		suggestions = append(suggestions, input.Suggestion[any]{Text: v})
+		suggestions = append(suggestions, editor.Suggestion[any]{Text: v})
 	}
 
 	return completer.FilterHasPrefix(currentBeforeCursor, suggestions)
 }
 
-func (m appModel) valueSuggestions(value goja.Value) []input.Suggestion[any] {
+func (m model) valueSuggestions(value goja.Value) []editor.Suggestion[any] {
 	if value == nil {
 		return nil
 	}
@@ -65,7 +65,7 @@ func (m appModel) valueSuggestions(value goja.Value) []input.Suggestion[any] {
 	}
 
 	completable := m.textInput.CompletableTokenBeforeCursor()
-	prev := m.textInput.FindLast(func(token input.Token, symbol string) bool {
+	prev := m.textInput.FindLast(func(token editor.Token, symbol string) bool {
 		return token.Start < currentToken.Start && symbol != "Whitespace"
 	})
 	prevToken := ""
@@ -78,9 +78,9 @@ func (m appModel) valueSuggestions(value goja.Value) []input.Suggestion[any] {
 		completable = strings.Trim(completable, `"`)
 	}
 
-	suggestions := []input.Suggestion[any]{}
+	suggestions := []editor.Suggestion[any]{}
 	for _, key := range objectVar.Keys() {
-		suggestions = append(suggestions, input.Suggestion[any]{
+		suggestions = append(suggestions, editor.Suggestion[any]{
 			Text:           keyWrap + key + keyWrap,
 			CompletionText: key,
 		})
@@ -89,7 +89,7 @@ func (m appModel) valueSuggestions(value goja.Value) []input.Suggestion[any] {
 	return completer.FilterHasPrefix(completable, suggestions)
 }
 
-func (m appModel) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
+func (m model) Complete(promptModel prompt.Model[any]) ([]editor.Suggestion[any], error) {
 	parsed, err := m.textInput.ParsedBeforeCursor()
 	if err != nil {
 		return nil, err
@@ -102,7 +102,7 @@ func (m appModel) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[an
 	return m.globalSuggestions(), nil
 }
 
-func (m appModel) Execute(input string, promptModel *prompt.Model[any]) (tea.Model, error) {
+func (m model) Execute(input string, promptModel *prompt.Model[any]) (tea.Model, error) {
 	return executor.NewAsyncStringModel(func() (string, error) {
 		err := m.textInput.Error()
 		if err != nil {
@@ -136,7 +136,7 @@ func (m appModel) Execute(input string, promptModel *prompt.Model[any]) (tea.Mod
 	}), nil
 }
 
-func (m appModel) Update(msg tea.Msg) (prompt.AppModel[any], tea.Cmd) {
+func (m model) Update(msg tea.Msg) (prompt.InputHandler[any], tea.Cmd) {
 	return m, nil
 }
 
@@ -151,14 +151,14 @@ func main() {
 	_, _ = vm.RunString(`pizza = {mushroom: 'magic', cheese: true, meat: {pepperoni: 1, sausage: 2 }}`)
 	_, _ = vm.RunString(`food = ['hummus', 'wine', {pizza: pizza}]`)
 
-	appModel := appModel{
-		suggestions: []input.Suggestion[any]{},
+	model := model{
+		suggestions: []editor.Suggestion[any]{},
 		textInput:   textInput,
 		vm:          vm,
 	}
 
 	promptModel, err := prompt.New[any](
-		appModel,
+		model,
 		textInput,
 		prompt.WithViewportRenderer[any](renderer.ViewportOffset{HeightOffset: 1}),
 	)

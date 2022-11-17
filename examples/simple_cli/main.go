@@ -7,32 +7,32 @@ import (
 
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
+	"github.com/aschey/bubbleprompt/editor"
+	"github.com/aschey/bubbleprompt/editor/commandinput"
 	"github.com/aschey/bubbleprompt/executor"
-	"github.com/aschey/bubbleprompt/input"
-	"github.com/aschey/bubbleprompt/input/commandinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type cmdMetadata struct {
 	commandinput.CmdMetadata
-	children []input.Suggestion[cmdMetadata]
+	children []editor.Suggestion[cmdMetadata]
 }
 
 type secretMsg string
 
-func (c cmdMetadata) Children() []input.Suggestion[cmdMetadata] {
+func (c cmdMetadata) Children() []editor.Suggestion[cmdMetadata] {
 	return c.children
 }
 
-type appModel struct {
-	suggestions        []input.Suggestion[cmdMetadata]
+type model struct {
+	suggestions        []editor.Suggestion[cmdMetadata]
 	textInput          *commandinput.Model[cmdMetadata]
 	secret             string
 	executorValueStyle lipgloss.Style
 }
 
-func (m appModel) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
+func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]editor.Suggestion[cmdMetadata], error) {
 	parsed := m.textInput.ParsedValue()
 	completed := m.textInput.CompletedArgsBeforeCursor()
 	if len(completed) == 1 && parsed.Command.Value() == "get" && parsed.Args[0].Value() == "weather" {
@@ -49,7 +49,7 @@ func (m appModel) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Sugge
 	return completer.GetRecursiveCompletions(m.textInput.Tokens(), m.textInput.CursorIndex(), m.suggestions), nil
 }
 
-func (m appModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
+func (m model) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
 	parsed := m.textInput.ParsedValue()
 	args := parsed.Args
 	flags := parsed.Flags
@@ -97,7 +97,7 @@ func (m appModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]) 
 	return nil, fmt.Errorf("Invalid input")
 }
 
-func (m appModel) Update(msg tea.Msg) (prompt.AppModel[cmdMetadata], tea.Cmd) {
+func (m model) Update(msg tea.Msg) (prompt.InputHandler[cmdMetadata], tea.Cmd) {
 	if msg, ok := msg.(secretMsg); ok {
 		m.secret = string(msg)
 	}
@@ -111,13 +111,13 @@ func main() {
 
 	commandMetadata := commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<command>"))
 
-	suggestions := []input.Suggestion[cmdMetadata]{
+	suggestions := []editor.Suggestion[cmdMetadata]{
 		{
 			Text:        "get",
 			Description: "retrieve things",
 			Metadata: cmdMetadata{
 				CmdMetadata: commandMetadata,
-				children: []input.Suggestion[cmdMetadata]{
+				children: []editor.Suggestion[cmdMetadata]{
 					{
 						Text:        "secret",
 						Description: "get the secret",
@@ -143,7 +143,7 @@ func main() {
 			Description: "update things",
 			Metadata: cmdMetadata{
 				CmdMetadata: commandMetadata,
-				children: []input.Suggestion[cmdMetadata]{
+				children: []editor.Suggestion[cmdMetadata]{
 					{
 						Text:        "secret",
 						Description: "update the secret",
@@ -158,7 +158,7 @@ func main() {
 			},
 		},
 	}
-	appModel := appModel{
+	model := model{
 		suggestions:        suggestions,
 		textInput:          textInput,
 		secret:             "hunter2",
@@ -166,7 +166,7 @@ func main() {
 	}
 
 	promptModel, err := prompt.New[cmdMetadata](
-		appModel,
+		model,
 		textInput,
 	)
 	if err != nil {

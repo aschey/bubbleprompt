@@ -1,7 +1,7 @@
 package prompt
 
 import (
-	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/editor"
 	"github.com/aschey/bubbleprompt/renderer"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -17,19 +17,19 @@ const (
 	executing
 )
 
-type AppModel[T any] interface {
-	Update(msg tea.Msg) (AppModel[T], tea.Cmd)
+type InputHandler[T any] interface {
+	Update(msg tea.Msg) (InputHandler[T], tea.Cmd)
 	Execute(input string, prompt *Model[T]) (tea.Model, error)
-	Complete(prompt Model[T]) ([]input.Suggestion[T], error)
+	Complete(prompt Model[T]) ([]editor.Suggestion[T], error)
 }
 
 type Model[T any] struct {
-	completer               completerModel[T]
-	app                     AppModel[T]
-	textInput               input.Input[T]
+	completionManager       completionManager[T]
+	inputHandler            InputHandler[T]
+	textInput               editor.Editor[T]
 	renderer                renderer.Renderer
-	formatters              input.Formatters
-	executorModel           *executorModel
+	formatters              editor.Formatters
+	executionManager        *executionManager
 	modelState              modelState
 	lastTypedCursorPosition int
 	typedRunes              []rune
@@ -38,14 +38,14 @@ type Model[T any] struct {
 	err                     error
 }
 
-func New[T any](app AppModel[T], textInput input.Input[T], opts ...Option[T]) (Model[T], error) {
-	formatters := input.DefaultFormatters()
+func New[T any](inputHandler InputHandler[T], textInput editor.Editor[T], opts ...Option[T]) (Model[T], error) {
+	formatters := editor.DefaultFormatters()
 	model := Model[T]{
-		completer:  newCompleterModel(textInput, formatters.ErrorText, 6),
-		app:        app,
-		textInput:  textInput,
-		renderer:   &renderer.UnmanagedRenderer{},
-		formatters: formatters,
+		completionManager: newCompletionManager(textInput, formatters.ErrorText, 6),
+		inputHandler:      inputHandler,
+		textInput:         textInput,
+		renderer:          &renderer.UnmanagedRenderer{},
+		formatters:        formatters,
 	}
 
 	for _, opt := range opts {
@@ -58,22 +58,22 @@ func New[T any](app AppModel[T], textInput input.Input[T], opts ...Option[T]) (M
 }
 
 func (m *Model[T]) SetMaxSuggestions(maxSuggestions int) {
-	m.completer.maxSuggestions = maxSuggestions
+	m.completionManager.maxSuggestions = maxSuggestions
 }
 
-func (m Model[T]) Formatters() input.Formatters {
+func (m Model[T]) Formatters() editor.Formatters {
 	return m.formatters
 }
 
-func (m *Model[T]) SetFormatters(formatters input.Formatters) {
+func (m *Model[T]) SetFormatters(formatters editor.Formatters) {
 	m.formatters = formatters
 }
 
-func (m Model[T]) SelectedSuggestion() *input.Suggestion[T] {
-	return m.completer.getSelectedSuggestion()
+func (m Model[T]) SelectedSuggestion() *editor.Suggestion[T] {
+	return m.completionManager.getSelectedSuggestion()
 }
 
-func (m Model[T]) TextInput() input.Input[T] {
+func (m Model[T]) TextInput() editor.Editor[T] {
 	return m.textInput
 }
 
@@ -104,7 +104,7 @@ func MsgFilter(_ tea.Model, msg tea.Msg) tea.Msg {
 }
 
 func (m Model[T]) Init() tea.Cmd {
-	return tea.Batch(m.textInput.Init(), m.completer.Init(m))
+	return tea.Batch(m.textInput.Init(), m.completionManager.Init(m))
 }
 
 func (m Model[T]) View() string {

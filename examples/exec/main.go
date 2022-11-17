@@ -8,16 +8,16 @@ import (
 
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
-	"github.com/aschey/bubbleprompt/input"
-	"github.com/aschey/bubbleprompt/input/commandinput"
+	"github.com/aschey/bubbleprompt/editor"
+	"github.com/aschey/bubbleprompt/editor/commandinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type cmdMetadata = commandinput.CmdMetadata
 
-type appModel struct {
-	suggestions []input.Suggestion[cmdMetadata]
+type model struct {
+	suggestions []editor.Suggestion[cmdMetadata]
 	textInput   *commandinput.Model[cmdMetadata]
 }
 
@@ -50,7 +50,7 @@ func (m cmdModel) View() string {
 
 type processFinishedMsg struct{ err error }
 
-func (m appModel) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
+func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]editor.Suggestion[cmdMetadata], error) {
 	if !m.textInput.CommandCompleted() {
 		return completer.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
 	}
@@ -63,7 +63,7 @@ func (m appModel) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Sugge
 	return nil, nil
 }
 
-func (m appModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
+func (m model) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
 	allValues := m.textInput.AllValues()
 	cmd := ""
 	args := []string{}
@@ -79,7 +79,7 @@ func (m appModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]) 
 	return cmdModel{cmd: exec.Command(cmd, args...)}, nil
 }
 
-func (m appModel) Update(msg tea.Msg) (prompt.AppModel[cmdMetadata], tea.Cmd) {
+func (m model) Update(msg tea.Msg) (prompt.InputHandler[cmdMetadata], tea.Cmd) {
 	return m, nil
 }
 
@@ -91,17 +91,17 @@ func main() {
 
 	textInput := commandinput.New[cmdMetadata]()
 	filenameArg := commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("[filename]"))
-	suggestions := []input.Suggestion[cmdMetadata]{
+	suggestions := []editor.Suggestion[cmdMetadata]{
 		{Text: "vim", Metadata: filenameArg},
 		{Text: "emacs", Metadata: filenameArg},
 		{Text: "nano", Metadata: filenameArg},
 		{Text: "top"},
 		{Text: "htop"},
 	}
-	appModel := appModel{suggestions: suggestions, textInput: textInput}
+	model := model{suggestions: suggestions, textInput: textInput}
 
 	promptModel, err := prompt.New[cmdMetadata](
-		appModel,
+		model,
 		textInput,
 	)
 	if err != nil {

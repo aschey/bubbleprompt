@@ -3,7 +3,7 @@ package test
 import (
 	"strings"
 
-	"github.com/aschey/bubbleprompt/input/commandinput"
+	"github.com/aschey/bubbleprompt/editor/commandinput"
 	tuitest "github.com/aschey/tui-tester"
 	. "github.com/onsi/ginkgo/v2"
 )

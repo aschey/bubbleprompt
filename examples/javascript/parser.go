@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/alecthomas/chroma/v2"
 	"github.com/alecthomas/participle/v2"
-	"github.com/aschey/bubbleprompt/input/parser/lexerbuilder"
+	"github.com/aschey/bubbleprompt/editor/parser/lexerbuilder"
 )
 
 var rules = []lexerbuilder.Rule{

@@ -1,13 +1,13 @@
 package prompt
 
 import (
-	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/editor"
 	"github.com/aschey/bubbleprompt/renderer"
 )
 
 type Option[T any] func(model *Model[T]) error
 
-func WithFormatters[T any](formatters input.Formatters) Option[T] {
+func WithFormatters[T any](formatters editor.Formatters) Option[T] {
 	return func(model *Model[T]) error {
 		model.formatters = formatters
 		return nil

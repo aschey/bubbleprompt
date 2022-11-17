@@ -8,11 +8,11 @@ import (
 	"github.com/alecthomas/participle/v2"
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
+	"github.com/aschey/bubbleprompt/editor"
+	"github.com/aschey/bubbleprompt/editor/commandinput"
+	"github.com/aschey/bubbleprompt/editor/parser"
+	"github.com/aschey/bubbleprompt/editor/parserinput"
 	"github.com/aschey/bubbleprompt/executor"
-	"github.com/aschey/bubbleprompt/input"
-	"github.com/aschey/bubbleprompt/input/commandinput"
-	"github.com/aschey/bubbleprompt/input/parser"
-	"github.com/aschey/bubbleprompt/input/parserinput"
 	"github.com/aschey/bubbleprompt/renderer"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -25,14 +25,14 @@ type Statement struct {
 	Words []string `parser:" (@Ident ( ',' @Ident )*)* "`
 }
 
-type appModel struct {
+type model struct {
 	textInput   *parserinput.ParserModel[any, Statement]
-	suggestions []input.Suggestion[any]
+	suggestions []editor.Suggestion[any]
 }
 
-func (m appModel) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
+func (m model) Complete(promptModel prompt.Model[any]) ([]editor.Suggestion[any], error) {
 	current := m.textInput.CompletableTokenBeforeCursor()
-	suggestions := []input.Suggestion[any]{
+	suggestions := []editor.Suggestion[any]{
 		{Text: "abcd"},
 		{Text: "def"},
 		{Text: "abcdef"},
@@ -40,7 +40,7 @@ func (m appModel) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[an
 	return completer.FilterHasPrefix(current, suggestions), nil
 }
 
-func (m appModel) Execute(input string, promptModel *prompt.Model[any]) (tea.Model, error) {
+func (m model) Execute(input string, promptModel *prompt.Model[any]) (tea.Model, error) {
 	return executor.NewAsyncStringModel(func() (string, error) {
 		err := m.textInput.Error()
 		if err != nil {
@@ -52,35 +52,35 @@ func (m appModel) Execute(input string, promptModel *prompt.Model[any]) (tea.Mod
 	}), nil
 }
 
-func (m appModel) Update(msg tea.Msg) (prompt.AppModel[any], tea.Cmd) {
+func (m model) Update(msg tea.Msg) (prompt.InputHandler[any], tea.Cmd) {
 	return m, nil
 }
 
 func TestApp(t *testing.T) {
-	input.DefaultNameForeground = "15"
-	input.DefaultSelectedNameForeground = "8"
+	editor.DefaultNameForeground = "15"
+	editor.DefaultSelectedNameForeground = "8"
 
-	input.DefaultDescriptionForeground = "15"
-	input.DefaultDescriptionBackground = "13"
-	input.DefaultSelectedDescriptionForeground = "8"
-	input.DefaultSelectedDescriptionBackground = "13"
+	editor.DefaultDescriptionForeground = "15"
+	editor.DefaultDescriptionBackground = "13"
+	editor.DefaultSelectedDescriptionForeground = "8"
+	editor.DefaultSelectedDescriptionBackground = "13"
 
 	commandinput.DefaultCurrentPlaceholderSuggestion = "8"
 
-	input.DefaultScrollbarColor = "8"
-	input.DefaultScrollbarThumbColor = "15"
+	editor.DefaultScrollbarColor = "8"
+	editor.DefaultScrollbarThumbColor = "15"
 
 	textInput := parserinput.NewParserModel[any, Statement](
 		parser.NewParticipleParser(participleParser),
 		parserinput.WithDelimiters[any](","))
 
-	appModel := appModel{
-		suggestions: []input.Suggestion[any]{},
+	model := model{
+		suggestions: []editor.Suggestion[any]{},
 		textInput:   textInput,
 	}
 
 	promptModel, _ := prompt.New[any](
-		appModel,
+		model,
 		textInput,
 		prompt.WithViewportRenderer[any](renderer.ViewportOffset{HeightOffset: 1}),
 	)

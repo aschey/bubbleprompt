@@ -7,9 +7,9 @@ import (
 
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
+	"github.com/aschey/bubbleprompt/editor"
+	"github.com/aschey/bubbleprompt/editor/commandinput"
 	"github.com/aschey/bubbleprompt/executor"
-	"github.com/aschey/bubbleprompt/input"
-	"github.com/aschey/bubbleprompt/input/commandinput"
 	"github.com/aschey/bubbleprompt/renderer"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -18,23 +18,23 @@ import (
 
 type cmdMetadata struct {
 	commandinput.CmdMetadata
-	children []input.Suggestion[cmdMetadata]
+	children []editor.Suggestion[cmdMetadata]
 }
 
-func (c cmdMetadata) Children() []input.Suggestion[cmdMetadata] {
+func (c cmdMetadata) Children() []editor.Suggestion[cmdMetadata] {
 	return c.children
 }
 
-type appModel struct {
-	suggestions []input.Suggestion[cmdMetadata]
+type model struct {
+	suggestions []editor.Suggestion[cmdMetadata]
 	textInput   *commandinput.Model[cmdMetadata]
 }
 
-func (m appModel) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
+func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]editor.Suggestion[cmdMetadata], error) {
 	return completer.GetRecursiveCompletions(m.textInput.Tokens(), m.textInput.CursorIndex(), m.suggestions), nil
 }
 
-func (m appModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
+func (m model) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
 	parsed := m.textInput.ParsedValue()
 	args := parsed.Args
 	if len(args) == 0 {
@@ -107,7 +107,7 @@ func (m appModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]) 
 	return executor.NewStringModel("input updated"), nil
 }
 
-func (m appModel) Update(msg tea.Msg) (prompt.AppModel[cmdMetadata], tea.Cmd) {
+func (m model) Update(msg tea.Msg) (prompt.InputHandler[cmdMetadata], tea.Cmd) {
 	return m, nil
 }
 
@@ -118,13 +118,13 @@ func main() {
 	colorMetadata := commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<color>"))
 	colorMetadata.Level = 1
 
-	suggestions := []input.Suggestion[cmdMetadata]{
+	suggestions := []editor.Suggestion[cmdMetadata]{
 		{
 			Text:        "cursor-mode",
 			Description: "set the cursor mode",
 			Metadata: cmdMetadata{
 				CmdMetadata: commandMetadata,
-				children: []input.Suggestion[cmdMetadata]{
+				children: []editor.Suggestion[cmdMetadata]{
 					{
 						Text:        "blink",
 						Description: "blinking cursor",
@@ -160,7 +160,7 @@ func main() {
 			Description: "set suggestion styles",
 			Metadata: cmdMetadata{
 				CmdMetadata: commandMetadata,
-				children: []input.Suggestion[cmdMetadata]{
+				children: []editor.Suggestion[cmdMetadata]{
 					{
 						Text:        "name",
 						Description: "set suggestion name background",
@@ -183,7 +183,7 @@ func main() {
 			Description: "set input style",
 			Metadata: cmdMetadata{
 				CmdMetadata: commandMetadata,
-				children: []input.Suggestion[cmdMetadata]{
+				children: []editor.Suggestion[cmdMetadata]{
 					{
 						Text:        "selected",
 						Description: "set selected suggestion foreground",
@@ -220,14 +220,14 @@ func main() {
 			Description: "change the renderer",
 			Metadata: cmdMetadata{
 				CmdMetadata: commandMetadata,
-				children: []input.Suggestion[cmdMetadata]{
+				children: []editor.Suggestion[cmdMetadata]{
 					{Text: "unmanaged", Description: "use the unmanaged renderer"},
 					{Text: "viewport", Description: "use the viewport renderer"},
 				},
 			},
 		},
 	}
-	appModel := appModel{
+	appModel := model{
 		suggestions: suggestions,
 		textInput:   textInput,
 	}

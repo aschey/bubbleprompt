@@ -8,24 +8,24 @@ import (
 
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
+	"github.com/aschey/bubbleprompt/editor"
+	"github.com/aschey/bubbleprompt/editor/commandinput"
 	"github.com/aschey/bubbleprompt/executor"
-	"github.com/aschey/bubbleprompt/input"
-	"github.com/aschey/bubbleprompt/input/commandinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type cmdMetadata = commandinput.CmdMetadata
 
-type appModel struct {
-	suggestions []input.Suggestion[cmdMetadata]
+type model struct {
+	suggestions []editor.Suggestion[cmdMetadata]
 	textInput   *commandinput.Model[cmdMetadata]
 	inc         int
 }
 
 type changeTextMsg struct{}
 
-func suggestions(textInput *commandinput.Model[cmdMetadata]) []input.Suggestion[cmdMetadata] {
-	return []input.Suggestion[cmdMetadata]{
+func suggestions(textInput *commandinput.Model[cmdMetadata]) []editor.Suggestion[cmdMetadata] {
+	return []editor.Suggestion[cmdMetadata]{
 		{Text: "first-option", Description: "test desc", Metadata: commandinput.CmdMetadata{
 			PositionalArgs: textInput.NewPositionalArgs("[test placeholder1]", "[test placeholder2]"),
 		}},
@@ -41,8 +41,8 @@ func suggestions(textInput *commandinput.Model[cmdMetadata]) []input.Suggestion[
 		{Text: "seventh-option", CompletionText: "completion text", Description: "test desc7"}}
 }
 
-func secondLevelSuggestions(textInput *commandinput.Model[cmdMetadata]) []input.Suggestion[cmdMetadata] {
-	return []input.Suggestion[cmdMetadata]{
+func secondLevelSuggestions(textInput *commandinput.Model[cmdMetadata]) []editor.Suggestion[cmdMetadata] {
+	return []editor.Suggestion[cmdMetadata]{
 		{Text: "second-level", Description: "test desc", Metadata: commandinput.CmdMetadata{
 			PositionalArgs: textInput.NewPositionalArgs("[placeholder2]"),
 			Level:          1,
@@ -54,7 +54,7 @@ var flags = []commandinput.FlagInput{
 	{Short: "t", Long: "test", Description: "test flag"},
 }
 
-func (m appModel) Update(msg tea.Msg) (prompt.AppModel[cmdMetadata], tea.Cmd) {
+func (m model) Update(msg tea.Msg) (prompt.InputHandler[cmdMetadata], tea.Cmd) {
 	switch msg.(type) {
 	case changeTextMsg:
 		m.suggestions[0].Text = "changed text"
@@ -66,7 +66,7 @@ func (m appModel) Update(msg tea.Msg) (prompt.AppModel[cmdMetadata], tea.Cmd) {
 	return m, nil
 }
 
-func (m appModel) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
+func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]editor.Suggestion[cmdMetadata], error) {
 	time.Sleep(100 * time.Millisecond)
 	suggestions := m.suggestions
 	if m.textInput.CommandCompleted() {
@@ -78,7 +78,7 @@ func (m appModel) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Sugge
 	return completer.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), suggestions), nil
 }
 
-func (m appModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
+func (m model) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
 	switch input {
 	case "error":
 		return nil, fmt.Errorf("bad things")
@@ -106,21 +106,21 @@ func (m appModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]) 
 }
 
 func TestApp(t *testing.T) {
-	input.DefaultNameForeground = "15"
-	input.DefaultSelectedNameForeground = "8"
+	editor.DefaultNameForeground = "15"
+	editor.DefaultSelectedNameForeground = "8"
 
-	input.DefaultDescriptionForeground = "15"
-	input.DefaultDescriptionBackground = "13"
-	input.DefaultSelectedDescriptionForeground = "8"
-	input.DefaultSelectedDescriptionBackground = "13"
+	editor.DefaultDescriptionForeground = "15"
+	editor.DefaultDescriptionBackground = "13"
+	editor.DefaultSelectedDescriptionForeground = "8"
+	editor.DefaultSelectedDescriptionBackground = "13"
 
-	input.DefaultScrollbarColor = "8"
-	input.DefaultScrollbarThumbColor = "15"
+	editor.DefaultScrollbarColor = "8"
+	editor.DefaultScrollbarThumbColor = "15"
 
 	commandinput.DefaultCurrentPlaceholderSuggestion = "8"
 
 	textInput := commandinput.New[cmdMetadata]()
-	m := appModel{suggestions: suggestions(textInput), textInput: textInput}
+	m := model{suggestions: suggestions(textInput), textInput: textInput}
 
 	promptModel, _ := prompt.New[cmdMetadata](
 		m,
