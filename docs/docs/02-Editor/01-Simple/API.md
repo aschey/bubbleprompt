@@ -1,0 +1,242 @@
+```go
+import "github.com/aschey/bubbleprompt/editor/simpleinput"
+```
+
+## Usage
+
+#### type Model
+
+```go
+type Model[T any] struct {
+}
+```
+
+
+#### func  New
+
+```go
+func New[T any](options ...Option[T]) *Model[T]
+```
+
+#### func (*Model[T]) AllTokens
+
+```go
+func (m *Model[T]) AllTokens() []editor.Token
+```
+
+#### func (*Model[T]) AllTokensBeforeCursor
+
+```go
+func (m *Model[T]) AllTokensBeforeCursor() []editor.Token
+```
+
+#### func (*Model[T]) Blur
+
+```go
+func (m *Model[T]) Blur()
+```
+
+#### func (*Model[T]) CompletionRunes
+
+```go
+func (m *Model[T]) CompletionRunes(runes []rune) []rune
+```
+
+#### func (*Model[T]) CurrentToken
+
+```go
+func (m *Model[T]) CurrentToken() editor.Token
+```
+
+#### func (*Model[T]) CurrentTokenBeforeCursor
+
+```go
+func (m *Model[T]) CurrentTokenBeforeCursor() string
+```
+
+#### func (*Model[T]) CursorIndex
+
+```go
+func (m *Model[T]) CursorIndex() int
+```
+
+#### func (*Model[T]) CursorOffset
+
+```go
+func (m *Model[T]) CursorOffset() int
+```
+
+#### func (*Model[T]) Focus
+
+```go
+func (m *Model[T]) Focus() tea.Cmd
+```
+
+#### func (*Model[T]) Focused
+
+```go
+func (m *Model[T]) Focused() bool
+```
+
+#### func (*Model[T]) Init
+
+```go
+func (m *Model[T]) Init() tea.Cmd
+```
+
+#### func (*Model[T]) OnExecutorFinished
+
+```go
+func (m *Model[T]) OnExecutorFinished()
+```
+
+#### func (*Model[T]) OnSuggestionChanged
+
+```go
+func (m *Model[T]) OnSuggestionChanged(suggestion editor.Suggestion[T])
+```
+
+#### func (*Model[T]) OnSuggestionUnselected
+
+```go
+func (m *Model[T]) OnSuggestionUnselected()
+```
+
+#### func (*Model[T]) OnUpdateFinish
+
+```go
+func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *editor.Suggestion[T], isSelected bool) tea.Cmd
+```
+
+#### func (*Model[T]) OnUpdateStart
+
+```go
+func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd
+```
+
+#### func (*Model[T]) Prompt
+
+```go
+func (m *Model[T]) Prompt() string
+```
+
+#### func (*Model[T]) ResetValue
+
+```go
+func (m *Model[T]) ResetValue()
+```
+
+#### func (*Model[T]) Runes
+
+```go
+func (m *Model[T]) Runes() []rune
+```
+
+#### func (*Model[T]) SetCursor
+
+```go
+func (m *Model[T]) SetCursor(cursor int)
+```
+
+#### func (*Model[T]) SetCursorMode
+
+```go
+func (m *Model[T]) SetCursorMode(cursorMode textinput.CursorMode) tea.Cmd
+```
+
+#### func (*Model[T]) SetPrompt
+
+```go
+func (m *Model[T]) SetPrompt(prompt string)
+```
+
+#### func (*Model[T]) SetValue
+
+```go
+func (m *Model[T]) SetValue(value string)
+```
+
+#### func (*Model[T]) ShouldClearSuggestions
+
+```go
+func (m *Model[T]) ShouldClearSuggestions(prevText []rune, msg tea.KeyMsg) bool
+```
+
+#### func (*Model[T]) ShouldSelectSuggestion
+
+```go
+func (m *Model[T]) ShouldSelectSuggestion(suggestion editor.Suggestion[T]) bool
+```
+
+#### func (*Model[T]) ShouldUnselectSuggestion
+
+```go
+func (m *Model[T]) ShouldUnselectSuggestion(prevText []rune, msg tea.KeyMsg) bool
+```
+
+#### func (*Model[T]) TokenValues
+
+```go
+func (m *Model[T]) TokenValues() []string
+```
+
+#### func (*Model[T]) Tokens
+
+```go
+func (m *Model[T]) Tokens() []editor.Token
+```
+
+#### func (*Model[T]) TokensBeforeCursor
+
+```go
+func (m *Model[T]) TokensBeforeCursor() []editor.Token
+```
+
+#### func (*Model[T]) Value
+
+```go
+func (m *Model[T]) Value() string
+```
+
+#### func (*Model[T]) View
+
+```go
+func (m *Model[T]) View(viewMode editor.ViewMode) string
+```
+
+#### type Option
+
+```go
+type Option[T any] func(settings *settings[T]) error
+```
+
+
+#### func  WithDelimiterRegex
+
+```go
+func WithDelimiterRegex[T any](delimiterRegex string) Option[T]
+```
+
+#### func  WithFormatter
+
+```go
+func WithFormatter[T any](formatter parser.Formatter) Option[T]
+```
+
+#### func  WithLexerOptions
+
+```go
+func WithLexerOptions[T any](options ...parserinput.Option[T]) Option[T]
+```
+
+#### func  WithSelectedTextStyle
+
+```go
+func WithSelectedTextStyle[T any](style lipgloss.Style) Option[T]
+```
+
+#### func  WithTokenRegex
+
+```go
+func WithTokenRegex[T any](tokenRegex string) Option[T]
+```

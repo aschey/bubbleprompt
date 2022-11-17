@@ -1,0 +1,589 @@
+```go
+import "github.com/aschey/bubbleprompt/editor/commandinput"
+```
+
+## Usage
+
+```go
+var DefaultBoolFlagForeground = "13"
+```
+
+```go
+var DefaultCurrentPlaceholderSuggestion = "240"
+```
+
+```go
+var DefaultFlagForeground = "245"
+```
+
+```go
+var DefaultFlagPlaceholderForeground = "14"
+```
+
+```go
+var DefaultNumberFlagForeground = "5"
+```
+
+```go
+var DefaultPlaceholderForeground = "14"
+```
+
+```go
+var DefaultSelectedTextColor = "10"
+```
+
+#### type Arg
+
+```go
+type Arg struct {
+	Start int
+	Value string
+}
+```
+
+
+#### type CmdMetadata
+
+```go
+type CmdMetadata struct {
+	PositionalArgs      []PositionalArg
+	ShowFlagPlaceholder bool
+	FlagPlaceholder     FlagPlaceholder
+	Level               int
+	PreservePlaceholder bool
+}
+```
+
+
+#### func  MetadataFromPositionalArgs
+
+```go
+func MetadataFromPositionalArgs(positionalArgs ...PositionalArg) CmdMetadata
+```
+
+#### func (CmdMetadata) GetFlagPlaceholder
+
+```go
+func (m CmdMetadata) GetFlagPlaceholder() FlagPlaceholder
+```
+
+#### func (CmdMetadata) GetLevel
+
+```go
+func (m CmdMetadata) GetLevel() int
+```
+
+#### func (CmdMetadata) GetPositionalArgs
+
+```go
+func (m CmdMetadata) GetPositionalArgs() []PositionalArg
+```
+
+#### func (CmdMetadata) GetPreservePlaceholder
+
+```go
+func (m CmdMetadata) GetPreservePlaceholder() bool
+```
+
+#### func (CmdMetadata) GetShowFlagPlaceholder
+
+```go
+func (m CmdMetadata) GetShowFlagPlaceholder() bool
+```
+
+#### type CmdMetadataAccessor
+
+```go
+type CmdMetadataAccessor interface {
+	GetPositionalArgs() []PositionalArg
+	GetFlagPlaceholder() FlagPlaceholder
+	GetLevel() int
+	GetPreservePlaceholder() bool
+	GetShowFlagPlaceholder() bool
+}
+```
+
+
+#### type Flag
+
+```go
+type Flag struct {
+	Start int
+	Name  string
+	Value *TokenValue
+}
+```
+
+
+#### type FlagFormatter
+
+```go
+type FlagFormatter struct {
+	Flag        lipgloss.Style
+	Placeholder lipgloss.Style
+}
+```
+
+
+#### type FlagInput
+
+```go
+type FlagInput struct {
+	Short       string
+	Long        string
+	Placeholder FlagPlaceholder
+	Description string
+}
+```
+
+
+#### func (FlagInput) RequiresArg
+
+```go
+func (f FlagInput) RequiresArg() bool
+```
+
+#### type FlagPlaceholder
+
+```go
+type FlagPlaceholder struct {
+	Style lipgloss.Style
+}
+```
+
+
+#### type FlagValueFormatter
+
+```go
+type FlagValueFormatter struct {
+	String lipgloss.Style
+	Bool   lipgloss.Style
+	Number lipgloss.Style
+}
+```
+
+
+#### type Formatters
+
+```go
+type Formatters struct {
+	PositionalArg PositionalArgFormatter
+	Flag          FlagFormatter
+	FlagValue     FlagValueFormatter
+	Placeholder   lipgloss.Style
+	Prompt        lipgloss.Style
+	Text          lipgloss.Style
+	SelectedText  lipgloss.Style
+	Cursor        lipgloss.Style
+}
+```
+
+
+#### func  DefaultFormatters
+
+```go
+func DefaultFormatters() Formatters
+```
+
+#### type Model
+
+```go
+type Model[T CmdMetadataAccessor] struct {
+}
+```
+
+
+#### func  New
+
+```go
+func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T]
+```
+
+#### func (Model[T]) AllTokensBeforeCursor
+
+```go
+func (m Model[T]) AllTokensBeforeCursor() []editor.Token
+```
+
+#### func (Model[T]) AllValues
+
+```go
+func (m Model[T]) AllValues() []string
+```
+
+#### func (Model[T]) AllValuesBeforeCursor
+
+```go
+func (m Model[T]) AllValuesBeforeCursor() []string
+```
+
+#### func (*Model[T]) ArgsBeforeCursor
+
+```go
+func (m *Model[T]) ArgsBeforeCursor() []string
+```
+
+#### func (*Model[T]) Blur
+
+```go
+func (m *Model[T]) Blur()
+```
+
+#### func (*Model[T]) CommandBeforeCursor
+
+```go
+func (m *Model[T]) CommandBeforeCursor() string
+```
+
+#### func (Model[T]) CommandCompleted
+
+```go
+func (m Model[T]) CommandCompleted() bool
+```
+
+#### func (*Model[T]) CompletedArgsBeforeCursor
+
+```go
+func (m *Model[T]) CompletedArgsBeforeCursor() []string
+```
+
+#### func (*Model[T]) CompletionRunes
+
+```go
+func (m *Model[T]) CompletionRunes(runes []rune) []rune
+```
+
+#### func (Model[T]) CurrentToken
+
+```go
+func (m Model[T]) CurrentToken() string
+```
+
+#### func (Model[T]) CurrentTokenBeforeCursor
+
+```go
+func (m Model[T]) CurrentTokenBeforeCursor() string
+```
+
+#### func (Model[T]) CurrentTokenBeforeCursorRoundDown
+
+```go
+func (m Model[T]) CurrentTokenBeforeCursorRoundDown() string
+```
+
+#### func (Model[T]) CurrentTokenPos
+
+```go
+func (m Model[T]) CurrentTokenPos() TokenPos
+```
+
+#### func (Model[T]) CurrentTokenPosRoundDown
+
+```go
+func (m Model[T]) CurrentTokenPosRoundDown() TokenPos
+```
+
+#### func (Model[T]) CurrentTokenRoundDown
+
+```go
+func (m Model[T]) CurrentTokenRoundDown() string
+```
+
+#### func (Model[T]) CursorIndex
+
+```go
+func (m Model[T]) CursorIndex() int
+```
+
+#### func (Model[T]) CursorOffset
+
+```go
+func (m Model[T]) CursorOffset() int
+```
+
+#### func (*Model[T]) FlagSuggestions
+
+```go
+func (m *Model[T]) FlagSuggestions(inputStr string, flags []FlagInput, suggestionFunc func(FlagInput) T) []editor.Suggestion[T]
+```
+
+#### func (*Model[T]) Focus
+
+```go
+func (m *Model[T]) Focus() tea.Cmd
+```
+
+#### func (Model[T]) Focused
+
+```go
+func (m Model[T]) Focused() bool
+```
+
+#### func (Model[T]) Formatters
+
+```go
+func (m Model[T]) Formatters() Formatters
+```
+
+#### func (Model[T]) HasArgs
+
+```go
+func (m Model[T]) HasArgs() bool
+```
+
+#### func (*Model[T]) Init
+
+```go
+func (m *Model[T]) Init() tea.Cmd
+```
+
+#### func (Model[T]) LastArg
+
+```go
+func (m Model[T]) LastArg() *ident
+```
+
+#### func (*Model[T]) NewFlagPlaceholder
+
+```go
+func (m *Model[T]) NewFlagPlaceholder(placeholder string) FlagPlaceholder
+```
+
+#### func (*Model[T]) NewPositionalArg
+
+```go
+func (m *Model[T]) NewPositionalArg(placeholder string) PositionalArg
+```
+
+#### func (*Model[T]) NewPositionalArgs
+
+```go
+func (m *Model[T]) NewPositionalArgs(placeholders ...string) []PositionalArg
+```
+
+#### func (*Model[T]) OnExecutorFinished
+
+```go
+func (m *Model[T]) OnExecutorFinished()
+```
+
+#### func (*Model[T]) OnSuggestionChanged
+
+```go
+func (m *Model[T]) OnSuggestionChanged(suggestion editor.Suggestion[T])
+```
+
+#### func (*Model[T]) OnSuggestionUnselected
+
+```go
+func (m *Model[T]) OnSuggestionUnselected()
+```
+
+#### func (*Model[T]) OnUpdateFinish
+
+```go
+func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *editor.Suggestion[T], isSelected bool) tea.Cmd
+```
+
+#### func (*Model[T]) OnUpdateStart
+
+```go
+func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd
+```
+
+#### func (*Model[T]) ParsedValue
+
+```go
+func (m *Model[T]) ParsedValue() Statement
+```
+
+#### func (*Model[T]) Prompt
+
+```go
+func (m *Model[T]) Prompt() string
+```
+
+#### func (*Model[T]) ResetValue
+
+```go
+func (m *Model[T]) ResetValue()
+```
+
+#### func (*Model[T]) Runes
+
+```go
+func (m *Model[T]) Runes() []rune
+```
+
+#### func (*Model[T]) SetCursor
+
+```go
+func (m *Model[T]) SetCursor(pos int)
+```
+
+#### func (*Model[T]) SetCursorMode
+
+```go
+func (m *Model[T]) SetCursorMode(cursorMode textinput.CursorMode) tea.Cmd
+```
+
+#### func (*Model[T]) SetFormatters
+
+```go
+func (m *Model[T]) SetFormatters(formatters Formatters)
+```
+
+#### func (*Model[T]) SetPrompt
+
+```go
+func (m *Model[T]) SetPrompt(prompt string)
+```
+
+#### func (*Model[T]) SetValue
+
+```go
+func (m *Model[T]) SetValue(s string)
+```
+
+#### func (*Model[T]) ShouldClearSuggestions
+
+```go
+func (m *Model[T]) ShouldClearSuggestions(prevText []rune, msg tea.KeyMsg) bool
+```
+
+#### func (*Model[T]) ShouldSelectSuggestion
+
+```go
+func (m *Model[T]) ShouldSelectSuggestion(suggestion editor.Suggestion[T]) bool
+```
+
+#### func (*Model[T]) ShouldUnselectSuggestion
+
+```go
+func (m *Model[T]) ShouldUnselectSuggestion(prevRunes []rune, msg tea.KeyMsg) bool
+```
+
+#### func (Model[T]) Tokens
+
+```go
+func (m Model[T]) Tokens() []editor.Token
+```
+
+#### func (*Model[T]) Value
+
+```go
+func (m *Model[T]) Value() string
+```
+
+#### func (Model[T]) View
+
+```go
+func (m Model[T]) View(viewMode editor.ViewMode) string
+```
+
+#### type Option
+
+```go
+type Option[T CmdMetadataAccessor] func(model *Model[T]) error
+```
+
+
+#### func  WithCursorMode
+
+```go
+func WithCursorMode[T CmdMetadataAccessor](cursorMode textinput.CursorMode) Option[T]
+```
+
+#### func  WithDefaultDelimiter
+
+```go
+func WithDefaultDelimiter[T CmdMetadataAccessor](defaultDelimiter string) Option[T]
+```
+
+#### func  WithFormatters
+
+```go
+func WithFormatters[T CmdMetadataAccessor](formatters Formatters) Option[T]
+```
+
+#### func  WithPrompt
+
+```go
+func WithPrompt[T CmdMetadataAccessor](prompt string) Option[T]
+```
+
+#### type PositionalArg
+
+```go
+type PositionalArg struct {
+	PlaceholderStyle lipgloss.Style
+	ArgStyle         lipgloss.Style
+}
+```
+
+
+#### func (PositionalArg) Placeholder
+
+```go
+func (p PositionalArg) Placeholder() string
+```
+
+#### type PositionalArgFormatter
+
+```go
+type PositionalArgFormatter struct {
+	Placeholder lipgloss.Style
+	Arg         lipgloss.Style
+}
+```
+
+
+#### type RoundingBehavior
+
+```go
+type RoundingBehavior int
+```
+
+
+#### type Statement
+
+```go
+type Statement struct {
+	Start   int
+	Command TokenValue
+	Args    []TokenValue
+	Flags   []Flag
+}
+```
+
+
+#### type TokenPos
+
+```go
+type TokenPos struct {
+	Start int
+	End   int
+	Index int
+}
+```
+
+
+#### type TokenValue
+
+```go
+type TokenValue struct {
+}
+```
+
+
+#### func (TokenValue) RawValue
+
+```go
+func (t TokenValue) RawValue() string
+```
+
+#### func (TokenValue) Value
+
+```go
+func (t TokenValue) Value() string
+```
