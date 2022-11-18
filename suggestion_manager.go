@@ -18,7 +18,7 @@ const (
 	running
 )
 
-type completionMsg[T any] struct {
+type suggestionMsg[T any] struct {
 	suggestions []editor.Suggestion[T]
 	err         error
 }
@@ -41,7 +41,7 @@ func OneShotCompleter(nextTrigger time.Duration) tea.Cmd {
 	})
 }
 
-type completionManager[T any] struct {
+type suggestionManager[T any] struct {
 	state          completerState
 	textInput      editor.Editor[T]
 	suggestions    []editor.Suggestion[T]
@@ -57,8 +57,8 @@ type completionManager[T any] struct {
 	err            error
 }
 
-func newCompletionManager[T any](textInput editor.Editor[T], errorText lipgloss.Style, maxSuggestions int) completionManager[T] {
-	return completionManager[T]{
+func newSuggestionManager[T any](textInput editor.Editor[T], errorText lipgloss.Style, maxSuggestions int) suggestionManager[T] {
+	return suggestionManager[T]{
 		textInput:      textInput,
 		state:          idle,
 		maxSuggestions: maxSuggestions,
@@ -67,16 +67,16 @@ func newCompletionManager[T any](textInput editor.Editor[T], errorText lipgloss.
 	}
 }
 
-func (c completionManager[T]) Init(model Model[T]) tea.Cmd {
+func (c suggestionManager[T]) Init(model Model[T]) tea.Cmd {
 	// Since the user hasn't typed anything on init, call the completer with empty text
-	return c.resetCompletions(model)
+	return c.resetSuggestions(model)
 }
 
-func (c completionManager[T]) Update(msg tea.Msg, model Model[T]) (completionManager[T], tea.Cmd) {
+func (c suggestionManager[T]) Update(msg tea.Msg, model Model[T]) (suggestionManager[T], tea.Cmd) {
 	switch msg := msg.(type) {
-	case completionMsg[T]:
+	case suggestionMsg[T]:
 		if c.ignoreCount > 0 {
-			// Request was in progress when resetCompletions was called, don't update suggestions
+			// Request was in progress when resetSuggestions was called, don't update suggestions
 			c.ignoreCount--
 		} else {
 			c.state = idle
@@ -95,32 +95,32 @@ func (c completionManager[T]) Update(msg tea.Msg, model Model[T]) (completionMan
 			if c.queueNext {
 				// Start another update if it was requested while running
 				c.queueNext = false
-				return c, c.updateCompletions(model)
+				return c, c.updateSuggestions(model)
 			}
 		}
 	case PeriodicCompleterMsg:
-		if !c.canUpdateCompletions() {
+		if !c.canUpdateSuggestions() {
 			return c, PeriodicCompleter(msg.NextTrigger)
 		}
-		return c, tea.Batch(c.forceUpdateCompletions(model), PeriodicCompleter(msg.NextTrigger))
+		return c, tea.Batch(c.forceUpdateSuggestions(model), PeriodicCompleter(msg.NextTrigger))
 	case OneShotCompleterMsg:
-		if !c.canUpdateCompletions() {
+		if !c.canUpdateSuggestions() {
 			return c, nil
 		}
-		return c, c.forceUpdateCompletions(model)
+		return c, c.forceUpdateSuggestions(model)
 	case tea.KeyMsg:
 		c.lastKeyMsg = msg
 		if msg.Type == tea.KeyTab {
-			// Tab completion may have changed text so reset previous value
+			// Tab suggestion may have changed text so reset previous value
 			c.prevRunes = []rune("")
 		}
 	}
 	return c, nil
 }
 
-func (c completionManager[T]) canUpdateCompletions() bool {
+func (c suggestionManager[T]) canUpdateSuggestions() bool {
 	runes := c.textInput.Runes()
-	if len(c.textInput.CompletionRunes(runes[:c.textInput.CursorIndex()])) == 0 {
+	if len(c.textInput.SuggestionRunes(runes[:c.textInput.CursorIndex()])) == 0 {
 		return true
 	}
 
@@ -132,7 +132,7 @@ func (c completionManager[T]) canUpdateCompletions() bool {
 	}
 }
 
-func (c completionManager[T]) scrollbarBounds(windowHeight int) (int, int) {
+func (c suggestionManager[T]) scrollbarBounds(windowHeight int) (int, int) {
 	contentHeight := len(c.suggestions)
 	// The zero-based index of the first element that will be shown when the content is scrolled to the bottom
 	lastSegmentStart := contentHeight - windowHeight
@@ -151,7 +151,7 @@ func (c completionManager[T]) scrollbarBounds(windowHeight int) (int, int) {
 	return scrollbarTop, scrollbarTop + scrollbarHeight
 }
 
-func (c completionManager[T]) Render(paddingSize int, formatters editor.Formatters) string {
+func (c suggestionManager[T]) Render(paddingSize int, formatters editor.Formatters) string {
 	if c.err != nil {
 		return c.errorText.Render(c.err.Error())
 	}
@@ -160,8 +160,8 @@ func (c completionManager[T]) Render(paddingSize int, formatters editor.Formatte
 
 	// Determine longest name and description to calculate padding
 	for _, cur := range c.suggestions {
-		completionText := cur.GetCompletionText()
-		textWidth := runewidth.StringWidth(completionText)
+		suggestionText := cur.GetSuggestionText()
+		textWidth := runewidth.StringWidth(suggestionText)
 		if textWidth > maxNameLen {
 			maxNameLen = textWidth
 		}
@@ -207,15 +207,15 @@ func (c completionManager[T]) Render(paddingSize int, formatters editor.Formatte
 	return strings.Join(prompts, "\n")
 }
 
-func (c *completionManager[T]) updateCompletions(model Model[T]) tea.Cmd {
-	return c.updateCompletionsCmd(model, false)
+func (c *suggestionManager[T]) updateSuggestions(model Model[T]) tea.Cmd {
+	return c.updateSuggestionsCmd(model, false)
 }
 
-func (c *completionManager[T]) forceUpdateCompletions(model Model[T]) tea.Cmd {
-	return c.updateCompletionsCmd(model, true)
+func (c *suggestionManager[T]) forceUpdateSuggestions(model Model[T]) tea.Cmd {
+	return c.updateSuggestionsCmd(model, true)
 }
 
-func (c *completionManager[T]) updateCompletionsCmd(model Model[T], forceUpdate bool) tea.Cmd {
+func (c *suggestionManager[T]) updateSuggestionsCmd(model Model[T], forceUpdate bool) tea.Cmd {
 	input := model.textInput
 	runes := input.Runes()
 	cursorPos := input.CursorIndex()
@@ -243,13 +243,13 @@ func (c *completionManager[T]) updateCompletionsCmd(model Model[T], forceUpdate 
 
 	return func() tea.Msg {
 		filtered, err := model.inputHandler.Complete(model)
-		return completionMsg[T]{suggestions: filtered, err: err}
+		return suggestionMsg[T]{suggestions: filtered, err: err}
 	}
 }
 
-func (c *completionManager[T]) resetCompletions(model Model[T]) tea.Cmd {
+func (c *suggestionManager[T]) resetSuggestions(model Model[T]) tea.Cmd {
 	if c.state == running {
-		// If completion is currently running, ignore the next value and trigger another update
+		// If suggestion is currently running, ignore the next value and trigger another update
 		// This helps speed up getting the next valid result for slow completers
 		c.ignoreCount++
 	}
@@ -259,32 +259,32 @@ func (c *completionManager[T]) resetCompletions(model Model[T]) tea.Cmd {
 
 	return func() tea.Msg {
 		filtered, err := model.inputHandler.Complete(model)
-		return completionMsg[T]{suggestions: filtered, err: err}
+		return suggestionMsg[T]{suggestions: filtered, err: err}
 	}
 }
 
-func (c *completionManager[T]) unselectSuggestion() {
+func (c *suggestionManager[T]) unselectSuggestion() {
 	c.selectedKey = nil
 	c.scroll = 0
 	c.prevScroll = 0
 	c.textInput.OnSuggestionUnselected()
 }
 
-func (c *completionManager[T]) clearSuggestions() {
+func (c *suggestionManager[T]) clearSuggestions() {
 	c.unselectSuggestion()
 	c.suggestions = []editor.Suggestion[T]{}
 }
 
-func (c *completionManager[T]) selectSuggestion(suggestion editor.Suggestion[T]) {
+func (c *suggestionManager[T]) selectSuggestion(suggestion editor.Suggestion[T]) {
 	c.selectedKey = suggestion.Key()
 	c.textInput.OnSuggestionChanged(suggestion)
 }
 
-func (c *completionManager[T]) isSuggestionSelected() bool {
+func (c *suggestionManager[T]) isSuggestionSelected() bool {
 	return c.selectedKey != nil
 }
 
-func (c *completionManager[T]) nextSuggestion() {
+func (c *suggestionManager[T]) nextSuggestion() {
 	if len(c.suggestions) == 0 {
 		return
 	}
@@ -301,7 +301,7 @@ func (c *completionManager[T]) nextSuggestion() {
 	}
 }
 
-func (c *completionManager[T]) previousSuggestion() {
+func (c *suggestionManager[T]) previousSuggestion() {
 	if len(c.suggestions) == 0 {
 		return
 	}
@@ -318,7 +318,7 @@ func (c *completionManager[T]) previousSuggestion() {
 	}
 }
 
-func (c *completionManager[T]) getSelectedIndex() int {
+func (c *suggestionManager[T]) getSelectedIndex() int {
 	if c.isSuggestionSelected() {
 		for i, suggestion := range c.suggestions {
 			if *suggestion.Key() == *c.selectedKey {
@@ -329,7 +329,7 @@ func (c *completionManager[T]) getSelectedIndex() int {
 	return -1
 }
 
-func (c *completionManager[T]) getSelectedSuggestion() *editor.Suggestion[T] {
+func (c *suggestionManager[T]) getSelectedSuggestion() *editor.Suggestion[T] {
 	if c.isSuggestionSelected() {
 		for _, suggestion := range c.suggestions {
 			if *suggestion.Key() == *c.selectedKey {

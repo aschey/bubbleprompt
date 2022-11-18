@@ -165,8 +165,8 @@ func (m *Model[T]) ShouldSelectSuggestion(suggestion editor.Suggestion[T]) bool 
 	return m.lexerModel.ShouldSelectSuggestion(suggestion)
 }
 
-func (m *Model[T]) CompletionRunes(runes []rune) []rune {
-	return m.lexerModel.CompletionRunes(runes)
+func (m *Model[T]) SuggestionRunes(runes []rune) []rune {
+	return m.lexerModel.SuggestionRunes(runes)
 }
 
 func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *editor.Suggestion[T], isSelected bool) tea.Cmd {

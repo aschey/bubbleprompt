@@ -204,7 +204,7 @@ func main() {
 	}
 
 	if _, err := tea.NewProgram(model, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
-		fmt.Printf("Could not start program :(\n%v\n", err)
+		fmt.Printf("Could not start program\n%v\n", err)
 		os.Exit(1)
 	}
 }

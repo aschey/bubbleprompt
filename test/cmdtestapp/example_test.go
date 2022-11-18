@@ -38,7 +38,7 @@ func suggestions(textInput *commandinput.Model[cmdMetadata]) []editor.Suggestion
 		{Text: "fourth-option", Description: "test desc4"},
 		{Text: "fifth-option", Description: "test desc5"},
 		{Text: "sixth-option", Description: "test desc6"},
-		{Text: "seventh-option", CompletionText: "completion text", Description: "test desc7"}}
+		{Text: "seventh-option", SuggestionText: "suggestion text", Description: "test desc7"}}
 }
 
 func secondLevelSuggestions(textInput *commandinput.Model[cmdMetadata]) []editor.Suggestion[cmdMetadata] {
@@ -128,7 +128,7 @@ func TestApp(t *testing.T) {
 	)
 
 	if _, err := tea.NewProgram(promptModel, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
-		fmt.Printf("Could not start program :(\n%v\n", err)
+		fmt.Printf("Could not start program\n%v\n", err)
 		os.Exit(1)
 	}
 }

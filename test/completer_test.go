@@ -13,7 +13,7 @@ import (
 )
 
 var _ = Describe("Completer", func() {
-	longestNameLength := len("completion text")
+	longestNameLength := len("suggestion text")
 	longestDescLength := len("test desc2")
 	promptWidth := leftPadding + margin + longestNameLength + 2*margin + longestDescLength + margin
 	textInput := commandinput.New[cmdMetadata]()
@@ -39,13 +39,13 @@ var _ = Describe("Completer", func() {
 	})
 
 	When("the prompt is loaded", Ordered, func() {
-		It("shows the completion text", func() {
+		It("shows the suggestion text", func() {
 			for i := 0; i < 6; i++ {
 				Expect(initialLines[i+1]).To(ContainSubstring(suggestions[i].Text))
 			}
 		})
 
-		It("shows the completion description", func() {
+		It("shows the suggestion description", func() {
 			for i := 0; i < 6; i++ {
 				Expect(initialLines[i+1]).To(ContainSubstring(suggestions[i].Text))
 			}
@@ -165,7 +165,7 @@ var _ = Describe("Completer", func() {
 			}
 		})
 
-		It("shows the completions matching the prefix", func() {
+		It("shows the suggestions matching the prefix", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				return state.NumLines() == 3 &&
 					strings.Contains(state.NthOutputLine(1), suggestions[0].Text) &&
@@ -220,7 +220,7 @@ var _ = Describe("Completer", func() {
 			console.SendString(tuitest.KeyEnter)
 		})
 
-		It("Updates the completions", func() {
+		It("Updates the suggestions", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				return strings.Contains(state.NthOutputLine(2), "changed text")
 			})
@@ -233,7 +233,7 @@ var _ = Describe("Completer", func() {
 			console.SendString(tuitest.KeyEnter)
 		})
 
-		It("Updates the completions", func() {
+		It("Updates the suggestions", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				return strings.Contains(state.NthOutputLine(2), "changed text2")
 			})

@@ -13,7 +13,7 @@ func AddNewlineIfMissing(s string) string {
 }
 
 func TrimNewline(s string) string {
-	return strings.TrimRight(s, "\n")
+	return strings.TrimSuffix(s, "\n")
 }
 
 func CountNewlines(s string) int {

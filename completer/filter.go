@@ -11,8 +11,8 @@ func FilterHasPrefix[T any](search string, suggestions []editor.Suggestion[T]) [
 
 	filtered := []editor.Suggestion[T]{}
 	for _, s := range suggestions {
-		completionText := strings.ToLower(s.GetCompletionText())
-		if strings.HasPrefix(completionText, cleanedSearch) || strings.HasPrefix(s.Text, cleanedSearch) {
+		suggestionText := strings.ToLower(s.GetSuggestionText())
+		if strings.HasPrefix(suggestionText, cleanedSearch) || strings.HasPrefix(s.Text, cleanedSearch) {
 			filtered = append(filtered, s)
 		}
 	}

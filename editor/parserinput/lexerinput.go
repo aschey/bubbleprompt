@@ -262,7 +262,7 @@ func (m *LexerModel[T]) PreviousToken() *editor.Token {
 	return &m.tokens[currentToken.Index-1]
 }
 
-func (m *LexerModel[T]) CompletionRunes(runes []rune) []rune {
+func (m *LexerModel[T]) SuggestionRunes(runes []rune) []rune {
 	token := m.currentToken(runes, m.CursorIndex()-1)
 	return []rune(token.Value)
 }

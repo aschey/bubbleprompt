@@ -25,7 +25,7 @@ func (m Model[T]) renderCompleting() string {
 	// Choosing a prompt via arrow keys or tab shouldn't change the prompt position
 	// so we use the last typed cursor position instead of the current position
 	paddingSize := runewidth.StringWidth(m.textInput.Prompt()) + m.lastTypedCursorPosition
-	prompts := m.completionManager.Render(paddingSize, m.formatters)
+	prompts := m.suggestionManager.Render(paddingSize, m.formatters)
 	textView += prompts
 
 	return textView
@@ -43,7 +43,7 @@ func (m Model[T]) render() string {
 		contentHeight = internal.CountNewlines(lines) + 1
 
 	case completing:
-		contentHeight = len(m.completionManager.suggestions)
+		contentHeight = len(m.suggestionManager.suggestions)
 		if contentHeight < 1 {
 			// Always add at least one empty line
 			contentHeight = 1
@@ -52,7 +52,7 @@ func (m Model[T]) render() string {
 	}
 
 	// Reserve height for the max number of suggestions so the output height stays consistent
-	extraHeight := m.completionManager.maxSuggestions - contentHeight
+	extraHeight := m.suggestionManager.maxSuggestions - contentHeight
 	if extraHeight > 0 {
 		lines += strings.Repeat("\n", extraHeight)
 	}

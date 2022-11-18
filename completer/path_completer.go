@@ -65,10 +65,10 @@ func equalsSeparator(check byte) bool {
 	return strings.ContainsAny(string(check), "/\\")
 }
 
-func (c *PathCompleter[T]) adjustCompletions(completions []editor.Suggestion[T], sub string) []editor.Suggestion[T] {
-	filteredCompletions := FilterHasPrefix(sub, completions)
+func (c *PathCompleter[T]) adjustSuggestions(suggestions []editor.Suggestion[T], sub string) []editor.Suggestion[T] {
+	filteredSuggestions := FilterHasPrefix(sub, suggestions)
 
-	return filteredCompletions
+	return filteredSuggestions
 }
 
 func (c *PathCompleter[T]) Complete(path string) []editor.Suggestion[T] {
@@ -84,7 +84,7 @@ func (c *PathCompleter[T]) Complete(path string) []editor.Suggestion[T] {
 	}
 
 	if cached, ok := c.fileListCache[dir]; ok {
-		return c.adjustCompletions(cached, base)
+		return c.adjustSuggestions(cached, base)
 	}
 	isAbs := filepath.IsAbs(path) || strings.HasPrefix(path, "~")
 
@@ -121,10 +121,10 @@ func (c *PathCompleter[T]) Complete(path string) []editor.Suggestion[T] {
 		}
 		suggests = append(suggests, editor.Suggestion[T]{
 			Text:           full,
-			CompletionText: f.Name(),
+			SuggestionText: f.Name(),
 			CursorOffset:   cursorOffset,
 		})
 	}
 	c.fileListCache[dir] = suggests
-	return c.adjustCompletions(suggests, base)
+	return c.adjustSuggestions(suggests, base)
 }

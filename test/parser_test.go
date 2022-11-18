@@ -31,7 +31,7 @@ var _ = Describe("Parser", func() {
 			console.SendString("d")
 		})
 
-		It("filters the completions", func() {
+		It("filters the suggestions", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				return strings.Contains(state.NthOutputLine(1), "def")
 			})
@@ -43,7 +43,7 @@ var _ = Describe("Parser", func() {
 			console.SendString("def.a")
 		})
 
-		It("filters the completions", func() {
+		It("filters the suggestions", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				return strings.Contains(state.NthOutputLine(1), "abcd")
 			})

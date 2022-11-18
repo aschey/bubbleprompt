@@ -31,7 +31,7 @@ type model struct {
 }
 
 func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]editor.Suggestion[cmdMetadata], error) {
-	return completer.GetRecursiveCompletions(m.textInput.Tokens(), m.textInput.CursorIndex(), m.suggestions), nil
+	return completer.GetRecursiveSuggestions(m.textInput.Tokens(), m.textInput.CursorIndex(), m.suggestions), nil
 }
 
 func (m model) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
@@ -241,7 +241,7 @@ func main() {
 	}
 
 	if _, err := tea.NewProgram(promptModel, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
-		fmt.Printf("Could not start program :(\n%v\n", err)
+		fmt.Printf("Could not start program\n%v\n", err)
 		os.Exit(1)
 	}
 }

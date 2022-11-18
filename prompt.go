@@ -24,7 +24,7 @@ type InputHandler[T any] interface {
 }
 
 type Model[T any] struct {
-	completionManager       completionManager[T]
+	suggestionManager       suggestionManager[T]
 	inputHandler            InputHandler[T]
 	textInput               editor.Editor[T]
 	renderer                renderer.Renderer
@@ -41,7 +41,7 @@ type Model[T any] struct {
 func New[T any](inputHandler InputHandler[T], textInput editor.Editor[T], opts ...Option[T]) (Model[T], error) {
 	formatters := editor.DefaultFormatters()
 	model := Model[T]{
-		completionManager: newCompletionManager(textInput, formatters.ErrorText, 6),
+		suggestionManager: newSuggestionManager(textInput, formatters.ErrorText, 6),
 		inputHandler:      inputHandler,
 		textInput:         textInput,
 		renderer:          &renderer.UnmanagedRenderer{},
@@ -58,7 +58,7 @@ func New[T any](inputHandler InputHandler[T], textInput editor.Editor[T], opts .
 }
 
 func (m *Model[T]) SetMaxSuggestions(maxSuggestions int) {
-	m.completionManager.maxSuggestions = maxSuggestions
+	m.suggestionManager.maxSuggestions = maxSuggestions
 }
 
 func (m Model[T]) Formatters() editor.Formatters {
@@ -70,7 +70,7 @@ func (m *Model[T]) SetFormatters(formatters editor.Formatters) {
 }
 
 func (m Model[T]) SelectedSuggestion() *editor.Suggestion[T] {
-	return m.completionManager.getSelectedSuggestion()
+	return m.suggestionManager.getSelectedSuggestion()
 }
 
 func (m Model[T]) TextInput() editor.Editor[T] {
@@ -104,7 +104,7 @@ func MsgFilter(_ tea.Model, msg tea.Msg) tea.Msg {
 }
 
 func (m Model[T]) Init() tea.Cmd {
-	return tea.Batch(m.textInput.Init(), m.completionManager.Init(m))
+	return tea.Batch(m.textInput.Init(), m.suggestionManager.Init(m))
 }
 
 func (m Model[T]) View() string {

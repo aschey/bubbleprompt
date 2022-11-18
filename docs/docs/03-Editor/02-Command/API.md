@@ -41,7 +41,6 @@ type Arg struct {
 }
 ```
 
-
 #### type CmdMetadata
 
 ```go
@@ -54,8 +53,7 @@ type CmdMetadata struct {
 }
 ```
 
-
-#### func  MetadataFromPositionalArgs
+#### func MetadataFromPositionalArgs
 
 ```go
 func MetadataFromPositionalArgs(positionalArgs ...PositionalArg) CmdMetadata
@@ -103,7 +101,6 @@ type CmdMetadataAccessor interface {
 }
 ```
 
-
 #### type Flag
 
 ```go
@@ -114,7 +111,6 @@ type Flag struct {
 }
 ```
 
-
 #### type FlagFormatter
 
 ```go
@@ -123,7 +119,6 @@ type FlagFormatter struct {
 	Placeholder lipgloss.Style
 }
 ```
-
 
 #### type FlagInput
 
@@ -135,7 +130,6 @@ type FlagInput struct {
 	Description string
 }
 ```
-
 
 #### func (FlagInput) RequiresArg
 
@@ -151,7 +145,6 @@ type FlagPlaceholder struct {
 }
 ```
 
-
 #### type FlagValueFormatter
 
 ```go
@@ -161,7 +154,6 @@ type FlagValueFormatter struct {
 	Number lipgloss.Style
 }
 ```
-
 
 #### type Formatters
 
@@ -178,8 +170,7 @@ type Formatters struct {
 }
 ```
 
-
-#### func  DefaultFormatters
+#### func DefaultFormatters
 
 ```go
 func DefaultFormatters() Formatters
@@ -192,8 +183,7 @@ type Model[T CmdMetadataAccessor] struct {
 }
 ```
 
-
-#### func  New
+#### func New
 
 ```go
 func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T]
@@ -217,19 +207,19 @@ func (m Model[T]) AllValues() []string
 func (m Model[T]) AllValuesBeforeCursor() []string
 ```
 
-#### func (*Model[T]) ArgsBeforeCursor
+#### func (\*Model[T]) ArgsBeforeCursor
 
 ```go
 func (m *Model[T]) ArgsBeforeCursor() []string
 ```
 
-#### func (*Model[T]) Blur
+#### func (\*Model[T]) Blur
 
 ```go
 func (m *Model[T]) Blur()
 ```
 
-#### func (*Model[T]) CommandBeforeCursor
+#### func (\*Model[T]) CommandBeforeCursor
 
 ```go
 func (m *Model[T]) CommandBeforeCursor() string
@@ -241,16 +231,16 @@ func (m *Model[T]) CommandBeforeCursor() string
 func (m Model[T]) CommandCompleted() bool
 ```
 
-#### func (*Model[T]) CompletedArgsBeforeCursor
+#### func (\*Model[T]) CompletedArgsBeforeCursor
 
 ```go
 func (m *Model[T]) CompletedArgsBeforeCursor() []string
 ```
 
-#### func (*Model[T]) CompletionRunes
+#### func (\*Model[T]) SuggestionRunes
 
 ```go
-func (m *Model[T]) CompletionRunes(runes []rune) []rune
+func (m *Model[T]) SuggestionRunes(runes []rune) []rune
 ```
 
 #### func (Model[T]) CurrentToken
@@ -301,13 +291,13 @@ func (m Model[T]) CursorIndex() int
 func (m Model[T]) CursorOffset() int
 ```
 
-#### func (*Model[T]) FlagSuggestions
+#### func (\*Model[T]) FlagSuggestions
 
 ```go
 func (m *Model[T]) FlagSuggestions(inputStr string, flags []FlagInput, suggestionFunc func(FlagInput) T) []editor.Suggestion[T]
 ```
 
-#### func (*Model[T]) Focus
+#### func (\*Model[T]) Focus
 
 ```go
 func (m *Model[T]) Focus() tea.Cmd
@@ -331,7 +321,7 @@ func (m Model[T]) Formatters() Formatters
 func (m Model[T]) HasArgs() bool
 ```
 
-#### func (*Model[T]) Init
+#### func (\*Model[T]) Init
 
 ```go
 func (m *Model[T]) Init() tea.Cmd
@@ -343,121 +333,121 @@ func (m *Model[T]) Init() tea.Cmd
 func (m Model[T]) LastArg() *ident
 ```
 
-#### func (*Model[T]) NewFlagPlaceholder
+#### func (\*Model[T]) NewFlagPlaceholder
 
 ```go
 func (m *Model[T]) NewFlagPlaceholder(placeholder string) FlagPlaceholder
 ```
 
-#### func (*Model[T]) NewPositionalArg
+#### func (\*Model[T]) NewPositionalArg
 
 ```go
 func (m *Model[T]) NewPositionalArg(placeholder string) PositionalArg
 ```
 
-#### func (*Model[T]) NewPositionalArgs
+#### func (\*Model[T]) NewPositionalArgs
 
 ```go
 func (m *Model[T]) NewPositionalArgs(placeholders ...string) []PositionalArg
 ```
 
-#### func (*Model[T]) OnExecutorFinished
+#### func (\*Model[T]) OnExecutorFinished
 
 ```go
 func (m *Model[T]) OnExecutorFinished()
 ```
 
-#### func (*Model[T]) OnSuggestionChanged
+#### func (\*Model[T]) OnSuggestionChanged
 
 ```go
 func (m *Model[T]) OnSuggestionChanged(suggestion editor.Suggestion[T])
 ```
 
-#### func (*Model[T]) OnSuggestionUnselected
+#### func (\*Model[T]) OnSuggestionUnselected
 
 ```go
 func (m *Model[T]) OnSuggestionUnselected()
 ```
 
-#### func (*Model[T]) OnUpdateFinish
+#### func (\*Model[T]) OnUpdateFinish
 
 ```go
 func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *editor.Suggestion[T], isSelected bool) tea.Cmd
 ```
 
-#### func (*Model[T]) OnUpdateStart
+#### func (\*Model[T]) OnUpdateStart
 
 ```go
 func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd
 ```
 
-#### func (*Model[T]) ParsedValue
+#### func (\*Model[T]) ParsedValue
 
 ```go
 func (m *Model[T]) ParsedValue() Statement
 ```
 
-#### func (*Model[T]) Prompt
+#### func (\*Model[T]) Prompt
 
 ```go
 func (m *Model[T]) Prompt() string
 ```
 
-#### func (*Model[T]) ResetValue
+#### func (\*Model[T]) ResetValue
 
 ```go
 func (m *Model[T]) ResetValue()
 ```
 
-#### func (*Model[T]) Runes
+#### func (\*Model[T]) Runes
 
 ```go
 func (m *Model[T]) Runes() []rune
 ```
 
-#### func (*Model[T]) SetCursor
+#### func (\*Model[T]) SetCursor
 
 ```go
 func (m *Model[T]) SetCursor(pos int)
 ```
 
-#### func (*Model[T]) SetCursorMode
+#### func (\*Model[T]) SetCursorMode
 
 ```go
 func (m *Model[T]) SetCursorMode(cursorMode textinput.CursorMode) tea.Cmd
 ```
 
-#### func (*Model[T]) SetFormatters
+#### func (\*Model[T]) SetFormatters
 
 ```go
 func (m *Model[T]) SetFormatters(formatters Formatters)
 ```
 
-#### func (*Model[T]) SetPrompt
+#### func (\*Model[T]) SetPrompt
 
 ```go
 func (m *Model[T]) SetPrompt(prompt string)
 ```
 
-#### func (*Model[T]) SetValue
+#### func (\*Model[T]) SetValue
 
 ```go
 func (m *Model[T]) SetValue(s string)
 ```
 
-#### func (*Model[T]) ShouldClearSuggestions
+#### func (\*Model[T]) ShouldClearSuggestions
 
 ```go
 func (m *Model[T]) ShouldClearSuggestions(prevText []rune, msg tea.KeyMsg) bool
 ```
 
-#### func (*Model[T]) ShouldSelectSuggestion
+#### func (\*Model[T]) ShouldSelectSuggestion
 
 ```go
 func (m *Model[T]) ShouldSelectSuggestion(suggestion editor.Suggestion[T]) bool
 ```
 
-#### func (*Model[T]) ShouldUnselectSuggestion
+#### func (\*Model[T]) ShouldUnselectSuggestion
 
 ```go
 func (m *Model[T]) ShouldUnselectSuggestion(prevRunes []rune, msg tea.KeyMsg) bool
@@ -469,7 +459,7 @@ func (m *Model[T]) ShouldUnselectSuggestion(prevRunes []rune, msg tea.KeyMsg) bo
 func (m Model[T]) Tokens() []editor.Token
 ```
 
-#### func (*Model[T]) Value
+#### func (\*Model[T]) Value
 
 ```go
 func (m *Model[T]) Value() string
@@ -487,26 +477,25 @@ func (m Model[T]) View(viewMode editor.ViewMode) string
 type Option[T CmdMetadataAccessor] func(model *Model[T]) error
 ```
 
-
-#### func  WithCursorMode
+#### func WithCursorMode
 
 ```go
 func WithCursorMode[T CmdMetadataAccessor](cursorMode textinput.CursorMode) Option[T]
 ```
 
-#### func  WithDefaultDelimiter
+#### func WithDefaultDelimiter
 
 ```go
 func WithDefaultDelimiter[T CmdMetadataAccessor](defaultDelimiter string) Option[T]
 ```
 
-#### func  WithFormatters
+#### func WithFormatters
 
 ```go
 func WithFormatters[T CmdMetadataAccessor](formatters Formatters) Option[T]
 ```
 
-#### func  WithPrompt
+#### func WithPrompt
 
 ```go
 func WithPrompt[T CmdMetadataAccessor](prompt string) Option[T]
@@ -520,7 +509,6 @@ type PositionalArg struct {
 	ArgStyle         lipgloss.Style
 }
 ```
-
 
 #### func (PositionalArg) Placeholder
 
@@ -537,13 +525,11 @@ type PositionalArgFormatter struct {
 }
 ```
 
-
 #### type RoundingBehavior
 
 ```go
 type RoundingBehavior int
 ```
-
 
 #### type Statement
 
@@ -556,7 +542,6 @@ type Statement struct {
 }
 ```
 
-
 #### type TokenPos
 
 ```go
@@ -567,14 +552,12 @@ type TokenPos struct {
 }
 ```
 
-
 #### type TokenValue
 
 ```go
 type TokenValue struct {
 }
 ```
-
 
 #### func (TokenValue) RawValue
 

@@ -261,8 +261,8 @@ func (m *Model[T]) FlagSuggestions(inputStr string, flags []FlagInput, suggestio
 				suggestion.Text = long
 			} else if isMulti {
 				suggestion.Text = flag.Short
-				// Ensure the completion text still has the leading dash for consistency
-				suggestion.CompletionText = short
+				// Ensure the suggestion text still has the leading dash for consistency
+				suggestion.SuggestionText = short
 			} else {
 				suggestion.Text = short
 			}
@@ -427,7 +427,7 @@ func (m *Model[T]) OnSuggestionUnselected() {
 	m.selectedTokenPos = nil
 }
 
-func (m *Model[T]) CompletionRunes(runes []rune) []rune {
+func (m *Model[T]) SuggestionRunes(runes []rune) []rune {
 	expr, _ := m.parser.Parse(string(runes))
 	tokens := m.allTokens(expr)
 	token := m.currentToken(tokens, roundUp)

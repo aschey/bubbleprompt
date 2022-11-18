@@ -15,21 +15,21 @@ const (
 
 type Suggestion[T any] struct {
 	Text           string
-	CompletionText string
+	SuggestionText string
 	Description    string
 	Metadata       T
 	CursorOffset   int
 }
 
-func (s Suggestion[T]) GetCompletionText() string {
-	if len(s.CompletionText) > 0 {
-		return s.CompletionText
+func (s Suggestion[T]) GetSuggestionText() string {
+	if len(s.SuggestionText) > 0 {
+		return s.SuggestionText
 	}
 	return s.Text
 }
 
 func (s Suggestion[T]) Render(selected bool, leftPadding string, maxNameLen int, maxDescLen int, formatters Formatters, scrollbar string) string {
-	name := formatters.Name.Format(s.GetCompletionText(), maxNameLen, selected)
+	name := formatters.Name.Format(s.GetSuggestionText(), maxNameLen, selected)
 	description := ""
 	if maxDescLen > 0 {
 		description = formatters.Description.Format(s.Description, maxDescLen, selected)

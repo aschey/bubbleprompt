@@ -83,14 +83,14 @@ var _ = Describe("Filter", func() {
 		})
 	})
 
-	When("the user filters a suggestion with completion text override", Ordered, func() {
+	When("the user filters a suggestion with suggestion text override", Ordered, func() {
 		BeforeAll(func() {
-			console.SendString("completion")
+			console.SendString("suggestion")
 		})
 
 		It("filters the suggestions", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return strings.Contains(state.NthOutputLine(1), suggestions[6].CompletionText)
+				return strings.Contains(state.NthOutputLine(1), suggestions[6].SuggestionText)
 			})
 		})
 

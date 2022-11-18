@@ -29,10 +29,10 @@ func (m model) evaluateStatement(statement statement) goja.Value {
 func (m model) evaluateExpressionInitial(parent *goja.Object, expression expression) goja.Value {
 	if expression.Token != nil {
 		if expression.Expression == nil {
-			// If this is a token, show completions against global object
+			// If this is a token, show suggestions against global object
 			return parent
 		}
-		// Get completions for right hand side
+		// Get suggestions for right hand side
 		return m.evaluateExpressionInitial(parent, *expression.Expression)
 	}
 	return m.evaluateExpression(parent, expression)

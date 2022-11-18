@@ -82,7 +82,7 @@ func (m model) valueSuggestions(value goja.Value) []editor.Suggestion[any] {
 	for _, key := range objectVar.Keys() {
 		suggestions = append(suggestions, editor.Suggestion[any]{
 			Text:           keyWrap + key + keyWrap,
-			CompletionText: key,
+			SuggestionText: key,
 		})
 	}
 
@@ -167,7 +167,7 @@ func main() {
 	}
 
 	if _, err := tea.NewProgram(promptModel, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
-		fmt.Printf("Could not start program :(\n%v\n", err)
+		fmt.Printf("Could not start program\n%v\n", err)
 		os.Exit(1)
 	}
 }

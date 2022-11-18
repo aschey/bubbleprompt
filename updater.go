@@ -49,7 +49,7 @@ func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmd = m.textInput.OnUpdateStart(msg)
 	cmds = append(cmds, cmd)
 
-	m.completionManager, cmd = m.completionManager.Update(msg, m)
+	m.suggestionManager, cmd = m.suggestionManager.Update(msg, m)
 	cmds = append(cmds, cmd)
 
 	// Scroll to bottom if the user typed something
@@ -129,13 +129,13 @@ func (m *Model[T]) updateCompleting(msg tea.Msg, cmds []tea.Cmd, prevRunes []run
 
 func (m *Model[T]) selectSingle() {
 	// Programatically select the suggestion if it's the only one and the input matches the suggestion
-	if len(m.completionManager.suggestions) == 1 && m.textInput.ShouldSelectSuggestion(m.completionManager.suggestions[0]) {
-		m.completionManager.selectSuggestion(m.completionManager.suggestions[0])
+	if len(m.suggestionManager.suggestions) == 1 && m.textInput.ShouldSelectSuggestion(m.suggestionManager.suggestions[0]) {
+		m.suggestionManager.selectSuggestion(m.suggestionManager.suggestions[0])
 	}
 }
 
 func (m *Model[T]) finishUpdate(msg tea.Msg) tea.Cmd {
-	suggestion := m.completionManager.getSelectedSuggestion()
+	suggestion := m.suggestionManager.getSelectedSuggestion()
 	isSelected := suggestion != nil
 	if !isSelected {
 		// Nothing selected
@@ -144,12 +144,12 @@ func (m *Model[T]) finishUpdate(msg tea.Msg) tea.Cmd {
 
 		cursor := m.textInput.CursorIndex()
 		runes := m.typedRunes
-		// Get completion text before the cursor
+		// Get suggestion text before the cursor
 		if cursor < len(runes) {
 			runes = runes[:cursor]
 		}
-		typedCompletionRunes := m.textInput.CompletionRunes(runes)
-		filteredSuggestions := completer.FilterHasPrefix(string(typedCompletionRunes), m.completionManager.suggestions)
+		typedSuggestionRunes := m.textInput.SuggestionRunes(runes)
+		filteredSuggestions := completer.FilterHasPrefix(string(typedSuggestionRunes), m.suggestionManager.suggestions)
 		// Show placeholders for the first matching suggestion, but don't actually select it
 		if len(filteredSuggestions) > 0 {
 			suggestion = &filteredSuggestions[0]
@@ -160,7 +160,7 @@ func (m *Model[T]) finishUpdate(msg tea.Msg) tea.Cmd {
 }
 
 func (m *Model[T]) finalizeExecutor(executorManager *executionManager) tea.Cmd {
-	m.completionManager.unselectSuggestion()
+	m.suggestionManager.unselectSuggestion()
 	// Store the final executor view in the history
 	// Need to store previous lines in a string instead of a []string in order to handle newlines from the tea.Model's View value properly
 	// When executing a tea.Model standalone, the output must end in a newline and if we use a []string to track newlines, we'll get a double newline here
@@ -181,7 +181,7 @@ func (m *Model[T]) updateWindowSizeMsg(msg tea.WindowSizeMsg) {
 }
 
 func (m *Model[T]) updateChosenListEntry(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
-	if !m.completionManager.isSuggestionSelected() {
+	if !m.suggestionManager.isSuggestionSelected() {
 		// No suggestion currently suggested, store the last cursor position before selecting
 		// so we can restore it later
 		m.lastTypedCursorPosition = m.textInput.CursorOffset()
@@ -192,17 +192,17 @@ func (m *Model[T]) updateChosenListEntry(msg tea.KeyMsg, cmds []tea.Cmd) []tea.C
 	m.textInput.SetCursor(m.lastTypedCursorPosition)
 
 	if msg.Type == tea.KeyUp {
-		m.completionManager.previousSuggestion()
+		m.suggestionManager.previousSuggestion()
 	} else {
-		m.completionManager.nextSuggestion()
+		m.suggestionManager.nextSuggestion()
 	}
 
-	if m.completionManager.isSuggestionSelected() {
+	if m.suggestionManager.isSuggestionSelected() {
 		// Set the input to the suggestion's selected text
 		return nil
 	} else {
-		// Need to update completions since we changed the text and the cursor position
-		return append(cmds, m.completionManager.updateCompletions(*m))
+		// Need to update suggestions since we changed the text and the cursor position
+		return append(cmds, m.suggestionManager.updateSuggestions(*m))
 	}
 }
 
@@ -224,7 +224,7 @@ func (m *Model[T]) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	// Reset all text and selection state
 	m.typedRunes = []rune("")
 	m.lastTypedCursorPosition = 0
-	m.completionManager.unselectSuggestion()
+	m.suggestionManager.unselectSuggestion()
 
 	// Store the user input including the prompt state and the executor result
 	// Pass in the static flag to signal to the text input to exclude interactive elements
@@ -244,16 +244,16 @@ func (m *Model[T]) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 		cmds = append(cmds, executorManager.Init())
 	}
 
-	return append(cmds, m.completionManager.resetCompletions(*m))
+	return append(cmds, m.suggestionManager.resetSuggestions(*m))
 }
 
 func (m *Model[T]) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd, prevRunes []rune) []tea.Cmd {
 	cmds = m.updatePosition(msg, cmds)
 	if m.textInput.ShouldClearSuggestions(prevRunes, msg) {
-		m.completionManager.clearSuggestions()
+		m.suggestionManager.clearSuggestions()
 	} else if m.textInput.ShouldUnselectSuggestion(prevRunes, msg) {
 		// Unselect selected item since user has changed the input
-		m.completionManager.unselectSuggestion()
+		m.suggestionManager.unselectSuggestion()
 	}
 	m.selectSingle()
 
@@ -263,7 +263,7 @@ func (m *Model[T]) updateKeypress(msg tea.KeyMsg, cmds []tea.Cmd, prevRunes []ru
 func (m *Model[T]) updatePosition(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	m.lastTypedCursorPosition = m.textInput.CursorOffset()
 	m.typedRunes = m.textInput.Runes()
-	cmds = append(cmds, m.completionManager.updateCompletions(*m))
+	cmds = append(cmds, m.suggestionManager.updateSuggestions(*m))
 
 	return cmds
 }

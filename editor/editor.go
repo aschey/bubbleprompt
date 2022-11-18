@@ -31,7 +31,7 @@ type Editor[T any] interface {
 	SetPrompt(prompt string)
 	Tokens() []Token
 	ShouldSelectSuggestion(suggestion Suggestion[T]) bool
-	CompletionRunes(runes []rune) []rune
+	SuggestionRunes(runes []rune) []rune
 	OnUpdateFinish(msg tea.Msg, suggestion *Suggestion[T], isSelected bool) tea.Cmd
 	OnSuggestionChanged(suggestion Suggestion[T])
 	OnExecutorFinished()

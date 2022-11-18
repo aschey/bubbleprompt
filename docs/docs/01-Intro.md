@@ -8,6 +8,8 @@ Bubbleprompt is a framework for creating interactive terminal prompts.
 Bubbleprompt is designed to be ran as a [Bubbletea](https://github.com/charmbracelet/bubbletea) [model](https://github.com/charmbracelet/bubbletea/tree/master/tutorials/basics#the-model).
 If you're not familiar with Bubbletea, please familiarize yourself with it before attempting to use Bubbleprompt.
 
+**Note:** this framework requires go 1.18+ as it makes heavy use of generics
+
 ![demo](../static/javascript.gif)
 
 ## Installation

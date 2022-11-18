@@ -86,7 +86,7 @@ func TestApp(t *testing.T) {
 	)
 
 	if _, err := tea.NewProgram(promptModel, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
-		fmt.Printf("Could not start program :(\n%v\n", err)
+		fmt.Printf("Could not start program\n%v\n", err)
 		os.Exit(1)
 	}
 }
