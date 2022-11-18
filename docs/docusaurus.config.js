@@ -18,7 +18,7 @@ async function createConfig() {
     title: "Bubbleprompt",
     tagline: "Prompts for your terminal",
     url: "https://aschey.tech",
-    baseUrl: "/",
+    baseUrl: "/bubbleprompt",
     onBrokenLinks: "throw",
     onBrokenMarkdownLinks: "warn",
     favicon: "img/favicon.ico",
