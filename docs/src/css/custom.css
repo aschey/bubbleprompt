@@ -13,6 +13,8 @@
   --ifm-color-primary-light: #783a7f;
   --ifm-color-primary-lighter: #7d3d84;
   --ifm-color-primary-lightest: #8e4596;
+
+  --text-secondary: #5b5863;
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
@@ -28,5 +30,11 @@ html[data-theme="dark"] {
   --ifm-color-primary-lighter: #f1e3f2;
   --ifm-color-primary-lightest: #ffffff;
 
+  --text-secondary: #c0b8c7;
+
   --ifm-heading-color: var(--ifm-color-primary-light);
+}
+
+.api p {
+  color: var(--text-secondary);
 }
