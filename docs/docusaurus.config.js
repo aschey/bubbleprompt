@@ -1,8 +1,8 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autosuggestion
 
-const lightCodeTheme = require("prism-react-renderer/themes/nightOwlLight");
-const darkCodeTheme = require("prism-react-renderer/themes/nightOwl");
+const lightCodeTheme = require("./codeThemes/nightOwlLight");
+const darkCodeTheme = require("./codeThemes/nightOwl");
 
 // #79BBA5
 // #47AFA2

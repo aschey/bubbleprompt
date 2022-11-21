@@ -10,10 +10,12 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// A Model is a simple editor for handling simple token-based inputs without any special parsing required
 type Model[T any] struct {
 	lexerModel *parserinput.LexerModel[T]
 }
 
+// New initializes a model
 func New[T any](options ...Option[T]) *Model[T] {
 	settings := &settings[T]{
 		delimiterRegex:    `\s+`,
@@ -54,14 +56,19 @@ func New[T any](options ...Option[T]) *Model[T] {
 	return m
 }
 
+// CurrentToken returns the token under the cursor
 func (m *Model[T]) CurrentToken() editor.Token {
 	return m.lexerModel.CurrentToken()
 }
 
+// CurrentTokenBeforeCursor returns the portion of the token under the cursor
+// that comes before the cursor position
 func (m *Model[T]) CurrentTokenBeforeCursor() string {
 	return m.lexerModel.CompletableTokenBeforeCursor()
 }
 
+// TokenValues returns a list of token values from the user input.
+// This excludes all delimiter tokens.
 func (m *Model[T]) TokenValues() []string {
 	tokenValues := []string{}
 	tokens := m.Tokens()
@@ -71,10 +78,14 @@ func (m *Model[T]) TokenValues() []string {
 	return tokenValues
 }
 
+// AllTokens returns a list of all tokens from the user input
+// including delimiter tokens.
 func (m *Model[T]) AllTokens() []editor.Token {
 	return m.lexerModel.Tokens()
 }
 
+// Tokens returns a list of all tokens from the user input
+// excluding delimiter tokens.
 func (m *Model[T]) Tokens() []editor.Token {
 	return m.filterWhitespaceTokens(m.lexerModel.Tokens())
 }
