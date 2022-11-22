@@ -1,7 +1,7 @@
 package prompt
 
 import (
-	"github.com/aschey/bubbleprompt/editor"
+	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/renderer"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -20,15 +20,15 @@ const (
 type InputHandler[T any] interface {
 	Update(msg tea.Msg) (InputHandler[T], tea.Cmd)
 	Execute(input string, prompt *Model[T]) (tea.Model, error)
-	Complete(prompt Model[T]) ([]editor.Suggestion[T], error)
+	Complete(prompt Model[T]) ([]input.Suggestion[T], error)
 }
 
 type Model[T any] struct {
 	suggestionManager       suggestionManager[T]
 	inputHandler            InputHandler[T]
-	textInput               editor.Editor[T]
+	textInput               input.Input[T]
 	renderer                renderer.Renderer
-	formatters              editor.Formatters
+	formatters              input.Formatters
 	executionManager        *executionManager
 	modelState              modelState
 	lastTypedCursorPosition int
@@ -38,8 +38,8 @@ type Model[T any] struct {
 	err                     error
 }
 
-func New[T any](inputHandler InputHandler[T], textInput editor.Editor[T], opts ...Option[T]) (Model[T], error) {
-	formatters := editor.DefaultFormatters()
+func New[T any](inputHandler InputHandler[T], textInput input.Input[T], opts ...Option[T]) (Model[T], error) {
+	formatters := input.DefaultFormatters()
 	defaultNumSuggestions := 6
 	model := Model[T]{
 		suggestionManager: newSuggestionManager(textInput, formatters.ErrorText, defaultNumSuggestions),
@@ -62,19 +62,19 @@ func (m *Model[T]) SetMaxSuggestions(maxSuggestions int) {
 	m.suggestionManager.maxSuggestions = maxSuggestions
 }
 
-func (m Model[T]) Formatters() editor.Formatters {
+func (m Model[T]) Formatters() input.Formatters {
 	return m.formatters
 }
 
-func (m *Model[T]) SetFormatters(formatters editor.Formatters) {
+func (m *Model[T]) SetFormatters(formatters input.Formatters) {
 	m.formatters = formatters
 }
 
-func (m Model[T]) SelectedSuggestion() *editor.Suggestion[T] {
+func (m Model[T]) SelectedSuggestion() *input.Suggestion[T] {
 	return m.suggestionManager.getSelectedSuggestion()
 }
 
-func (m Model[T]) TextInput() editor.Editor[T] {
+func (m Model[T]) TextInput() input.Input[T] {
 	return m.textInput
 }
 

@@ -1,0 +1,56 @@
+<div class="api">
+
+ 
+
+```go
+import "github.com/aschey/bubbleprompt/input/parserinput"
+```
+
+## Usage
+
+#### type Model
+
+```go
+type Model[T any, G any] struct {
+	lexerinput.Model[T]
+}
+```
+
+
+#### func  NewModel
+
+```go
+func NewModel[T any, G any](parser parser.Parser[G], options ...lexerinput.Option[T]) *Model[T, G]
+```
+
+#### func (*Model[T, G]) Error
+
+```go
+func (m *Model[T, G]) Error() error
+```
+
+#### func (*Model[T, G]) OnUpdateStart
+
+```go
+func (m *Model[T, G]) OnUpdateStart(msg tea.Msg) tea.Cmd
+```
+
+#### func (*Model[T, G]) Parsed
+
+```go
+func (m *Model[T, G]) Parsed() *G
+```
+
+#### func (*Model[T, G]) ParsedBeforeCursor
+
+```go
+func (m *Model[T, G]) ParsedBeforeCursor() (*G, error)
+```
+
+#### func (*Model[T, G]) SetValue
+
+```go
+func (m *Model[T, G]) SetValue(value string)
+```
+
+</div>

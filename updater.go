@@ -4,8 +4,8 @@ import (
 	"reflect"
 
 	"github.com/aschey/bubbleprompt/completer"
-	"github.com/aschey/bubbleprompt/editor"
 	"github.com/aschey/bubbleprompt/executor"
+	"github.com/aschey/bubbleprompt/input"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -229,7 +229,7 @@ func (m *Model[T]) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	// Store the user input including the prompt state and the executor result
 	// Pass in the static flag to signal to the text input to exclude interactive elements
 	// such as placeholders and the cursor
-	m.renderer.AddOutput(m.textInput.View(editor.Static))
+	m.renderer.AddOutput(m.textInput.View(input.Static))
 	m.textInput.ResetValue()
 
 	executorManager := newExecutorManager(innerExecutor, m.formatters.ErrorText, err)

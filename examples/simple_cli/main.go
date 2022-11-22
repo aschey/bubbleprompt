@@ -7,32 +7,32 @@ import (
 
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
-	"github.com/aschey/bubbleprompt/editor"
-	"github.com/aschey/bubbleprompt/editor/commandinput"
 	"github.com/aschey/bubbleprompt/executor"
+	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/input/commandinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type cmdMetadata struct {
 	commandinput.CmdMetadata
-	children []editor.Suggestion[cmdMetadata]
+	children []input.Suggestion[cmdMetadata]
 }
 
 type secretMsg string
 
-func (c cmdMetadata) Children() []editor.Suggestion[cmdMetadata] {
+func (c cmdMetadata) Children() []input.Suggestion[cmdMetadata] {
 	return c.children
 }
 
 type model struct {
-	suggestions        []editor.Suggestion[cmdMetadata]
+	suggestions        []input.Suggestion[cmdMetadata]
 	textInput          *commandinput.Model[cmdMetadata]
 	secret             string
 	executorValueStyle lipgloss.Style
 }
 
-func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]editor.Suggestion[cmdMetadata], error) {
+func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
 	parsed := m.textInput.ParsedValue()
 	completed := m.textInput.CompletedArgsBeforeCursor()
 	if len(completed) == 1 && parsed.Command.Value() == "get" && parsed.Args[0].Value() == "weather" {
@@ -111,13 +111,13 @@ func main() {
 
 	commandMetadata := commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<command>"))
 
-	suggestions := []editor.Suggestion[cmdMetadata]{
+	suggestions := []input.Suggestion[cmdMetadata]{
 		{
 			Text:        "get",
 			Description: "retrieve things",
 			Metadata: cmdMetadata{
 				CmdMetadata: commandMetadata,
-				children: []editor.Suggestion[cmdMetadata]{
+				children: []input.Suggestion[cmdMetadata]{
 					{
 						Text:        "secret",
 						Description: "get the secret",
@@ -143,7 +143,7 @@ func main() {
 			Description: "update things",
 			Metadata: cmdMetadata{
 				CmdMetadata: commandMetadata,
-				children: []editor.Suggestion[cmdMetadata]{
+				children: []input.Suggestion[cmdMetadata]{
 					{
 						Text:        "secret",
 						Description: "update the secret",

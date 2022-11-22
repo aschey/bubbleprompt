@@ -8,11 +8,12 @@ import (
 	"github.com/alecthomas/participle/v2"
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
-	"github.com/aschey/bubbleprompt/editor"
-	"github.com/aschey/bubbleprompt/editor/commandinput"
-	"github.com/aschey/bubbleprompt/editor/parser"
-	"github.com/aschey/bubbleprompt/editor/parserinput"
 	"github.com/aschey/bubbleprompt/executor"
+	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/input/commandinput"
+	"github.com/aschey/bubbleprompt/input/lexerinput"
+	"github.com/aschey/bubbleprompt/input/parserinput"
+	"github.com/aschey/bubbleprompt/parser"
 	"github.com/aschey/bubbleprompt/renderer"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -26,13 +27,13 @@ type Statement struct {
 }
 
 type model struct {
-	textInput   *parserinput.ParserModel[any, Statement]
-	suggestions []editor.Suggestion[any]
+	textInput   *parserinput.Model[any, Statement]
+	suggestions []input.Suggestion[any]
 }
 
-func (m model) Complete(promptModel prompt.Model[any]) ([]editor.Suggestion[any], error) {
+func (m model) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
 	current := m.textInput.CompletableTokenBeforeCursor()
-	suggestions := []editor.Suggestion[any]{
+	suggestions := []input.Suggestion[any]{
 		{Text: "abcd"},
 		{Text: "def"},
 		{Text: "abcdef"},
@@ -57,25 +58,25 @@ func (m model) Update(msg tea.Msg) (prompt.InputHandler[any], tea.Cmd) {
 }
 
 func TestApp(t *testing.T) {
-	editor.DefaultNameForeground = "15"
-	editor.DefaultSelectedNameForeground = "8"
+	input.DefaultNameForeground = "15"
+	input.DefaultSelectedNameForeground = "8"
 
-	editor.DefaultDescriptionForeground = "15"
-	editor.DefaultDescriptionBackground = "13"
-	editor.DefaultSelectedDescriptionForeground = "8"
-	editor.DefaultSelectedDescriptionBackground = "13"
+	input.DefaultDescriptionForeground = "15"
+	input.DefaultDescriptionBackground = "13"
+	input.DefaultSelectedDescriptionForeground = "8"
+	input.DefaultSelectedDescriptionBackground = "13"
 
 	commandinput.DefaultCurrentPlaceholderSuggestion = "8"
 
-	editor.DefaultScrollbarColor = "8"
-	editor.DefaultScrollbarThumbColor = "15"
+	input.DefaultScrollbarColor = "8"
+	input.DefaultScrollbarThumbColor = "15"
 
-	textInput := parserinput.NewParserModel[any, Statement](
+	textInput := parserinput.NewModel[any, Statement](
 		parser.NewParticipleParser(participleParser),
-		parserinput.WithDelimiters[any](","))
+		lexerinput.WithDelimiters[any](","))
 
 	model := model{
-		suggestions: []editor.Suggestion[any]{},
+		suggestions: []input.Suggestion[any]{},
 		textInput:   textInput,
 	}
 

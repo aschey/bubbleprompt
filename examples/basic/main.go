@@ -7,21 +7,21 @@ import (
 
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
-	"github.com/aschey/bubbleprompt/editor"
-	"github.com/aschey/bubbleprompt/editor/simpleinput"
 	"github.com/aschey/bubbleprompt/executor"
+	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/input/simpleinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type model struct {
-	suggestions []editor.Suggestion[any]
+	suggestions []input.Suggestion[any]
 	textInput   *simpleinput.Model[any]
 	outputStyle lipgloss.Style
 	numChoices  int64
 }
 
-func (m model) Complete(promptModel prompt.Model[any]) ([]editor.Suggestion[any], error) {
+func (m model) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
 	if len(m.textInput.AllTokens()) > 1 {
 		return nil, nil
 	}
@@ -52,7 +52,7 @@ func (m model) Update(msg tea.Msg) (prompt.InputHandler[any], tea.Cmd) {
 
 func main() {
 	textInput := simpleinput.New[any]()
-	suggestions := []editor.Suggestion[any]{
+	suggestions := []input.Suggestion[any]{
 		{Text: "banana", Description: "good with peanut butter"},
 		{Text: "\"sugar apple\"", SuggestionText: "sugar apple", Description: "spherical...ish"},
 		{Text: "jackfruit", Description: "the jack of all fruits"},

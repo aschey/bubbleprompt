@@ -10,10 +10,11 @@ import (
 	"github.com/alecthomas/chroma/v2/styles"
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
-	"github.com/aschey/bubbleprompt/editor"
-	"github.com/aschey/bubbleprompt/editor/parser"
-	"github.com/aschey/bubbleprompt/editor/parserinput"
 	"github.com/aschey/bubbleprompt/executor"
+	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/input/lexerinput"
+	"github.com/aschey/bubbleprompt/input/parserinput"
+	"github.com/aschey/bubbleprompt/parser"
 	"github.com/aschey/bubbleprompt/renderer"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/dop251/goja"
@@ -24,23 +25,23 @@ const objectType = "object"
 const stringType = "string"
 
 type model struct {
-	textInput   *parserinput.ParserModel[any, statement]
-	suggestions []editor.Suggestion[any]
+	textInput   *parserinput.Model[any, statement]
+	suggestions []input.Suggestion[any]
 	vm          *vm
 }
 
-func (m model) globalSuggestions() []editor.Suggestion[any] {
+func (m model) globalSuggestions() []input.Suggestion[any] {
 	currentBeforeCursor := m.textInput.CurrentTokenBeforeCursor()
 	vars := m.vm.GlobalObject().Keys()
-	suggestions := []editor.Suggestion[any]{}
+	suggestions := []input.Suggestion[any]{}
 	for _, v := range vars {
-		suggestions = append(suggestions, editor.Suggestion[any]{Text: v})
+		suggestions = append(suggestions, input.Suggestion[any]{Text: v})
 	}
 
 	return completer.FilterHasPrefix(currentBeforeCursor, suggestions)
 }
 
-func (m model) valueSuggestions(value goja.Value) []editor.Suggestion[any] {
+func (m model) valueSuggestions(value goja.Value) []input.Suggestion[any] {
 	if value == nil {
 		return nil
 	}
@@ -65,7 +66,7 @@ func (m model) valueSuggestions(value goja.Value) []editor.Suggestion[any] {
 	}
 
 	completable := m.textInput.CompletableTokenBeforeCursor()
-	prev := m.textInput.FindLast(func(token editor.Token, symbol string) bool {
+	prev := m.textInput.FindLast(func(token input.Token, symbol string) bool {
 		return token.Start < currentToken.Start && symbol != "Whitespace"
 	})
 	prevToken := ""
@@ -78,9 +79,9 @@ func (m model) valueSuggestions(value goja.Value) []editor.Suggestion[any] {
 		completable = strings.Trim(completable, `"`)
 	}
 
-	suggestions := []editor.Suggestion[any]{}
+	suggestions := []input.Suggestion[any]{}
 	for _, key := range objectVar.Keys() {
-		suggestions = append(suggestions, editor.Suggestion[any]{
+		suggestions = append(suggestions, input.Suggestion[any]{
 			Text:           keyWrap + key + keyWrap,
 			SuggestionText: key,
 		})
@@ -89,7 +90,7 @@ func (m model) valueSuggestions(value goja.Value) []editor.Suggestion[any] {
 	return completer.FilterHasPrefix(completable, suggestions)
 }
 
-func (m model) Complete(promptModel prompt.Model[any]) ([]editor.Suggestion[any], error) {
+func (m model) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
 	parsed, err := m.textInput.ParsedBeforeCursor()
 	if err != nil {
 		return nil, err
@@ -141,10 +142,10 @@ func (m model) Update(msg tea.Msg) (prompt.InputHandler[any], tea.Cmd) {
 }
 
 func main() {
-	textInput := parserinput.NewParserModel[any, statement](
+	textInput := parserinput.NewModel[any, statement](
 		parser.NewParticipleParser(participleParser),
-		parserinput.WithDelimiterTokens[any]("Punct", "Whitespace", "And", "Or", "Eq"),
-		parserinput.WithFormatter[any](parser.NewChromaFormatter(styles.SwapOff, styleLexer)),
+		lexerinput.WithDelimiterTokens[any]("Punct", "Whitespace", "And", "Or", "Eq"),
+		lexerinput.WithFormatter[any](parser.NewChromaFormatter(styles.SwapOff, styleLexer)),
 	)
 
 	vm := newVm()
@@ -152,7 +153,7 @@ func main() {
 	_, _ = vm.RunString(`food = ['hummus', 'wine', {pizza: pizza}]`)
 
 	model := model{
-		suggestions: []editor.Suggestion[any]{},
+		suggestions: []input.Suggestion[any]{},
 		textInput:   textInput,
 		vm:          vm,
 	}

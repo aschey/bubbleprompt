@@ -3,7 +3,7 @@ package prompt
 import (
 	"strings"
 
-	"github.com/aschey/bubbleprompt/editor"
+	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/internal"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mattn/go-runewidth"
@@ -19,7 +19,7 @@ func (m Model[T]) renderExecuting() string {
 
 func (m Model[T]) renderCompleting() string {
 	// If an item is selected, parse out the text portion and apply formatting
-	textView := internal.AddNewlineIfMissing(m.textInput.View(editor.Interactive))
+	textView := internal.AddNewlineIfMissing(m.textInput.View(input.Interactive))
 
 	// Calculate left offset for suggestions
 	// Choosing a prompt via arrow keys or tab shouldn't change the prompt position

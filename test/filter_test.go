@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aschey/bubbleprompt/editor/commandinput"
+	"github.com/aschey/bubbleprompt/input/commandinput"
 	tuitest "github.com/aschey/tui-tester"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

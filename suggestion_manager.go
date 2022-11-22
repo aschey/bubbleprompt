@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aschey/bubbleprompt/editor"
+	"github.com/aschey/bubbleprompt/input"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mattn/go-runewidth"
@@ -19,7 +19,7 @@ const (
 )
 
 type suggestionMsg[T any] struct {
-	suggestions []editor.Suggestion[T]
+	suggestions []input.Suggestion[T]
 	err         error
 }
 
@@ -43,8 +43,8 @@ func OneShotCompleter(nextTrigger time.Duration) tea.Cmd {
 
 type suggestionManager[T any] struct {
 	state          completerState
-	textInput      editor.Editor[T]
-	suggestions    []editor.Suggestion[T]
+	textInput      input.Input[T]
+	suggestions    []input.Suggestion[T]
 	errorText      lipgloss.Style
 	lastKeyMsg     tea.KeyMsg
 	maxSuggestions int
@@ -57,7 +57,7 @@ type suggestionManager[T any] struct {
 	err            error
 }
 
-func newSuggestionManager[T any](textInput editor.Editor[T], errorText lipgloss.Style, maxSuggestions int) suggestionManager[T] {
+func newSuggestionManager[T any](textInput input.Input[T], errorText lipgloss.Style, maxSuggestions int) suggestionManager[T] {
 	return suggestionManager[T]{
 		textInput:      textInput,
 		state:          idle,
@@ -81,7 +81,7 @@ func (c suggestionManager[T]) Update(msg tea.Msg, model Model[T]) (suggestionMan
 		} else {
 			c.state = idle
 			if msg.suggestions == nil {
-				c.suggestions = []editor.Suggestion[T]{}
+				c.suggestions = []input.Suggestion[T]{}
 			} else {
 				c.suggestions = msg.suggestions
 			}
@@ -151,7 +151,7 @@ func (c suggestionManager[T]) scrollbarBounds(windowHeight int) (int, int) {
 	return scrollbarTop, scrollbarTop + scrollbarHeight
 }
 
-func (c suggestionManager[T]) Render(paddingSize int, formatters editor.Formatters) string {
+func (c suggestionManager[T]) Render(paddingSize int, formatters input.Formatters) string {
 	if c.err != nil {
 		return c.errorText.Render(c.err.Error())
 	}
@@ -272,10 +272,10 @@ func (c *suggestionManager[T]) unselectSuggestion() {
 
 func (c *suggestionManager[T]) clearSuggestions() {
 	c.unselectSuggestion()
-	c.suggestions = []editor.Suggestion[T]{}
+	c.suggestions = []input.Suggestion[T]{}
 }
 
-func (c *suggestionManager[T]) selectSuggestion(suggestion editor.Suggestion[T]) {
+func (c *suggestionManager[T]) selectSuggestion(suggestion input.Suggestion[T]) {
 	c.selectedKey = suggestion.Key()
 	c.textInput.OnSuggestionChanged(suggestion)
 }
@@ -329,7 +329,7 @@ func (c *suggestionManager[T]) getSelectedIndex() int {
 	return -1
 }
 
-func (c *suggestionManager[T]) getSelectedSuggestion() *editor.Suggestion[T] {
+func (c *suggestionManager[T]) getSelectedSuggestion() *input.Suggestion[T] {
 	if c.isSuggestionSelected() {
 		for _, suggestion := range c.suggestions {
 			if *suggestion.Key() == *c.selectedKey {

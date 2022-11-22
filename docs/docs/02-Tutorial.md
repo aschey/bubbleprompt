@@ -1,12 +1,12 @@
-Let's build a simple app to demonstratate how to use Bubbleprompt.
+Let's build a simpleinput app to demonstratate how to use Bubbleprompt.
 The app will display a list of fruits and tell the user which one they selected.
 The final code can be seen in the [basic example](https://github.com/aschey/bubbleprompt/tree/main/examples/basic/main.go).
 
 ## Starting Out
 
-First, we need to choose an editor.
-We'll use the simple input here because we don't need any fancy features like custom parsing or flags.
-By default, the simple input parses input text as a series of whitespace-delimited tokens.
+First, we need to choose an input.
+We'll use the simpleinput input here because we don't need any fancy features like custom parsing or flags.
+By default, the simpleinput input parses input text as a series of whitespace-delimited tokens.
 It also supports using double quotes to define a single token, so `"two words"` will be parsed as one token rather than two.
 
 ```go
@@ -15,18 +15,18 @@ func main() {
 }
 ```
 
-The simple input component takes one generic parameter.
+The simpleinput input component takes one generic parameter.
 This parameter is used to define custom metadata that gets attached to each suggestion.
 We don't need any custom metadata here so we'll leave it as `any`.
 
 Next, we'll define a list of suggestions.
-These will be shown underneath our editor component.
+These will be shown underneath our input component.
 
 ```go
 func main() {
     textInput := simpleinput.New[any]()
 
-    suggestions := []editor.Suggestion[any]{
+    suggestions := []input.Suggestion[any]{
 		{Text: "banana", Description: "good with peanut butter"},
 		{Text: "\"sugar apple\"", SuggestionText: "sugar apple", Description: "spherical...ish"},
 		{Text: "jackfruit", Description: "the jack of all fruits"},
@@ -56,8 +56,8 @@ Additionally, we store a style struct from [lipgloss](https://github.com/charmbr
 ```go
 type model struct {
     // list of suggestions that we'll display using the completer function
-	suggestions []editor.Suggestion[any]
-    // Reference to our editor component. We'll use this to read user input
+	suggestions []input.Suggestion[any]
+    // Reference to our input component. We'll use this to read user input
 	textInput   *simpleinput.Model[any]
     // Style struct for formatting the output
 	outputStyle lipgloss.Style
@@ -70,11 +70,11 @@ Now we can create our model in our `main` function:
 
 ```go
 func main() {
-	// Initialize the editor
+	// Initialize the input
 	textInput := simpleinput.New[any]()
 
     // Define our suggestions
-	suggestions := []editor.Suggestion[any]{
+	suggestions := []input.Suggestion[any]{
 		{Text: "banana", Description: "good with peanut butter"},
 		{Text: "\"sugar apple\"", SuggestionText: "sugar apple", Description: "spherical...ish"},
 		{Text: "jackfruit", Description: "the jack of all fruits"},
@@ -97,7 +97,7 @@ func main() {
 In order to render our suggestions onto the screen, we need to define the `Complete` method.
 
 ```go
-func (m model) Complete(promptModel prompt.Model[any]) ([]editor.Suggestion[any], error) {
+func (m model) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
     // Our program only takes one token as input,
     // so don't return any suggestions if the user types more than one word
 	if len(m.textInput.AllTokens()) > 1 {
@@ -113,7 +113,7 @@ This method is responsible for returning a list of suggestions based on the user
 Typically you'll have a predefined list of suggestions and you'll want to apply some kind of filtering function to replace the suggestions that aren't relevant to what the user typed.
 Bubbleprompt provides a few predefined filtering functions in the `completer` package for convenience, but you're free to generate the list of suggestions however you want.
 
-We use `SimpleInput`'s `CurrentTokenBeforeCursor` method to get the text that the user typed before the cursor.
+We use `simpleinput`'s `CurrentTokenBeforeCursor` method to get the text that the user typed before the cursor.
 Since the list of suggestions always stays in sync with the cursor as it moves left or right,
 it's expected that the completer function should only take into account what's before the cursor, rather than always checking the entire input.
 
@@ -165,7 +165,7 @@ func (m model) formatOutput(choice string) string {
 
 Here we check if the user entered in any input and display their choice if they did.
 The executor method requires that we return a `tea.Model`, but it would be rather annoying to have to
-manually create a new model for simple cases like showing a line of text.
+manually create a new model for simpleinput cases like showing a line of text.
 For these cases, the `executor` package supplies several prebuilt models for common situations.
 
 ## Putting It All Together
@@ -174,11 +174,11 @@ Now that we have all the building blocks, we can finish writing our `main` funct
 
 ```go
 func main() {
-    // Initialize the editor
+    // Initialize the input
 	textInput := simpleinput.New[any]()
 
     // Define our suggestions
-	suggestions := []editor.Suggestion[any]{
+	suggestions := []input.Suggestion[any]{
 		{Text: "banana", Description: "good with peanut butter"},
 		{Text: "\"sugar apple\"", SuggestionText: "sugar apple", Description: "spherical...ish"},
 		{Text: "jackfruit", Description: "the jack of all fruits"},
@@ -228,21 +228,21 @@ import (
 
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
-	"github.com/aschey/bubbleprompt/editor"
-	"github.com/aschey/bubbleprompt/editor/simpleinput"
+	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/input/simpleinput"
 	"github.com/aschey/bubbleprompt/executor"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type model struct {
-	suggestions []editor.Suggestion[any]
+	suggestions []input.Suggestion[any]
 	textInput   *simpleinput.Model[any]
 	outputStyle lipgloss.Style
 	numChoices  int64
 }
 
-func (m model) Complete(promptModel prompt.Model[any]) ([]editor.Suggestion[any], error) {
+func (m model) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
 	if len(m.textInput.AllTokens()) > 1 {
 		return nil, nil
 	}
@@ -273,7 +273,7 @@ func (m model) Update(msg tea.Msg) (prompt.InputHandler[any], tea.Cmd) {
 
 func main() {
 	textInput := simpleinput.New[any]()
-	suggestions := []editor.Suggestion[any]{
+	suggestions := []input.Suggestion[any]{
 		{Text: "banana", Description: "good with peanut butter"},
 		{Text: "\"sugar apple\"", SuggestionText: "sugar apple", Description: "spherical...ish"},
 		{Text: "jackfruit", Description: "the jack of all fruits"},

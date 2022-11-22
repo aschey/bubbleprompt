@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aschey/bubbleprompt/editor"
-	"github.com/aschey/bubbleprompt/editor/commandinput"
+	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/input/commandinput"
 	tuitest "github.com/aschey/tui-tester"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -54,7 +54,7 @@ var _ = Describe("Completer", func() {
 		It("shows the scrollbar", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				for i := 1; i < 6; i++ {
-					if state.BackgroundColor(1, promptWidth).String() != editor.DefaultScrollbarThumbColor {
+					if state.BackgroundColor(1, promptWidth).String() != input.DefaultScrollbarThumbColor {
 						return false
 					}
 				}
@@ -62,7 +62,7 @@ var _ = Describe("Completer", func() {
 			})
 
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return state.BackgroundColor(6, promptWidth).String() == editor.DefaultScrollbarColor
+				return state.BackgroundColor(6, promptWidth).String() == input.DefaultScrollbarColor
 			})
 
 		})
@@ -75,13 +75,13 @@ var _ = Describe("Completer", func() {
 
 		It("applies the correct background for the suggestion name so it covers the longest name", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return state.BackgroundColor(1, leftPadding+longestNameLength+margin).String() == editor.DefaultSelectedNameBackground
+				return state.BackgroundColor(1, leftPadding+longestNameLength+margin).String() == input.DefaultSelectedNameBackground
 			})
 		})
 
 		It("applies the correct background for the suggestion description so it covers the longest description", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return state.BackgroundColor(1, leftPadding+longestNameLength+2*margin+longestDescLength+margin).String() == editor.DefaultSelectedDescriptionBackground
+				return state.BackgroundColor(1, leftPadding+longestNameLength+2*margin+longestDescLength+margin).String() == input.DefaultSelectedDescriptionBackground
 			})
 		})
 	})
@@ -93,7 +93,7 @@ var _ = Describe("Completer", func() {
 
 		It("selects the suggestion", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return state.BackgroundColor(1, leftPadding).String() == editor.DefaultSelectedNameBackground
+				return state.BackgroundColor(1, leftPadding).String() == input.DefaultSelectedNameBackground
 			})
 		})
 
@@ -104,7 +104,7 @@ var _ = Describe("Completer", func() {
 
 			It("moves the suggestions over", func() {
 				_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-					return state.BackgroundColor(1, leftPadding+len(suggestions[0].Text)+1).String() == editor.DefaultNameBackground
+					return state.BackgroundColor(1, leftPadding+len(suggestions[0].Text)+1).String() == input.DefaultNameBackground
 				})
 			})
 		})
@@ -121,7 +121,7 @@ var _ = Describe("Completer", func() {
 		It("updates the scrollbar", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				for i := 2; i < 7; i++ {
-					if state.BackgroundColor(i, promptWidth).String() != editor.DefaultScrollbarThumbColor {
+					if state.BackgroundColor(i, promptWidth).String() != input.DefaultScrollbarThumbColor {
 						return false
 					}
 				}
@@ -129,7 +129,7 @@ var _ = Describe("Completer", func() {
 			})
 
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return state.BackgroundColor(1, promptWidth).String() == editor.DefaultScrollbarColor
+				return state.BackgroundColor(1, promptWidth).String() == input.DefaultScrollbarColor
 			})
 		})
 
@@ -143,7 +143,7 @@ var _ = Describe("Completer", func() {
 			It("updates the scrollbar", func() {
 				_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 					for i := 1; i < 6; i++ {
-						if state.BackgroundColor(1, promptWidth).String() != editor.DefaultScrollbarThumbColor {
+						if state.BackgroundColor(1, promptWidth).String() != input.DefaultScrollbarThumbColor {
 							return false
 						}
 					}
@@ -151,7 +151,7 @@ var _ = Describe("Completer", func() {
 				})
 
 				_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-					return state.BackgroundColor(6, promptWidth).String() == editor.DefaultScrollbarColor
+					return state.BackgroundColor(6, promptWidth).String() == input.DefaultScrollbarColor
 				})
 			})
 		})
@@ -175,7 +175,7 @@ var _ = Describe("Completer", func() {
 
 		It("moves the suggestions to match the cursor", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return state.BackgroundColor(1, 3).Int() == tuitest.DefaultBG && fmt.Sprint(state.BackgroundColor(1, 4)) == editor.DefaultNameBackground
+				return state.BackgroundColor(1, 3).Int() == tuitest.DefaultBG && fmt.Sprint(state.BackgroundColor(1, 4)) == input.DefaultNameBackground
 			})
 		})
 	})
@@ -184,7 +184,7 @@ var _ = Describe("Completer", func() {
 		BeforeAll(func() {
 			console.SendString(tuitest.KeyDown)
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return state.ForegroundColor(1, leftPadding+margin).String() == editor.DefaultSelectedNameForeground
+				return state.ForegroundColor(1, leftPadding+margin).String() == input.DefaultSelectedNameForeground
 			})
 			console.SendString(" ")
 		})
@@ -202,14 +202,14 @@ var _ = Describe("Completer", func() {
 				console.SendString(tuitest.KeyDown)
 			}
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return state.ForegroundColor(6, leftPadding+margin).String() == editor.DefaultSelectedNameForeground
+				return state.ForegroundColor(6, leftPadding+margin).String() == input.DefaultSelectedNameForeground
 			})
 			console.SendString(tuitest.KeyDown)
 		})
 
 		It("unselects the suggestion", func() {
 			_, _ = console.WaitForDuration(func(state tuitest.TermState) bool {
-				return state.ForegroundColor(6, leftPadding+margin).String() == editor.DefaultNameForeground
+				return state.ForegroundColor(6, leftPadding+margin).String() == input.DefaultNameForeground
 			}, 100*time.Millisecond)
 		})
 	})

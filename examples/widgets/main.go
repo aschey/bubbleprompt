@@ -8,9 +8,9 @@ import (
 
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
-	"github.com/aschey/bubbleprompt/editor"
-	"github.com/aschey/bubbleprompt/editor/commandinput"
 	"github.com/aschey/bubbleprompt/executor"
+	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/input/commandinput"
 	"github.com/aschey/bubbleprompt/renderer"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -48,7 +48,7 @@ func (m model) View() string {
 }
 
 type textModel struct {
-	editor   textinput.Model
+	input    textinput.Model
 	quitting bool
 }
 
@@ -65,8 +65,8 @@ func (m textModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 	}
-	editor, cmd := m.editor.Update(msg)
-	m.editor = editor
+	editor, cmd := m.input.Update(msg)
+	m.input = editor
 	return m, cmd
 }
 
@@ -74,7 +74,7 @@ func (m textModel) View() string {
 	if m.quitting {
 		return "byeeeeeeee"
 	}
-	return m.editor.View()
+	return m.input.View()
 }
 
 type statusModel struct {
@@ -101,13 +101,13 @@ func (m statusModel) Update(msg tea.Msg) (statusModel, tea.Cmd) {
 }
 
 type inputModel struct {
-	suggestions []editor.Suggestion[cmdMetadata]
+	suggestions []input.Suggestion[cmdMetadata]
 	textInput   *commandinput.Model[cmdMetadata]
 	editText    string
 	outputStyle lipgloss.Style
 }
 
-func (m inputModel) Complete(promptModel prompt.Model[cmdMetadata]) ([]editor.Suggestion[cmdMetadata], error) {
+func (m inputModel) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
 	if m.textInput.CommandCompleted() {
 		return nil, nil
 	}
@@ -145,7 +145,7 @@ func (m inputModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]
 		ti.Placeholder = "Enter some stuff"
 		ti.Focus()
 		ti.SetValue(m.editText)
-		return textModel{editor: ti}, nil
+		return textModel{input: ti}, nil
 	}
 	return nil, nil
 }
@@ -153,7 +153,7 @@ func (m inputModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]
 func (m inputModel) Update(msg tea.Msg) (prompt.InputHandler[cmdMetadata], tea.Cmd) {
 	if msg, ok := msg.(prompt.ExecutorFinishedMsg); ok {
 		if model, ok := msg.(textModel); ok {
-			m.editText = model.editor.Value()
+			m.editText = model.input.Value()
 		}
 	}
 	return m, nil
@@ -163,7 +163,7 @@ func main() {
 	textInput := commandinput.New[cmdMetadata]()
 	secondsArg := textInput.NewPositionalArg("<seconds>")
 	secondsArg.ArgStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("13"))
-	suggestions := []editor.Suggestion[cmdMetadata]{
+	suggestions := []input.Suggestion[cmdMetadata]{
 		{
 			Text:        "set-status",
 			Description: "set statusbar text",
@@ -186,10 +186,12 @@ func main() {
 		outputStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("13")),
 	}
 
+	statusBarHeight := 1
+	padding := 1
 	promptModel, err := prompt.New[cmdMetadata](
 		inputModel,
 		textInput,
-		prompt.WithViewportRenderer[cmdMetadata](renderer.ViewportOffset{HeightOffset: 2}),
+		prompt.WithViewportRenderer[cmdMetadata](renderer.ViewportOffset{HeightOffset: statusBarHeight + padding}),
 	)
 	if err != nil {
 		panic(err)
