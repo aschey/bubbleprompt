@@ -198,10 +198,7 @@ func main() {
 
     // Create the Bubbleprompt model
     // This struct fulfills the tea.Model interface so it can be passed directly to tea.NewProgram
-	promptModel, err := prompt.New[any](
-		model,
-		textInput,
-	)
+	promptModel, err := prompt.New[any](modeltextInput)
 	if err != nil {
 		panic(err)
 	}
@@ -292,10 +289,7 @@ func main() {
 		outputStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("13")),
 	}
 
-	promptModel, err := prompt.New[any](
-		model,
-		textInput,
-	)
+	promptModel, err := prompt.New[any](model,textInput)
 	if err != nil {
 		panic(err)
 	}

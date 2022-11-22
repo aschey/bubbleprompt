@@ -74,7 +74,8 @@ func (c *PathCompleter[T]) adjustSuggestions(suggestions []editor.Suggestion[T],
 func (c *PathCompleter[T]) Complete(path string) []editor.Suggestion[T] {
 	path = strings.ReplaceAll(path, "\"", "")
 	if c.fileListCache == nil {
-		c.fileListCache = make(map[string][]editor.Suggestion[T], 4)
+		defaultCacheSize := 4
+		c.fileListCache = make(map[string][]editor.Suggestion[T], defaultCacheSize)
 	}
 
 	dir, base, err := cleanFilePath(path)

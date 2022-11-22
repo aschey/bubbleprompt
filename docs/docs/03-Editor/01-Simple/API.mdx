@@ -16,41 +16,43 @@ type Model[T any] struct {
 ```
 
 A Model is a simple editor for handling simple token-based inputs without any
-special parsing required
+special parsing required.
 
 #### func  New
 
 ```go
 func New[T any](options ...Option[T]) *Model[T]
 ```
-New initializes a model
+New creates new a model.
 
 #### func (*Model[T]) AllTokens
 
 ```go
 func (m *Model[T]) AllTokens() []editor.Token
 ```
-AllTokens returns a list of all tokens from the user input including delimiter
-tokens.
+AllTokens returns the tokenized input. This **does** include delimiter tokens.
 
 #### func (*Model[T]) AllTokensBeforeCursor
 
 ```go
 func (m *Model[T]) AllTokensBeforeCursor() []editor.Token
 ```
+AllTokensBeforeCursor returns the tokenized input up to the cursor position.
+This **does not** include delimiter tokens.
 
 #### func (*Model[T]) Blur
 
 ```go
 func (m *Model[T]) Blur()
 ```
+Blur removes the focus from the editor.
 
 #### func (*Model[T]) CurrentToken
 
 ```go
 func (m *Model[T]) CurrentToken() editor.Token
 ```
-CurrentToken returns the token under the cursor
+CurrentToken returns the token under the cursor.
 
 #### func (*Model[T]) CurrentTokenBeforeCursor
 
@@ -58,37 +60,46 @@ CurrentToken returns the token under the cursor
 func (m *Model[T]) CurrentTokenBeforeCursor() string
 ```
 CurrentTokenBeforeCursor returns the portion of the token under the cursor that
-comes before the cursor position
+comes before the cursor position.
 
 #### func (*Model[T]) CursorIndex
 
 ```go
 func (m *Model[T]) CursorIndex() int
 ```
+CursorIndex returns the cursor index in terms of number of unicode characters.
+Use this to calculate input lengths in terms of number of characters entered.
 
 #### func (*Model[T]) CursorOffset
 
 ```go
 func (m *Model[T]) CursorOffset() int
 ```
+CursorOffset returns the visual offset of the cursor in terms of number of
+terminal cells. Use this for calculating visual dimensions such as input
+width/height.
 
 #### func (*Model[T]) Focus
 
 ```go
 func (m *Model[T]) Focus() tea.Cmd
 ```
+Focus sets the keyboard focus on the editor so the user can enter text.
 
 #### func (*Model[T]) Focused
 
 ```go
 func (m *Model[T]) Focused() bool
 ```
+Focused returns whether the keyboard is focused on the editor.
 
 #### func (*Model[T]) Init
 
 ```go
 func (m *Model[T]) Init() tea.Cmd
 ```
+Init is part of the editor interface. It does not need to be invoked by end
+users.
 
 #### func (*Model[T]) OnExecutorFinished
 
@@ -119,48 +130,59 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *editor.Suggestion[T],
 ```go
 func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd
 ```
+OnUpdateStart is part of the editor interface. It does not need to be invoked by
+end users.
 
 #### func (*Model[T]) Prompt
 
 ```go
 func (m *Model[T]) Prompt() string
 ```
+Prompt returns the terminal prompt.
 
 #### func (*Model[T]) ResetValue
 
 ```go
 func (m *Model[T]) ResetValue()
 ```
+ResetValue clears the editor.
 
 #### func (*Model[T]) Runes
 
 ```go
 func (m *Model[T]) Runes() []rune
 ```
+Runes returns the raw text entered by the user as a list of runes. This is
+useful for indexing and length checks because doing these operations on strings
+does not work well with some unicode characters.
 
 #### func (*Model[T]) SetCursor
 
 ```go
 func (m *Model[T]) SetCursor(cursor int)
 ```
+Set cursor sets the cursor position.
 
 #### func (*Model[T]) SetCursorMode
 
 ```go
 func (m *Model[T]) SetCursorMode(cursorMode textinput.CursorMode) tea.Cmd
 ```
+SetCursorMode sets the mode of the cursor.
 
 #### func (*Model[T]) SetPrompt
 
 ```go
 func (m *Model[T]) SetPrompt(prompt string)
 ```
+SetPrompt sets the terminal prompt.
 
 #### func (*Model[T]) SetValue
 
 ```go
 func (m *Model[T]) SetValue(value string)
 ```
+SetValue sets the text of the editor.
 
 #### func (*Model[T]) ShouldClearSuggestions
 
@@ -191,34 +213,38 @@ func (m *Model[T]) SuggestionRunes(runes []rune) []rune
 ```go
 func (m *Model[T]) TokenValues() []string
 ```
-TokenValues returns a list of token values from the user input. This excludes
-all delimiter tokens.
+TokenValues returns the tokenized input text. This **does not** include
+delimiter tokens.
 
 #### func (*Model[T]) Tokens
 
 ```go
 func (m *Model[T]) Tokens() []editor.Token
 ```
-Tokens returns a list of all tokens from the user input excluding delimiter
-tokens.
+Tokens returns the tokenized input. This **does not** include delimiter tokens.
 
 #### func (*Model[T]) TokensBeforeCursor
 
 ```go
 func (m *Model[T]) TokensBeforeCursor() []editor.Token
 ```
+AllTokensBeforeCursor returns the tokenized input up to the cursor position.
+This **does** include delimiter tokens.
 
 #### func (*Model[T]) Value
 
 ```go
 func (m *Model[T]) Value() string
 ```
+Value returns the raw text entered by the user.
 
 #### func (*Model[T]) View
 
 ```go
 func (m *Model[T]) View(viewMode editor.ViewMode) string
 ```
+View is part of the editor interface. It does not need to be invoked by end
+users.
 
 #### type Option
 

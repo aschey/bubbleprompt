@@ -68,10 +68,7 @@ func main() {
 		outputStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("13")),
 	}
 
-	promptModel, err := prompt.New[any](
-		model,
-		textInput,
-	)
+	promptModel, err := prompt.New[any](model, textInput)
 	if err != nil {
 		panic(err)
 	}

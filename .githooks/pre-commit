@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+echo "Running pre-commit..."
+golangci-lint run

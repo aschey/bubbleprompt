@@ -40,8 +40,9 @@ type Model[T any] struct {
 
 func New[T any](inputHandler InputHandler[T], textInput editor.Editor[T], opts ...Option[T]) (Model[T], error) {
 	formatters := editor.DefaultFormatters()
+	defaultNumSuggestions := 6
 	model := Model[T]{
-		suggestionManager: newSuggestionManager(textInput, formatters.ErrorText, 6),
+		suggestionManager: newSuggestionManager(textInput, formatters.ErrorText, defaultNumSuggestions),
 		inputHandler:      inputHandler,
 		textInput:         textInput,
 		renderer:          &renderer.UnmanagedRenderer{},
