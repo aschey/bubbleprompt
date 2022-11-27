@@ -6,9 +6,12 @@
 import "github.com/aschey/bubbleprompt/input/parserinput"
 ```
 
-## Usage
+#### Index
 
-#### type Model
+ - [type Model](#Model)
+     - [func NewModel[T any, G any](parser parser.Parser[G], options ...lexerinput.Option[T]) *Model[T, G]](#NewModel)
+
+#### type Model() {#Model}
 
 ```go
 type Model[T any, G any] struct {
@@ -17,37 +20,37 @@ type Model[T any, G any] struct {
 ```
 
 
-#### func  NewModel
+#### func NewModel() {#NewModel}
 
 ```go
 func NewModel[T any, G any](parser parser.Parser[G], options ...lexerinput.Option[T]) *Model[T, G]
 ```
 
-#### func (*Model[T, G]) Error
+#### func (*Model[T, G]) Error() {#Error}
 
 ```go
 func (m *Model[T, G]) Error() error
 ```
 
-#### func (*Model[T, G]) OnUpdateStart
+#### func (*Model[T, G]) OnUpdateStart() {#OnUpdateStart}
 
 ```go
 func (m *Model[T, G]) OnUpdateStart(msg tea.Msg) tea.Cmd
 ```
 
-#### func (*Model[T, G]) Parsed
+#### func (*Model[T, G]) Parsed() {#Parsed}
 
 ```go
 func (m *Model[T, G]) Parsed() *G
 ```
 
-#### func (*Model[T, G]) ParsedBeforeCursor
+#### func (*Model[T, G]) ParsedBeforeCursor() {#ParsedBeforeCursor}
 
 ```go
 func (m *Model[T, G]) ParsedBeforeCursor() (*G, error)
 ```
 
-#### func (*Model[T, G]) SetValue
+#### func (*Model[T, G]) SetValue() {#SetValue}
 
 ```go
 func (m *Model[T, G]) SetValue(value string)

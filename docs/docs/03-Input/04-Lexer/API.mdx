@@ -6,9 +6,17 @@
 import "github.com/aschey/bubbleprompt/input/lexerinput"
 ```
 
-## Usage
+#### Index
 
-#### type Model
+ - [type Model](#Model)
+     - [func NewModel[T any](lexer parser.Lexer, options ...Option[T]) *Model[T]](#NewModel)
+ - [type Option](#Option)
+     - [func WithCursorMode[T any](cursorMode textinput.CursorMode) Option[T]](#WithCursorMode)
+     - [func WithDelimiterTokens[T any](tokens ...string) Option[T]](#WithDelimiterTokens)
+     - [func WithDelimiters[T any](delimiters ...string) Option[T]](#WithDelimiters)
+     - [func WithFormatter[T any](formatter parser.Formatter) Option[T]](#WithFormatter)
+
+#### type Model() {#Model}
 
 ```go
 type Model[T any] struct {
@@ -16,248 +24,248 @@ type Model[T any] struct {
 ```
 
 
-#### func  NewModel
+#### func NewModel() {#NewModel}
 
 ```go
 func NewModel[T any](lexer parser.Lexer, options ...Option[T]) *Model[T]
 ```
 
-#### func (*Model[T]) Blur
+#### func (*Model[T]) Blur() {#Blur}
 
 ```go
 func (m *Model[T]) Blur()
 ```
 
-#### func (*Model[T]) CompletableTokenBeforeCursor
+#### func (*Model[T]) CompletableTokenBeforeCursor() {#CompletableTokenBeforeCursor}
 
 ```go
 func (m *Model[T]) CompletableTokenBeforeCursor() string
 ```
 
-#### func (*Model[T]) CurrentToken
+#### func (*Model[T]) CurrentToken() {#CurrentToken}
 
 ```go
 func (m *Model[T]) CurrentToken() input.Token
 ```
 
-#### func (*Model[T]) CurrentTokenBeforeCursor
+#### func (*Model[T]) CurrentTokenBeforeCursor() {#CurrentTokenBeforeCursor}
 
 ```go
 func (m *Model[T]) CurrentTokenBeforeCursor() string
 ```
 
-#### func (*Model[T]) CursorIndex
+#### func (*Model[T]) CursorIndex() {#CursorIndex}
 
 ```go
 func (m *Model[T]) CursorIndex() int
 ```
 
-#### func (*Model[T]) CursorOffset
+#### func (*Model[T]) CursorOffset() {#CursorOffset}
 
 ```go
 func (m *Model[T]) CursorOffset() int
 ```
 
-#### func (*Model[T]) Error
+#### func (*Model[T]) Error() {#Error}
 
 ```go
 func (m *Model[T]) Error() error
 ```
 
-#### func (*Model[T]) FindLast
+#### func (*Model[T]) FindLast() {#FindLast}
 
 ```go
 func (m *Model[T]) FindLast(filter func(token input.Token, symbol string) bool) *input.Token
 ```
 
-#### func (*Model[T]) Focus
+#### func (*Model[T]) Focus() {#Focus}
 
 ```go
 func (m *Model[T]) Focus() tea.Cmd
 ```
 
-#### func (*Model[T]) Focused
+#### func (*Model[T]) Focused() {#Focused}
 
 ```go
 func (m *Model[T]) Focused() bool
 ```
 
-#### func (*Model[T]) FormatText
+#### func (*Model[T]) FormatText() {#FormatText}
 
 ```go
 func (m *Model[T]) FormatText(text string) string
 ```
 
-#### func (*Model[T]) Init
+#### func (*Model[T]) Init() {#Init}
 
 ```go
 func (m *Model[T]) Init() tea.Cmd
 ```
 
-#### func (*Model[T]) IsDelimiterToken
+#### func (*Model[T]) IsDelimiterToken() {#IsDelimiterToken}
 
 ```go
 func (m *Model[T]) IsDelimiterToken(token input.Token) bool
 ```
 
-#### func (*Model[T]) OnExecutorFinished
+#### func (*Model[T]) OnExecutorFinished() {#OnExecutorFinished}
 
 ```go
 func (m *Model[T]) OnExecutorFinished()
 ```
 
-#### func (*Model[T]) OnSuggestionChanged
+#### func (*Model[T]) OnSuggestionChanged() {#OnSuggestionChanged}
 
 ```go
 func (m *Model[T]) OnSuggestionChanged(suggestion input.Suggestion[T])
 ```
 
-#### func (*Model[T]) OnSuggestionUnselected
+#### func (*Model[T]) OnSuggestionUnselected() {#OnSuggestionUnselected}
 
 ```go
 func (m *Model[T]) OnSuggestionUnselected()
 ```
 
-#### func (*Model[T]) OnUpdateFinish
+#### func (*Model[T]) OnUpdateFinish() {#OnUpdateFinish}
 
 ```go
 func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T], isSelected bool) tea.Cmd
 ```
 
-#### func (*Model[T]) OnUpdateStart
+#### func (*Model[T]) OnUpdateStart() {#OnUpdateStart}
 
 ```go
 func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd
 ```
 
-#### func (*Model[T]) PreviousToken
+#### func (*Model[T]) PreviousToken() {#PreviousToken}
 
 ```go
 func (m *Model[T]) PreviousToken() *input.Token
 ```
 
-#### func (*Model[T]) Prompt
+#### func (*Model[T]) Prompt() {#Prompt}
 
 ```go
 func (m *Model[T]) Prompt() string
 ```
 
-#### func (*Model[T]) ResetValue
+#### func (*Model[T]) ResetValue() {#ResetValue}
 
 ```go
 func (m *Model[T]) ResetValue()
 ```
 
-#### func (*Model[T]) Runes
+#### func (*Model[T]) Runes() {#Runes}
 
 ```go
 func (m *Model[T]) Runes() []rune
 ```
 
-#### func (*Model[T]) SetCursor
+#### func (*Model[T]) SetCursor() {#SetCursor}
 
 ```go
 func (m *Model[T]) SetCursor(cursor int)
 ```
 
-#### func (*Model[T]) SetCursorMode
+#### func (*Model[T]) SetCursorMode() {#SetCursorMode}
 
 ```go
 func (m *Model[T]) SetCursorMode(cursorMode textinput.CursorMode) tea.Cmd
 ```
 
-#### func (*Model[T]) SetPrompt
+#### func (*Model[T]) SetPrompt() {#SetPrompt}
 
 ```go
 func (m *Model[T]) SetPrompt(prompt string)
 ```
 
-#### func (*Model[T]) SetValue
+#### func (*Model[T]) SetValue() {#SetValue}
 
 ```go
 func (m *Model[T]) SetValue(value string)
 ```
 
-#### func (*Model[T]) ShouldClearSuggestions
+#### func (*Model[T]) ShouldClearSuggestions() {#ShouldClearSuggestions}
 
 ```go
 func (m *Model[T]) ShouldClearSuggestions(prevText []rune, msg tea.KeyMsg) bool
 ```
 
-#### func (*Model[T]) ShouldSelectSuggestion
+#### func (*Model[T]) ShouldSelectSuggestion() {#ShouldSelectSuggestion}
 
 ```go
 func (m *Model[T]) ShouldSelectSuggestion(suggestion input.Suggestion[T]) bool
 ```
 
-#### func (*Model[T]) ShouldUnselectSuggestion
+#### func (*Model[T]) ShouldUnselectSuggestion() {#ShouldUnselectSuggestion}
 
 ```go
 func (m *Model[T]) ShouldUnselectSuggestion(prevText []rune, msg tea.KeyMsg) bool
 ```
 
-#### func (*Model[T]) SuggestionRunes
+#### func (*Model[T]) SuggestionRunes() {#SuggestionRunes}
 
 ```go
 func (m *Model[T]) SuggestionRunes(runes []rune) []rune
 ```
 
-#### func (*Model[T]) TokenValues
+#### func (*Model[T]) TokenValues() {#TokenValues}
 
 ```go
 func (m *Model[T]) TokenValues() []string
 ```
 
-#### func (*Model[T]) Tokens
+#### func (*Model[T]) Tokens() {#Tokens}
 
 ```go
 func (m *Model[T]) Tokens() []input.Token
 ```
 
-#### func (*Model[T]) TokensBeforeCursor
+#### func (*Model[T]) TokensBeforeCursor() {#TokensBeforeCursor}
 
 ```go
 func (m *Model[T]) TokensBeforeCursor() []input.Token
 ```
 
-#### func (*Model[T]) Value
+#### func (*Model[T]) Value() {#Value}
 
 ```go
 func (m *Model[T]) Value() string
 ```
 
-#### func (*Model[T]) View
+#### func (*Model[T]) View() {#View}
 
 ```go
 func (m *Model[T]) View(viewMode input.ViewMode) string
 ```
 
-#### type Option
+#### type Option() {#Option}
 
 ```go
 type Option[T any] func(model *Model[T]) error
 ```
 
 
-#### func  WithCursorMode
+#### func WithCursorMode() {#WithCursorMode}
 
 ```go
 func WithCursorMode[T any](cursorMode textinput.CursorMode) Option[T]
 ```
 
-#### func  WithDelimiterTokens
+#### func WithDelimiterTokens() {#WithDelimiterTokens}
 
 ```go
 func WithDelimiterTokens[T any](tokens ...string) Option[T]
 ```
 
-#### func  WithDelimiters
+#### func WithDelimiters() {#WithDelimiters}
 
 ```go
 func WithDelimiters[T any](delimiters ...string) Option[T]
 ```
 
-#### func  WithFormatter
+#### func WithFormatter() {#WithFormatter}
 
 ```go
 func WithFormatter[T any](formatter parser.Formatter) Option[T]
