@@ -61,7 +61,7 @@ var DefaultPlaceholderForeground = "14"
 var DefaultSelectedTextColor = "10"
 ```
 
-#### type Arg() {#Arg}
+#### type Arg {#Arg}
 
 ```go
 type Arg struct {
@@ -71,7 +71,7 @@ type Arg struct {
 ```
 
 
-#### type CmdMetadata() {#CmdMetadata}
+#### type CmdMetadata {#CmdMetadata}
 
 ```go
 type CmdMetadata struct {
@@ -84,43 +84,43 @@ type CmdMetadata struct {
 ```
 
 
-#### func MetadataFromPositionalArgs() {#MetadataFromPositionalArgs}
+#### func MetadataFromPositionalArgs {#MetadataFromPositionalArgs}
 
 ```go
 func MetadataFromPositionalArgs(positionalArgs ...PositionalArg) CmdMetadata
 ```
 
-#### func (CmdMetadata) GetFlagPlaceholder() {#GetFlagPlaceholder}
+#### func (CmdMetadata) GetFlagPlaceholder {#GetFlagPlaceholder}
 
 ```go
 func (m CmdMetadata) GetFlagPlaceholder() FlagPlaceholder
 ```
 
-#### func (CmdMetadata) GetLevel() {#GetLevel}
+#### func (CmdMetadata) GetLevel {#GetLevel}
 
 ```go
 func (m CmdMetadata) GetLevel() int
 ```
 
-#### func (CmdMetadata) GetPositionalArgs() {#GetPositionalArgs}
+#### func (CmdMetadata) GetPositionalArgs {#GetPositionalArgs}
 
 ```go
 func (m CmdMetadata) GetPositionalArgs() []PositionalArg
 ```
 
-#### func (CmdMetadata) GetPreservePlaceholder() {#GetPreservePlaceholder}
+#### func (CmdMetadata) GetPreservePlaceholder {#GetPreservePlaceholder}
 
 ```go
 func (m CmdMetadata) GetPreservePlaceholder() bool
 ```
 
-#### func (CmdMetadata) GetShowFlagPlaceholder() {#GetShowFlagPlaceholder}
+#### func (CmdMetadata) GetShowFlagPlaceholder {#GetShowFlagPlaceholder}
 
 ```go
 func (m CmdMetadata) GetShowFlagPlaceholder() bool
 ```
 
-#### type CmdMetadataAccessor() {#CmdMetadataAccessor}
+#### type CmdMetadataAccessor {#CmdMetadataAccessor}
 
 ```go
 type CmdMetadataAccessor interface {
@@ -133,7 +133,7 @@ type CmdMetadataAccessor interface {
 ```
 
 
-#### type Flag() {#Flag}
+#### type Flag {#Flag}
 
 ```go
 type Flag struct {
@@ -144,7 +144,7 @@ type Flag struct {
 ```
 
 
-#### type FlagFormatter() {#FlagFormatter}
+#### type FlagFormatter {#FlagFormatter}
 
 ```go
 type FlagFormatter struct {
@@ -154,7 +154,7 @@ type FlagFormatter struct {
 ```
 
 
-#### type FlagInput() {#FlagInput}
+#### type FlagInput {#FlagInput}
 
 ```go
 type FlagInput struct {
@@ -166,13 +166,13 @@ type FlagInput struct {
 ```
 
 
-#### func (FlagInput) RequiresArg() {#RequiresArg}
+#### func (FlagInput) RequiresArg {#RequiresArg}
 
 ```go
 func (f FlagInput) RequiresArg() bool
 ```
 
-#### type FlagPlaceholder() {#FlagPlaceholder}
+#### type FlagPlaceholder {#FlagPlaceholder}
 
 ```go
 type FlagPlaceholder struct {
@@ -181,7 +181,7 @@ type FlagPlaceholder struct {
 ```
 
 
-#### type FlagValueFormatter() {#FlagValueFormatter}
+#### type FlagValueFormatter {#FlagValueFormatter}
 
 ```go
 type FlagValueFormatter struct {
@@ -192,7 +192,7 @@ type FlagValueFormatter struct {
 ```
 
 
-#### type Formatters() {#Formatters}
+#### type Formatters {#Formatters}
 
 ```go
 type Formatters struct {
@@ -208,13 +208,13 @@ type Formatters struct {
 ```
 
 
-#### func DefaultFormatters() {#DefaultFormatters}
+#### func DefaultFormatters {#DefaultFormatters}
 
 ```go
 func DefaultFormatters() Formatters
 ```
 
-#### type Model() {#Model}
+#### type Model {#Model}
 
 ```go
 type Model[T CmdMetadataAccessor] struct {
@@ -222,326 +222,326 @@ type Model[T CmdMetadataAccessor] struct {
 ```
 
 
-#### func New() {#New}
+#### func New {#New}
 
 ```go
 func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T]
 ```
 
-#### func (Model[T]) AllTokensBeforeCursor() {#AllTokensBeforeCursor}
+#### func (Model[T]) AllTokensBeforeCursor {#AllTokensBeforeCursor}
 
 ```go
 func (m Model[T]) AllTokensBeforeCursor() []input.Token
 ```
 
-#### func (Model[T]) AllValues() {#AllValues}
+#### func (Model[T]) AllValues {#AllValues}
 
 ```go
 func (m Model[T]) AllValues() []string
 ```
 
-#### func (Model[T]) AllValuesBeforeCursor() {#AllValuesBeforeCursor}
+#### func (Model[T]) AllValuesBeforeCursor {#AllValuesBeforeCursor}
 
 ```go
 func (m Model[T]) AllValuesBeforeCursor() []string
 ```
 
-#### func (*Model[T]) ArgsBeforeCursor() {#ArgsBeforeCursor}
+#### func (*Model[T]) ArgsBeforeCursor {#ArgsBeforeCursor}
 
 ```go
 func (m *Model[T]) ArgsBeforeCursor() []string
 ```
 
-#### func (*Model[T]) Blur() {#Blur}
+#### func (*Model[T]) Blur {#Blur}
 
 ```go
 func (m *Model[T]) Blur()
 ```
 
-#### func (*Model[T]) CommandBeforeCursor() {#CommandBeforeCursor}
+#### func (*Model[T]) CommandBeforeCursor {#CommandBeforeCursor}
 
 ```go
 func (m *Model[T]) CommandBeforeCursor() string
 ```
 
-#### func (Model[T]) CommandCompleted() {#CommandCompleted}
+#### func (Model[T]) CommandCompleted {#CommandCompleted}
 
 ```go
 func (m Model[T]) CommandCompleted() bool
 ```
 
-#### func (*Model[T]) CompletedArgsBeforeCursor() {#CompletedArgsBeforeCursor}
+#### func (*Model[T]) CompletedArgsBeforeCursor {#CompletedArgsBeforeCursor}
 
 ```go
 func (m *Model[T]) CompletedArgsBeforeCursor() []string
 ```
 
-#### func (Model[T]) CurrentToken() {#CurrentToken}
+#### func (Model[T]) CurrentToken {#CurrentToken}
 
 ```go
 func (m Model[T]) CurrentToken() string
 ```
 
-#### func (Model[T]) CurrentTokenBeforeCursor() {#CurrentTokenBeforeCursor}
+#### func (Model[T]) CurrentTokenBeforeCursor {#CurrentTokenBeforeCursor}
 
 ```go
 func (m Model[T]) CurrentTokenBeforeCursor() string
 ```
 
-#### func (Model[T]) CurrentTokenBeforeCursorRoundDown() {#CurrentTokenBeforeCursorRoundDown}
+#### func (Model[T]) CurrentTokenBeforeCursorRoundDown {#CurrentTokenBeforeCursorRoundDown}
 
 ```go
 func (m Model[T]) CurrentTokenBeforeCursorRoundDown() string
 ```
 
-#### func (Model[T]) CurrentTokenPos() {#CurrentTokenPos}
+#### func (Model[T]) CurrentTokenPos {#CurrentTokenPos}
 
 ```go
 func (m Model[T]) CurrentTokenPos() TokenPos
 ```
 
-#### func (Model[T]) CurrentTokenPosRoundDown() {#CurrentTokenPosRoundDown}
+#### func (Model[T]) CurrentTokenPosRoundDown {#CurrentTokenPosRoundDown}
 
 ```go
 func (m Model[T]) CurrentTokenPosRoundDown() TokenPos
 ```
 
-#### func (Model[T]) CurrentTokenRoundDown() {#CurrentTokenRoundDown}
+#### func (Model[T]) CurrentTokenRoundDown {#CurrentTokenRoundDown}
 
 ```go
 func (m Model[T]) CurrentTokenRoundDown() string
 ```
 
-#### func (Model[T]) CursorIndex() {#CursorIndex}
+#### func (Model[T]) CursorIndex {#CursorIndex}
 
 ```go
 func (m Model[T]) CursorIndex() int
 ```
 
-#### func (Model[T]) CursorOffset() {#CursorOffset}
+#### func (Model[T]) CursorOffset {#CursorOffset}
 
 ```go
 func (m Model[T]) CursorOffset() int
 ```
 
-#### func (*Model[T]) FlagSuggestions() {#FlagSuggestions}
+#### func (*Model[T]) FlagSuggestions {#FlagSuggestions}
 
 ```go
 func (m *Model[T]) FlagSuggestions(inputStr string, flags []FlagInput, suggestionFunc func(FlagInput) T) []input.Suggestion[T]
 ```
 
-#### func (*Model[T]) Focus() {#Focus}
+#### func (*Model[T]) Focus {#Focus}
 
 ```go
 func (m *Model[T]) Focus() tea.Cmd
 ```
 
-#### func (Model[T]) Focused() {#Focused}
+#### func (Model[T]) Focused {#Focused}
 
 ```go
 func (m Model[T]) Focused() bool
 ```
 
-#### func (Model[T]) Formatters() {#Formatters}
+#### func (Model[T]) Formatters {#Formatters}
 
 ```go
 func (m Model[T]) Formatters() Formatters
 ```
 
-#### func (Model[T]) HasArgs() {#HasArgs}
+#### func (Model[T]) HasArgs {#HasArgs}
 
 ```go
 func (m Model[T]) HasArgs() bool
 ```
 
-#### func (*Model[T]) Init() {#Init}
+#### func (*Model[T]) Init {#Init}
 
 ```go
 func (m *Model[T]) Init() tea.Cmd
 ```
 
-#### func (Model[T]) LastArg() {#LastArg}
+#### func (Model[T]) LastArg {#LastArg}
 
 ```go
 func (m Model[T]) LastArg() *ident
 ```
 
-#### func (*Model[T]) NewFlagPlaceholder() {#NewFlagPlaceholder}
+#### func (*Model[T]) NewFlagPlaceholder {#NewFlagPlaceholder}
 
 ```go
 func (m *Model[T]) NewFlagPlaceholder(placeholder string) FlagPlaceholder
 ```
 
-#### func (*Model[T]) NewPositionalArg() {#NewPositionalArg}
+#### func (*Model[T]) NewPositionalArg {#NewPositionalArg}
 
 ```go
 func (m *Model[T]) NewPositionalArg(placeholder string) PositionalArg
 ```
 
-#### func (*Model[T]) NewPositionalArgs() {#NewPositionalArgs}
+#### func (*Model[T]) NewPositionalArgs {#NewPositionalArgs}
 
 ```go
 func (m *Model[T]) NewPositionalArgs(placeholders ...string) []PositionalArg
 ```
 
-#### func (*Model[T]) OnExecutorFinished() {#OnExecutorFinished}
+#### func (*Model[T]) OnExecutorFinished {#OnExecutorFinished}
 
 ```go
 func (m *Model[T]) OnExecutorFinished()
 ```
 
-#### func (*Model[T]) OnSuggestionChanged() {#OnSuggestionChanged}
+#### func (*Model[T]) OnSuggestionChanged {#OnSuggestionChanged}
 
 ```go
 func (m *Model[T]) OnSuggestionChanged(suggestion input.Suggestion[T])
 ```
 
-#### func (*Model[T]) OnSuggestionUnselected() {#OnSuggestionUnselected}
+#### func (*Model[T]) OnSuggestionUnselected {#OnSuggestionUnselected}
 
 ```go
 func (m *Model[T]) OnSuggestionUnselected()
 ```
 
-#### func (*Model[T]) OnUpdateFinish() {#OnUpdateFinish}
+#### func (*Model[T]) OnUpdateFinish {#OnUpdateFinish}
 
 ```go
 func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T], isSelected bool) tea.Cmd
 ```
 
-#### func (*Model[T]) OnUpdateStart() {#OnUpdateStart}
+#### func (*Model[T]) OnUpdateStart {#OnUpdateStart}
 
 ```go
 func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd
 ```
 
-#### func (*Model[T]) ParsedValue() {#ParsedValue}
+#### func (*Model[T]) ParsedValue {#ParsedValue}
 
 ```go
 func (m *Model[T]) ParsedValue() Statement
 ```
 
-#### func (*Model[T]) Prompt() {#Prompt}
+#### func (*Model[T]) Prompt {#Prompt}
 
 ```go
 func (m *Model[T]) Prompt() string
 ```
 
-#### func (*Model[T]) ResetValue() {#ResetValue}
+#### func (*Model[T]) ResetValue {#ResetValue}
 
 ```go
 func (m *Model[T]) ResetValue()
 ```
 
-#### func (*Model[T]) Runes() {#Runes}
+#### func (*Model[T]) Runes {#Runes}
 
 ```go
 func (m *Model[T]) Runes() []rune
 ```
 
-#### func (*Model[T]) SetCursor() {#SetCursor}
+#### func (*Model[T]) SetCursor {#SetCursor}
 
 ```go
 func (m *Model[T]) SetCursor(pos int)
 ```
 
-#### func (*Model[T]) SetCursorMode() {#SetCursorMode}
+#### func (*Model[T]) SetCursorMode {#SetCursorMode}
 
 ```go
 func (m *Model[T]) SetCursorMode(cursorMode textinput.CursorMode) tea.Cmd
 ```
 
-#### func (*Model[T]) SetFormatters() {#SetFormatters}
+#### func (*Model[T]) SetFormatters {#SetFormatters}
 
 ```go
 func (m *Model[T]) SetFormatters(formatters Formatters)
 ```
 
-#### func (*Model[T]) SetPrompt() {#SetPrompt}
+#### func (*Model[T]) SetPrompt {#SetPrompt}
 
 ```go
 func (m *Model[T]) SetPrompt(prompt string)
 ```
 
-#### func (*Model[T]) SetValue() {#SetValue}
+#### func (*Model[T]) SetValue {#SetValue}
 
 ```go
 func (m *Model[T]) SetValue(s string)
 ```
 
-#### func (*Model[T]) ShouldClearSuggestions() {#ShouldClearSuggestions}
+#### func (*Model[T]) ShouldClearSuggestions {#ShouldClearSuggestions}
 
 ```go
 func (m *Model[T]) ShouldClearSuggestions(prevText []rune, msg tea.KeyMsg) bool
 ```
 
-#### func (*Model[T]) ShouldSelectSuggestion() {#ShouldSelectSuggestion}
+#### func (*Model[T]) ShouldSelectSuggestion {#ShouldSelectSuggestion}
 
 ```go
 func (m *Model[T]) ShouldSelectSuggestion(suggestion input.Suggestion[T]) bool
 ```
 
-#### func (*Model[T]) ShouldUnselectSuggestion() {#ShouldUnselectSuggestion}
+#### func (*Model[T]) ShouldUnselectSuggestion {#ShouldUnselectSuggestion}
 
 ```go
 func (m *Model[T]) ShouldUnselectSuggestion(prevRunes []rune, msg tea.KeyMsg) bool
 ```
 
-#### func (*Model[T]) SuggestionRunes() {#SuggestionRunes}
+#### func (*Model[T]) SuggestionRunes {#SuggestionRunes}
 
 ```go
 func (m *Model[T]) SuggestionRunes(runes []rune) []rune
 ```
 
-#### func (Model[T]) Tokens() {#Tokens}
+#### func (Model[T]) Tokens {#Tokens}
 
 ```go
 func (m Model[T]) Tokens() []input.Token
 ```
 
-#### func (*Model[T]) Value() {#Value}
+#### func (*Model[T]) Value {#Value}
 
 ```go
 func (m *Model[T]) Value() string
 ```
 
-#### func (Model[T]) View() {#View}
+#### func (Model[T]) View {#View}
 
 ```go
 func (m Model[T]) View(viewMode input.ViewMode) string
 ```
 
-#### type Option() {#Option}
+#### type Option {#Option}
 
 ```go
 type Option[T CmdMetadataAccessor] func(model *Model[T]) error
 ```
 
 
-#### func WithCursorMode() {#WithCursorMode}
+#### func WithCursorMode {#WithCursorMode}
 
 ```go
 func WithCursorMode[T CmdMetadataAccessor](cursorMode textinput.CursorMode) Option[T]
 ```
 
-#### func WithDefaultDelimiter() {#WithDefaultDelimiter}
+#### func WithDefaultDelimiter {#WithDefaultDelimiter}
 
 ```go
 func WithDefaultDelimiter[T CmdMetadataAccessor](defaultDelimiter string) Option[T]
 ```
 
-#### func WithFormatters() {#WithFormatters}
+#### func WithFormatters {#WithFormatters}
 
 ```go
 func WithFormatters[T CmdMetadataAccessor](formatters Formatters) Option[T]
 ```
 
-#### func WithPrompt() {#WithPrompt}
+#### func WithPrompt {#WithPrompt}
 
 ```go
 func WithPrompt[T CmdMetadataAccessor](prompt string) Option[T]
 ```
 
-#### type PositionalArg() {#PositionalArg}
+#### type PositionalArg {#PositionalArg}
 
 ```go
 type PositionalArg struct {
@@ -551,13 +551,13 @@ type PositionalArg struct {
 ```
 
 
-#### func (PositionalArg) Placeholder() {#Placeholder}
+#### func (PositionalArg) Placeholder {#Placeholder}
 
 ```go
 func (p PositionalArg) Placeholder() string
 ```
 
-#### type PositionalArgFormatter() {#PositionalArgFormatter}
+#### type PositionalArgFormatter {#PositionalArgFormatter}
 
 ```go
 type PositionalArgFormatter struct {
@@ -567,14 +567,14 @@ type PositionalArgFormatter struct {
 ```
 
 
-#### type RoundingBehavior() {#RoundingBehavior}
+#### type RoundingBehavior {#RoundingBehavior}
 
 ```go
 type RoundingBehavior int
 ```
 
 
-#### type Statement() {#Statement}
+#### type Statement {#Statement}
 
 ```go
 type Statement struct {
@@ -586,7 +586,7 @@ type Statement struct {
 ```
 
 
-#### type TokenPos() {#TokenPos}
+#### type TokenPos {#TokenPos}
 
 ```go
 type TokenPos struct {
@@ -597,7 +597,7 @@ type TokenPos struct {
 ```
 
 
-#### type TokenValue() {#TokenValue}
+#### type TokenValue {#TokenValue}
 
 ```go
 type TokenValue struct {
@@ -605,13 +605,13 @@ type TokenValue struct {
 ```
 
 
-#### func (TokenValue) RawValue() {#RawValue}
+#### func (TokenValue) RawValue {#RawValue}
 
 ```go
 func (t TokenValue) RawValue() string
 ```
 
-#### func (TokenValue) Value() {#Value}
+#### func (TokenValue) Value {#Value}
 
 ```go
 func (t TokenValue) Value() string

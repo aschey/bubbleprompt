@@ -17,7 +17,7 @@ import "github.com/aschey/bubbleprompt/input/simpleinput"
      - [func WithSelectedTextStyle[T any](style lipgloss.Style) Option[T]](#WithSelectedTextStyle)
      - [func WithTokenRegex[T any](tokenRegex string) Option[T]](#WithTokenRegex)
 
-#### type Model() {#Model}
+#### type Model {#Model}
 
 ```go
 type Model[T any] struct {
@@ -26,14 +26,14 @@ type Model[T any] struct {
 
 A Model is a simpleinput editor for handling simpleinput token-based inputs without any special parsing required.
 
-#### func New() {#New}
+#### func New {#New}
 
 ```go
 func New[T any](options ...Option[T]) *Model[T]
 ```
 New creates new a model.
 
-#### func (*Model[T]) AllTokens() {#AllTokens}
+#### func (*Model[T]) AllTokens {#AllTokens}
 
 ```go
 func (m *Model[T]) AllTokens() []input.Token
@@ -41,7 +41,7 @@ func (m *Model[T]) AllTokens() []input.Token
 AllTokens returns the tokenized input.
 This **does** include delimiter tokens.
 
-#### func (*Model[T]) AllTokensBeforeCursor() {#AllTokensBeforeCursor}
+#### func (*Model[T]) AllTokensBeforeCursor {#AllTokensBeforeCursor}
 
 ```go
 func (m *Model[T]) AllTokensBeforeCursor() []input.Token
@@ -49,21 +49,21 @@ func (m *Model[T]) AllTokensBeforeCursor() []input.Token
 AllTokensBeforeCursor returns the tokenized input up to the cursor position.
 This **does not** include delimiter tokens.
 
-#### func (*Model[T]) Blur() {#Blur}
+#### func (*Model[T]) Blur {#Blur}
 
 ```go
 func (m *Model[T]) Blur()
 ```
 Blur removes the focus from the input.
 
-#### func (*Model[T]) CurrentToken() {#CurrentToken}
+#### func (*Model[T]) CurrentToken {#CurrentToken}
 
 ```go
 func (m *Model[T]) CurrentToken() input.Token
 ```
 CurrentToken returns the token under the cursor.
 
-#### func (*Model[T]) CurrentTokenBeforeCursor() {#CurrentTokenBeforeCursor}
+#### func (*Model[T]) CurrentTokenBeforeCursor {#CurrentTokenBeforeCursor}
 
 ```go
 func (m *Model[T]) CurrentTokenBeforeCursor() string
@@ -71,7 +71,7 @@ func (m *Model[T]) CurrentTokenBeforeCursor() string
 CurrentTokenBeforeCursor returns the portion of the token under the cursor
 that comes before the cursor position.
 
-#### func (*Model[T]) CursorIndex() {#CursorIndex}
+#### func (*Model[T]) CursorIndex {#CursorIndex}
 
 ```go
 func (m *Model[T]) CursorIndex() int
@@ -79,7 +79,7 @@ func (m *Model[T]) CursorIndex() int
 CursorIndex returns the cursor index in terms of number of unicode characters.
 Use this to calculate input lengths in terms of number of characters entered.
 
-#### func (*Model[T]) CursorOffset() {#CursorOffset}
+#### func (*Model[T]) CursorOffset {#CursorOffset}
 
 ```go
 func (m *Model[T]) CursorOffset() int
@@ -88,21 +88,21 @@ CursorOffset returns the visual offset of the cursor in terms
 of number of terminal cells. Use this for calculating visual dimensions
 such as input width/height.
 
-#### func (*Model[T]) Focus() {#Focus}
+#### func (*Model[T]) Focus {#Focus}
 
 ```go
 func (m *Model[T]) Focus() tea.Cmd
 ```
 Focus sets the keyboard focus on the editor so the user can enter text.
 
-#### func (*Model[T]) Focused() {#Focused}
+#### func (*Model[T]) Focused {#Focused}
 
 ```go
 func (m *Model[T]) Focused() bool
 ```
 Focused returns whether the keyboard is focused on the input.
 
-#### func (*Model[T]) Init() {#Init}
+#### func (*Model[T]) Init {#Init}
 
 ```go
 func (m *Model[T]) Init() tea.Cmd
@@ -110,31 +110,31 @@ func (m *Model[T]) Init() tea.Cmd
 Init is part of the editor interface.
 It does not need to be invoked by end users.
 
-#### func (*Model[T]) OnExecutorFinished() {#OnExecutorFinished}
+#### func (*Model[T]) OnExecutorFinished {#OnExecutorFinished}
 
 ```go
 func (m *Model[T]) OnExecutorFinished()
 ```
 
-#### func (*Model[T]) OnSuggestionChanged() {#OnSuggestionChanged}
+#### func (*Model[T]) OnSuggestionChanged {#OnSuggestionChanged}
 
 ```go
 func (m *Model[T]) OnSuggestionChanged(suggestion input.Suggestion[T])
 ```
 
-#### func (*Model[T]) OnSuggestionUnselected() {#OnSuggestionUnselected}
+#### func (*Model[T]) OnSuggestionUnselected {#OnSuggestionUnselected}
 
 ```go
 func (m *Model[T]) OnSuggestionUnselected()
 ```
 
-#### func (*Model[T]) OnUpdateFinish() {#OnUpdateFinish}
+#### func (*Model[T]) OnUpdateFinish {#OnUpdateFinish}
 
 ```go
 func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T], isSelected bool) tea.Cmd
 ```
 
-#### func (*Model[T]) OnUpdateStart() {#OnUpdateStart}
+#### func (*Model[T]) OnUpdateStart {#OnUpdateStart}
 
 ```go
 func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd
@@ -142,21 +142,21 @@ func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd
 OnUpdateStart is part of the editor interface.
 It does not need to be invoked by end users.
 
-#### func (*Model[T]) Prompt() {#Prompt}
+#### func (*Model[T]) Prompt {#Prompt}
 
 ```go
 func (m *Model[T]) Prompt() string
 ```
 Prompt returns the terminal prompt.
 
-#### func (*Model[T]) ResetValue() {#ResetValue}
+#### func (*Model[T]) ResetValue {#ResetValue}
 
 ```go
 func (m *Model[T]) ResetValue()
 ```
 ResetValue clears the input.
 
-#### func (*Model[T]) Runes() {#Runes}
+#### func (*Model[T]) Runes {#Runes}
 
 ```go
 func (m *Model[T]) Runes() []rune
@@ -165,59 +165,59 @@ Runes returns the raw text entered by the user as a list of runes.
 This is useful for indexing and length checks because doing these
 operations on strings does not work well with some unicode characters.
 
-#### func (*Model[T]) SetCursor() {#SetCursor}
+#### func (*Model[T]) SetCursor {#SetCursor}
 
 ```go
 func (m *Model[T]) SetCursor(cursor int)
 ```
 Set cursor sets the cursor position.
 
-#### func (*Model[T]) SetCursorMode() {#SetCursorMode}
+#### func (*Model[T]) SetCursorMode {#SetCursorMode}
 
 ```go
 func (m *Model[T]) SetCursorMode(cursorMode textinput.CursorMode) tea.Cmd
 ```
 SetCursorMode sets the mode of the cursor.
 
-#### func (*Model[T]) SetPrompt() {#SetPrompt}
+#### func (*Model[T]) SetPrompt {#SetPrompt}
 
 ```go
 func (m *Model[T]) SetPrompt(prompt string)
 ```
 SetPrompt sets the terminal prompt.
 
-#### func (*Model[T]) SetValue() {#SetValue}
+#### func (*Model[T]) SetValue {#SetValue}
 
 ```go
 func (m *Model[T]) SetValue(value string)
 ```
 SetValue sets the text of the input.
 
-#### func (*Model[T]) ShouldClearSuggestions() {#ShouldClearSuggestions}
+#### func (*Model[T]) ShouldClearSuggestions {#ShouldClearSuggestions}
 
 ```go
 func (m *Model[T]) ShouldClearSuggestions(prevText []rune, msg tea.KeyMsg) bool
 ```
 
-#### func (*Model[T]) ShouldSelectSuggestion() {#ShouldSelectSuggestion}
+#### func (*Model[T]) ShouldSelectSuggestion {#ShouldSelectSuggestion}
 
 ```go
 func (m *Model[T]) ShouldSelectSuggestion(suggestion input.Suggestion[T]) bool
 ```
 
-#### func (*Model[T]) ShouldUnselectSuggestion() {#ShouldUnselectSuggestion}
+#### func (*Model[T]) ShouldUnselectSuggestion {#ShouldUnselectSuggestion}
 
 ```go
 func (m *Model[T]) ShouldUnselectSuggestion(prevText []rune, msg tea.KeyMsg) bool
 ```
 
-#### func (*Model[T]) SuggestionRunes() {#SuggestionRunes}
+#### func (*Model[T]) SuggestionRunes {#SuggestionRunes}
 
 ```go
 func (m *Model[T]) SuggestionRunes(runes []rune) []rune
 ```
 
-#### func (*Model[T]) TokenValues() {#TokenValues}
+#### func (*Model[T]) TokenValues {#TokenValues}
 
 ```go
 func (m *Model[T]) TokenValues() []string
@@ -225,7 +225,7 @@ func (m *Model[T]) TokenValues() []string
 TokenValues returns the tokenized input text.
 This **does not** include delimiter tokens.
 
-#### func (*Model[T]) Tokens() {#Tokens}
+#### func (*Model[T]) Tokens {#Tokens}
 
 ```go
 func (m *Model[T]) Tokens() []input.Token
@@ -233,7 +233,7 @@ func (m *Model[T]) Tokens() []input.Token
 Tokens returns the tokenized input.
 This **does not** include delimiter tokens.
 
-#### func (*Model[T]) TokensBeforeCursor() {#TokensBeforeCursor}
+#### func (*Model[T]) TokensBeforeCursor {#TokensBeforeCursor}
 
 ```go
 func (m *Model[T]) TokensBeforeCursor() []input.Token
@@ -241,14 +241,14 @@ func (m *Model[T]) TokensBeforeCursor() []input.Token
 AllTokensBeforeCursor returns the tokenized input up to the cursor position.
 This **does** include delimiter tokens.
 
-#### func (*Model[T]) Value() {#Value}
+#### func (*Model[T]) Value {#Value}
 
 ```go
 func (m *Model[T]) Value() string
 ```
 Value returns the raw text entered by the user.
 
-#### func (*Model[T]) View() {#View}
+#### func (*Model[T]) View {#View}
 
 ```go
 func (m *Model[T]) View(viewMode input.ViewMode) string
@@ -256,38 +256,38 @@ func (m *Model[T]) View(viewMode input.ViewMode) string
 View is part of the editor interface.
 It does not need to be invoked by end users.
 
-#### type Option() {#Option}
+#### type Option {#Option}
 
 ```go
 type Option[T any] func(settings *settings[T]) error
 ```
 
 
-#### func WithDelimiterRegex() {#WithDelimiterRegex}
+#### func WithDelimiterRegex {#WithDelimiterRegex}
 
 ```go
 func WithDelimiterRegex[T any](delimiterRegex string) Option[T]
 ```
 
-#### func WithFormatter() {#WithFormatter}
+#### func WithFormatter {#WithFormatter}
 
 ```go
 func WithFormatter[T any](formatter parser.Formatter) Option[T]
 ```
 
-#### func WithLexerOptions() {#WithLexerOptions}
+#### func WithLexerOptions {#WithLexerOptions}
 
 ```go
 func WithLexerOptions[T any](options ...lexerinput.Option[T]) Option[T]
 ```
 
-#### func WithSelectedTextStyle() {#WithSelectedTextStyle}
+#### func WithSelectedTextStyle {#WithSelectedTextStyle}
 
 ```go
 func WithSelectedTextStyle[T any](style lipgloss.Style) Option[T]
 ```
 
-#### func WithTokenRegex() {#WithTokenRegex}
+#### func WithTokenRegex {#WithTokenRegex}
 
 ```go
 func WithTokenRegex[T any](tokenRegex string) Option[T]
