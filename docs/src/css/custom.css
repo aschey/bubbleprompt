@@ -15,6 +15,9 @@
   --ifm-color-primary-lightest: #8e4596;
 
   --text-secondary: #5b5863;
+
+  --code-background-color: #fbfbfb;
+  --code-foreground-color: rgb(72, 118, 214);
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
@@ -33,24 +36,16 @@ html[data-theme="dark"] {
   --text-secondary: #c0b8c7;
 
   --ifm-heading-color: var(--ifm-color-primary-light);
+
+  --code-background-color: #011627;
+  --code-foreground-color: rgb(173, 219, 103);
 }
 
 .api p {
   color: var(--text-secondary);
 }
 
-.inline-code {
-  display: inline-flex;
-}
-
-.inline-code.codeBlockContainer_node_modules-\@docusaurus-theme-classic-lib-theme-CodeBlock-Container-styles-module {
-  margin: 0;
-}
-
-.inline-code pre {
-  display: flex;
-}
-
-.inline-code code {
-  padding: 0.2rem;
+code {
+  background-color: var(--code-background-color);
+  color: var(--code-foreground-color);
 }
