@@ -2,11 +2,11 @@
 
 ```go
 func (m model) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
-	if len(m.textInput.AllTokens()) > 1 {
-		return nil, nil
-	}
+    if len(m.textInput.AllTokens()) > 1 {
+        return nil, nil
+    }
 
-	return completer.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
+    return completer.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
 }
 
 

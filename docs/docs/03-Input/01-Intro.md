@@ -1,3 +1,5 @@
+# Intro
+
 ## Tokenization
 
 Bubbleprompt's input handling uses the concept of **tokenization** to parse

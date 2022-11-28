@@ -10,7 +10,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// A Model is a simpleinput editor for handling simpleinput token-based inputs without any special parsing required.
+// A Model is an input for handling simple token-based inputs without any special parsing required.
 type Model[T any] struct {
 	lexerModel *lexerinput.Model[T]
 }

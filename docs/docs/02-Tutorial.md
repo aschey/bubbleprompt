@@ -1,12 +1,14 @@
-Let's build a simpleinput app to demonstratate how to use Bubbleprompt.
+# Tutorial
+
+Let's build a simple app to demonstratate how to use Bubbleprompt.
 The app will display a list of fruits and tell the user which one they selected.
 The final code can be seen in the [basic example](https://github.com/aschey/bubbleprompt/tree/main/examples/basic/main.go).
 
 ## Starting Out
 
 First, we need to choose an input.
-We'll use the simpleinput input here because we don't need any fancy features like custom parsing or flags.
-By default, the simpleinput input parses input text as a series of whitespace-delimited tokens.
+We'll use the simple input here because we don't need any fancy features like custom parsing or flags.
+By default, the simple input parses input text as a series of whitespace-delimited tokens.
 It also supports using double quotes to define a single token, so `"two words"` will be parsed as one token rather than two.
 
 ```go
@@ -15,7 +17,7 @@ func main() {
 }
 ```
 
-The simpleinput input component takes one generic parameter.
+The simple input component takes one generic parameter.
 This parameter is used to define custom metadata that gets attached to each suggestion.
 We don't need any custom metadata here so we'll leave it as `any`.
 
@@ -27,14 +29,14 @@ func main() {
     textInput := simpleinput.New[any]()
 
     suggestions := []input.Suggestion[any]{
-		{Text: "banana", Description: "good with peanut butter"},
-		{Text: "\"sugar apple\"", SuggestionText: "sugar apple", Description: "spherical...ish"},
-		{Text: "jackfruit", Description: "the jack of all fruits"},
-		{Text: "snozzberry", Description: "tastes like snozzberries"},
-		{Text: "lychee", Description: "better than leeches"},
-		{Text: "mangosteen", Description: "it's not a mango"},
-		{Text: "durian", Description: "stinky"},
-	}
+        {Text: "banana", Description: "good with peanut butter"},
+        {Text: "\"sugar apple\"", SuggestionText: "sugar apple", Description: "spherical...ish"},
+        {Text: "jackfruit", Description: "the jack of all fruits"},
+        {Text: "snozzberry", Description: "tastes like snozzberries"},
+        {Text: "lychee", Description: "better than leeches"},
+        {Text: "mangosteen", Description: "it's not a mango"},
+        {Text: "durian", Description: "stinky"},
+    }
 }
 ```
 
@@ -56,11 +58,11 @@ Additionally, we store a style struct from [lipgloss](https://github.com/charmbr
 ```go
 type model struct {
     // list of suggestions that we'll display using the completer function
-	suggestions []input.Suggestion[any]
+    suggestions []input.Suggestion[any]
     // Reference to our input component. We'll use this to read user input
-	textInput   *simpleinput.Model[any]
+    textInput   *simpleinput.Model[any]
     // Style struct for formatting the output
-	outputStyle lipgloss.Style
+    outputStyle lipgloss.Style
     // Number of times the user enters some input
     numChoices  int64
 }
@@ -70,26 +72,26 @@ Now we can create our model in our `main` function:
 
 ```go
 func main() {
-	// Initialize the input
-	textInput := simpleinput.New[any]()
+    // Initialize the input
+    textInput := simpleinput.New[any]()
 
     // Define our suggestions
-	suggestions := []input.Suggestion[any]{
-		{Text: "banana", Description: "good with peanut butter"},
-		{Text: "\"sugar apple\"", SuggestionText: "sugar apple", Description: "spherical...ish"},
-		{Text: "jackfruit", Description: "the jack of all fruits"},
-		{Text: "snozzberry", Description: "tastes like snozzberries"},
-		{Text: "lychee", Description: "better than leeches"},
-		{Text: "mangosteen", Description: "it's not a mango"},
-		{Text: "durian", Description: "stinky"},
-	}
+    suggestions := []input.Suggestion[any]{
+        {Text: "banana", Description: "good with peanut butter"},
+        {Text: "\"sugar apple\"", SuggestionText: "sugar apple", Description: "spherical...ish"},
+        {Text: "jackfruit", Description: "the jack of all fruits"},
+        {Text: "snozzberry", Description: "tastes like snozzberries"},
+        {Text: "lychee", Description: "better than leeches"},
+        {Text: "mangosteen", Description: "it's not a mango"},
+        {Text: "durian", Description: "stinky"},
+    }
 
-	model := model{
-		suggestions: suggestions,
-		textInput:   textInput,
+    model := model{
+        suggestions: suggestions,
+        textInput:   textInput,
         // Add some coloring to the foreground of our output to make it look pretty
-		outputStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("13")),
-	}
+        outputStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("13")),
+    }
 ```
 
 ## The Complete Method
@@ -100,12 +102,12 @@ In order to render our suggestions onto the screen, we need to define the `Compl
 func (m model) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
     // Our program only takes one token as input,
     // so don't return any suggestions if the user types more than one word
-	if len(m.textInput.AllTokens()) > 1 {
-		return nil, nil
-	}
+    if len(m.textInput.AllTokens()) > 1 {
+        return nil, nil
+    }
 
     // Filter suggestions based on the text before the cursor
-	return completer.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
+    return completer.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
 }
 ```
 
@@ -126,10 +128,10 @@ See the [Bubbletea docs](https://github.com/charmbracelet/bubbletea/tree/master/
 ```go
 func (m model) Update(msg tea.Msg) (prompt.InputHandler[any], tea.Cmd) {
     // Update the counter every time the user submits something
-	if msg, ok := msg.(tea.KeyMsg); ok && msg.Type == tea.KeyEnter {
-		m.numChoices++
-	}
-	return m, nil
+    if msg, ok := msg.(tea.KeyMsg); ok && msg.Type == tea.KeyEnter {
+        m.numChoices++
+    }
+    return m, nil
 }
 ```
 
@@ -144,28 +146,28 @@ The returned model will take over the event loop until it finishes, and then we 
 ```go
 func (m model) Execute(input string, promptModel *prompt.Model[any]) (tea.Model, error) {
     // Get a list of all the tokens from the input
-	tokens := m.textInput.TokenValues()
-	if len(tokens) == 0 {
+    tokens := m.textInput.TokenValues()
+    if len(tokens) == 0 {
         // We didn't receive any input, which is invalid
         // Returning an error will output text will special error styling
-		return nil, fmt.Errorf("No selection")
-	}
+        return nil, fmt.Errorf("No selection")
+    }
     // The user entered a selection
     // Render their choice with styling applied
-	return executor.NewStringModel(m.formatOutput(tokens[0])), nil
+    return executor.NewStringModel(m.formatOutput(tokens[0])), nil
 }
 
 func (m model) formatOutput(choice string) string {
-	return fmt.Sprintf("You picked: %s\nYou've entered %s submissions(s)\n\n",
-		m.outputStyle.Render(choice),
-		m.outputStyle.Render(strconv.FormatInt(m.numChoices, 10)))
+    return fmt.Sprintf("You picked: %s\nYou've entered %s submissions(s)\n\n",
+        m.outputStyle.Render(choice),
+        m.outputStyle.Render(strconv.FormatInt(m.numChoices, 10)))
 }
 
 ```
 
 Here we check if the user entered in any input and display their choice if they did.
 The executor method requires that we return a `tea.Model`, but it would be rather annoying to have to
-manually create a new model for simpleinput cases like showing a line of text.
+manually create a new model for simple cases like showing a line of text.
 For these cases, the `executor` package supplies several prebuilt models for common situations.
 
 ## Putting It All Together
@@ -175,41 +177,41 @@ Now that we have all the building blocks, we can finish writing our `main` funct
 ```go
 func main() {
     // Initialize the input
-	textInput := simpleinput.New[any]()
+    textInput := simpleinput.New[any]()
 
     // Define our suggestions
-	suggestions := []input.Suggestion[any]{
-		{Text: "banana", Description: "good with peanut butter"},
-		{Text: "\"sugar apple\"", SuggestionText: "sugar apple", Description: "spherical...ish"},
-		{Text: "jackfruit", Description: "the jack of all fruits"},
-		{Text: "snozzberry", Description: "tastes like snozzberries"},
-		{Text: "lychee", Description: "better than leeches"},
-		{Text: "mangosteen", Description: "it's not a mango"},
-		{Text: "durian", Description: "stinky"},
-	}
+    suggestions := []input.Suggestion[any]{
+        {Text: "banana", Description: "good with peanut butter"},
+        {Text: "\"sugar apple\"", SuggestionText: "sugar apple", Description: "spherical...ish"},
+        {Text: "jackfruit", Description: "the jack of all fruits"},
+        {Text: "snozzberry", Description: "tastes like snozzberries"},
+        {Text: "lychee", Description: "better than leeches"},
+        {Text: "mangosteen", Description: "it's not a mango"},
+        {Text: "durian", Description: "stinky"},
+    }
 
     // Combine everything into our model
-	model := model{
-		suggestions: suggestions,
-		textInput:   textInput,
+    model := model{
+        suggestions: suggestions,
+        textInput:   textInput,
         // Add some coloring to the foreground of our output to make it look pretty
-		outputStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("13")),
-	}
+        outputStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("13")),
+    }
 
     // Create the Bubbleprompt model
     // This struct fulfills the tea.Model interface so it can be passed directly to tea.NewProgram
-	promptModel, err := prompt.New[any](modeltextInput)
-	if err != nil {
-		panic(err)
-	}
+    promptModel, err := prompt.New[any](modeltextInput)
+    if err != nil {
+        panic(err)
+    }
 
-	fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Render("Pick a fruit!"))
-	fmt.Println()
+    fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Render("Pick a fruit!"))
+    fmt.Println()
 
-	if _, err := tea.NewProgram(promptModel, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
-		fmt.Printf("Could not start program\n%v\n", err)
-		os.Exit(1)
-	}
+    if _, err := tea.NewProgram(promptModel, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
+        fmt.Printf("Could not start program\n%v\n", err)
+        os.Exit(1)
+    }
 }
 ```
 
@@ -222,84 +224,84 @@ This is what the whole program looks like:
 package main
 
 import (
-	"fmt"
-	"os"
-	"strconv"
+    "fmt"
+    "os"
+    "strconv"
 
-	prompt "github.com/aschey/bubbleprompt"
-	"github.com/aschey/bubbleprompt/completer"
-	"github.com/aschey/bubbleprompt/input"
-	"github.com/aschey/bubbleprompt/input/simpleinput"
-	"github.com/aschey/bubbleprompt/executor"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+    prompt "github.com/aschey/bubbleprompt"
+    "github.com/aschey/bubbleprompt/completer"
+    "github.com/aschey/bubbleprompt/input"
+    "github.com/aschey/bubbleprompt/input/simpleinput"
+    "github.com/aschey/bubbleprompt/executor"
+    tea "github.com/charmbracelet/bubbletea"
+    "github.com/charmbracelet/lipgloss"
 )
 
 type model struct {
-	suggestions []input.Suggestion[any]
-	textInput   *simpleinput.Model[any]
-	outputStyle lipgloss.Style
-	numChoices  int64
+    suggestions []input.Suggestion[any]
+    textInput   *simpleinput.Model[any]
+    outputStyle lipgloss.Style
+    numChoices  int64
 }
 
 func (m model) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
-	if len(m.textInput.AllTokens()) > 1 {
-		return nil, nil
-	}
+    if len(m.textInput.AllTokens()) > 1 {
+        return nil, nil
+    }
 
-	return completer.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
+    return completer.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
 }
 
 func (m model) Execute(input string, promptModel *prompt.Model[any]) (tea.Model, error) {
-	tokens := m.textInput.TokenValues()
-	if len(tokens) == 0 {
-		return nil, fmt.Errorf("No selection")
-	}
-	return executor.NewStringModel(m.formatOutput(tokens[0])), nil
+    tokens := m.textInput.TokenValues()
+    if len(tokens) == 0 {
+        return nil, fmt.Errorf("No selection")
+    }
+    return executor.NewStringModel(m.formatOutput(tokens[0])), nil
 }
 
 func (m model) formatOutput(choice string) string {
-	return fmt.Sprintf("You picked: %s\nYou've entered %s submissions(s)\n\n",
-		m.outputStyle.Render(choice),
-		m.outputStyle.Render(strconv.FormatInt(m.numChoices, 10)))
+    return fmt.Sprintf("You picked: %s\nYou've entered %s submissions(s)\n\n",
+        m.outputStyle.Render(choice),
+        m.outputStyle.Render(strconv.FormatInt(m.numChoices, 10)))
 }
 
 func (m model) Update(msg tea.Msg) (prompt.InputHandler[any], tea.Cmd) {
-	if msg, ok := msg.(tea.KeyMsg); ok && msg.Type == tea.KeyEnter {
-		m.numChoices++
-	}
-	return m, nil
+    if msg, ok := msg.(tea.KeyMsg); ok && msg.Type == tea.KeyEnter {
+        m.numChoices++
+    }
+    return m, nil
 }
 
 func main() {
-	textInput := simpleinput.New[any]()
-	suggestions := []input.Suggestion[any]{
-		{Text: "banana", Description: "good with peanut butter"},
-		{Text: "\"sugar apple\"", SuggestionText: "sugar apple", Description: "spherical...ish"},
-		{Text: "jackfruit", Description: "the jack of all fruits"},
-		{Text: "snozzberry", Description: "tastes like snozzberries"},
-		{Text: "lychee", Description: "better than leeches"},
-		{Text: "mangosteen", Description: "it's not a mango"},
-		{Text: "durian", Description: "stinky"},
-	}
+    textInput := simpleinput.New[any]()
+    suggestions := []input.Suggestion[any]{
+        {Text: "banana", Description: "good with peanut butter"},
+        {Text: "\"sugar apple\"", SuggestionText: "sugar apple", Description: "spherical...ish"},
+        {Text: "jackfruit", Description: "the jack of all fruits"},
+        {Text: "snozzberry", Description: "tastes like snozzberries"},
+        {Text: "lychee", Description: "better than leeches"},
+        {Text: "mangosteen", Description: "it's not a mango"},
+        {Text: "durian", Description: "stinky"},
+    }
 
-	model := model{
-		suggestions: suggestions,
-		textInput:   textInput,
-		outputStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("13")),
-	}
+    model := model{
+        suggestions: suggestions,
+        textInput:   textInput,
+        outputStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("13")),
+    }
 
-	promptModel, err := prompt.New[any](model,textInput)
-	if err != nil {
-		panic(err)
-	}
+    promptModel, err := prompt.New[any](model,textInput)
+    if err != nil {
+        panic(err)
+    }
 
-	fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Render("Pick a fruit!"))
-	fmt.Println()
+    fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Render("Pick a fruit!"))
+    fmt.Println()
 
-	if _, err := tea.NewProgram(promptModel, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
-		fmt.Printf("Could not start program\n%v\n", err)
-		os.Exit(1)
-	}
+    if _, err := tea.NewProgram(promptModel, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
+        fmt.Printf("Could not start program\n%v\n", err)
+        os.Exit(1)
+    }
 }
 ```
