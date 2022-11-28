@@ -68,7 +68,7 @@ func (m *Model[T]) CurrentTokenBeforeCursor() string {
 }
 
 // TokenValues returns the tokenized input text.
-// This **does not** include delimiter tokens.
+// This does not include delimiter tokens.
 func (m *Model[T]) TokenValues() []string {
 	tokenValues := []string{}
 	tokens := m.Tokens()
@@ -79,25 +79,25 @@ func (m *Model[T]) TokenValues() []string {
 }
 
 // AllTokens returns the tokenized input.
-// This **does** include delimiter tokens.
+// This does include delimiter tokens.
 func (m *Model[T]) AllTokens() []input.Token {
 	return m.lexerModel.Tokens()
 }
 
 // Tokens returns the tokenized input.
-// This **does not** include delimiter tokens.
+// This does not include delimiter tokens.
 func (m *Model[T]) Tokens() []input.Token {
 	return m.filterWhitespaceTokens(m.lexerModel.Tokens())
 }
 
 // AllTokensBeforeCursor returns the tokenized input up to the cursor position.
-// This **does not** include delimiter tokens.
+// This does not include delimiter tokens.
 func (m *Model[T]) AllTokensBeforeCursor() []input.Token {
 	return m.lexerModel.Tokens()
 }
 
 // AllTokensBeforeCursor returns the tokenized input up to the cursor position.
-// This **does** include delimiter tokens.
+// This does include delimiter tokens.
 func (m *Model[T]) TokensBeforeCursor() []input.Token {
 	return m.filterWhitespaceTokens(m.lexerModel.TokensBeforeCursor())
 }
