@@ -38,3 +38,19 @@ html[data-theme="dark"] {
 .api p {
   color: var(--text-secondary);
 }
+
+.inline-code {
+  display: inline-flex;
+}
+
+.inline-code.codeBlockContainer_node_modules-\@docusaurus-theme-classic-lib-theme-CodeBlock-Container-styles-module {
+  margin: 0;
+}
+
+.inline-code pre {
+  display: flex;
+}
+
+.inline-code code {
+  padding: 0.2rem;
+}

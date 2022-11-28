@@ -1,0 +1,18 @@
+import CodeBlock from "@theme/CodeBlock";
+
+export const Code = ({ children }) => (
+  <CodeBlock language="go" className="inline-code">
+    {children}
+  </CodeBlock>
+);
+
+## Tokenization
+
+<div>
+  Bubbleprompt's input handling uses the concept of <b>tokenization</b> to parse
+  user input. This makes it easier to perform operations on specific parts of
+  the user input. The most common tokenization method is to split input on
+  whitespace. For example, if the input is <Code>"this is some text"</Code>, the
+  tokenized input would be{" "}
+  <Code>["this", " ", "is", " ", "some", " ", "text"]</Code>.
+</div>
