@@ -19,7 +19,8 @@ linters:
     - gocyclo
     - godot
     - gomnd
-    - gomoddirectives
+    # re-enable once bubbletea is updated
+    # - gomoddirectives
     - goprintffuncname
     # - lll
     - misspell
