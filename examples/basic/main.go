@@ -22,7 +22,7 @@ type model struct {
 }
 
 func (m model) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
-	if len(m.textInput.AllTokens()) > 1 {
+	if len(m.textInput.Tokens()) > 1 {
 		return nil, nil
 	}
 
@@ -30,7 +30,7 @@ func (m model) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[any],
 }
 
 func (m model) Execute(input string, promptModel *prompt.Model[any]) (tea.Model, error) {
-	tokens := m.textInput.TokenValues()
+	tokens := m.textInput.WordTokenValues()
 	if len(tokens) == 0 {
 		return nil, fmt.Errorf("No selection")
 	}

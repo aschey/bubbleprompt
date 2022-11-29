@@ -29,11 +29,11 @@ type model struct {
 }
 
 func (m model) Complete(promptModel prompt.Model[metadata]) ([]input.Suggestion[metadata], error) {
-	return completer.GetRecursiveSuggestions(m.textInput.Tokens(), m.textInput.CursorIndex(), m.suggestions), nil
+	return completer.GetRecursiveSuggestions(m.textInput.WordTokens(), m.textInput.CursorIndex(), m.suggestions), nil
 }
 
 func (m model) Execute(input string, promptModel *prompt.Model[metadata]) (tea.Model, error) {
-	allValues := strings.Join(m.textInput.TokenValues(), " → ")
+	allValues := strings.Join(m.textInput.WordTokenValues(), " → ")
 	return executor.NewStringModel("You picked: " + m.outputStyle.Render(allValues)), nil
 }
 
@@ -167,7 +167,7 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Render("Pick a fruit!"))
+	fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Render("Pick a city!"))
 	fmt.Println()
 	if _, err := tea.NewProgram(promptModel, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
 		fmt.Printf("Could not start program\n%v\n", err)

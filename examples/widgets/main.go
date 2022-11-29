@@ -111,17 +111,17 @@ func (m inputModel) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Sug
 	if m.textInput.CommandCompleted() {
 		return nil, nil
 	}
-	return completer.FilterHasPrefix(m.textInput.ParsedValue().Command.Value(), m.suggestions), nil
+	return completer.FilterHasPrefix(m.textInput.ParsedValue().Command.Value, m.suggestions), nil
 }
 
 func (m inputModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
 	parsed := m.textInput.ParsedValue()
-	switch parsed.Command.Value() {
+	switch parsed.Command.Value {
 	case "set-status":
 		if len(parsed.Args) == 0 {
 			return nil, fmt.Errorf("One arg required")
 		}
-		arg := parsed.Args[0].Value()
+		arg := parsed.Args[0].Value
 		return executor.NewCmdModel("status updated", func() tea.Msg {
 			return updateStatusMsg(arg)
 		}), nil
@@ -129,7 +129,7 @@ func (m inputModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]
 		if len(parsed.Args) == 0 {
 			return nil, fmt.Errorf("One arg required")
 		}
-		arg := parsed.Args[0].Value()
+		arg := parsed.Args[0].Value
 		intArg, err := strconv.ParseInt(arg, 10, 64)
 		if err != nil {
 			return nil, err

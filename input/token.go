@@ -1,7 +1,10 @@
 package input
 
 import (
+	"strings"
+
 	"github.com/alecthomas/participle/v2/lexer"
+	"github.com/aschey/bubbleprompt/internal"
 )
 
 type Token struct {
@@ -9,6 +12,20 @@ type Token struct {
 	Type  string
 	Value string
 	Index int
+}
+
+func (t Token) Unquote() string {
+	if strings.HasPrefix(t.Value, `"`) || strings.HasPrefix(t.Value, `\"`) {
+		return internal.Unescape(t.Value, `"`)
+	}
+	if strings.HasPrefix(t.Value, `'`) || strings.HasPrefix(t.Value, `\'`) {
+		return internal.Unescape(t.Value, `'`)
+	}
+	return t.Value
+}
+
+func (t Token) Unescape(wrapper string) string {
+	return internal.Unescape(t.Value, wrapper)
 }
 
 func (t Token) End() int {

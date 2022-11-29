@@ -1,6 +1,6 @@
 package commandinput
 
-import "github.com/charmbracelet/bubbles/textinput"
+import "github.com/charmbracelet/bubbles/cursor"
 
 type Option[T CmdMetadataAccessor] func(model *Model[T]) error
 
@@ -25,7 +25,7 @@ func WithDefaultDelimiter[T CmdMetadataAccessor](defaultDelimiter string) Option
 	}
 }
 
-func WithCursorMode[T CmdMetadataAccessor](cursorMode textinput.CursorMode) Option[T] {
+func WithCursorMode[T CmdMetadataAccessor](cursorMode cursor.Mode) Option[T] {
 	return func(model *Model[T]) error {
 		model.SetCursorMode(cursorMode)
 		return nil

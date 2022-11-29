@@ -5,6 +5,7 @@ import (
 
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/parser"
+	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -135,7 +136,7 @@ func (m *Model[T]) styledView(formatterTokens []parser.FormatterToken, showCurso
 }
 
 func (m *Model[T]) View(viewMode input.ViewMode) string {
-	showCursor := !m.textinput.Blink()
+	showCursor := !m.textinput.Cursor.Blink
 	if viewMode == input.Static {
 		showCursor = false
 	}
@@ -190,7 +191,7 @@ func (m *Model[T]) Blur() {
 }
 
 func (m *Model[T]) CursorIndex() int {
-	return m.textinput.Cursor()
+	return m.textinput.Position()
 }
 
 func (m *Model[T]) CursorOffset() int {
@@ -203,8 +204,8 @@ func (m *Model[T]) SetCursor(cursor int) {
 	m.textinput.SetCursor(cursor)
 }
 
-func (m *Model[T]) SetCursorMode(cursorMode textinput.CursorMode) tea.Cmd {
-	return m.textinput.SetCursorMode(cursorMode)
+func (m *Model[T]) SetCursorMode(cursorMode cursor.Mode) tea.Cmd {
+	return m.textinput.Cursor.SetMode(cursorMode)
 }
 
 func (m *Model[T]) Prompt() string {

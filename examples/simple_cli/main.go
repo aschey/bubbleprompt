@@ -35,7 +35,7 @@ type model struct {
 func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
 	parsed := m.textInput.ParsedValue()
 	completed := m.textInput.CompletedArgsBeforeCursor()
-	if len(completed) == 1 && parsed.Command.Value() == "get" && parsed.Args[0].Value() == "weather" {
+	if len(completed) == 1 && parsed.Command.Value == "get" && parsed.Args[0].Value == "weather" {
 		flags := []commandinput.FlagInput{
 			{
 				Short:       "d",
@@ -57,22 +57,22 @@ func (m model) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (te
 		return nil, fmt.Errorf("1 argument required")
 	}
 	arg := args[0]
-	switch parsed.Command.Value() {
+	switch parsed.Command.Value {
 	case "get":
-		switch arg.Value() {
+		switch arg.Value {
 		case "weather":
 			days := "1"
 			if len(flags) > 0 {
 				flag := flags[0]
-				if flag.Name == "-d" || flag.Name == "--days" {
+				if flag.Name.Value == "-d" || flag.Name.Value == "--days" {
 					if flag.Value == nil {
 						return nil, fmt.Errorf("flag value required")
 					}
-					_, err := strconv.ParseInt(flag.Value.Value(), 10, 64)
+					_, err := strconv.ParseInt(flag.Value.Value, 10, 64)
 					if err != nil {
 						return nil, fmt.Errorf("flag value must be a valid int")
 					}
-					days = flag.Value.Value()
+					days = flag.Value.Value
 				}
 			}
 			days = m.executorValueStyle.Render(days)
@@ -82,7 +82,7 @@ func (m model) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (te
 			return executor.NewStringModel("the secret is: " + m.executorValueStyle.Render(m.secret)), nil
 		}
 	case "set":
-		switch arg.Value() {
+		switch arg.Value {
 		case "secret":
 			if len(args) < 2 {
 				return nil, fmt.Errorf("secret value required")
@@ -90,7 +90,7 @@ func (m model) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (te
 			secretVal := args[1]
 
 			return executor.NewCmdModel("Secret updated", func() tea.Msg {
-				return secretMsg(secretVal.Value())
+				return secretMsg(secretVal.Unquote())
 			}), nil
 		}
 	}

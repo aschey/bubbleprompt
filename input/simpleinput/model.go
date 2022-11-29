@@ -5,7 +5,7 @@ import (
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/lexerinput"
 	"github.com/aschey/bubbleprompt/parser"
-	"github.com/charmbracelet/bubbles/textinput"
+	"github.com/charmbracelet/bubbles/cursor"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -67,38 +67,38 @@ func (m *Model[T]) CurrentTokenBeforeCursor() string {
 	return m.lexerModel.CompletableTokenBeforeCursor()
 }
 
-// TokenValues returns the tokenized input text.
+// WordTokenValues returns the tokenized input text.
 // This does not include delimiter tokens.
-func (m *Model[T]) TokenValues() []string {
+func (m *Model[T]) WordTokenValues() []string {
 	tokenValues := []string{}
-	tokens := m.Tokens()
+	tokens := m.WordTokens()
 	for _, token := range tokens {
-		tokenValues = append(tokenValues, token.Value)
+		tokenValues = append(tokenValues, token.Unquote())
 	}
 	return tokenValues
 }
 
-// AllTokens returns the tokenized input.
-// This does include delimiter tokens.
-func (m *Model[T]) AllTokens() []input.Token {
+// Tokens returns the tokenized input.
+// This includes delimiter tokens.
+func (m *Model[T]) Tokens() []input.Token {
 	return m.lexerModel.Tokens()
 }
 
-// Tokens returns the tokenized input.
+// WordTokens returns the tokenized input.
 // This does not include delimiter tokens.
-func (m *Model[T]) Tokens() []input.Token {
+func (m *Model[T]) WordTokens() []input.Token {
 	return m.filterWhitespaceTokens(m.lexerModel.Tokens())
 }
 
-// AllTokensBeforeCursor returns the tokenized input up to the cursor position.
-// This does not include delimiter tokens.
-func (m *Model[T]) AllTokensBeforeCursor() []input.Token {
+// TokensBeforeCursor returns the tokenized input up to the cursor position.
+// This includes delimiter tokens.
+func (m *Model[T]) TokensBeforeCursor() []input.Token {
 	return m.lexerModel.Tokens()
 }
 
-// AllTokensBeforeCursor returns the tokenized input up to the cursor position.
-// This does include delimiter tokens.
-func (m *Model[T]) TokensBeforeCursor() []input.Token {
+// WordTokensBeforeCursor returns the tokenized input up to the cursor position.
+// This does not include delimiter tokens.
+func (m *Model[T]) WordTokensBeforeCursor() []input.Token {
 	return m.filterWhitespaceTokens(m.lexerModel.TokensBeforeCursor())
 }
 
@@ -168,7 +168,7 @@ func (m *Model[T]) SetCursor(cursor int) {
 }
 
 // SetCursorMode sets the mode of the cursor.
-func (m *Model[T]) SetCursorMode(cursorMode textinput.CursorMode) tea.Cmd {
+func (m *Model[T]) SetCursorMode(cursorMode cursor.Mode) tea.Cmd {
 	return m.lexerModel.SetCursorMode(cursorMode)
 }
 

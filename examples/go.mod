@@ -6,8 +6,8 @@ require (
 	github.com/alecthomas/chroma/v2 v2.4.0
 	github.com/alecthomas/participle/v2 v2.0.0-beta.5
 	github.com/aschey/bubbleprompt v0.0.0
-	github.com/charmbracelet/bubbles v0.14.0
-	github.com/charmbracelet/bubbletea v0.22.2-0.20221013054030-9545e7cee210
+	github.com/charmbracelet/bubbles v0.14.1-0.20221118011100-925e5bd8ea4d
+	github.com/charmbracelet/bubbletea v0.23.1
 	github.com/charmbracelet/lipgloss v0.6.0
 	github.com/dop251/goja v0.0.0-20221118162653-d4bf6fde1b86
 
@@ -28,10 +28,12 @@ require (
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.13.0 // indirect
 	github.com/rivo/uniseg v0.4.3 // indirect
-	golang.org/x/exp v0.0.0-20221114191408-850992195362 // indirect
+	golang.org/x/exp v0.0.0-20221126150942-6ab00d035af9 // indirect
 	golang.org/x/sys v0.2.0 // indirect
 	golang.org/x/term v0.2.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
 )
 
 replace github.com/aschey/bubbleprompt => ../
+
+replace github.com/charmbracelet/bubbletea => github.com/aschey/bubbletea v0.20.1-0.20221129055038-2361f5df1cc5

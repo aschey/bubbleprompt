@@ -16,7 +16,7 @@ type cmdViewBuilder[T CmdMetadataAccessor] struct {
 }
 
 func newCmdViewBuilder[T CmdMetadataAccessor](model Model[T], viewMode input.ViewMode) cmdViewBuilder[T] {
-	showCursor := !model.textinput.Blink()
+	showCursor := !model.textinput.Cursor.Blink
 	if viewMode == input.Static {
 		showCursor = false
 	}

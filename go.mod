@@ -6,13 +6,13 @@ require (
 	github.com/alecthomas/chroma/v2 v2.4.0
 	github.com/alecthomas/participle/v2 v2.0.0-beta.5
 	github.com/aschey/tui-tester v0.0.0-20221013025214-ee61efd9b285
-	github.com/charmbracelet/bubbles v0.14.0
-	github.com/charmbracelet/bubbletea v0.22.2-0.20221013054030-9545e7cee210
+	github.com/charmbracelet/bubbles v0.14.1-0.20221118011100-925e5bd8ea4d
+	github.com/charmbracelet/bubbletea v0.23.1
 	github.com/charmbracelet/lipgloss v0.6.0
 	github.com/mattn/go-runewidth v0.0.14
 	github.com/onsi/ginkgo/v2 v2.5.1
 	github.com/onsi/gomega v1.24.1
-	golang.org/x/exp v0.0.0-20221114191408-850992195362
+	golang.org/x/exp v0.0.0-20221126150942-6ab00d035af9
 )
 
 require (
@@ -45,3 +45,5 @@ require (
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/charmbracelet/bubbletea => github.com/aschey/bubbletea v0.20.1-0.20221129055038-2361f5df1cc5

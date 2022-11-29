@@ -9,6 +9,7 @@ import (
 
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/parser"
+	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -500,16 +501,16 @@ func (m Model[T]) AllValuesBeforeCursor() []string {
 }
 
 func (m Model[T]) allTokens(statement *statement) []input.Token {
-	tokens := []input.Token{statement.Command.ToToken(0, "command")}
-	for i, arg := range statement.Args.Value {
-		tokens = append(tokens, arg.ToToken(i+1, "arg"))
-	}
-	for _, flag := range statement.Flags.Value {
-		tokens = append(tokens, input.TokenFromPos(flag.Name, "flag", len(tokens), flag.Pos))
+	parsed := m.ParsedValue()
+	tokens := []input.Token{parsed.Command}
+	tokens = append(tokens, parsed.Args...)
+	for _, flag := range parsed.Flags {
+		tokens = append(tokens, flag.Name)
 		if flag.Value != nil {
-			tokens = append(tokens, (*flag.Value).ToToken(len(tokens), "flagValue"))
+			tokens = append(tokens, *flag.Value)
 		}
 	}
+
 	return tokens
 }
 
@@ -517,13 +518,13 @@ func (m Model[T]) AllValues() []string {
 	tokens := m.Tokens()
 	values := []string{}
 	for _, t := range tokens {
-		values = append(values, t.Value)
+		values = append(values, t.Unquote())
 	}
 	return values
 }
 
 func (m Model[T]) CursorIndex() int {
-	return m.textinput.Cursor()
+	return m.textinput.Position()
 }
 
 func (m Model[T]) CursorOffset() int {
@@ -536,8 +537,8 @@ func (m *Model[T]) SetCursor(pos int) {
 	m.textinput.SetCursor(pos)
 }
 
-func (m *Model[T]) SetCursorMode(cursorMode textinput.CursorMode) tea.Cmd {
-	return m.textinput.SetCursorMode(cursorMode)
+func (m *Model[T]) SetCursorMode(cursorMode cursor.Mode) tea.Cmd {
+	return m.textinput.Cursor.SetMode(cursorMode)
 }
 
 func (m Model[T]) Focused() bool {

@@ -1,9 +1,6 @@
 package commandinput
 
 import (
-	"encoding/json"
-	"strings"
-
 	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
 	"github.com/aschey/bubbleprompt/input"
@@ -15,32 +12,12 @@ func (m *Model[T]) buildParser() {
 		{Name: "LongFlag", Pattern: `\-\-[^\s=\-]*`},
 		{Name: "ShortFlag", Pattern: `\-[^\s=\-]*`},
 		{Name: "Eq", Pattern: "="},
-		{Name: "QuotedString", Pattern: `"[^"]*"`},
+		{Name: "QuotedString", Pattern: `("[^"]*"?)|('[^']*'?)`},
 		{Name: `String`, Pattern: `[^\-\s][^\s]*`},
 		{Name: "whitespace", Pattern: m.delimiterRegex.String()},
 	})
 	participleParser := participle.MustBuild[statement](participle.Lexer(lexer))
 	m.parser = parser.NewParticipleParser(participleParser)
-}
-
-type TokenValue struct {
-	value string
-}
-
-func (t TokenValue) RawValue() string {
-	return t.value
-}
-
-func (t TokenValue) Value() string {
-	if strings.HasPrefix(t.value, "\"") {
-		var dest string
-		err := json.Unmarshal([]byte(t.value), &dest)
-		if err != nil {
-			return t.value
-		}
-		return dest
-	}
-	return strings.ReplaceAll(t.value, `\"`, `"`)
 }
 
 type statement struct {
@@ -53,18 +30,16 @@ type statement struct {
 }
 
 type Statement struct {
-	Start   int
-	Command TokenValue
-	Args    []TokenValue
+	Command input.Token
+	Args    []input.Token
 	Flags   []Flag
 }
 
 func (s statement) toStatement() Statement {
 	return Statement{
-		Start:   s.Pos.Column - 1,
-		Command: TokenValue{value: s.Command.Value},
-		Args:    s.Args.toArgs(),
-		Flags:   s.Flags.toFlags(),
+		Command: input.TokenFromPos(s.Command.Value, "command", 0, s.Pos), //TokenValue{value: s.Command.Value},
+		Args:    s.Args.toArgs(1),
+		Flags:   s.Flags.toFlags(len(s.Args.Value) + 1),
 	}
 }
 
@@ -78,10 +53,10 @@ type Arg struct {
 	Value string
 }
 
-func (a args) toArgs() []TokenValue {
-	args := []TokenValue{}
-	for _, arg := range a.Value {
-		args = append(args, TokenValue{value: arg.Value})
+func (a args) toArgs(startIndex int) []input.Token {
+	args := []input.Token{}
+	for i, arg := range a.Value {
+		args = append(args, input.TokenFromPos(arg.Value, "arg", startIndex+i, arg.Pos)) //TokenValue{value: arg.Value})
 	}
 	return args
 }
@@ -91,10 +66,14 @@ type flags struct {
 	Value []flag `parser:"@@*"`
 }
 
-func (f flags) toFlags() []Flag {
+func (f flags) toFlags(startIndex int) []Flag {
 	flags := []Flag{}
 	for _, flag := range f.Value {
-		flags = append(flags, flag.toFlag())
+		flags = append(flags, flag.toFlag(startIndex))
+		startIndex++
+		if flag.Value != nil {
+			startIndex++
+		}
 	}
 	return flags
 }
@@ -106,22 +85,22 @@ type flag struct {
 	Value *ident `parser:"@@?"`
 }
 
-func (f flag) toFlag() Flag {
-	var value *TokenValue = nil
+func (f flag) toFlag(index int) Flag {
+	name := input.TokenFromPos(f.Name, "flag", index, f.Pos)
+	var value *input.Token = nil
 	if f.Value != nil {
-		value = &TokenValue{value: f.Value.Value}
+		v := input.TokenFromPos(f.Value.Value, "flagValue", index+1, f.Value.Pos) // {value: f.Value.Value}
+		value = &v
 	}
 	return Flag{
-		Start: f.Pos.Column - 1,
-		Name:  f.Name,
+		Name:  name,
 		Value: value,
 	}
 }
 
 type Flag struct {
-	Start int
-	Name  string
-	Value *TokenValue
+	Name  input.Token
+	Value *input.Token
 }
 
 type delim struct {

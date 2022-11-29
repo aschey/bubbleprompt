@@ -2,7 +2,7 @@ package lexerinput
 
 import (
 	"github.com/aschey/bubbleprompt/parser"
-	"github.com/charmbracelet/bubbles/textinput"
+	"github.com/charmbracelet/bubbles/cursor"
 )
 
 type Option[T any] func(model *Model[T]) error
@@ -28,7 +28,7 @@ func WithFormatter[T any](formatter parser.Formatter) Option[T] {
 	}
 }
 
-func WithCursorMode[T any](cursorMode textinput.CursorMode) Option[T] {
+func WithCursorMode[T any](cursorMode cursor.Mode) Option[T] {
 	return func(model *Model[T]) error {
 		model.SetCursorMode(cursorMode)
 		return nil

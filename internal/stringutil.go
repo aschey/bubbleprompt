@@ -25,3 +25,14 @@ func CountNewlines(s string) int {
 	}
 	return count
 }
+
+func Unescape(s string, wrapper string) string {
+	val := s
+	if strings.HasPrefix(val, wrapper) {
+		val = strings.TrimPrefix(val, wrapper)
+		val = strings.TrimSuffix(val, wrapper)
+	}
+	val = strings.ReplaceAll(val, `\`+wrapper, wrapper)
+
+	return val
+}
