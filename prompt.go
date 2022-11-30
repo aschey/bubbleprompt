@@ -60,12 +60,26 @@ func (m *Model[T]) SetMaxSuggestions(maxSuggestions int) {
 	m.suggestionManager.maxSuggestions = maxSuggestions
 }
 
+func (m *Model[T]) SetSelectionIndicator(indicator string) {
+	m.suggestionManager.selectionIndicator = indicator
+}
+
 func (m Model[T]) Formatters() input.Formatters {
 	return m.formatters
 }
 
 func (m *Model[T]) SetFormatters(formatters input.Formatters) {
 	m.formatters = formatters
+}
+
+func (m *Model[T]) EnableScrollbar() {
+	m.suggestionManager.scrollbar = " "
+	m.suggestionManager.scrollbarThumb = " "
+}
+
+func (m *Model[T]) DisableScrollbar() {
+	m.suggestionManager.scrollbar = ""
+	m.suggestionManager.scrollbarThumb = ""
 }
 
 func (m Model[T]) SelectedSuggestion() *input.Suggestion[T] {

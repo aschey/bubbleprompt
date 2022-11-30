@@ -42,28 +42,34 @@ func OneShotCompleter(nextTrigger time.Duration) tea.Cmd {
 }
 
 type suggestionManager[T any] struct {
-	state          completerState
-	textInput      input.Input[T]
-	suggestions    []input.Suggestion[T]
-	errorText      lipgloss.Style
-	lastKeyMsg     tea.KeyMsg
-	maxSuggestions int
-	scroll         int
-	prevScroll     int
-	selectedKey    *string
-	prevRunes      []rune
-	queueNext      bool
-	ignoreCount    int
-	err            error
+	state              completerState
+	textInput          input.Input[T]
+	suggestions        []input.Suggestion[T]
+	errorText          lipgloss.Style
+	lastKeyMsg         tea.KeyMsg
+	maxSuggestions     int
+	scroll             int
+	prevScroll         int
+	selectedKey        *string
+	prevRunes          []rune
+	queueNext          bool
+	ignoreCount        int
+	selectionIndicator string
+	scrollbar          string
+	scrollbarThumb     string
+	err                error
 }
 
 func newSuggestionManager[T any](textInput input.Input[T], errorText lipgloss.Style, maxSuggestions int) suggestionManager[T] {
 	return suggestionManager[T]{
-		textInput:      textInput,
-		state:          idle,
-		maxSuggestions: maxSuggestions,
-		errorText:      errorText,
-		prevRunes:      []rune(" "), // Need to set the previous text to something in order to force the initial render
+		textInput:          textInput,
+		state:              idle,
+		maxSuggestions:     maxSuggestions,
+		errorText:          errorText,
+		selectionIndicator: "",
+		scrollbar:          " ",
+		scrollbarThumb:     " ",
+		prevRunes:          []rune(" "), // Need to set the previous text to something in order to force the initial render
 	}
 }
 
@@ -187,8 +193,8 @@ func (c suggestionManager[T]) Render(paddingSize int, formatters input.Formatter
 
 	prompts := []string{}
 	listPosition := c.getSelectedIndex() - c.scroll
-	scrollbar := formatters.Scrollbar.Render(" ")
-	scrollbarThumb := formatters.ScrollbarThumb.Render(" ")
+	scrollbar := formatters.Scrollbar.Render(c.scrollbar)
+	scrollbarThumb := formatters.ScrollbarThumb.Render(c.scrollbarThumb)
 	for i, cur := range visibleSuggestions {
 		selected := i == listPosition
 		scrollbarView := ""
@@ -200,7 +206,7 @@ func (c suggestionManager[T]) Render(paddingSize int, formatters input.Formatter
 			}
 		}
 
-		line := cur.Render(selected, leftPadding, maxNameLen, maxDescLen, formatters, scrollbarView)
+		line := cur.Render(selected, leftPadding, maxNameLen, maxDescLen, formatters, scrollbarView, c.selectionIndicator)
 		prompts = append(prompts, line)
 	}
 

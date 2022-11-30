@@ -19,6 +19,12 @@ func WithMaxSuggestions[T any](maxSuggestions int) Option[T] {
 	}
 }
 
+func WithSelectionIndicator[T any](indicator string) Option[T] {
+	return func(model *Model[T]) {
+		model.SetSelectionIndicator(indicator)
+	}
+}
+
 func WithUnmanagedRenderer[T any]() Option[T] {
 	return func(model *Model[T]) {
 		model.renderer = renderer.NewUnmanagedRenderer()

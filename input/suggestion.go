@@ -1,7 +1,10 @@
 package input
 
 import (
+	"strings"
+
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mattn/go-runewidth"
 )
 
 type Datatype int
@@ -28,14 +31,18 @@ func (s Suggestion[T]) GetSuggestionText() string {
 	return s.Text
 }
 
-func (s Suggestion[T]) Render(selected bool, leftPadding string, maxNameLen int, maxDescLen int, formatters Formatters, scrollbar string) string {
+func (s Suggestion[T]) Render(selected bool, leftPadding string, maxNameLen int, maxDescLen int, formatters Formatters, scrollbar string, indicator string) string {
 	name := formatters.Name.Format(s.GetSuggestionText(), maxNameLen, selected)
+	selectedIndicator := formatters.SelectedIndicator.Render(indicator)
+	if !selected {
+		selectedIndicator = strings.Repeat(" ", runewidth.StringWidth(indicator))
+	}
 	description := ""
 	if maxDescLen > 0 {
 		description = formatters.Description.Format(s.Description, maxDescLen, selected)
 	}
 
-	line := lipgloss.JoinHorizontal(lipgloss.Bottom, leftPadding, name, description, scrollbar)
+	line := lipgloss.JoinHorizontal(lipgloss.Bottom, leftPadding, selectedIndicator, name, description, scrollbar)
 	return line
 }
 

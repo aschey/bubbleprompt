@@ -34,7 +34,7 @@ func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Suggesti
 	return completer.GetRecursiveSuggestions(m.textInput.Tokens(), m.textInput.CursorIndex(), m.suggestions), nil
 }
 
-func (m model) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
+func (m model) Execute(inputStr string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
 	parsed := m.textInput.ParsedValue()
 	args := parsed.Args
 	if len(args) == 0 {
@@ -44,6 +44,23 @@ func (m model) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (te
 	promptFormatters := promptModel.Formatters()
 
 	switch parsed.Command.Value {
+	case "theme":
+		switch args[0].Value {
+		case "default":
+			promptFormatters = input.DefaultFormatters()
+			promptModel.SetSelectionIndicator("")
+		case "minimal":
+			promptFormatters = input.DefaultFormatters().Minimal()
+			promptModel.SetSelectionIndicator("> ")
+		}
+	case "scrollbar":
+		switch args[0].Value {
+		case "enable":
+			promptModel.EnableScrollbar()
+		case "disable":
+			promptModel.DisableScrollbar()
+		}
+
 	case "cursor-mode":
 		switch args[0].Value {
 		case "blink":
@@ -115,8 +132,16 @@ func main() {
 	textInput := commandinput.New[cmdMetadata]()
 
 	commandMetadata := commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<command>"))
-	colorMetadata := commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<color>"))
+	colorMetadata := cmdMetadata{
+		CmdMetadata: commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<color>")),
+	}
 	colorMetadata.Level = 1
+
+	childMetadata := cmdMetadata{
+		CmdMetadata: commandinput.CmdMetadata{
+			Level: 1,
+		},
+	}
 
 	suggestions := []input.Suggestion[cmdMetadata]{
 		{
@@ -128,20 +153,12 @@ func main() {
 					{
 						Text:        "blink",
 						Description: "blinking cursor",
-						Metadata: cmdMetadata{
-							CmdMetadata: commandinput.CmdMetadata{
-								Level: 1,
-							},
-						},
+						Metadata:    childMetadata,
 					},
 					{
 						Text:        "static",
 						Description: "normal cursor",
-						Metadata: cmdMetadata{
-							CmdMetadata: commandinput.CmdMetadata{
-								Level: 1,
-							},
-						},
+						Metadata:    childMetadata,
 					},
 					{
 						Text:        "hide",
@@ -164,16 +181,12 @@ func main() {
 					{
 						Text:        "name",
 						Description: "set suggestion name background",
-						Metadata: cmdMetadata{
-							CmdMetadata: colorMetadata,
-						},
+						Metadata:    colorMetadata,
 					},
 					{
 						Text:        "description",
 						Description: "set suggestion description background",
-						Metadata: cmdMetadata{
-							CmdMetadata: colorMetadata,
-						},
+						Metadata:    colorMetadata,
 					},
 				},
 			},
@@ -187,16 +200,50 @@ func main() {
 					{
 						Text:        "selected",
 						Description: "set selected suggestion foreground",
-						Metadata: cmdMetadata{
-							CmdMetadata: colorMetadata,
-						},
+						Metadata:    colorMetadata,
 					},
 					{
 						Text:        "cursor",
 						Description: "set cursor foreground",
-						Metadata: cmdMetadata{
-							CmdMetadata: colorMetadata,
-						},
+						Metadata:    colorMetadata,
+					},
+				},
+			},
+		},
+		{
+			Text:        "theme",
+			Description: "change theme",
+			Metadata: cmdMetadata{
+				CmdMetadata: commandMetadata,
+				children: []input.Suggestion[cmdMetadata]{
+					{
+						Text:        "default",
+						Description: "enable default theme",
+						Metadata:    childMetadata,
+					},
+					{
+						Text:        "minimal",
+						Description: "enable the minimal theme",
+						Metadata:    childMetadata,
+					},
+				},
+			},
+		},
+		{
+			Text:        "scrollbar",
+			Description: "change the scrollbar",
+			Metadata: cmdMetadata{
+				CmdMetadata: commandMetadata,
+				children: []input.Suggestion[cmdMetadata]{
+					{
+						Text:        "enable",
+						Description: "enable the scrollbar",
+						Metadata:    childMetadata,
+					},
+					{
+						Text:        "disable",
+						Description: "disable the scrollbar",
+						Metadata:    childMetadata,
 					},
 				},
 			},
@@ -221,8 +268,16 @@ func main() {
 			Metadata: cmdMetadata{
 				CmdMetadata: commandMetadata,
 				children: []input.Suggestion[cmdMetadata]{
-					{Text: "unmanaged", Description: "use the unmanaged renderer"},
-					{Text: "viewport", Description: "use the viewport renderer"},
+					{
+						Text:        "unmanaged",
+						Description: "use the unmanaged renderer",
+						Metadata:    childMetadata,
+					},
+					{
+						Text:        "viewport",
+						Description: "use the viewport renderer",
+						Metadata:    childMetadata,
+					},
 				},
 			},
 		},

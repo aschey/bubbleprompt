@@ -3,11 +3,12 @@ package input
 import "github.com/charmbracelet/lipgloss"
 
 type Formatters struct {
-	Name           SuggestionText
-	Description    SuggestionText
-	ErrorText      lipgloss.Style
-	Scrollbar      lipgloss.Style
-	ScrollbarThumb lipgloss.Style
+	Name              SuggestionText
+	Description       SuggestionText
+	ErrorText         lipgloss.Style
+	SelectedIndicator lipgloss.Style
+	Scrollbar         lipgloss.Style
+	ScrollbarThumb    lipgloss.Style
 }
 
 var DefaultNameForeground = "255"
@@ -23,6 +24,8 @@ var DefaultErrorTextBackground = "1"
 
 var DefaultScrollbarColor = "251"
 var DefaultScrollbarThumbColor = "255"
+
+var DefaultIndicatorForeground = "8"
 
 func DefaultFormatters() Formatters {
 	return Formatters{
@@ -45,6 +48,10 @@ func DefaultFormatters() Formatters {
 				Foreground(lipgloss.Color(DefaultDescriptionForeground)).
 				Background(lipgloss.Color(DefaultDescriptionBackground)),
 		},
+		SelectedIndicator: lipgloss.
+			NewStyle().
+			Foreground(lipgloss.Color(DefaultIndicatorForeground)),
+
 		ErrorText: lipgloss.
 			NewStyle().
 			PaddingLeft(1).
@@ -57,4 +64,21 @@ func DefaultFormatters() Formatters {
 			NewStyle().
 			Background(lipgloss.Color(DefaultScrollbarThumbColor)),
 	}
+}
+
+func (f Formatters) Minimal() Formatters {
+	f.Name.Style.UnsetBackground()
+	f.Name.SelectedStyle.UnsetBackground()
+	f.Name.Style.Foreground(lipgloss.Color(DefaultNameBackground))
+	f.Name.SelectedStyle.Foreground(lipgloss.Color(DefaultSelectedNameBackground))
+
+	f.Description.Style.UnsetBackground()
+	f.Description.SelectedStyle.UnsetBackground()
+	f.Description.Style.Foreground(lipgloss.Color(DefaultDescriptionBackground))
+	f.Description.SelectedStyle.Foreground(lipgloss.Color(DefaultSelectedDescriptionBackground))
+
+	f.Scrollbar.Background(lipgloss.Color("237"))
+	f.ScrollbarThumb.Background(lipgloss.Color("240"))
+
+	return f
 }

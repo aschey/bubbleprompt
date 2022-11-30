@@ -24,7 +24,12 @@ func (m Model[T]) renderCompleting() string {
 	// Calculate left offset for suggestions
 	// Choosing a prompt via arrow keys or tab shouldn't change the prompt position
 	// so we use the last typed cursor position instead of the current position
-	paddingSize := runewidth.StringWidth(m.textInput.Prompt()) + m.lastTypedCursorPosition
+	paddingSize := runewidth.StringWidth(m.textInput.Prompt()) +
+		m.lastTypedCursorPosition -
+		runewidth.StringWidth(m.suggestionManager.selectionIndicator)
+	if paddingSize < 0 {
+		paddingSize = 0
+	}
 	prompts := m.suggestionManager.Render(paddingSize, m.formatters)
 	textView += prompts
 
