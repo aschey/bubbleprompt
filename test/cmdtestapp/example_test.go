@@ -122,7 +122,7 @@ func TestApp(t *testing.T) {
 	textInput := commandinput.New[cmdMetadata]()
 	m := model{suggestions: suggestions(textInput), textInput: textInput}
 
-	promptModel, _ := prompt.New[cmdMetadata](
+	promptModel := prompt.New[cmdMetadata](
 		m,
 		textInput,
 	)

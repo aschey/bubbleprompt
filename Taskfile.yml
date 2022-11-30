@@ -13,6 +13,8 @@ tasks:
   test:
     cmds:
       - ginkgo -v -race -p ./test
+      - go test .
+      - go test ./input/...
   covTest:
     cmds:
       - go test ./test -v -tuicover -tuicoverpkg ../...
@@ -27,6 +29,7 @@ tasks:
   examples:
     cmds:
       - task: os:examples
+      - cd ./docs/examples && go build
   update:
     cmds:
       - go get -t -u ./...

@@ -165,13 +165,10 @@ func main() {
 		executorValueStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("13")),
 	}
 
-	promptModel, err := prompt.New[cmdMetadata](
+	promptModel := prompt.New[cmdMetadata](
 		model,
 		textInput,
 	)
-	if err != nil {
-		panic(err)
-	}
 
 	if _, err := tea.NewProgram(promptModel, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
 		fmt.Printf("Could not start program\n%v\n", err)

@@ -232,13 +232,10 @@ func main() {
 		textInput:   textInput,
 	}
 
-	promptModel, err := prompt.New[cmdMetadata](
+	promptModel := prompt.New[cmdMetadata](
 		appModel,
 		textInput,
 	)
-	if err != nil {
-		panic(err)
-	}
 
 	if _, err := tea.NewProgram(promptModel, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
 		fmt.Printf("Could not start program\n%v\n", err)

@@ -188,14 +188,11 @@ func main() {
 
 	statusBarHeight := 1
 	padding := 1
-	promptModel, err := prompt.New[cmdMetadata](
+	promptModel := prompt.New[cmdMetadata](
 		inputModel,
 		textInput,
 		prompt.WithViewportRenderer[cmdMetadata](renderer.ViewportOffset{HeightOffset: statusBarHeight + padding}),
 	)
-	if err != nil {
-		panic(err)
-	}
 
 	model := model{
 		prompt: promptModel,

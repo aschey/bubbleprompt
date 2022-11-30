@@ -14,39 +14,34 @@ type settings[T any] struct {
 	lexerOptions      []lexerinput.Option[T]
 }
 
-type Option[T any] func(settings *settings[T]) error
+type Option[T any] func(settings *settings[T])
 
 func WithDelimiterRegex[T any](delimiterRegex string) Option[T] {
-	return func(settings *settings[T]) error {
+	return func(settings *settings[T]) {
 		settings.delimiterRegex = delimiterRegex
-		return nil
 	}
 }
 
 func WithTokenRegex[T any](tokenRegex string) Option[T] {
-	return func(settings *settings[T]) error {
+	return func(settings *settings[T]) {
 		settings.tokenRegex = tokenRegex
-		return nil
 	}
 }
 
 func WithSelectedTextStyle[T any](style lipgloss.Style) Option[T] {
-	return func(settings *settings[T]) error {
+	return func(settings *settings[T]) {
 		settings.selectedTextStyle = style
-		return nil
 	}
 }
 
 func WithFormatter[T any](formatter parser.Formatter) Option[T] {
-	return func(settings *settings[T]) error {
+	return func(settings *settings[T]) {
 		settings.formatter = &formatter
-		return nil
 	}
 }
 
 func WithLexerOptions[T any](options ...lexerinput.Option[T]) Option[T] {
-	return func(settings *settings[T]) error {
+	return func(settings *settings[T]) {
 		settings.lexerOptions = options
-		return nil
 	}
 }

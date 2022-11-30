@@ -31,3 +31,11 @@ func main() {
 }
 
 ```
+
+## Changing the Tokenization Strategy
+
+```go
+textInput := simpleinput.New(
+    simpleinput.WithDelimiterRegex[metadata](`\s*\.\s*`),
+    simpleinput.WithTokenRegex[metadata](`[^\s\.]+`))
+```

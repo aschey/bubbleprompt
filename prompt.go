@@ -38,7 +38,7 @@ type Model[T any] struct {
 	err                     error
 }
 
-func New[T any](inputHandler InputHandler[T], textInput input.Input[T], opts ...Option[T]) (Model[T], error) {
+func New[T any](inputHandler InputHandler[T], textInput input.Input[T], opts ...Option[T]) Model[T] {
 	formatters := input.DefaultFormatters()
 	defaultNumSuggestions := 6
 	model := Model[T]{
@@ -50,12 +50,10 @@ func New[T any](inputHandler InputHandler[T], textInput input.Input[T], opts ...
 	}
 
 	for _, opt := range opts {
-		if err := opt(&model); err != nil {
-			return Model[T]{}, err
-		}
+		opt(&model)
 	}
 
-	return model, nil
+	return model
 }
 
 func (m *Model[T]) SetMaxSuggestions(maxSuggestions int) {

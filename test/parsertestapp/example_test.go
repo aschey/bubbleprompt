@@ -80,7 +80,7 @@ func TestApp(t *testing.T) {
 		textInput:   textInput,
 	}
 
-	promptModel, _ := prompt.New[any](
+	promptModel := prompt.New[any](
 		model,
 		textInput,
 		prompt.WithViewportRenderer[any](renderer.ViewportOffset{HeightOffset: 1}),

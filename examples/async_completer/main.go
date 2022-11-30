@@ -65,13 +65,10 @@ func main() {
 		textInput: textInput,
 	}
 
-	promptModel, err := prompt.New[any](
+	promptModel := prompt.New[any](
 		model,
 		textInput,
 	)
-	if err != nil {
-		panic(err)
-	}
 
 	fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Render("Type something and watch the suggestions update asynchronously"))
 	fmt.Println()

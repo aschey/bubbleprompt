@@ -96,9 +96,7 @@ func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T] {
 		defaultDelimiter:   " ",
 	}
 	for _, opt := range opts {
-		if err := opt(model); err != nil {
-			panic(err)
-		}
+		opt(model)
 	}
 
 	model.buildParser()

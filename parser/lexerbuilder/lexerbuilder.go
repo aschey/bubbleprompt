@@ -14,9 +14,7 @@ type LexerBuilder struct {
 func NewLexerBuilder(rules []Rule, options ...Option) *LexerBuilder {
 	builder := &LexerBuilder{rules: rules}
 	for _, option := range options {
-		if err := option(builder); err != nil {
-			panic(err)
-		}
+		option(builder)
 	}
 	return builder
 }

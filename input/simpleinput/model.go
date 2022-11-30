@@ -24,9 +24,7 @@ func New[T any](options ...Option[T]) *Model[T] {
 		lexerOptions:      []lexerinput.Option[T]{},
 	}
 	for _, option := range options {
-		if err := option(settings); err != nil {
-			panic(err)
-		}
+		option(settings)
 	}
 	lexerDefinition := participlelexer.MustSimple([]participlelexer.SimpleRule{
 		{Name: "Token", Pattern: settings.tokenRegex},

@@ -5,18 +5,16 @@ import (
 	"github.com/alecthomas/participle/v2/lexer"
 )
 
-type Option func(builder *LexerBuilder) error
+type Option func(builder *LexerBuilder)
 
 func WithLexerOptions(options ...lexer.Option) Option {
-	return func(model *LexerBuilder) error {
+	return func(model *LexerBuilder) {
 		model.lexerOptions = options
-		return nil
 	}
 }
 
 func WithChromaConfig(config *chroma.Config) Option {
-	return func(model *LexerBuilder) error {
+	return func(model *LexerBuilder) {
 		model.chromaConfig = config
-		return nil
 	}
 }

@@ -1,0 +1,120 @@
+import TutorialStart from "!!raw-loader!../examples/tutorial-start.go";
+import TutorialModel from "!!raw-loader!../examples/tutorial-model.go";
+import TutorialModelInit from "!!raw-loader!../examples/tutorial-model-init.go";
+import TutorialSuggestions from "!!raw-loader!../examples/tutorial-suggestions.go";
+import TutorialComplete from "!!raw-loader!../examples/tutorial-complete.go";
+import TutorialUpdate from "!!raw-loader!../examples/tutorial-update.go";
+import TutorialExecute from "!!raw-loader!../examples/tutorial-execute.go";
+import TutorialMain from "!!raw-loader!../examples/tutorial-main.go";
+import TutorialFinal from "!!raw-loader!../examples/tutorial-final.go";
+import CodeBlock from "@theme/CodeBlock";
+
+export const ExampleCode = ({ replace, children }) => {
+  for (let replacement in replace) {
+    if (!children.includes(replacement)) {
+      throw new Error("text does not contain replacement " + replacement);
+    }
+    children = children.replaceAll(replacement, replace[replacement]);
+  }
+  children = children
+    .split("\n")
+    .filter((c) => !c.trim().startsWith("_ ="))
+    .map((c) => c.replaceAll("\t", "    "))
+    .join("\n");
+  return <CodeBlock language="go">{children}</CodeBlock>;
+};
+
+# Tutorial
+
+Let's build a simple app to demonstratate how to use Bubbleprompt.
+The app will display a list of fruits and tell the user which one they selected.
+The final code can be seen in the [basic example](https://github.com/aschey/bubbleprompt/tree/main/examples/basic/main.go).
+
+## Starting Out
+
+First, we need to choose an input.
+We'll use the simple input here because we don't need any fancy features like custom parsing or flags.
+By default, the simple input parses input text as a series of whitespace-delimited tokens.
+It also supports using double quotes to define a single token, so `"two words"` will be parsed as one token rather than two.
+
+<ExampleCode replace={{ main1: "main" }}>{TutorialStart}</ExampleCode>
+
+The simple input component takes one generic parameter.
+This parameter is used to define custom metadata that gets attached to each suggestion.
+We don't need any custom metadata here so we'll leave it as `any`.
+
+Next, we'll define a list of suggestions.
+These will be shown underneath our input component.
+
+<ExampleCode replace={{ main2: "main" }}>{TutorialSuggestions}</ExampleCode>
+
+The `Suggestion` struct defines each list entry that we show.
+Here we're using three properties: `Text`, `Description`, and `SuggestionText`.
+
+- `Text` represents the text that the user should type to choose this suggestion.
+  It gets rendered on the left side of the suggestion.
+- `Description` is an optional second property we can pass in to add some additional context to the suggestion.
+  It gets rendered on the right side.
+- `SuggestionText` is a special property that we can pass in to override the text that gets shown in the suggestion lists.
+
+Here we're using the `SuggestionText` property for the second entry because it has two words, so we need to wrap it in quotes to treat it as a single token.
+However, we don't want to show the quotes in the suggestion list because that would look odd.
+
+Now, let's create a model. This will implement the `InputHandler` interface and hold our program state.
+Additionally, we store a style struct from [lipgloss](https://github.com/charmbracelet/lipgloss) that we can use to add formatting to our output.
+
+<ExampleCode>{TutorialModel}</ExampleCode>
+
+Now we can create our model in our `main` function:
+
+<ExampleCode replace={{ main3: "main" }}>{TutorialModelInit}</ExampleCode>
+
+## The Complete Method
+
+In order to render our suggestions onto the screen, we need to define the `Complete` method.
+
+<ExampleCode>{TutorialComplete}</ExampleCode>
+
+This method is responsible for returning a list of suggestions based on the user input.
+Typically you'll have a predefined list of suggestions and you'll want to apply some kind of filtering function to replace the suggestions that aren't relevant to what the user typed.
+Bubbleprompt provides a few predefined filtering functions in the `completer` package for convenience, but you're free to generate the list of suggestions however you want.
+
+We use `simpleinput`'s `CurrentTokenBeforeCursor` method to get the text that the user typed before the cursor.
+Since the list of suggestions always stays in sync with the cursor as it moves left or right,
+it's expected that the completer function should only take into account what's before the cursor, rather than always checking the entire input.
+
+## The Update Method
+
+The `Update` method is part of the standard Bubbletea event loop.
+It gets invoked whenever the program receives some kind of event.
+See the [Bubbletea docs](https://github.com/charmbracelet/bubbletea/tree/master/tutorials/basics#the-update-method) for more information.
+
+<ExampleCode>{TutorialUpdate}</ExampleCode>
+
+Here we record every time the user presses enter so we can show this information later.
+
+## The Execute Method
+
+The executor method is invoked whenever the user presses enter.
+It checks the user's input and returns a [tea.Model](https://github.com/charmbracelet/bubbletea/tree/master/tutorials/basics#the-model) that gets rendered to the output.
+The returned model will take over the event loop until it finishes, and then we can start the process over.
+
+<ExampleCode>{TutorialExecute}</ExampleCode>
+
+Here we check if the user entered in any input and display their choice if they did.
+The executor method requires that we return a `tea.Model`, but it would be rather annoying to have to
+manually create a new model for simple cases like showing a line of text.
+For these cases, the `executor` package supplies several prebuilt models for common situations.
+
+## Putting It All Together
+
+Now that we have all the building blocks, we can finish writing our `main` function.
+
+<ExampleCode replace={{ main4: "main" }}>{TutorialMain}</ExampleCode>
+
+With that in place, everything should be functional.
+This is what the whole program looks like:
+
+## Complete Program
+
+<ExampleCode replace={{ model2: "model" }}>{TutorialFinal}</ExampleCode>

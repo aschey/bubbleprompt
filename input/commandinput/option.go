@@ -2,32 +2,28 @@ package commandinput
 
 import "github.com/charmbracelet/bubbles/cursor"
 
-type Option[T CmdMetadataAccessor] func(model *Model[T]) error
+type Option[T CmdMetadataAccessor] func(model *Model[T])
 
 func WithPrompt[T CmdMetadataAccessor](prompt string) Option[T] {
-	return func(model *Model[T]) error {
+	return func(model *Model[T]) {
 		model.SetPrompt(prompt)
-		return nil
 	}
 }
 
 func WithFormatters[T CmdMetadataAccessor](formatters Formatters) Option[T] {
-	return func(model *Model[T]) error {
+	return func(model *Model[T]) {
 		model.SetFormatters(formatters)
-		return nil
 	}
 }
 
 func WithDefaultDelimiter[T CmdMetadataAccessor](defaultDelimiter string) Option[T] {
-	return func(model *Model[T]) error {
+	return func(model *Model[T]) {
 		model.defaultDelimiter = defaultDelimiter
-		return nil
 	}
 }
 
 func WithCursorMode[T CmdMetadataAccessor](cursorMode cursor.Mode) Option[T] {
-	return func(model *Model[T]) error {
+	return func(model *Model[T]) {
 		model.SetCursorMode(cursorMode)
-		return nil
 	}
 }

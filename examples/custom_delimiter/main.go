@@ -159,13 +159,10 @@ func main() {
 		outputStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("13")),
 	}
 
-	promptModel, err := prompt.New[metadata](
+	promptModel := prompt.New[metadata](
 		model,
 		textInput,
 	)
-	if err != nil {
-		panic(err)
-	}
 
 	fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Render("Pick a city!"))
 	fmt.Println()

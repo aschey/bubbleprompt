@@ -158,14 +158,11 @@ func main() {
 		vm:          vm,
 	}
 
-	promptModel, err := prompt.New[any](
+	promptModel := prompt.New[any](
 		model,
 		textInput,
 		prompt.WithViewportRenderer[any](renderer.ViewportOffset{HeightOffset: 1}),
 	)
-	if err != nil {
-		panic(err)
-	}
 
 	if _, err := tea.NewProgram(promptModel, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
 		fmt.Printf("Could not start program\n%v\n", err)

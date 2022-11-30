@@ -21,3 +21,6 @@ coverage.html
 examples/**/bin/**
 
 __debug_bin
+
+go.work
+go.work.sum

@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 tasks:
   coverage:
@@ -6,4 +6,4 @@ tasks:
       - pwsh -Command ./coverage.html
   examples:
     cmds:
-      - pwsh -Command "foreach (\$p in \$(Get-ChildItem -Path ./examples -Directory)) { go build \$p }"
+      - pwsh -Command "foreach (\$p in \$(Get-ChildItem -Path ./examples -Directory)) { cd \$p && go build }"

@@ -1,0 +1,9 @@
+version: "3"
+
+tasks:
+  coverage:
+    cmds:
+      - open ./coverage.html
+  examples:
+    cmds:
+      - \ls -d examples/*/ | tr '\n' '\0' | xargs -0 -n1 sh -c 'echo building $0 && cd $0 && go build -o bin/example $0'

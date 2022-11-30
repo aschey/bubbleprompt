@@ -39,9 +39,7 @@ func NewModel[T any](lexer parser.Lexer, options ...Option[T]) *Model[T] {
 		whitespaceTokens: make(map[int]bool),
 	}
 	for _, option := range options {
-		if err := option(model); err != nil {
-			panic(err)
-		}
+		option(model)
 	}
 	return model
 }
