@@ -9,9 +9,9 @@ import (
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
 	"github.com/aschey/bubbleprompt/executor"
-	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/commandinput"
 	"github.com/aschey/bubbleprompt/renderer"
+	"github.com/aschey/bubbleprompt/suggestion"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -101,13 +101,13 @@ func (m statusModel) Update(msg tea.Msg) (statusModel, tea.Cmd) {
 }
 
 type inputModel struct {
-	suggestions []input.Suggestion[cmdMetadata]
+	suggestions []suggestion.Suggestion[cmdMetadata]
 	textInput   *commandinput.Model[cmdMetadata]
 	editText    string
 	outputStyle lipgloss.Style
 }
 
-func (m inputModel) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
+func (m inputModel) Complete(promptModel prompt.Model[cmdMetadata]) ([]suggestion.Suggestion[cmdMetadata], error) {
 	if m.textInput.CommandCompleted() {
 		return nil, nil
 	}
@@ -163,7 +163,7 @@ func main() {
 	textInput := commandinput.New[cmdMetadata]()
 	secondsArg := textInput.NewPositionalArg("<seconds>")
 	secondsArg.ArgStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("13"))
-	suggestions := []input.Suggestion[cmdMetadata]{
+	suggestions := []suggestion.Suggestion[cmdMetadata]{
 		{
 			Text:        "set-status",
 			Description: "set statusbar text",

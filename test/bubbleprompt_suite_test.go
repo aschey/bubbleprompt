@@ -3,23 +3,23 @@ package test
 import (
 	"testing"
 
-	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/formatter"
 	"github.com/aschey/bubbleprompt/input/commandinput"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 func TestBubbleprompt(t *testing.T) {
-	input.DefaultNameForeground = "15"
-	input.DefaultSelectedNameForeground = "8"
+	formatter.DefaultNameForeground = "15"
+	formatter.DefaultSelectedNameForeground = "8"
 
-	input.DefaultDescriptionForeground = "15"
-	input.DefaultDescriptionBackground = "13"
-	input.DefaultSelectedDescriptionForeground = "8"
-	input.DefaultSelectedDescriptionBackground = "13"
+	formatter.DefaultDescriptionForeground = "15"
+	formatter.DefaultDescriptionBackground = "13"
+	formatter.DefaultSelectedDescriptionForeground = "8"
+	formatter.DefaultSelectedDescriptionBackground = "13"
 
-	input.DefaultScrollbarColor = "8"
-	input.DefaultScrollbarThumbColor = "15"
+	formatter.DefaultScrollbarColor = "8"
+	formatter.DefaultScrollbarThumbColor = "15"
 
 	commandinput.DefaultCurrentPlaceholderSuggestion = "8"
 

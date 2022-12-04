@@ -1,8 +1,9 @@
-package input
+package suggestion
 
 import (
 	"strings"
 
+	"github.com/aschey/bubbleprompt/formatter"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mattn/go-runewidth"
 )
@@ -31,7 +32,7 @@ func (s Suggestion[T]) GetSuggestionText() string {
 	return s.Text
 }
 
-func (s Suggestion[T]) Render(selected bool, leftPadding string, maxNameLen int, maxDescLen int, formatters Formatters, scrollbar string, indicator string) string {
+func (s Suggestion[T]) Render(selected bool, leftPadding string, maxNameLen int, maxDescLen int, formatters formatter.Formatters, scrollbar string, indicator string) string {
 	name := formatters.Name.Format(s.GetSuggestionText(), maxNameLen, selected)
 	selectedIndicator := formatters.SelectedIndicator.Render(indicator)
 	if !selected {

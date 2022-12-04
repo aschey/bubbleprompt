@@ -1,27 +1,16 @@
 package prompt
 
 import (
-	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/formatter"
 	"github.com/aschey/bubbleprompt/renderer"
+	"github.com/aschey/bubbleprompt/suggestion"
 )
 
 type Option[T any] func(model *Model[T])
 
-func WithFormatters[T any](formatters input.Formatters) Option[T] {
+func WithFormatters[T any](formatters formatter.Formatters) Option[T] {
 	return func(model *Model[T]) {
 		model.formatters = formatters
-	}
-}
-
-func WithMaxSuggestions[T any](maxSuggestions int) Option[T] {
-	return func(model *Model[T]) {
-		model.SetMaxSuggestions(maxSuggestions)
-	}
-}
-
-func WithSelectionIndicator[T any](indicator string) Option[T] {
-	return func(model *Model[T]) {
-		model.SetSelectionIndicator(indicator)
 	}
 }
 
@@ -40,5 +29,11 @@ func WithViewportRenderer[T any](offset renderer.ViewportOffset) Option[T] {
 func WithRenderer[T any](r renderer.Renderer) Option[T] {
 	return func(model *Model[T]) {
 		model.renderer = r
+	}
+}
+
+func WithSuggestionManager[T any](manager suggestion.Manager[T]) Option[T] {
+	return func(model *Model[T]) {
+		model.suggestionManager = manager
 	}
 }

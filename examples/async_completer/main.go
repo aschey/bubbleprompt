@@ -7,20 +7,20 @@ import (
 	"time"
 
 	prompt "github.com/aschey/bubbleprompt"
-	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/simpleinput"
+	"github.com/aschey/bubbleprompt/suggestion"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type model struct {
-	suggestions    []input.Suggestion[any]
+	suggestions    []suggestion.Suggestion[any]
 	textInput      *simpleinput.Model[any]
 	initCounter    int
 	numSuggestions int
 }
 
-func (m model) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
+func (m model) Complete(promptModel prompt.Model[any]) ([]suggestion.Suggestion[any], error) {
 	time.Sleep(time.Second)
 	return m.suggestions, nil
 }
@@ -35,11 +35,11 @@ func (m model) Update(msg tea.Msg) (prompt.InputHandler[any], tea.Cmd) {
 	switch msg.(type) {
 	case updateMsg:
 		m.numSuggestions++
-		m.suggestions = []input.Suggestion[any]{}
+		m.suggestions = []suggestion.Suggestion[any]{}
 		for i := 0; i < m.numSuggestions; i++ {
-			m.suggestions = append(m.suggestions, input.Suggestion[any]{Text: fmt.Sprintf("suggestion%d", i)})
+			m.suggestions = append(m.suggestions, suggestion.Suggestion[any]{Text: fmt.Sprintf("suggestion%d", i)})
 		}
-		return m, prompt.OneShotCompleter(0)
+		return m, suggestion.OneShotCompleter(0)
 	case tea.KeyMsg:
 		m.numSuggestions = rand.Intn(5)
 		return m, func() tea.Msg {

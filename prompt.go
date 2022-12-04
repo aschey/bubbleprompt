@@ -1,8 +1,11 @@
 package prompt
 
 import (
+	"github.com/aschey/bubbleprompt/formatter"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/renderer"
+	"github.com/aschey/bubbleprompt/suggestion"
+	"github.com/aschey/bubbleprompt/suggestion/dropdown"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -20,15 +23,15 @@ const (
 type InputHandler[T any] interface {
 	Update(msg tea.Msg) (InputHandler[T], tea.Cmd)
 	Execute(input string, prompt *Model[T]) (tea.Model, error)
-	Complete(prompt Model[T]) ([]input.Suggestion[T], error)
+	Complete(prompt Model[T]) ([]suggestion.Suggestion[T], error)
 }
 
 type Model[T any] struct {
-	suggestionManager       suggestionManager[T]
+	suggestionManager       suggestion.Manager[T]
 	inputHandler            InputHandler[T]
 	textInput               input.Input[T]
 	renderer                renderer.Renderer
-	formatters              input.Formatters
+	formatters              formatter.Formatters
 	executionManager        *executionManager
 	modelState              modelState
 	lastTypedCursorPosition int
@@ -39,10 +42,9 @@ type Model[T any] struct {
 }
 
 func New[T any](inputHandler InputHandler[T], textInput input.Input[T], opts ...Option[T]) Model[T] {
-	formatters := input.DefaultFormatters()
-	defaultNumSuggestions := 6
+	formatters := formatter.DefaultFormatters()
 	model := Model[T]{
-		suggestionManager: newSuggestionManager(textInput, formatters.ErrorText, defaultNumSuggestions),
+		suggestionManager: dropdown.NewDropdownSuggestionModel(textInput),
 		inputHandler:      inputHandler,
 		textInput:         textInput,
 		renderer:          &renderer.UnmanagedRenderer{},
@@ -56,34 +58,16 @@ func New[T any](inputHandler InputHandler[T], textInput input.Input[T], opts ...
 	return model
 }
 
-func (m *Model[T]) SetMaxSuggestions(maxSuggestions int) {
-	m.suggestionManager.maxSuggestions = maxSuggestions
+func (m *Model[T]) SuggestionManager() suggestion.Manager[T] {
+	return m.suggestionManager
 }
 
-func (m *Model[T]) SetSelectionIndicator(indicator string) {
-	m.suggestionManager.selectionIndicator = indicator
-}
-
-func (m Model[T]) Formatters() input.Formatters {
+func (m Model[T]) Formatters() formatter.Formatters {
 	return m.formatters
 }
 
-func (m *Model[T]) SetFormatters(formatters input.Formatters) {
+func (m *Model[T]) SetFormatters(formatters formatter.Formatters) {
 	m.formatters = formatters
-}
-
-func (m *Model[T]) EnableScrollbar() {
-	m.suggestionManager.scrollbar = " "
-	m.suggestionManager.scrollbarThumb = " "
-}
-
-func (m *Model[T]) DisableScrollbar() {
-	m.suggestionManager.scrollbar = ""
-	m.suggestionManager.scrollbarThumb = ""
-}
-
-func (m Model[T]) SelectedSuggestion() *input.Suggestion[T] {
-	return m.suggestionManager.getSelectedSuggestion()
 }
 
 func (m Model[T]) TextInput() input.Input[T] {
@@ -117,7 +101,7 @@ func MsgFilter(_ tea.Model, msg tea.Msg) tea.Msg {
 }
 
 func (m Model[T]) Init() tea.Cmd {
-	return tea.Batch(m.textInput.Init(), m.suggestionManager.Init(m))
+	return tea.Batch(m.textInput.Init(), m.suggestionManager.Init())
 }
 
 func (m Model[T]) View() string {

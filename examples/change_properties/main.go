@@ -8,9 +8,10 @@ import (
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
 	"github.com/aschey/bubbleprompt/executor"
-	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/formatter"
 	"github.com/aschey/bubbleprompt/input/commandinput"
 	"github.com/aschey/bubbleprompt/renderer"
+	"github.com/aschey/bubbleprompt/suggestion"
 	"github.com/charmbracelet/bubbles/cursor"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -18,19 +19,19 @@ import (
 
 type cmdMetadata struct {
 	commandinput.CmdMetadata
-	children []input.Suggestion[cmdMetadata]
+	children []suggestion.Suggestion[cmdMetadata]
 }
 
-func (c cmdMetadata) Children() []input.Suggestion[cmdMetadata] {
+func (c cmdMetadata) Children() []suggestion.Suggestion[cmdMetadata] {
 	return c.children
 }
 
 type model struct {
-	suggestions []input.Suggestion[cmdMetadata]
+	suggestions []suggestion.Suggestion[cmdMetadata]
 	textInput   *commandinput.Model[cmdMetadata]
 }
 
-func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
+func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]suggestion.Suggestion[cmdMetadata], error) {
 	return completer.GetRecursiveSuggestions(m.textInput.Tokens(), m.textInput.CursorIndex(), m.suggestions), nil
 }
 
@@ -47,18 +48,18 @@ func (m model) Execute(inputStr string, promptModel *prompt.Model[cmdMetadata]) 
 	case "theme":
 		switch args[0].Value {
 		case "default":
-			promptFormatters = input.DefaultFormatters()
-			promptModel.SetSelectionIndicator("")
+			promptFormatters = formatter.DefaultFormatters()
+			promptModel.SuggestionManager().SetSelectionIndicator("")
 		case "minimal":
-			promptFormatters = input.DefaultFormatters().Minimal()
-			promptModel.SetSelectionIndicator("> ")
+			promptFormatters = formatter.DefaultFormatters().Minimal()
+			promptModel.SuggestionManager().SetSelectionIndicator("> ")
 		}
 	case "scrollbar":
 		switch args[0].Value {
 		case "enable":
-			promptModel.EnableScrollbar()
+			promptModel.SuggestionManager().EnableScrollbar()
 		case "disable":
-			promptModel.DisableScrollbar()
+			promptModel.SuggestionManager().DisableScrollbar()
 		}
 
 	case "cursor-mode":
@@ -108,7 +109,7 @@ func (m model) Execute(inputStr string, promptModel *prompt.Model[cmdMetadata]) 
 		if err != nil {
 			return nil, err
 		}
-		promptModel.SetMaxSuggestions(int(maxSuggestions))
+		promptModel.SuggestionManager().SetMaxSuggestions(int(maxSuggestions))
 
 	case "renderer":
 		switch args[0].Value {
@@ -143,13 +144,13 @@ func main() {
 		},
 	}
 
-	suggestions := []input.Suggestion[cmdMetadata]{
+	suggestions := []suggestion.Suggestion[cmdMetadata]{
 		{
 			Text:        "cursor-mode",
 			Description: "set the cursor mode",
 			Metadata: cmdMetadata{
 				CmdMetadata: commandMetadata,
-				children: []input.Suggestion[cmdMetadata]{
+				children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "blink",
 						Description: "blinking cursor",
@@ -177,7 +178,7 @@ func main() {
 			Description: "set suggestion styles",
 			Metadata: cmdMetadata{
 				CmdMetadata: commandMetadata,
-				children: []input.Suggestion[cmdMetadata]{
+				children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "name",
 						Description: "set suggestion name background",
@@ -196,7 +197,7 @@ func main() {
 			Description: "set input style",
 			Metadata: cmdMetadata{
 				CmdMetadata: commandMetadata,
-				children: []input.Suggestion[cmdMetadata]{
+				children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "selected",
 						Description: "set selected suggestion foreground",
@@ -215,7 +216,7 @@ func main() {
 			Description: "change theme",
 			Metadata: cmdMetadata{
 				CmdMetadata: commandMetadata,
-				children: []input.Suggestion[cmdMetadata]{
+				children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "default",
 						Description: "enable default theme",
@@ -234,7 +235,7 @@ func main() {
 			Description: "change the scrollbar",
 			Metadata: cmdMetadata{
 				CmdMetadata: commandMetadata,
-				children: []input.Suggestion[cmdMetadata]{
+				children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "enable",
 						Description: "enable the scrollbar",
@@ -267,7 +268,7 @@ func main() {
 			Description: "change the renderer",
 			Metadata: cmdMetadata{
 				CmdMetadata: commandMetadata,
-				children: []input.Suggestion[cmdMetadata]{
+				children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "unmanaged",
 						Description: "use the unmanaged renderer",

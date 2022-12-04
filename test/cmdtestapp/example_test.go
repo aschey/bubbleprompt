@@ -9,23 +9,24 @@ import (
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
 	"github.com/aschey/bubbleprompt/executor"
-	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/formatter"
 	"github.com/aschey/bubbleprompt/input/commandinput"
+	"github.com/aschey/bubbleprompt/suggestion"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type cmdMetadata = commandinput.CmdMetadata
 
 type model struct {
-	suggestions []input.Suggestion[cmdMetadata]
+	suggestions []suggestion.Suggestion[cmdMetadata]
 	textInput   *commandinput.Model[cmdMetadata]
 	inc         int
 }
 
 type changeTextMsg struct{}
 
-func suggestions(textInput *commandinput.Model[cmdMetadata]) []input.Suggestion[cmdMetadata] {
-	return []input.Suggestion[cmdMetadata]{
+func suggestions(textInput *commandinput.Model[cmdMetadata]) []suggestion.Suggestion[cmdMetadata] {
+	return []suggestion.Suggestion[cmdMetadata]{
 		{Text: "first-option", Description: "test desc", Metadata: commandinput.CmdMetadata{
 			PositionalArgs: textInput.NewPositionalArgs("[test placeholder1]", "[test placeholder2]"),
 		}},
@@ -41,8 +42,8 @@ func suggestions(textInput *commandinput.Model[cmdMetadata]) []input.Suggestion[
 		{Text: "seventh-option", SuggestionText: "suggestion text", Description: "test desc7"}}
 }
 
-func secondLevelSuggestions(textInput *commandinput.Model[cmdMetadata]) []input.Suggestion[cmdMetadata] {
-	return []input.Suggestion[cmdMetadata]{
+func secondLevelSuggestions(textInput *commandinput.Model[cmdMetadata]) []suggestion.Suggestion[cmdMetadata] {
+	return []suggestion.Suggestion[cmdMetadata]{
 		{Text: "second-level", Description: "test desc", Metadata: commandinput.CmdMetadata{
 			PositionalArgs: textInput.NewPositionalArgs("[placeholder2]"),
 			Level:          1,
@@ -58,7 +59,7 @@ func (m model) Update(msg tea.Msg) (prompt.InputHandler[cmdMetadata], tea.Cmd) {
 	switch msg.(type) {
 	case changeTextMsg:
 		m.suggestions[0].Text = "changed text"
-	case prompt.PeriodicCompleterMsg:
+	case suggestion.PeriodicCompleterMsg:
 		m.suggestions[0].Text = "changed text" + fmt.Sprint(m.inc)
 		m.inc++
 	}
@@ -66,7 +67,7 @@ func (m model) Update(msg tea.Msg) (prompt.InputHandler[cmdMetadata], tea.Cmd) {
 	return m, nil
 }
 
-func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
+func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]suggestion.Suggestion[cmdMetadata], error) {
 	time.Sleep(100 * time.Millisecond)
 	suggestions := m.suggestions
 	if m.textInput.CommandCompleted() {
@@ -85,16 +86,16 @@ func (m model) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (te
 	case "oneshot":
 		return executor.NewCmdModel("", tea.Sequence(
 			tea.Tick(100*time.Millisecond, func(t time.Time) tea.Msg { return changeTextMsg{} }),
-			prompt.OneShotCompleter(100*time.Millisecond),
+			suggestion.OneShotCompleter(100*time.Millisecond),
 		)), nil
 	case "periodic":
 		return executor.NewCmdModel("", tea.Sequence(
 			tea.Tick(100*time.Millisecond, func(t time.Time) tea.Msg { return changeTextMsg{} }),
-			prompt.PeriodicCompleter(100*time.Millisecond),
+			suggestion.PeriodicCompleter(100*time.Millisecond),
 		)), nil
 
 	}
-	selectedSuggestion := promptModel.SelectedSuggestion()
+	selectedSuggestion := promptModel.SuggestionManager().SelectedSuggestion()
 
 	return executor.NewAsyncStringModel(func() (string, error) {
 		time.Sleep(100 * time.Millisecond)
@@ -106,16 +107,16 @@ func (m model) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (te
 }
 
 func TestApp(t *testing.T) {
-	input.DefaultNameForeground = "15"
-	input.DefaultSelectedNameForeground = "8"
+	formatter.DefaultNameForeground = "15"
+	formatter.DefaultSelectedNameForeground = "8"
 
-	input.DefaultDescriptionForeground = "15"
-	input.DefaultDescriptionBackground = "13"
-	input.DefaultSelectedDescriptionForeground = "8"
-	input.DefaultSelectedDescriptionBackground = "13"
+	formatter.DefaultDescriptionForeground = "15"
+	formatter.DefaultDescriptionBackground = "13"
+	formatter.DefaultSelectedDescriptionForeground = "8"
+	formatter.DefaultSelectedDescriptionBackground = "13"
 
-	input.DefaultScrollbarColor = "8"
-	input.DefaultScrollbarThumbColor = "15"
+	formatter.DefaultScrollbarColor = "8"
+	formatter.DefaultScrollbarThumbColor = "15"
 
 	commandinput.DefaultCurrentPlaceholderSuggestion = "8"
 

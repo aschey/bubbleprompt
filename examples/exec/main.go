@@ -8,8 +8,8 @@ import (
 
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
-	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/commandinput"
+	"github.com/aschey/bubbleprompt/suggestion"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -17,7 +17,7 @@ import (
 type cmdMetadata = commandinput.CmdMetadata
 
 type model struct {
-	suggestions []input.Suggestion[cmdMetadata]
+	suggestions []suggestion.Suggestion[cmdMetadata]
 	textInput   *commandinput.Model[cmdMetadata]
 }
 
@@ -50,7 +50,7 @@ func (m cmdModel) View() string {
 
 type processFinishedMsg struct{ err error }
 
-func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]input.Suggestion[cmdMetadata], error) {
+func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]suggestion.Suggestion[cmdMetadata], error) {
 	if !m.textInput.CommandCompleted() {
 		return completer.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
 	}
@@ -91,7 +91,7 @@ func main() {
 
 	textInput := commandinput.New[cmdMetadata]()
 	filenameArg := commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("[filename]"))
-	suggestions := []input.Suggestion[cmdMetadata]{
+	suggestions := []suggestion.Suggestion[cmdMetadata]{
 		{Text: "vim", Metadata: filenameArg},
 		{Text: "emacs", Metadata: filenameArg},
 		{Text: "nano", Metadata: filenameArg},

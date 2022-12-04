@@ -8,13 +8,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/suggestion"
 )
 
 type PathCompleter[T any] struct {
 	Filter        func(de fs.DirEntry) bool
 	IgnoreCase    bool
-	fileListCache map[string][]input.Suggestion[T]
+	fileListCache map[string][]suggestion.Suggestion[T]
 }
 
 func cleanFilePath(path string) (dir string, base string, err error) {
@@ -65,17 +65,17 @@ func equalsSeparator(check byte) bool {
 	return strings.ContainsAny(string(check), "/\\")
 }
 
-func (c *PathCompleter[T]) adjustSuggestions(suggestions []input.Suggestion[T], sub string) []input.Suggestion[T] {
+func (c *PathCompleter[T]) adjustSuggestions(suggestions []suggestion.Suggestion[T], sub string) []suggestion.Suggestion[T] {
 	filteredSuggestions := FilterHasPrefix(sub, suggestions)
 
 	return filteredSuggestions
 }
 
-func (c *PathCompleter[T]) Complete(path string) []input.Suggestion[T] {
+func (c *PathCompleter[T]) Complete(path string) []suggestion.Suggestion[T] {
 	path = strings.ReplaceAll(path, "\"", "")
 	if c.fileListCache == nil {
 		defaultCacheSize := 4
-		c.fileListCache = make(map[string][]input.Suggestion[T], defaultCacheSize)
+		c.fileListCache = make(map[string][]suggestion.Suggestion[T], defaultCacheSize)
 	}
 
 	dir, base, err := cleanFilePath(path)
@@ -103,7 +103,7 @@ func (c *PathCompleter[T]) Complete(path string) []input.Suggestion[T] {
 		return nil
 	}
 
-	suggests := make([]input.Suggestion[T], 0, len(files))
+	suggests := make([]suggestion.Suggestion[T], 0, len(files))
 	for _, f := range files {
 		if c.Filter != nil && !c.Filter(f) {
 			continue
@@ -120,7 +120,7 @@ func (c *PathCompleter[T]) Complete(path string) []input.Suggestion[T] {
 			full = fmt.Sprintf("\"%s\"", full)
 			cursorOffset = 1
 		}
-		suggests = append(suggests, input.Suggestion[T]{
+		suggests = append(suggests, suggestion.Suggestion[T]{
 			Text:           full,
 			SuggestionText: f.Name(),
 			CursorOffset:   cursorOffset,

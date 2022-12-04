@@ -16,6 +16,7 @@ import (
 	"github.com/aschey/bubbleprompt/input/parserinput"
 	"github.com/aschey/bubbleprompt/parser"
 	"github.com/aschey/bubbleprompt/renderer"
+	"github.com/aschey/bubbleprompt/suggestion"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/dop251/goja"
 )
@@ -26,22 +27,22 @@ const stringType = "string"
 
 type model struct {
 	textInput   *parserinput.Model[any, statement]
-	suggestions []input.Suggestion[any]
+	suggestions []suggestion.Suggestion[any]
 	vm          *vm
 }
 
-func (m model) globalSuggestions() []input.Suggestion[any] {
+func (m model) globalSuggestions() []suggestion.Suggestion[any] {
 	currentBeforeCursor := m.textInput.CurrentTokenBeforeCursor()
 	vars := m.vm.GlobalObject().Keys()
-	suggestions := []input.Suggestion[any]{}
+	suggestions := []suggestion.Suggestion[any]{}
 	for _, v := range vars {
-		suggestions = append(suggestions, input.Suggestion[any]{Text: v})
+		suggestions = append(suggestions, suggestion.Suggestion[any]{Text: v})
 	}
 
 	return completer.FilterHasPrefix(currentBeforeCursor, suggestions)
 }
 
-func (m model) valueSuggestions(value goja.Value) []input.Suggestion[any] {
+func (m model) valueSuggestions(value goja.Value) []suggestion.Suggestion[any] {
 	if value == nil {
 		return nil
 	}
@@ -79,9 +80,9 @@ func (m model) valueSuggestions(value goja.Value) []input.Suggestion[any] {
 		completable = strings.Trim(completable, `"`)
 	}
 
-	suggestions := []input.Suggestion[any]{}
+	suggestions := []suggestion.Suggestion[any]{}
 	for _, key := range objectVar.Keys() {
-		suggestions = append(suggestions, input.Suggestion[any]{
+		suggestions = append(suggestions, suggestion.Suggestion[any]{
 			Text:           keyWrap + key + keyWrap,
 			SuggestionText: key,
 		})
@@ -90,7 +91,7 @@ func (m model) valueSuggestions(value goja.Value) []input.Suggestion[any] {
 	return completer.FilterHasPrefix(completable, suggestions)
 }
 
-func (m model) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
+func (m model) Complete(promptModel prompt.Model[any]) ([]suggestion.Suggestion[any], error) {
 	parsed, err := m.textInput.ParsedBeforeCursor()
 	if err != nil {
 		return nil, err
@@ -153,7 +154,7 @@ func main() {
 	_, _ = vm.RunString(`food = ['hummus', 'wine', {pizza: pizza}]`)
 
 	model := model{
-		suggestions: []input.Suggestion[any]{},
+		suggestions: []suggestion.Suggestion[any]{},
 		textInput:   textInput,
 		vm:          vm,
 	}

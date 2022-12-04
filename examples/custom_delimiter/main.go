@@ -8,27 +8,27 @@ import (
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
 	"github.com/aschey/bubbleprompt/executor"
-	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/simpleinput"
+	"github.com/aschey/bubbleprompt/suggestion"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type metadata struct {
-	children []input.Suggestion[metadata]
+	children []suggestion.Suggestion[metadata]
 }
 
-func (m metadata) Children() []input.Suggestion[metadata] {
+func (m metadata) Children() []suggestion.Suggestion[metadata] {
 	return m.children
 }
 
 type model struct {
-	suggestions []input.Suggestion[metadata]
+	suggestions []suggestion.Suggestion[metadata]
 	textInput   *simpleinput.Model[metadata]
 	outputStyle lipgloss.Style
 }
 
-func (m model) Complete(promptModel prompt.Model[metadata]) ([]input.Suggestion[metadata], error) {
+func (m model) Complete(promptModel prompt.Model[metadata]) ([]suggestion.Suggestion[metadata], error) {
 	return completer.GetRecursiveSuggestions(m.textInput.WordTokens(), m.textInput.CursorIndex(), m.suggestions), nil
 }
 
@@ -45,14 +45,14 @@ func main() {
 	textInput := simpleinput.New(
 		simpleinput.WithDelimiterRegex[metadata](`\s*\.\s*`),
 		simpleinput.WithTokenRegex[metadata](`[^\s\.]+`))
-	suggestions := []input.Suggestion[metadata]{
+	suggestions := []suggestion.Suggestion[metadata]{
 		{Text: "germany",
 			Metadata: metadata{
-				children: []input.Suggestion[metadata]{
+				children: []suggestion.Suggestion[metadata]{
 					{
 						Text: "bavaria",
 						Metadata: metadata{
-							children: []input.Suggestion[metadata]{
+							children: []suggestion.Suggestion[metadata]{
 								{Text: "munich"},
 								{Text: "dachau"},
 								{Text: "würzburg"},
@@ -62,7 +62,7 @@ func main() {
 					{
 						Text: "saxony",
 						Metadata: metadata{
-							children: []input.Suggestion[metadata]{
+							children: []suggestion.Suggestion[metadata]{
 								{Text: "leipzig"},
 								{Text: "dresden"},
 								{Text: "freiberg"},
@@ -72,7 +72,7 @@ func main() {
 					{
 						Text: "baden-württemberg",
 						Metadata: metadata{
-							children: []input.Suggestion[metadata]{
+							children: []suggestion.Suggestion[metadata]{
 								{Text: "stuttgart"},
 								{Text: "mannheim"},
 								{Text: "heidelberg"},
@@ -83,11 +83,11 @@ func main() {
 			}},
 		{Text: "canada",
 			Metadata: metadata{
-				children: []input.Suggestion[metadata]{
+				children: []suggestion.Suggestion[metadata]{
 					{
 						Text: "ontario",
 						Metadata: metadata{
-							children: []input.Suggestion[metadata]{
+							children: []suggestion.Suggestion[metadata]{
 								{Text: "toronto"},
 								{Text: "ottowa"},
 								{Text: "windsor"},
@@ -97,7 +97,7 @@ func main() {
 					{
 						Text: "quebec",
 						Metadata: metadata{
-							children: []input.Suggestion[metadata]{
+							children: []suggestion.Suggestion[metadata]{
 								{Text: "montreal"},
 								{Text: "gatineau"},
 								{Text: "alma"},
@@ -107,7 +107,7 @@ func main() {
 					{
 						Text: "alberta",
 						Metadata: metadata{
-							children: []input.Suggestion[metadata]{
+							children: []suggestion.Suggestion[metadata]{
 								{Text: "calgary"},
 								{Text: "edmonton"},
 								{Text: "leduc"},
@@ -118,11 +118,11 @@ func main() {
 			}},
 		{Text: "italy",
 			Metadata: metadata{
-				children: []input.Suggestion[metadata]{
+				children: []suggestion.Suggestion[metadata]{
 					{
 						Text: "lombardy",
 						Metadata: metadata{
-							children: []input.Suggestion[metadata]{
+							children: []suggestion.Suggestion[metadata]{
 								{Text: "milan"},
 								{Text: "brescia"},
 								{Text: "varese"},
@@ -132,7 +132,7 @@ func main() {
 					{
 						Text: "campania",
 						Metadata: metadata{
-							children: []input.Suggestion[metadata]{
+							children: []suggestion.Suggestion[metadata]{
 								{Text: "naples"},
 								{Text: "pompeii"},
 								{Text: "salerno"},
@@ -142,7 +142,7 @@ func main() {
 					{
 						Text: "sicily",
 						Metadata: metadata{
-							children: []input.Suggestion[metadata]{
+							children: []suggestion.Suggestion[metadata]{
 								{Text: "palermo"},
 								{Text: "catania"},
 								{Text: "ragusa"},

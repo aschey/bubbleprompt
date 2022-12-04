@@ -1,7 +1,7 @@
 # Usage
 
 ```go
-func (m model) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
+func (m model) Complete(promptModel prompt.Model[any]) ([]suggestion.Suggestion[any], error) {
     if len(m.textInput.AllTokens()) > 1 {
         return nil, nil
     }
@@ -12,7 +12,7 @@ func (m model) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[any],
 
 func main() {
     textInput := simpleinput.New[any]()
-    suggestions := []input.Suggestion[any]{
+    suggestions := []suggestion.Suggestion[any]{
         {Text: "banana", Description: "good with peanut butter"},
         {Text: "\"sugar apple\"", SuggestionText: "sugar apple", Description: "spherical...ish"},
         {Text: "jackfruit", Description: "the jack of all fruits"},

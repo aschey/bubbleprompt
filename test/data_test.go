@@ -1,8 +1,8 @@
 package test
 
 import (
-	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/commandinput"
+	"github.com/aschey/bubbleprompt/suggestion"
 )
 
 var leftPadding = 2
@@ -10,8 +10,8 @@ var margin = 1
 
 type cmdMetadata = commandinput.CmdMetadata
 
-func suggestions(textInput *commandinput.Model[cmdMetadata]) []input.Suggestion[cmdMetadata] {
-	return []input.Suggestion[cmdMetadata]{
+func suggestions(textInput *commandinput.Model[cmdMetadata]) []suggestion.Suggestion[cmdMetadata] {
+	return []suggestion.Suggestion[cmdMetadata]{
 		{Text: "first-option", Description: "test desc", Metadata: commandinput.CmdMetadata{
 			PositionalArgs: textInput.NewPositionalArgs("[test placeholder1]", "[test placeholder2]"),
 		}},
@@ -27,8 +27,8 @@ func suggestions(textInput *commandinput.Model[cmdMetadata]) []input.Suggestion[
 		{Text: "seventh-option", SuggestionText: "suggestion text", Description: "test desc7"}}
 }
 
-func secondLevelSuggestions(textInput *commandinput.Model[cmdMetadata]) []input.Suggestion[cmdMetadata] {
-	return []input.Suggestion[cmdMetadata]{
+func secondLevelSuggestions(textInput *commandinput.Model[cmdMetadata]) []suggestion.Suggestion[cmdMetadata] {
+	return []suggestion.Suggestion[cmdMetadata]{
 		{Text: "second-level", Description: "test desc", Metadata: commandinput.CmdMetadata{
 			PositionalArgs: textInput.NewPositionalArgs("[placeholder2]"),
 			Level:          1,

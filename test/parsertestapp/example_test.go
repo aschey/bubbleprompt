@@ -9,12 +9,13 @@ import (
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
 	"github.com/aschey/bubbleprompt/executor"
-	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/formatter"
 	"github.com/aschey/bubbleprompt/input/commandinput"
 	"github.com/aschey/bubbleprompt/input/lexerinput"
 	"github.com/aschey/bubbleprompt/input/parserinput"
 	"github.com/aschey/bubbleprompt/parser"
 	"github.com/aschey/bubbleprompt/renderer"
+	"github.com/aschey/bubbleprompt/suggestion"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -28,12 +29,12 @@ type Statement struct {
 
 type model struct {
 	textInput   *parserinput.Model[any, Statement]
-	suggestions []input.Suggestion[any]
+	suggestions []suggestion.Suggestion[any]
 }
 
-func (m model) Complete(promptModel prompt.Model[any]) ([]input.Suggestion[any], error) {
+func (m model) Complete(promptModel prompt.Model[any]) ([]suggestion.Suggestion[any], error) {
 	current := m.textInput.CompletableTokenBeforeCursor()
-	suggestions := []input.Suggestion[any]{
+	suggestions := []suggestion.Suggestion[any]{
 		{Text: "abcd"},
 		{Text: "def"},
 		{Text: "abcdef"},
@@ -58,25 +59,25 @@ func (m model) Update(msg tea.Msg) (prompt.InputHandler[any], tea.Cmd) {
 }
 
 func TestApp(t *testing.T) {
-	input.DefaultNameForeground = "15"
-	input.DefaultSelectedNameForeground = "8"
+	formatter.DefaultNameForeground = "15"
+	formatter.DefaultSelectedNameForeground = "8"
 
-	input.DefaultDescriptionForeground = "15"
-	input.DefaultDescriptionBackground = "13"
-	input.DefaultSelectedDescriptionForeground = "8"
-	input.DefaultSelectedDescriptionBackground = "13"
+	formatter.DefaultDescriptionForeground = "15"
+	formatter.DefaultDescriptionBackground = "13"
+	formatter.DefaultSelectedDescriptionForeground = "8"
+	formatter.DefaultSelectedDescriptionBackground = "13"
 
 	commandinput.DefaultCurrentPlaceholderSuggestion = "8"
 
-	input.DefaultScrollbarColor = "8"
-	input.DefaultScrollbarThumbColor = "15"
+	formatter.DefaultScrollbarColor = "8"
+	formatter.DefaultScrollbarThumbColor = "15"
 
 	textInput := parserinput.NewModel[any, Statement](
 		parser.NewParticipleParser(participleParser),
 		lexerinput.WithDelimiters[any](","))
 
 	model := model{
-		suggestions: []input.Suggestion[any]{},
+		suggestions: []suggestion.Suggestion[any]{},
 		textInput:   textInput,
 	}
 

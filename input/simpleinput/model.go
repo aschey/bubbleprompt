@@ -5,6 +5,7 @@ import (
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/lexerinput"
 	"github.com/aschey/bubbleprompt/parser"
+	"github.com/aschey/bubbleprompt/suggestion"
 	"github.com/charmbracelet/bubbles/cursor"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -200,7 +201,7 @@ func (m *Model[T]) View(viewMode input.ViewMode) string {
 
 // ShouldSelectSuggestion is part of the Input interface.
 // It should not be invoked by end users.
-func (m *Model[T]) ShouldSelectSuggestion(suggestion input.Suggestion[T]) bool {
+func (m *Model[T]) ShouldSelectSuggestion(suggestion suggestion.Suggestion[T]) bool {
 	return m.lexerModel.ShouldSelectSuggestion(suggestion)
 }
 
@@ -212,13 +213,13 @@ func (m *Model[T]) SuggestionRunes(runes []rune) []rune {
 
 // OnUpdateFinish is part of the Input interface.
 // It should not be invoked by end users.
-func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T], isSelected bool) tea.Cmd {
+func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion[T], isSelected bool) tea.Cmd {
 	return m.lexerModel.OnUpdateFinish(msg, suggestion, isSelected)
 }
 
 // OnSuggestionChanged is part of the Input interface.
 // It should not be invoked by end users.
-func (m *Model[T]) OnSuggestionChanged(suggestion input.Suggestion[T]) {
+func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T]) {
 	m.lexerModel.OnSuggestionChanged(suggestion)
 }
 

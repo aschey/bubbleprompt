@@ -9,6 +9,7 @@ import (
 
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/parser"
+	"github.com/aschey/bubbleprompt/suggestion"
 	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -61,7 +62,7 @@ type Model[T CmdMetadataAccessor] struct {
 	args                []arg
 	showFlagPlaceholder bool
 	argIndex            int
-	currentFlag         *input.Suggestion[T]
+	currentFlag         *suggestion.Suggestion[T]
 	selectedTokenPos    *TokenPos
 	formatters          Formatters
 	parser              parser.Parser[statement]
@@ -138,7 +139,7 @@ func (m *Model[T]) NewFlagPlaceholder(placeholder string) FlagPlaceholder {
 	}
 }
 
-func (m *Model[T]) ShouldSelectSuggestion(suggestion input.Suggestion[T]) bool {
+func (m *Model[T]) ShouldSelectSuggestion(suggestion suggestion.Suggestion[T]) bool {
 	currentTokenPos := m.CurrentTokenPos()
 	currentToken := m.CurrentToken()
 	// Only select if cursor is at the end of the token or the input will cut off the part after the cursor
@@ -217,9 +218,9 @@ func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	return cmd
 }
 
-func (m *Model[T]) FlagSuggestions(inputStr string, flags []FlagInput, suggestionFunc func(FlagInput) T) []input.Suggestion[T] {
+func (m *Model[T]) FlagSuggestions(inputStr string, flags []FlagInput, suggestionFunc func(FlagInput) T) []suggestion.Suggestion[T] {
 	inputRunes := []rune(inputStr)
-	suggestions := []input.Suggestion[T]{}
+	suggestions := []suggestion.Suggestion[T]{}
 	isLong := strings.HasPrefix(inputStr, "--")
 	isMulti := !isLong && strings.HasPrefix(inputStr, "-") && len(inputRunes) > 1
 	tokenIndex := m.CurrentTokenPos().Index
@@ -246,14 +247,14 @@ func (m *Model[T]) FlagSuggestions(inputStr string, flags []FlagInput, suggestio
 		if ((isMulti && flag.Short == curFlagText) ||
 			prevToken == "-"+flag.Short ||
 			prevToken == "--"+flag.Long) && flag.RequiresArg() && (!currentIsFlag || currentToken == "-"+flag.Short || currentToken == "--"+flag.Long) {
-			return []input.Suggestion[T]{}
+			return []suggestion.Suggestion[T]{}
 		}
 
 		long := "--" + flag.Long
 		short := "-" + flag.Short
 		if ((isLong || flag.Short == "") && strings.HasPrefix(long, inputStr)) ||
 			strings.HasPrefix(short, inputStr) || (isMulti && !flag.RequiresArg()) {
-			suggestion := input.Suggestion[T]{
+			suggestion := suggestion.Suggestion[T]{
 				Description: flag.Description,
 			}
 			if isLong {
@@ -302,7 +303,7 @@ func (m *Model[T]) getPosArgs(metadata T) []arg {
 	return args
 }
 
-func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T], isSelected bool) tea.Cmd {
+func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion[T], isSelected bool) tea.Cmd {
 	if m.CommandCompleted() {
 		// If no suggestions, leave args alone
 		if suggestion == nil {
@@ -379,7 +380,7 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T], 
 	return nil
 }
 
-func (m *Model[T]) OnSuggestionChanged(suggestion input.Suggestion[T]) {
+func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T]) {
 	token := m.CurrentToken()
 	tokenRunes := []rune(token)
 	suggestionRunes := []rune(suggestion.Text)

@@ -5,8 +5,8 @@ import (
 	"os"
 
 	prompt "github.com/aschey/bubbleprompt"
-	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/input/simpleinput"
+	"github.com/aschey/bubbleprompt/suggestion"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -16,7 +16,7 @@ func main4() {
 	textInput := simpleinput.New[any]()
 
 	// Define our suggestions
-	suggestions := []input.Suggestion[any]{
+	suggestions := []suggestion.Suggestion[any]{
 		{Text: "banana", Description: "good with peanut butter"},
 		{Text: "\"sugar apple\"", SuggestionText: "sugar apple", Description: "spherical...ish"},
 		{Text: "jackfruit", Description: "the jack of all fruits"},

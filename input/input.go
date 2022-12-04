@@ -1,6 +1,7 @@
 package input
 
 import (
+	"github.com/aschey/bubbleprompt/suggestion"
 	"github.com/charmbracelet/bubbles/cursor"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -30,10 +31,10 @@ type Input[T any] interface {
 	Prompt() string
 	SetPrompt(prompt string)
 	Tokens() []Token
-	ShouldSelectSuggestion(suggestion Suggestion[T]) bool
+	ShouldSelectSuggestion(suggestion suggestion.Suggestion[T]) bool
 	SuggestionRunes(runes []rune) []rune
-	OnUpdateFinish(msg tea.Msg, suggestion *Suggestion[T], isSelected bool) tea.Cmd
-	OnSuggestionChanged(suggestion Suggestion[T])
+	OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion[T], isSelected bool) tea.Cmd
+	OnSuggestionChanged(suggestion suggestion.Suggestion[T])
 	OnExecutorFinished()
 	OnSuggestionUnselected()
 	ShouldClearSuggestions(prevRunes []rune, msg tea.KeyMsg) bool

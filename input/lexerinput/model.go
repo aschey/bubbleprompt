@@ -5,6 +5,7 @@ import (
 
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/parser"
+	"github.com/aschey/bubbleprompt/suggestion"
 	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -214,7 +215,7 @@ func (m *Model[T]) SetPrompt(prompt string) {
 	m.prompt = prompt
 }
 
-func (m *Model[T]) ShouldSelectSuggestion(suggestion input.Suggestion[T]) bool {
+func (m *Model[T]) ShouldSelectSuggestion(suggestion suggestion.Suggestion[T]) bool {
 	token := m.CurrentToken()
 	tokenStr := token.Value
 	return m.CursorIndex() == token.End() && tokenStr == suggestion.Text
@@ -297,7 +298,7 @@ func (m *Model[T]) TokenValues() []string {
 	return tokens
 }
 
-func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *input.Suggestion[T], isSelected bool) tea.Cmd {
+func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion[T], isSelected bool) tea.Cmd {
 	return nil
 }
 
@@ -306,7 +307,7 @@ func (m *Model[T]) IsDelimiterToken(token input.Token) bool {
 	return slices.Contains(m.delimiters, token.Value) || slices.Contains(m.delimiterTokens, token.Type) || m.whitespaceTokens[token.Start]
 }
 
-func (m *Model[T]) OnSuggestionChanged(suggestion input.Suggestion[T]) {
+func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T]) {
 	runes := m.Runes()
 	token := m.currentToken(runes, m.CursorIndex())
 
