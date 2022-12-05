@@ -29,7 +29,7 @@ tasks:
   examples:
     cmds:
       - task: os:examples
-      - cd ./docs/examples && go build
+      - cd ./docs/examples && go build ./...
   update:
     cmds:
       - go get -t -u ./...
