@@ -10,7 +10,7 @@ type settings[T any] struct {
 	delimiterRegex    string
 	tokenRegex        string
 	selectedTextStyle lipgloss.Style
-	formatter         *parser.Formatter
+	formatterFunc     func(parser.Lexer) parser.Formatter
 	lexerOptions      []lexerinput.Option[T]
 }
 
@@ -34,9 +34,9 @@ func WithSelectedTextStyle[T any](style lipgloss.Style) Option[T] {
 	}
 }
 
-func WithFormatter[T any](formatter parser.Formatter) Option[T] {
+func WithFormatter[T any](formatterFunc func(lexer parser.Lexer) parser.Formatter) Option[T] {
 	return func(settings *settings[T]) {
-		settings.formatter = &formatter
+		settings.formatterFunc = formatterFunc
 	}
 }
 

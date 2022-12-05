@@ -1,28 +1,13 @@
-import TutorialStart from "!!raw-loader!../examples/tutorial-start.go";
-import TutorialModel from "!!raw-loader!../examples/tutorial-model.go";
-import TutorialModelInit from "!!raw-loader!../examples/tutorial-model-init.go";
-import TutorialSuggestions from "!!raw-loader!../examples/tutorial-suggestions.go";
-import TutorialComplete from "!!raw-loader!../examples/tutorial-complete.go";
-import TutorialUpdate from "!!raw-loader!../examples/tutorial-update.go";
-import TutorialExecute from "!!raw-loader!../examples/tutorial-execute.go";
-import TutorialMain from "!!raw-loader!../examples/tutorial-main.go";
-import TutorialFinal from "!!raw-loader!../examples/tutorial-final.go";
-import CodeBlock from "@theme/CodeBlock";
-
-export const ExampleCode = ({ replace, children }) => {
-  for (let replacement in replace) {
-    if (!children.includes(replacement)) {
-      throw new Error("text does not contain replacement " + replacement);
-    }
-    children = children.replaceAll(replacement, replace[replacement]);
-  }
-  children = children
-    .split("\n")
-    .filter((c) => !c.trim().startsWith("_ ="))
-    .map((c) => c.replaceAll("\t", "    "))
-    .join("\n");
-  return <CodeBlock language="go">{children}</CodeBlock>;
-};
+import TutorialStart from "!!raw-loader!../examples/tutorial/start.go";
+import TutorialModel from "!!raw-loader!../examples/tutorial/model.go";
+import TutorialModelInit from "!!raw-loader!../examples/tutorial/model-init.go";
+import TutorialSuggestions from "!!raw-loader!../examples/tutorial/suggestions.go";
+import TutorialComplete from "!!raw-loader!../examples/tutorial/complete.go";
+import TutorialUpdate from "!!raw-loader!../examples/tutorial/update.go";
+import TutorialExecute from "!!raw-loader!../examples/tutorial/execute.go";
+import TutorialMain from "!!raw-loader!../examples/tutorial/main.go";
+import TutorialFinal from "!!raw-loader!../examples/tutorial/final.go";
+import { ExampleCode } from "../src/components/ExampleCode";
 
 # Tutorial
 

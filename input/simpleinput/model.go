@@ -1,3 +1,5 @@
+// Package simpleinput provides an implementation of the input.Input interface.
+// It should be used for basic cases without the need for structured or cli-style input
 package simpleinput
 
 import (
@@ -31,18 +33,17 @@ func New[T any](options ...Option[T]) *Model[T] {
 		{Name: "Token", Pattern: settings.tokenRegex},
 		{Name: "Delimiter", Pattern: settings.delimiterRegex},
 	})
+	participleLexer := parser.NewParticipleLexer(lexerDefinition)
 
 	var formatter parser.Formatter
-	if settings.formatter != nil {
-		formatter = *settings.formatter
+	if settings.formatterFunc != nil {
+		formatter = settings.formatterFunc(participleLexer)
 	} else {
 		formatter = simpleinputFormatter{
-			lexer:             lexerDefinition,
+			lexer:             participleLexer,
 			selectedTextStyle: settings.selectedTextStyle,
 		}
 	}
-
-	participleLexer := parser.NewParticipleLexer(lexerDefinition)
 
 	m := &Model[T]{
 		lexerinput.NewModel(participleLexer,
@@ -182,7 +183,7 @@ func (m *Model[T]) SetPrompt(prompt string) {
 }
 
 // Init is part of the Input interface.
-// It should not be invoked by end users.
+// It should not be invoked by users of this library.
 func (m *Model[T]) Init() tea.Cmd {
 	return m.lexerModel.Init()
 }
@@ -194,55 +195,55 @@ func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 }
 
 // View is part of the Input interface.
-// It should not be invoked by end users.
+// It should not be invoked by users of this library.
 func (m *Model[T]) View(viewMode input.ViewMode) string {
 	return m.lexerModel.View(viewMode)
 }
 
 // ShouldSelectSuggestion is part of the Input interface.
-// It should not be invoked by end users.
+// It should not be invoked by users of this library.
 func (m *Model[T]) ShouldSelectSuggestion(suggestion suggestion.Suggestion[T]) bool {
 	return m.lexerModel.ShouldSelectSuggestion(suggestion)
 }
 
 // SuggestionRunes is part of the Input interface.
-// It should not be invoked by end users.
+// It should not be invoked by users of this library.
 func (m *Model[T]) SuggestionRunes(runes []rune) []rune {
 	return m.lexerModel.SuggestionRunes(runes)
 }
 
 // OnUpdateFinish is part of the Input interface.
-// It should not be invoked by end users.
+// It should not be invoked by users of this library.
 func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion[T], isSelected bool) tea.Cmd {
 	return m.lexerModel.OnUpdateFinish(msg, suggestion, isSelected)
 }
 
 // OnSuggestionChanged is part of the Input interface.
-// It should not be invoked by end users.
+// It should not be invoked by users of this library.
 func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T]) {
 	m.lexerModel.OnSuggestionChanged(suggestion)
 }
 
 // OnExecutorFinished is part of the Input interface.
-// It should not be invoked by end users.
+// It should not be invoked by users of this library.
 func (m *Model[T]) OnExecutorFinished() {
 	m.lexerModel.OnExecutorFinished()
 }
 
 // OnSuggestionUnselected is part of the Input interface.
-// It should not be invoked by end users.
+// It should not be invoked by users of this library.
 func (m *Model[T]) OnSuggestionUnselected() {
 	m.lexerModel.OnSuggestionUnselected()
 }
 
 // ShouldClearSuggestions is part of the Input interface.
-// It should not be invoked by end users.
+// It should not be invoked by users of this library.
 func (m *Model[T]) ShouldClearSuggestions(prevText []rune, msg tea.KeyMsg) bool {
 	return m.lexerModel.ShouldClearSuggestions(prevText, msg)
 }
 
 // ShouldUnselectSuggestion is part of the Input interface.
-// It should not be invoked by end users.
+// It should not be invoked by users of this library.
 func (m *Model[T]) ShouldUnselectSuggestion(prevText []rune, msg tea.KeyMsg) bool {
 	return m.lexerModel.ShouldUnselectSuggestion(prevText, msg)
 }

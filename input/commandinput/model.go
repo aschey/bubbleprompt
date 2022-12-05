@@ -1,3 +1,5 @@
+// Package commandinput provides an implementation of the input.Input interface.
+// It should be used to build interactive CLI applications.
 package commandinput
 
 import (
@@ -64,6 +66,8 @@ func (f FlagInput) RequiresArg() bool {
 	return len(f.Placeholder.text) > 0
 }
 
+// A Model is an input for handling CLI-style inputs.
+// It provides advanced features such as placeholders and context-aware suggestions.
 type Model[T CmdMetadataAccessor] struct {
 	textinput           textinput.Model
 	commandPlaceholder  []rune
@@ -96,6 +100,7 @@ const (
 	roundDown
 )
 
+// New creates a new model
 func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T] {
 	textinput := textinput.New()
 
@@ -118,18 +123,22 @@ func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T] {
 	return model
 }
 
+// Init is part of the Input interface. It should not be invoked by users of this library.
 func (m *Model[T]) Init() tea.Cmd {
 	return m.textinput.Focus()
 }
 
+// SetFormatters sets the formatters used by the input.
 func (m *Model[T]) SetFormatters(formatters Formatters) {
 	m.formatters = formatters
 }
 
+// Formatters returns the formatters used by the input.
 func (m Model[T]) Formatters() Formatters {
 	return m.formatters
 }
 
+// NewPositionalArg creates a positional arg placeholder for completions.
 func (m *Model[T]) NewPositionalArg(placeholder string) PositionalArg {
 	return PositionalArg{
 		placeholder:      placeholder,
@@ -138,6 +147,7 @@ func (m *Model[T]) NewPositionalArg(placeholder string) PositionalArg {
 	}
 }
 
+// NewPositionalArgs creates multiple positional arg placeholders for completions.
 func (m *Model[T]) NewPositionalArgs(placeholders ...string) []PositionalArg {
 	args := []PositionalArg{}
 	for _, placeholder := range placeholders {
@@ -146,6 +156,7 @@ func (m *Model[T]) NewPositionalArgs(placeholders ...string) []PositionalArg {
 	return args
 }
 
+// NewFlagPlaceholder creates a flag placeholder for completions.
 func (m *Model[T]) NewFlagPlaceholder(placeholder string) FlagPlaceholder {
 	return FlagPlaceholder{
 		text:  placeholder,
@@ -153,6 +164,7 @@ func (m *Model[T]) NewFlagPlaceholder(placeholder string) FlagPlaceholder {
 	}
 }
 
+// ShouldSelectSuggestion is part of the Input interface. It should not be invoked by users of this library.
 func (m *Model[T]) ShouldSelectSuggestion(suggestion suggestion.Suggestion[T]) bool {
 	currentTokenPos := m.CurrentTokenPos()
 	currentToken := m.CurrentToken()
@@ -160,6 +172,7 @@ func (m *Model[T]) ShouldSelectSuggestion(suggestion suggestion.Suggestion[T]) b
 	return m.CursorIndex() == currentTokenPos.End && currentToken == suggestion.Text
 }
 
+// ShouldUnselectSuggestion is part of the Input interface. It should not be invoked by users of this library.
 func (m *Model[T]) ShouldUnselectSuggestion(prevRunes []rune, msg tea.KeyMsg) bool {
 	pos := m.CursorIndex()
 	switch msg.Type {
@@ -183,10 +196,12 @@ func (m *Model[T]) ShouldUnselectSuggestion(prevRunes []rune, msg tea.KeyMsg) bo
 	}
 }
 
+// ShouldClearSuggestions is part of the Input interface. It should not be invoked by users of this library.
 func (m *Model[T]) ShouldClearSuggestions(prevText []rune, msg tea.KeyMsg) bool {
 	return m.isDelimiter(msg.String())
 }
 
+// ArgsBeforeCursor returns the positional arguments before the cursor position.
 func (m *Model[T]) ArgsBeforeCursor() []string {
 	args := []string{}
 	runesBeforeCursor := m.Runes()[:m.CursorIndex()]
@@ -199,6 +214,8 @@ func (m *Model[T]) ArgsBeforeCursor() []string {
 	return args
 }
 
+// CompletedArgsBeforeCursor returns the positional arguments before the cursor that have already been completed.
+// In other words, there needs to be a delimiter after the argument to indicate that the user has finished entering in that argument.
 func (m *Model[T]) CompletedArgsBeforeCursor() []string {
 	args := []string{}
 	runesBeforeCursor := m.Runes()[:m.CursorIndex()]

@@ -21,8 +21,6 @@ type model2 struct {
 	numChoices  int64
 }
 
-//
-
 func (m model2) Complete(promptModel prompt.Model[any]) ([]suggestion.Suggestion[any], error) {
 	if len(m.textInput.Tokens()) > 1 {
 		return nil, nil

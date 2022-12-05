@@ -1,6 +1,12 @@
 <div class="api">
 
-{{ template "import" . -}}
+{{ if eq .Name "main" -}}
+	{{- header .Level .Dirname -}}
+{{- else -}}
+	{{- header .Level .Name -}}
+{{- end -}}
+
+{{- template "import" . -}}
 
 {{- template "doc" .Doc -}}
 
