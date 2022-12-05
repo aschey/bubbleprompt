@@ -34,4 +34,4 @@ linters:
 linters-settings:
   gocyclo:
     # todo: lower this
-    min-complexity: 30
+    min-complexity: 20

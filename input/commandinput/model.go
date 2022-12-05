@@ -46,6 +46,20 @@ type FlagInput struct {
 	Description string
 }
 
+func (f FlagInput) ShortFlag() string {
+	if len(f.Short) > 0 && !strings.HasPrefix(f.Short, "-") {
+		return "-" + f.Short
+	}
+	return f.Short
+}
+
+func (f FlagInput) LongFlag() string {
+	if len(f.Long) > 0 && !strings.HasPrefix(f.Long, "--") {
+		return "--" + f.Long
+	}
+	return f.Long
+}
+
 func (f FlagInput) RequiresArg() bool {
 	return len(f.Placeholder.text) > 0
 }
@@ -223,6 +237,24 @@ func (m *Model[T]) FlagSuggestions(inputStr string, flags []FlagInput, suggestio
 	suggestions := []suggestion.Suggestion[T]{}
 	isLong := strings.HasPrefix(inputStr, "--")
 	isMulti := !isLong && strings.HasPrefix(inputStr, "-") && len(inputRunes) > 1
+
+	for _, flag := range flags {
+		// Don't show any flag suggestions if the current flag requires an arg unless the user skipped the arg and is now typing another flag that does not require an arg
+		if m.shouldSkipFlagSuggestions(flag, inputRunes, isMulti) {
+			return []suggestion.Suggestion[T]{}
+		}
+
+		if ((isLong || flag.Short == "") && strings.HasPrefix(flag.LongFlag(), inputStr)) ||
+			strings.HasPrefix(flag.ShortFlag(), inputStr) || (isMulti && !flag.RequiresArg()) {
+
+			suggestions = append(suggestions, m.getFlagSuggestion(flag, isLong, isMulti, suggestionFunc))
+		}
+	}
+
+	return suggestions
+}
+
+func (m *Model[T]) shouldSkipFlagSuggestions(flag FlagInput, inputRunes []rune, isMulti bool) bool {
 	tokenIndex := m.CurrentTokenPos().Index
 	allTokens := m.Tokens()
 	prevToken := ""
@@ -241,48 +273,37 @@ func (m *Model[T]) FlagSuggestions(inputStr string, flags []FlagInput, suggestio
 	if isMulti {
 		curFlagText = string(inputRunes[len(inputRunes)-1])
 	}
+	return ((isMulti && flag.Short == curFlagText) ||
+		prevToken == flag.ShortFlag() ||
+		prevToken == flag.LongFlag()) && flag.RequiresArg() && (!currentIsFlag || currentToken == flag.ShortFlag() || currentToken == flag.LongFlag())
+}
 
-	for _, flag := range flags {
-		// Don't show any flag suggestions if the current flag requires an arg unless the user skipped the arg and is now typing another flag that does not require an arg
-		if ((isMulti && flag.Short == curFlagText) ||
-			prevToken == "-"+flag.Short ||
-			prevToken == "--"+flag.Long) && flag.RequiresArg() && (!currentIsFlag || currentToken == "-"+flag.Short || currentToken == "--"+flag.Long) {
-			return []suggestion.Suggestion[T]{}
-		}
-
-		long := "--" + flag.Long
-		short := "-" + flag.Short
-		if ((isLong || flag.Short == "") && strings.HasPrefix(long, inputStr)) ||
-			strings.HasPrefix(short, inputStr) || (isMulti && !flag.RequiresArg()) {
-			suggestion := suggestion.Suggestion[T]{
-				Description: flag.Description,
-			}
-			if isLong {
-				suggestion.Text = long
-			} else if isMulti {
-				suggestion.Text = flag.Short
-				// Ensure the suggestion text still has the leading dash for consistency
-				suggestion.SuggestionText = short
-			} else {
-				suggestion.Text = short
-			}
-
-			if suggestionFunc == nil {
-				metadata := *new(T)
-				placeholderField := reflect.ValueOf(&metadata).Elem().FieldByName("FlagPlaceholder")
-				if placeholderField.IsValid() {
-					placeholderField.Set(reflect.ValueOf(flag.Placeholder))
-					suggestion.Metadata = metadata
-				}
-			} else {
-				suggestion.Metadata = suggestionFunc(flag)
-			}
-
-			suggestions = append(suggestions, suggestion)
-		}
+func (m *Model[T]) getFlagSuggestion(flag FlagInput, isLong bool, isMulti bool, suggestionFunc func(FlagInput) T) suggestion.Suggestion[T] {
+	suggestion := suggestion.Suggestion[T]{
+		Description: flag.Description,
+	}
+	if isLong {
+		suggestion.Text = flag.LongFlag()
+	} else if isMulti {
+		suggestion.Text = flag.Short
+		// Ensure the suggestion text still has the leading dash for consistency
+		suggestion.SuggestionText = flag.ShortFlag()
+	} else {
+		suggestion.Text = flag.ShortFlag()
 	}
 
-	return suggestions
+	if suggestionFunc == nil {
+		metadata := *new(T)
+		placeholderField := reflect.ValueOf(&metadata).Elem().FieldByName("FlagPlaceholder")
+		if placeholderField.IsValid() {
+			placeholderField.Set(reflect.ValueOf(flag.Placeholder))
+			suggestion.Metadata = metadata
+		}
+	} else {
+		suggestion.Metadata = suggestionFunc(flag)
+	}
+
+	return suggestion
 }
 
 func (m *Model[T]) getPosArgs(metadata T) []arg {
