@@ -1,5 +1,5 @@
 import CodeBlock from "@theme/CodeBlock";
-import React from "React";
+import React from "react";
 
 export const ExampleCode = ({
   replace,
