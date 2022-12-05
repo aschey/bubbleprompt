@@ -50,55 +50,74 @@ func NewDropdownSuggestionModel[T any](textInput input.Input[T]) *Model[T] {
 	}
 }
 
-func (c *Model[T]) Init() tea.Cmd {
+func (m *Model[T]) Init() tea.Cmd {
 	// Since the user hasn't typed anything on init, call the completer with empty text
-	return c.ResetSuggestions()
+	return m.ResetSuggestions()
 }
 
-func (c *Model[T]) Update(msg tea.Msg) tea.Cmd {
+func (m *Model[T]) Update(msg tea.Msg) tea.Cmd {
 	switch msg := msg.(type) {
 	case suggestion.SuggestionMsg[T]:
-		if c.ignoreCount > 0 {
+		if m.ignoreCount > 0 {
 			// Request was in progress when resetSuggestions was called, don't update suggestions
-			c.ignoreCount--
+			m.ignoreCount--
 		} else {
-			c.state = idle
+			m.state = idle
 			if msg.Suggestions == nil {
-				c.suggestions = []suggestion.Suggestion[T]{}
+				m.suggestions = []suggestion.Suggestion[T]{}
 			} else {
-				c.suggestions = msg.Suggestions
+				m.suggestions = msg.Suggestions
 			}
 
-			c.err = msg.Err
+			m.err = msg.Err
 			// Selection is out of range of the current view or the key is no longer present
-			if c.scrollPosition > len(c.suggestions)-1 || c.SelectedSuggestion() == nil {
-				c.UnselectSuggestion()
+			if m.scrollPosition > len(m.suggestions)-1 || m.SelectedSuggestion() == nil {
+				m.UnselectSuggestion()
 			}
 
-			if c.queueNext {
+			if m.queueNext {
 				// Start another update if it was requested while running
-				c.queueNext = false
-				return c.UpdateSuggestions()
+				m.queueNext = false
+				return m.UpdateSuggestions()
 			}
 		}
 	case suggestion.PeriodicCompleterMsg:
-		if !c.canUpdateSuggestions() {
+		if !m.canUpdateSuggestions() {
 			return suggestion.PeriodicCompleter(msg.NextTrigger)
 		}
-		return tea.Batch(c.forceUpdateSuggestions(), suggestion.PeriodicCompleter(msg.NextTrigger))
+		return tea.Batch(m.forceUpdateSuggestions(), suggestion.PeriodicCompleter(msg.NextTrigger))
 	case suggestion.OneShotCompleterMsg:
-		if !c.canUpdateSuggestions() {
+		if !m.canUpdateSuggestions() {
 			return nil
 		}
-		return c.forceUpdateSuggestions()
+		return m.forceUpdateSuggestions()
 	case tea.KeyMsg:
-		c.lastKeyMsg = msg
-		if msg.Type == tea.KeyTab {
+		m.lastKeyMsg = msg
+		switch msg.Type {
+		case tea.KeyTab:
 			// Tab suggestion may have changed text so reset previous value
-			c.prevRunes = []rune("")
+			m.prevRunes = []rune("")
+			m.NextSuggestion()
+			m.updateIfUnselected()
+		case tea.KeyUp:
+			m.PreviousSuggestion()
+			m.updateIfUnselected()
+		case tea.KeyDown:
+			m.NextSuggestion()
+			m.updateIfUnselected()
 		}
 	}
 	return nil
+}
+
+func (m *Model[T]) updateIfUnselected() tea.Cmd {
+	if m.IsSuggestionSelected() {
+		// Set the input to the suggestion's selected text
+		return nil
+	} else {
+		// Need to update suggestions since we changed the text and the cursor position
+		return m.UpdateSuggestions()
+	}
 }
 
 func (c Model[T]) canUpdateSuggestions() bool {
@@ -135,17 +154,17 @@ func (c Model[T]) ScrollbarBounds() (int, int) {
 	return scrollbarTop, scrollbarTop + scrollbarHeight
 }
 
-func (c *Model[T]) UpdateSuggestions() tea.Cmd {
-	return c.updateSuggestionsCmd(false)
+func (m *Model[T]) UpdateSuggestions() tea.Cmd {
+	return m.updateSuggestionsCmd(false)
 }
 
-func (c *Model[T]) forceUpdateSuggestions() tea.Cmd {
-	return c.updateSuggestionsCmd(true)
+func (m *Model[T]) forceUpdateSuggestions() tea.Cmd {
+	return m.updateSuggestionsCmd(true)
 }
 
-func (c *Model[T]) updateSuggestionsCmd(forceUpdate bool) tea.Cmd {
-	runes := c.textInput.Runes()
-	cursorPos := c.textInput.CursorIndex()
+func (m *Model[T]) updateSuggestionsCmd(forceUpdate bool) tea.Cmd {
+	runes := m.textInput.Runes()
+	cursorPos := m.textInput.CursorIndex()
 
 	runesBeforeCursor := runes
 	if cursorPos < len(runes) {
@@ -154,95 +173,95 @@ func (c *Model[T]) updateSuggestionsCmd(forceUpdate bool) tea.Cmd {
 
 	// No need to queue another update if the text hasn't changed
 	// Don't trim whitespace here because cursor location affects suggestions
-	if !forceUpdate && string(runesBeforeCursor) == string(c.prevRunes) {
+	if !forceUpdate && string(runesBeforeCursor) == string(m.prevRunes) {
 		return nil
 	}
 
 	// Text has changed, but the completer is already running
 	// Run again once the current iteration has finished
-	if c.state == running {
-		c.queueNext = true
+	if m.state == running {
+		m.queueNext = true
 		return nil
 	}
 
-	c.state = running
-	c.prevRunes = runesBeforeCursor
+	m.state = running
+	m.prevRunes = runesBeforeCursor
 
 	return suggestion.Complete
 }
 
-func (c *Model[T]) ResetSuggestions() tea.Cmd {
-	if c.state == running {
+func (m *Model[T]) ResetSuggestions() tea.Cmd {
+	if m.state == running {
 		// If suggestion is currently running, ignore the next value and trigger another update
 		// This helps speed up getting the next valid result for slow completers
-		c.ignoreCount++
+		m.ignoreCount++
 	}
 
-	c.state = running
-	c.prevRunes = []rune("")
+	m.state = running
+	m.prevRunes = []rune("")
 
 	return suggestion.Complete
 }
 
-func (c *Model[T]) UnselectSuggestion() {
-	c.selectedKey = nil
-	c.scrollPosition = 0
-	c.prevScroll = 0
-	c.textInput.OnSuggestionUnselected()
+func (m *Model[T]) UnselectSuggestion() {
+	m.selectedKey = nil
+	m.scrollPosition = 0
+	m.prevScroll = 0
+	m.textInput.OnSuggestionUnselected()
 }
 
-func (c *Model[T]) ClearSuggestions() {
-	c.UnselectSuggestion()
-	c.suggestions = []suggestion.Suggestion[T]{}
+func (m *Model[T]) ClearSuggestions() {
+	m.UnselectSuggestion()
+	m.suggestions = []suggestion.Suggestion[T]{}
 }
 
-func (c *Model[T]) SelectSuggestion(suggestion suggestion.Suggestion[T]) {
-	c.selectedKey = suggestion.Key()
-	c.textInput.OnSuggestionChanged(suggestion)
+func (m *Model[T]) SelectSuggestion(suggestion suggestion.Suggestion[T]) {
+	m.selectedKey = suggestion.Key()
+	m.textInput.OnSuggestionChanged(suggestion)
 }
 
-func (c *Model[T]) IsSuggestionSelected() bool {
-	return c.selectedKey != nil
+func (m *Model[T]) IsSuggestionSelected() bool {
+	return m.selectedKey != nil
 }
 
-func (c *Model[T]) NextSuggestion() {
-	if len(c.suggestions) == 0 {
+func (m *Model[T]) NextSuggestion() {
+	if len(m.suggestions) == 0 {
 		return
 	}
-	index := c.SelectedIndex()
-	if index < len(c.suggestions)-1 {
-		c.prevScroll = c.scrollPosition
-		c.SelectSuggestion(c.suggestions[index+1])
-		if index+1 >= c.scrollPosition+c.maxSuggestions {
-			c.scrollPosition++
+	index := m.SelectedIndex()
+	if index < len(m.suggestions)-1 {
+		m.prevScroll = m.scrollPosition
+		m.SelectSuggestion(m.suggestions[index+1])
+		if index+1 >= m.scrollPosition+m.maxSuggestions {
+			m.scrollPosition++
 		}
 
 	} else {
-		c.UnselectSuggestion()
+		m.UnselectSuggestion()
 	}
 }
 
-func (c *Model[T]) PreviousSuggestion() {
-	if len(c.suggestions) == 0 {
+func (m *Model[T]) PreviousSuggestion() {
+	if len(m.suggestions) == 0 {
 		return
 	}
 
-	index := c.SelectedIndex()
+	index := m.SelectedIndex()
 	if index > 0 {
-		c.prevScroll = c.scrollPosition
-		c.SelectSuggestion(c.suggestions[index-1])
-		if index-1 < c.scrollPosition {
-			c.scrollPosition--
+		m.prevScroll = m.scrollPosition
+		m.SelectSuggestion(m.suggestions[index-1])
+		if index-1 < m.scrollPosition {
+			m.scrollPosition--
 		}
 	} else {
-		c.UnselectSuggestion()
+		m.UnselectSuggestion()
 	}
 }
 
-func (c *Model[T]) SelectedIndex() int {
-	if c.IsSuggestionSelected() {
-		for i, suggestion := range c.suggestions {
-			if *suggestion.Key() == *c.selectedKey {
+func (m *Model[T]) SelectedIndex() int {
+	if m.IsSuggestionSelected() {
+		for i, suggestion := range m.suggestions {
+			if *suggestion.Key() == *m.selectedKey {
 				return i
 			}
 		}
@@ -250,10 +269,10 @@ func (c *Model[T]) SelectedIndex() int {
 	return -1
 }
 
-func (c *Model[T]) SelectedSuggestion() *suggestion.Suggestion[T] {
-	if c.IsSuggestionSelected() {
-		for _, suggestion := range c.suggestions {
-			if *suggestion.Key() == *c.selectedKey {
+func (m *Model[T]) SelectedSuggestion() *suggestion.Suggestion[T] {
+	if m.IsSuggestionSelected() {
+		for _, suggestion := range m.suggestions {
+			if *suggestion.Key() == *m.selectedKey {
 				return &suggestion
 			}
 		}
@@ -372,4 +391,15 @@ func (m *Model[T]) Scrollbar() string {
 
 func (m *Model[T]) ScrollbarThumb() string {
 	return m.scrollbarThumb
+}
+
+func (m *Model[T]) ShouldChangeListPosition(msg tea.Msg) bool {
+	if key, ok := msg.(tea.KeyMsg); ok {
+		switch key.Type {
+		case tea.KeyUp, tea.KeyDown, tea.KeyTab:
+			return true
+		}
+	}
+
+	return false
 }

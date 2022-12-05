@@ -32,4 +32,5 @@ type Manager[T any] interface {
 	Scrollbar() string
 	ScrollbarThumb() string
 	Render(paddingSize int, formatters formatter.Formatters) string
+	ShouldChangeListPosition(msg tea.Msg) bool
 }

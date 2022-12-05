@@ -20,7 +20,8 @@ go get github.com/aschey/bubbleprompt@main
 
 ## Concepts
 
-Bubbleprompt consists of three distinct components, the **input**, **input handler**, and **renderer**. Each plays a different part in the application's lifecycle.
+Bubbleprompt consists of four distinct components, the **input**, **input handler**, **suggestion manager**, and **renderer**.
+Each plays a different part in the application's lifecycle.
 
 ### Input
 
@@ -45,6 +46,12 @@ It consists of three methods:
   It should parse the text that the user entered and return a [Bubbletea model](https://github.com/charmbracelet/bubbletea/tree/master/tutorials/basics#the-model).
   Bubbleprompt will then pause and allow the new model to take over the event loop until it returns `tea.Quit`.
 - **Update** - This is the standard update method used in the standard Bubbletea event loop.
+
+### Suggestion manager
+
+A **suggestion manager** handles the logic reponsible for rendering the suggestion list.
+It fulfills the [Manager](https://github.com/aschey/bubbleprompt/blob/main/suggestion/manager.go) interface.
+Bubbleprompt provides one implementation which renders the suggestions in a dropdown list below the input.
 
 ### Renderer
 

@@ -54,6 +54,10 @@ func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmd = m.textInput.OnUpdateStart(msg)
 	cmds = append(cmds, cmd)
 
+	if m.suggestionManager.ShouldChangeListPosition(msg) {
+		m.saveCurrentInput()
+	}
+
 	cmds = append(cmds, m.suggestionManager.Update(msg))
 
 	// Scroll to bottom if the user typed something
@@ -113,9 +117,6 @@ func (m *Model[T]) updateCompleting(msg tea.Msg, cmds []tea.Cmd, prevRunes []run
 			// with the executor model
 			shutdown = true
 			return append(cmds, tea.Quit), scrollToBottom
-		// Select next/previous list entry
-		case tea.KeyUp, tea.KeyDown, tea.KeyTab:
-			cmds = m.updateChosenListEntry(msg, cmds)
 
 		case tea.KeyEnter:
 			cmds = m.submit(msg, cmds)
@@ -184,7 +185,7 @@ func (m *Model[T]) updateWindowSizeMsg(msg tea.WindowSizeMsg) {
 	}
 }
 
-func (m *Model[T]) updateChosenListEntry(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
+func (m *Model[T]) saveCurrentInput() {
 	if !m.suggestionManager.IsSuggestionSelected() {
 		// No suggestion currently suggested, store the last cursor position before selecting
 		// so we can restore it later
@@ -194,20 +195,6 @@ func (m *Model[T]) updateChosenListEntry(msg tea.KeyMsg, cmds []tea.Cmd) []tea.C
 	m.textInput.SetValue(string(m.typedRunes))
 	// Make sure to set the cursor AFTER setting the value or it may get overwritten
 	m.textInput.SetCursor(m.lastTypedCursorPosition)
-
-	if msg.Type == tea.KeyUp {
-		m.suggestionManager.PreviousSuggestion()
-	} else {
-		m.suggestionManager.NextSuggestion()
-	}
-
-	if m.suggestionManager.IsSuggestionSelected() {
-		// Set the input to the suggestion's selected text
-		return nil
-	} else {
-		// Need to update suggestions since we changed the text and the cursor position
-		return append(cmds, m.suggestionManager.UpdateSuggestions())
-	}
 }
 
 func (m *Model[T]) updateExecutor(executor *executionManager) {
