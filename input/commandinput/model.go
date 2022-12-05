@@ -100,7 +100,7 @@ const (
 	roundDown
 )
 
-// New creates a new model
+// New creates a new model.
 func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T] {
 	textinput := textinput.New()
 
