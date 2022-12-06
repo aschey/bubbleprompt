@@ -4,6 +4,7 @@
 [![goreport](https://goreportcard.com/badge/github.com/aschey/bubbleprompt)](https://goreportcard.com/report/github.com/aschey/bubbleprompt)
 [![codecov](https://codecov.io/gh/aschey/bubbleprompt/branch/main/graph/badge.svg?token=NWS6Q3W4FP)](https://codecov.io/gh/aschey/bubbleprompt)
 ![Lines of Code](https://aschey.tech/tokei/github/aschey/bubbleprompt)
+[![insights](https://img.shields.io/badge/open%20source-insights-purple)](https://deps.dev/go/github.com%2Faschey%2Fbubbleprompt)
 
 # Bubbleprompt
 
