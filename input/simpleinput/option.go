@@ -3,6 +3,7 @@ package simpleinput
 import (
 	"github.com/aschey/bubbleprompt/input/lexerinput"
 	"github.com/aschey/bubbleprompt/parser"
+	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -39,9 +40,8 @@ func WithFormatter[T any](formatterFunc func(lexer parser.Lexer) parser.Formatte
 		settings.formatterFunc = formatterFunc
 	}
 }
-
-func WithLexerOptions[T any](options ...lexerinput.Option[T]) Option[T] {
+func WithCursorMode[T any](cursorMode cursor.Mode) Option[T] {
 	return func(settings *settings[T]) {
-		settings.lexerOptions = options
+		settings.lexerOptions = append(settings.lexerOptions, lexerinput.WithCursorMode[T](cursorMode))
 	}
 }

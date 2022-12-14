@@ -2,6 +2,7 @@ package simpleinput_test
 
 import (
 	"github.com/aschey/bubbleprompt/input/simpleinput"
+	"github.com/charmbracelet/bubbles/cursor"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -26,4 +27,8 @@ func ExampleWithTokenRegex() {
 func ExampleWithSelectedTextStyle() {
 	style := lipgloss.NewStyle().Foreground(lipgloss.Color("1")).Bold(true)
 	simpleinput.New(simpleinput.WithSelectedTextStyle[any](style))
+}
+
+func ExampleWithCursorMode() {
+	simpleinput.New(simpleinput.WithCursorMode[any](cursor.CursorStatic))
 }

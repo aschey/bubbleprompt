@@ -142,9 +142,9 @@ func main() {
   - [func \(m \*Model\[T\]\) WordTokens\(\) \[\]input.Token](<#func-modelt-wordtokens>)
   - [func \(m \*Model\[T\]\) WordTokensBeforeCursor\(\) \[\]input.Token](<#func-modelt-wordtokensbeforecursor>)
 - [type Option](<#type-option>)
+  - [func WithCursorMode[T any](cursorMode cursor.Mode) Option[T]](<#func-withcursormode>)
   - [func WithDelimiterRegex[T any](delimiterRegex string) Option[T]](<#func-withdelimiterregex>)
   - [func WithFormatter[T any](formatterFunc func(lexer parser.Lexer) parser.Formatter) Option[T]](<#func-withformatter>)
-  - [func WithLexerOptions[T any](options ...lexerinput.Option[T]) Option[T]](<#func-withlexeroptions>)
   - [func WithSelectedTextStyle[T any](style lipgloss.Style) Option[T]](<#func-withselectedtextstyle>)
   - [func WithTokenRegex[T any](tokenRegex string) Option[T]](<#func-withtokenregex>)
 
@@ -415,13 +415,38 @@ func (m *Model[T]) WordTokensBeforeCursor() []input.Token
 
 WordTokensBeforeCursor returns the tokenized input up to the cursor position. This does not include delimiter tokens.
 
-## type [Option](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/option.go#L17>)
+## type [Option](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/option.go#L18>)
 
 ```go
 type Option[T any] func(settings *settings[T])
 ```
 
-### func [WithDelimiterRegex](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/option.go#L19>)
+### func [WithCursorMode](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/option.go#L43>)
+
+```go
+func WithCursorMode[T any](cursorMode cursor.Mode) Option[T]
+```
+
+<details><summary>Example</summary>
+<p>
+
+```go
+package main
+
+import (
+	"github.com/aschey/bubbleprompt/input/simpleinput"
+	"github.com/charmbracelet/bubbles/cursor"
+)
+
+func main() {
+	simpleinput.New(simpleinput.WithCursorMode[any](cursor.CursorStatic))
+}
+```
+
+</p>
+</details>
+
+### func [WithDelimiterRegex](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/option.go#L20>)
 
 ```go
 func WithDelimiterRegex[T any](delimiterRegex string) Option[T]
@@ -450,7 +475,7 @@ func main() {
 </p>
 </details>
 
-### func [WithFormatter](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/option.go#L37>)
+### func [WithFormatter](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/option.go#L38>)
 
 ```go
 func WithFormatter[T any](formatterFunc func(lexer parser.Lexer) parser.Formatter) Option[T]
@@ -510,13 +535,7 @@ func main() {
 </p>
 </details>
 
-### func [WithLexerOptions](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/option.go#L43>)
-
-```go
-func WithLexerOptions[T any](options ...lexerinput.Option[T]) Option[T]
-```
-
-### func [WithSelectedTextStyle](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/option.go#L31>)
+### func [WithSelectedTextStyle](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/option.go#L32>)
 
 ```go
 func WithSelectedTextStyle[T any](style lipgloss.Style) Option[T]
@@ -542,7 +561,7 @@ func main() {
 </p>
 </details>
 
-### func [WithTokenRegex](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/option.go#L25>)
+### func [WithTokenRegex](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/option.go#L26>)
 
 ```go
 func WithTokenRegex[T any](tokenRegex string) Option[T]

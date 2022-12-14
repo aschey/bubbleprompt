@@ -235,6 +235,7 @@ func (m *Model[T]) CompletedArgsBeforeCursor() []string {
 	return args
 }
 
+// OnUpdateStart is part of the Input interface. It should not be invoked by users of this library.
 func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
 	m.textinput, cmd = m.textinput.Update(msg)
@@ -249,6 +250,7 @@ func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	return cmd
 }
 
+// FlagSuggestions generates a list of [suggestion.Suggestion]s.
 func (m *Model[T]) FlagSuggestions(inputStr string, flags []FlagInput, suggestionFunc func(FlagInput) T) []suggestion.Suggestion[T] {
 	inputRunes := []rune(inputStr)
 	suggestions := []suggestion.Suggestion[T]{}

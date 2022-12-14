@@ -482,21 +482,21 @@ type Model[T CmdMetadataAccessor] struct {
 func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T]
 ```
 
-New creates a new model
+New creates a new model.
 
-### func \(Model\[T\]\) [AllTokensBeforeCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L524>)
+### func \(Model\[T\]\) [AllTokensBeforeCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L526>)
 
 ```go
 func (m Model[T]) AllTokensBeforeCursor() []input.Token
 ```
 
-### func \(Model\[T\]\) [AllValues](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L554>)
+### func \(Model\[T\]\) [AllValues](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L556>)
 
 ```go
 func (m Model[T]) AllValues() []string
 ```
 
-### func \(Model\[T\]\) [AllValuesBeforeCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L531>)
+### func \(Model\[T\]\) [AllValuesBeforeCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L533>)
 
 ```go
 func (m Model[T]) AllValuesBeforeCursor() []string
@@ -510,19 +510,19 @@ func (m *Model[T]) ArgsBeforeCursor() []string
 
 ArgsBeforeCursor returns the positional arguments before the cursor position.
 
-### func \(\*Model\[T\]\) [Blur](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L709>)
+### func \(\*Model\[T\]\) [Blur](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L711>)
 
 ```go
 func (m *Model[T]) Blur()
 ```
 
-### func \(\*Model\[T\]\) [CommandBeforeCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L492>)
+### func \(\*Model\[T\]\) [CommandBeforeCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L494>)
 
 ```go
 func (m *Model[T]) CommandBeforeCursor() string
 ```
 
-### func \(Model\[T\]\) [CommandCompleted](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L701>)
+### func \(Model\[T\]\) [CommandCompleted](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L703>)
 
 ```go
 func (m Model[T]) CommandCompleted() bool
@@ -536,67 +536,69 @@ func (m *Model[T]) CompletedArgsBeforeCursor() []string
 
 CompletedArgsBeforeCursor returns the positional arguments before the cursor that have already been completed. In other words, there needs to be a delimiter after the argument to indicate that the user has finished entering in that argument.
 
-### func \(Model\[T\]\) [CurrentToken](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L680>)
+### func \(Model\[T\]\) [CurrentToken](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L682>)
 
 ```go
 func (m Model[T]) CurrentToken() string
 ```
 
-### func \(Model\[T\]\) [CurrentTokenBeforeCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L658>)
+### func \(Model\[T\]\) [CurrentTokenBeforeCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L660>)
 
 ```go
 func (m Model[T]) CurrentTokenBeforeCursor() string
 ```
 
-### func \(Model\[T\]\) [CurrentTokenBeforeCursorRoundDown](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L662>)
+### func \(Model\[T\]\) [CurrentTokenBeforeCursorRoundDown](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L664>)
 
 ```go
 func (m Model[T]) CurrentTokenBeforeCursorRoundDown() string
 ```
 
-### func \(Model\[T\]\) [CurrentTokenPos](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L613>)
+### func \(Model\[T\]\) [CurrentTokenPos](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L615>)
 
 ```go
 func (m Model[T]) CurrentTokenPos() TokenPos
 ```
 
-### func \(Model\[T\]\) [CurrentTokenPosRoundDown](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L617>)
+### func \(Model\[T\]\) [CurrentTokenPosRoundDown](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L619>)
 
 ```go
 func (m Model[T]) CurrentTokenPosRoundDown() TokenPos
 ```
 
-### func \(Model\[T\]\) [CurrentTokenRoundDown](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L684>)
+### func \(Model\[T\]\) [CurrentTokenRoundDown](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L686>)
 
 ```go
 func (m Model[T]) CurrentTokenRoundDown() string
 ```
 
-### func \(Model\[T\]\) [CursorIndex](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L563>)
+### func \(Model\[T\]\) [CursorIndex](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L565>)
 
 ```go
 func (m Model[T]) CursorIndex() int
 ```
 
-### func \(Model\[T\]\) [CursorOffset](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L567>)
+### func \(Model\[T\]\) [CursorOffset](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L569>)
 
 ```go
 func (m Model[T]) CursorOffset() int
 ```
 
-### func \(\*Model\[T\]\) [FlagSuggestions](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L252>)
+### func \(\*Model\[T\]\) [FlagSuggestions](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L254>)
 
 ```go
 func (m *Model[T]) FlagSuggestions(inputStr string, flags []FlagInput, suggestionFunc func(FlagInput) T) []suggestion.Suggestion[T]
 ```
 
-### func \(\*Model\[T\]\) [Focus](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L476>)
+FlagSuggestions generates a list of \[suggestion.Suggestion\]s.
+
+### func \(\*Model\[T\]\) [Focus](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L478>)
 
 ```go
 func (m *Model[T]) Focus() tea.Cmd
 ```
 
-### func \(Model\[T\]\) [Focused](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L581>)
+### func \(Model\[T\]\) [Focused](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L583>)
 
 ```go
 func (m Model[T]) Focused() bool
@@ -610,7 +612,7 @@ func (m Model[T]) Formatters() Formatters
 
 Formatters returns the formatters used by the input.
 
-### func \(Model\[T\]\) [HasArgs](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L676>)
+### func \(Model\[T\]\) [HasArgs](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L678>)
 
 ```go
 func (m Model[T]) HasArgs() bool
@@ -624,7 +626,7 @@ func (m *Model[T]) Init() tea.Cmd
 
 Init is part of the Input interface. It should not be invoked by users of this library.
 
-### func \(Model\[T\]\) [LastArg](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L693>)
+### func \(Model\[T\]\) [LastArg](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L695>)
 
 ```go
 func (m Model[T]) LastArg() *ident
@@ -654,67 +656,69 @@ func (m *Model[T]) NewPositionalArgs(placeholders ...string) []PositionalArg
 
 NewPositionalArgs creates multiple positional arg placeholders for completions.
 
-### func \(\*Model\[T\]\) [OnExecutorFinished](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L713>)
+### func \(\*Model\[T\]\) [OnExecutorFinished](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L715>)
 
 ```go
 func (m *Model[T]) OnExecutorFinished()
 ```
 
-### func \(\*Model\[T\]\) [OnSuggestionChanged](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L421>)
+### func \(\*Model\[T\]\) [OnSuggestionChanged](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L423>)
 
 ```go
 func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T])
 ```
 
-### func \(\*Model\[T\]\) [OnSuggestionUnselected](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L464>)
+### func \(\*Model\[T\]\) [OnSuggestionUnselected](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L466>)
 
 ```go
 func (m *Model[T]) OnSuggestionUnselected()
 ```
 
-### func \(\*Model\[T\]\) [OnUpdateFinish](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L344>)
+### func \(\*Model\[T\]\) [OnUpdateFinish](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L346>)
 
 ```go
 func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion[T], isSelected bool) tea.Cmd
 ```
 
-### func \(\*Model\[T\]\) [OnUpdateStart](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L238>)
+### func \(\*Model\[T\]\) [OnUpdateStart](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L239>)
 
 ```go
 func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd
 ```
 
-### func \(\*Model\[T\]\) [ParsedValue](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L488>)
+OnUpdateStart is part of the Input interface. It should not be invoked by users of this library.
+
+### func \(\*Model\[T\]\) [ParsedValue](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L490>)
 
 ```go
 func (m *Model[T]) ParsedValue() Statement
 ```
 
-### func \(\*Model\[T\]\) [Prompt](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L585>)
+### func \(\*Model\[T\]\) [Prompt](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L587>)
 
 ```go
 func (m *Model[T]) Prompt() string
 ```
 
-### func \(\*Model\[T\]\) [ResetValue](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L511>)
+### func \(\*Model\[T\]\) [ResetValue](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L513>)
 
 ```go
 func (m *Model[T]) ResetValue()
 ```
 
-### func \(\*Model\[T\]\) [Runes](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L484>)
+### func \(\*Model\[T\]\) [Runes](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L486>)
 
 ```go
 func (m *Model[T]) Runes() []rune
 ```
 
-### func \(\*Model\[T\]\) [SetCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L573>)
+### func \(\*Model\[T\]\) [SetCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L575>)
 
 ```go
 func (m *Model[T]) SetCursor(pos int)
 ```
 
-### func \(\*Model\[T\]\) [SetCursorMode](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L577>)
+### func \(\*Model\[T\]\) [SetCursorMode](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L579>)
 
 ```go
 func (m *Model[T]) SetCursorMode(cursorMode cursor.Mode) tea.Cmd
@@ -728,13 +732,13 @@ func (m *Model[T]) SetFormatters(formatters Formatters)
 
 SetFormatters sets the formatters used by the input.
 
-### func \(\*Model\[T\]\) [SetPrompt](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L589>)
+### func \(\*Model\[T\]\) [SetPrompt](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L591>)
 
 ```go
 func (m *Model[T]) SetPrompt(prompt string)
 ```
 
-### func \(\*Model\[T\]\) [SetValue](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L501>)
+### func \(\*Model\[T\]\) [SetValue](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L503>)
 
 ```go
 func (m *Model[T]) SetValue(s string)
@@ -764,25 +768,25 @@ func (m *Model[T]) ShouldUnselectSuggestion(prevRunes []rune, msg tea.KeyMsg) bo
 
 ShouldUnselectSuggestion is part of the Input interface. It should not be invoked by users of this library.
 
-### func \(\*Model\[T\]\) [SuggestionRunes](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L468>)
+### func \(\*Model\[T\]\) [SuggestionRunes](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L470>)
 
 ```go
 func (m *Model[T]) SuggestionRunes(runes []rune) []rune
 ```
 
-### func \(Model\[T\]\) [Tokens](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L520>)
+### func \(Model\[T\]\) [Tokens](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L522>)
 
 ```go
 func (m Model[T]) Tokens() []input.Token
 ```
 
-### func \(\*Model\[T\]\) [Value](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L480>)
+### func \(\*Model\[T\]\) [Value](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L482>)
 
 ```go
 func (m *Model[T]) Value() string
 ```
 
-### func \(Model\[T\]\) [View](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L715>)
+### func \(Model\[T\]\) [View](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L717>)
 
 ```go
 func (m Model[T]) View(viewMode input.ViewMode) string

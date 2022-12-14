@@ -8,15 +8,6 @@ import (
 	"github.com/mattn/go-runewidth"
 )
 
-type Datatype int
-
-const (
-	Bool Datatype = iota
-	String
-	Int
-	Float
-)
-
 type Suggestion[T any] struct {
 	Text           string
 	SuggestionText string
