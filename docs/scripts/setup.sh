@@ -1,1 +1,1 @@
-go install github.com/robertkrimen/godocdown/godocdown
+go install github.com/princjef/gomarkdoc/cmd/gomarkdoc@latest
