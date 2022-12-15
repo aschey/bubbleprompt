@@ -8,7 +8,8 @@
 import "github.com/aschey/bubbleprompt/input/simpleinput"
 ```
 
-Package simpleinput provides an implementation of the input.Input interface. It should be used for basic cases without the need for structured or cli\-style input
+Package simpleinput provides an implementation of the [input.Input](/input/API#type-input) interface.
+It should be used for basic cases without the need for structured or cli-style input
 
 <details><summary>Example</summary>
 <p>
@@ -151,7 +152,7 @@ func main() {
 
 ## type [Model](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L17-L19>)
 
-A Model is an input for handling simple token\-based inputs without any special parsing required.
+A Model is an input for handling simple token-based inputs without any special parsing required.
 
 ```go
 type Model[T any] struct {
@@ -189,7 +190,8 @@ CurrentToken returns the token under the cursor.
 func (m *Model[T]) CurrentTokenBeforeCursor() string
 ```
 
-CurrentTokenBeforeCursor returns the portion of the token under the cursor that comes before the cursor position.
+CurrentTokenBeforeCursor returns the portion of the token under the cursor
+that comes before the cursor position.
 
 ### func \(\*Model\[T\]\) [CursorIndex](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L161>)
 
@@ -197,7 +199,8 @@ CurrentTokenBeforeCursor returns the portion of the token under the cursor that 
 func (m *Model[T]) CursorIndex() int
 ```
 
-CursorIndex returns the cursor index in terms of number of unicode characters. Use this to calculate input lengths in terms of number of characters entered.
+CursorIndex returns the cursor index in terms of number of unicode characters.
+Use this to calculate input lengths in terms of number of characters entered.
 
 ### func \(\*Model\[T\]\) [CursorOffset](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L155>)
 
@@ -205,7 +208,9 @@ CursorIndex returns the cursor index in terms of number of unicode characters. U
 func (m *Model[T]) CursorOffset() int
 ```
 
-CursorOffset returns the visual offset of the cursor in terms of number of terminal cells. Use this for calculating visual dimensions such as input width/height.
+CursorOffset returns the visual offset of the cursor in terms
+of number of terminal cells. Use this for calculating visual dimensions
+such as input width/height.
 
 ### func \(\*Model\[T\]\) [Focus](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L116>)
 
@@ -229,7 +234,8 @@ Focused returns whether the keyboard is focused on the input.
 func (m *Model[T]) Init() tea.Cmd
 ```
 
-Init is part of the Input interface. It should not be invoked by users of this library.
+Init is part of the Input interface.
+It should not be invoked by users of this library.
 
 ### func \(\*Model\[T\]\) [OnExecutorFinished](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L229>)
 
@@ -237,7 +243,8 @@ Init is part of the Input interface. It should not be invoked by users of this l
 func (m *Model[T]) OnExecutorFinished()
 ```
 
-OnExecutorFinished is part of the Input interface. It should not be invoked by users of this library.
+OnExecutorFinished is part of the Input interface.
+It should not be invoked by users of this library.
 
 ### func \(\*Model\[T\]\) [OnSuggestionChanged](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L223>)
 
@@ -245,7 +252,8 @@ OnExecutorFinished is part of the Input interface. It should not be invoked by u
 func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T])
 ```
 
-OnSuggestionChanged is part of the Input interface. It should not be invoked by users of this library.
+OnSuggestionChanged is part of the Input interface.
+It should not be invoked by users of this library.
 
 ### func \(\*Model\[T\]\) [OnSuggestionUnselected](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L235>)
 
@@ -253,7 +261,8 @@ OnSuggestionChanged is part of the Input interface. It should not be invoked by 
 func (m *Model[T]) OnSuggestionUnselected()
 ```
 
-OnSuggestionUnselected is part of the Input interface. It should not be invoked by users of this library.
+OnSuggestionUnselected is part of the Input interface.
+It should not be invoked by users of this library.
 
 ### func \(\*Model\[T\]\) [OnUpdateFinish](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L217>)
 
@@ -261,7 +270,8 @@ OnSuggestionUnselected is part of the Input interface. It should not be invoked 
 func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion[T], isSelected bool) tea.Cmd
 ```
 
-OnUpdateFinish is part of the Input interface. It should not be invoked by users of this library.
+OnUpdateFinish is part of the Input interface.
+It should not be invoked by users of this library.
 
 ### func \(\*Model\[T\]\) [OnUpdateStart](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L193>)
 
@@ -269,7 +279,8 @@ OnUpdateFinish is part of the Input interface. It should not be invoked by users
 func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd
 ```
 
-OnUpdateStart is part of the Input interface. It  should not be invoked by end users.
+OnUpdateStart is part of the Input interface.
+It  should not be invoked by end users.
 
 ### func \(\*Model\[T\]\) [Prompt](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L176>)
 
@@ -293,7 +304,9 @@ ResetValue clears the input.
 func (m *Model[T]) Runes() []rune
 ```
 
-Runes returns the raw text entered by the user as a list of runes. This is useful for indexing and length checks because doing these operations on strings does not work well with some unicode characters.
+Runes returns the raw text entered by the user as a list of runes.
+This is useful for indexing and length checks because doing these
+operations on strings does not work well with some unicode characters.
 
 ### func \(\*Model\[T\]\) [SetCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L166>)
 
@@ -333,7 +346,8 @@ SetValue sets the text of the input.
 func (m *Model[T]) ShouldClearSuggestions(prevText []rune, msg tea.KeyMsg) bool
 ```
 
-ShouldClearSuggestions is part of the Input interface. It should not be invoked by users of this library.
+ShouldClearSuggestions is part of the Input interface.
+It should not be invoked by users of this library.
 
 ### func \(\*Model\[T\]\) [ShouldSelectSuggestion](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L205>)
 
@@ -341,7 +355,8 @@ ShouldClearSuggestions is part of the Input interface. It should not be invoked 
 func (m *Model[T]) ShouldSelectSuggestion(suggestion suggestion.Suggestion[T]) bool
 ```
 
-ShouldSelectSuggestion is part of the Input interface. It should not be invoked by users of this library.
+ShouldSelectSuggestion is part of the Input interface.
+It should not be invoked by users of this library.
 
 ### func \(\*Model\[T\]\) [ShouldUnselectSuggestion](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L247>)
 
@@ -349,7 +364,8 @@ ShouldSelectSuggestion is part of the Input interface. It should not be invoked 
 func (m *Model[T]) ShouldUnselectSuggestion(prevText []rune, msg tea.KeyMsg) bool
 ```
 
-ShouldUnselectSuggestion is part of the Input interface. It should not be invoked by users of this library.
+ShouldUnselectSuggestion is part of the Input interface.
+It should not be invoked by users of this library.
 
 ### func \(\*Model\[T\]\) [SuggestionRunes](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L211>)
 
@@ -357,7 +373,8 @@ ShouldUnselectSuggestion is part of the Input interface. It should not be invoke
 func (m *Model[T]) SuggestionRunes(runes []rune) []rune
 ```
 
-SuggestionRunes is part of the Input interface. It should not be invoked by users of this library.
+SuggestionRunes is part of the Input interface.
+It should not be invoked by users of this library.
 
 ### func \(\*Model\[T\]\) [Tokens](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L83>)
 
@@ -365,7 +382,8 @@ SuggestionRunes is part of the Input interface. It should not be invoked by user
 func (m *Model[T]) Tokens() []input.Token
 ```
 
-Tokens returns the tokenized input. This includes delimiter tokens.
+Tokens returns the tokenized input.
+This includes delimiter tokens.
 
 ### func \(\*Model\[T\]\) [TokensBeforeCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L95>)
 
@@ -373,7 +391,8 @@ Tokens returns the tokenized input. This includes delimiter tokens.
 func (m *Model[T]) TokensBeforeCursor() []input.Token
 ```
 
-TokensBeforeCursor returns the tokenized input up to the cursor position. This includes delimiter tokens.
+TokensBeforeCursor returns the tokenized input up to the cursor position.
+This includes delimiter tokens.
 
 ### func \(\*Model\[T\]\) [Value](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L126>)
 
@@ -389,7 +408,8 @@ Value returns the raw text entered by the user.
 func (m *Model[T]) View(viewMode input.ViewMode) string
 ```
 
-View is part of the Input interface. It should not be invoked by users of this library.
+View is part of the Input interface.
+It should not be invoked by users of this library.
 
 ### func \(\*Model\[T\]\) [WordTokenValues](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L72>)
 
@@ -397,7 +417,8 @@ View is part of the Input interface. It should not be invoked by users of this l
 func (m *Model[T]) WordTokenValues() []string
 ```
 
-WordTokenValues returns the tokenized input text. This does not include delimiter tokens.
+WordTokenValues returns the tokenized input text.
+This does not include delimiter tokens.
 
 ### func \(\*Model\[T\]\) [WordTokens](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L89>)
 
@@ -405,7 +426,8 @@ WordTokenValues returns the tokenized input text. This does not include delimite
 func (m *Model[T]) WordTokens() []input.Token
 ```
 
-WordTokens returns the tokenized input. This does not include delimiter tokens.
+WordTokens returns the tokenized input.
+This does not include delimiter tokens.
 
 ### func \(\*Model\[T\]\) [WordTokensBeforeCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L101>)
 
@@ -413,7 +435,8 @@ WordTokens returns the tokenized input. This does not include delimiter tokens.
 func (m *Model[T]) WordTokensBeforeCursor() []input.Token
 ```
 
-WordTokensBeforeCursor returns the tokenized input up to the cursor position. This does not include delimiter tokens.
+WordTokensBeforeCursor returns the tokenized input up to the cursor position.
+This does not include delimiter tokens.
 
 ## type [Option](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/option.go#L18>)
 

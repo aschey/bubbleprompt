@@ -8,7 +8,8 @@
 import "github.com/aschey/bubbleprompt/input/commandinput"
 ```
 
-Package commandinput provides an implementation of the input.Input interface. It should be used to build interactive CLI applications.
+Package commandinput provides an implementation of the [input.Input](/input/API#type-input) interface.
+It should be used to build interactive CLI applications.
 
 <details><summary>Example</summary>
 <p>
@@ -468,7 +469,8 @@ func DefaultFormatters() Formatters
 
 ## type [Model](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L71-L88>)
 
-A Model is an input for handling CLI\-style inputs. It provides advanced features such as placeholders and context\-aware suggestions.
+A Model is an input for handling CLI-style inputs.
+It provides advanced features such as placeholders and context-aware suggestions.
 
 ```go
 type Model[T CmdMetadataAccessor] struct {
@@ -534,7 +536,8 @@ func (m Model[T]) CommandCompleted() bool
 func (m *Model[T]) CompletedArgsBeforeCursor() []string
 ```
 
-CompletedArgsBeforeCursor returns the positional arguments before the cursor that have already been completed. In other words, there needs to be a delimiter after the argument to indicate that the user has finished entering in that argument.
+CompletedArgsBeforeCursor returns the positional arguments before the cursor that have already been completed.
+In other words, there needs to be a delimiter after the argument to indicate that the user has finished entering in that argument.
 
 ### func \(Model\[T\]\) [CurrentToken](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L682>)
 
@@ -590,7 +593,7 @@ func (m Model[T]) CursorOffset() int
 func (m *Model[T]) FlagSuggestions(inputStr string, flags []FlagInput, suggestionFunc func(FlagInput) T) []suggestion.Suggestion[T]
 ```
 
-FlagSuggestions generates a list of \[suggestion.Suggestion\]s.
+FlagSuggestions generates a list of [suggestion.Suggestion](/suggestion/API#type-suggestion).
 
 ### func \(\*Model\[T\]\) [Focus](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L478>)
 

@@ -1,4 +1,4 @@
-// Package simpleinput provides an implementation of the input.Input interface.
+// Package simpleinput provides an implementation of the [input.Input] interface.
 // It should be used for basic cases without the need for structured or cli-style input
 package simpleinput
 

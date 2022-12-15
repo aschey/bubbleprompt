@@ -1,4 +1,4 @@
-// Package commandinput provides an implementation of the input.Input interface.
+// Package commandinput provides an implementation of the [input.Input] interface.
 // It should be used to build interactive CLI applications.
 package commandinput
 
@@ -250,7 +250,7 @@ func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	return cmd
 }
 
-// FlagSuggestions generates a list of [suggestion.Suggestion]s.
+// FlagSuggestions generates a list of [suggestion.Suggestion].
 func (m *Model[T]) FlagSuggestions(inputStr string, flags []FlagInput, suggestionFunc func(FlagInput) T) []suggestion.Suggestion[T] {
 	inputRunes := []rune(inputStr)
 	suggestions := []suggestion.Suggestion[T]{}
