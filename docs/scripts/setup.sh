@@ -1,1 +1,0 @@
-go install github.com/princjef/gomarkdoc/cmd/gomarkdoc@latest

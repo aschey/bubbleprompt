@@ -6,7 +6,7 @@
 	{{- else if eq .Kind "link" -}}
 		{{- link (exec "text" .Inner) .Href -}}
 	{{- else if eq .Kind "docLink" -}}
-		{{- docLink (exec "text" .Inner) (printf "%s/API" .Path) (localHref .Href) -}}
+		{{- docLink (exec "text" .Inner) (printf "%s/api" .Path) (localHref .Href) -}}
 	{{- end -}}
 {{- end -}}
 

@@ -250,7 +250,8 @@ func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	return cmd
 }
 
-// FlagSuggestions generates a list of [suggestion.Suggestion].
+// FlagSuggestions generates a slice of [suggestion.Suggestion] based on the input string and the slice of [FlagInput] supplied.
+// The last parameter can be used to customize the metadata for the returned suggestions.
 func (m *Model[T]) FlagSuggestions(inputStr string, flags []FlagInput, suggestionFunc func(FlagInput) T) []suggestion.Suggestion[T] {
 	inputRunes := []rune(inputStr)
 	suggestions := []suggestion.Suggestion[T]{}
@@ -343,6 +344,7 @@ func (m *Model[T]) getPosArgs(metadata T) []arg {
 	return args
 }
 
+// OnUpdateFinish is part of the Input interface. It should not be invoked by users of this library.
 func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion[T], isSelected bool) tea.Cmd {
 	if m.CommandCompleted() {
 		// If no suggestions, leave args alone
@@ -420,6 +422,7 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion
 	return nil
 }
 
+// OnSuggestionChanged is part of the Input interface. It should not be invoked by users of this library.
 func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T]) {
 	token := m.CurrentToken()
 	tokenRunes := []rune(token)
@@ -463,10 +466,12 @@ func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T]) {
 	}
 }
 
+// OnSuggestionUnselected is part of the Input interface. It should not be invoked by users of this library.
 func (m *Model[T]) OnSuggestionUnselected() {
 	m.selectedTokenPos = nil
 }
 
+// SuggestionRunes is part of the Input interface. It should not be invoked by users of this library.
 func (m *Model[T]) SuggestionRunes(runes []rune) []rune {
 	expr, _ := m.parser.Parse(string(runes))
 	tokens := m.allTokens(expr)
@@ -475,18 +480,29 @@ func (m *Model[T]) SuggestionRunes(runes []rune) []rune {
 	return token
 }
 
+// Focus sets the keyboard focus on the editor so the user can enter text.
 func (m *Model[T]) Focus() tea.Cmd {
 	return m.textinput.Focus()
 }
 
+// Focused returns whether the keyboard is focused on the input.
+func (m Model[T]) Focused() bool {
+	return m.textinput.Focused()
+}
+
+// Value returns the raw text entered by the user.
 func (m *Model[T]) Value() string {
 	return m.textinput.Value()
 }
 
+// Runes returns the raw text entered by the user as a list of runes.
+// This is useful for indexing and length checks because doing these
+// operations on strings does not work well with some unicode characters.
 func (m *Model[T]) Runes() []rune {
 	return []rune(m.textinput.Value())
 }
 
+// ParsedValue returns the input parsed into a [Statement].
 func (m *Model[T]) ParsedValue() Statement {
 	return (*m.parsedText).toStatement()
 }
@@ -578,10 +594,6 @@ func (m *Model[T]) SetCursor(pos int) {
 
 func (m *Model[T]) SetCursorMode(cursorMode cursor.Mode) tea.Cmd {
 	return m.textinput.Cursor.SetMode(cursorMode)
-}
-
-func (m Model[T]) Focused() bool {
-	return m.textinput.Focused()
 }
 
 func (m *Model[T]) Prompt() string {

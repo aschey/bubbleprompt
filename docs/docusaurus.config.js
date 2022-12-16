@@ -38,6 +38,7 @@ async function createConfig() {
           hashed: true,
           language: ["en"],
           docsRouteBasePath: "/",
+          blogDir: [],
         },
       ],
     ],

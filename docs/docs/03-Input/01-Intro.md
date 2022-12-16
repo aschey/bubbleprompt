@@ -20,7 +20,7 @@ like this: `("[^"]*"?)|[^\s]+`. And a regex for whitespace delimiters would be `
 
 Under the hood, Bubbleprompt uses [Participle](https://github.com/alecthomas/participle)
 to handle input tokenization. Defining these rules yourself can be complicated, which is why
-Bubbleprompt offers the [Simple](./Simple/API) input for common uses like handling whitespace delimited
+Bubbleprompt offers the [Simple](./simpleinput/api) input for common uses like handling whitespace delimited
 tokens as described above.
 
 If you need more control over your tokenization, you can use the [Lexer](./Lexer/Usage) input to
@@ -34,5 +34,5 @@ zero or more arguments, and any number of short flags and long flags. Each of th
 which would be difficult to parse with a list of tokens alone. For these use cases, you can define a custom grammar
 that represents your input structure.
 
-For handling POSIX-style CLI input as described above, we provide the [Command](./Command/API) input.
+For handling POSIX-style CLI input as described above, we provide the [Command](./commandinput/api) input.
 To implement custom grammars, you can use the [Parser](./Parser/Usage) input.
