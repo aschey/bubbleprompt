@@ -29,7 +29,6 @@ import (
 	"github.com/aschey/bubbleprompt/executor"
 	"github.com/aschey/bubbleprompt/input/commandinput"
 	"github.com/aschey/bubbleprompt/suggestion"
-
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -58,10 +57,10 @@ func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]suggestion.Sug
 	if len(completed) == 1 && parsed.Command.Value == "get" && parsed.Args[0].Value == "weather" {
 		flags := []commandinput.FlagInput{
 			{
-				Short:       "d",
-				Long:        "days",
-				Placeholder: m.textInput.NewFlagPlaceholder("<int>"),
-				Description: "Forecast days",
+				Short:          "d",
+				Long:           "days",
+				ArgPlaceholder: m.textInput.NewFlagPlaceholder("<int>"),
+				Description:    "Forecast days",
 			},
 		}
 		return m.textInput.FlagSuggestions(m.textInput.CurrentTokenBeforeCursor(), flags, nil), nil
@@ -206,20 +205,20 @@ func main() {
 - [type Arg](<#type-arg>)
 - [type CommandMetadata](<#type-commandmetadata>)
   - [func MetadataFromPositionalArgs(positionalArgs ...PositionalArg) CommandMetadata](<#func-metadatafrompositionalargs>)
-  - [func \(m CommandMetadata\) GetFlagPlaceholder\(\) FlagPlaceholder](<#func-commandmetadata-getflagplaceholder>)
+  - [func \(m CommandMetadata\) GetFlagArgPlaceholder\(\) FlagArgPlaceholder](<#func-commandmetadata-getflagargplaceholder>)
   - [func \(m CommandMetadata\) GetLevel\(\) int](<#func-commandmetadata-getlevel>)
   - [func \(m CommandMetadata\) GetPositionalArgs\(\) \[\]PositionalArg](<#func-commandmetadata-getpositionalargs>)
   - [func \(m CommandMetadata\) GetPreservePlaceholder\(\) bool](<#func-commandmetadata-getpreserveplaceholder>)
   - [func \(m CommandMetadata\) GetShowFlagPlaceholder\(\) bool](<#func-commandmetadata-getshowflagplaceholder>)
 - [type CommandMetadataAccessor](<#type-commandmetadataaccessor>)
 - [type Flag](<#type-flag>)
+- [type FlagArgPlaceholder](<#type-flagargplaceholder>)
+  - [func \(p FlagArgPlaceholder\) Text\(\) string](<#func-flagargplaceholder-text>)
 - [type FlagFormatter](<#type-flagformatter>)
 - [type FlagInput](<#type-flaginput>)
   - [func \(f FlagInput\) LongFlag\(\) string](<#func-flaginput-longflag>)
   - [func \(f FlagInput\) RequiresArg\(\) bool](<#func-flaginput-requiresarg>)
   - [func \(f FlagInput\) ShortFlag\(\) string](<#func-flaginput-shortflag>)
-- [type FlagPlaceholder](<#type-flagplaceholder>)
-  - [func \(p FlagPlaceholder\) Text\(\) string](<#func-flagplaceholder-text>)
 - [type FlagValueFormatter](<#type-flagvalueformatter>)
 - [type Formatters](<#type-formatters>)
   - [func DefaultFormatters() Formatters](<#func-defaultformatters>)
@@ -245,7 +244,7 @@ func main() {
   - [func \(m Model\[T\]\) HasArgs\(\) bool](<#func-modelt-hasargs>)
   - [func \(m \*Model\[T\]\) Init\(\) tea.Cmd](<#func-modelt-init>)
   - [func \(m Model\[T\]\) LastArg\(\) \*input.Token](<#func-modelt-lastarg>)
-  - [func \(m \*Model\[T\]\) NewFlagPlaceholder\(placeholder string\) FlagPlaceholder](<#func-modelt-newflagplaceholder>)
+  - [func \(m \*Model\[T\]\) NewFlagPlaceholder\(placeholder string\) FlagArgPlaceholder](<#func-modelt-newflagplaceholder>)
   - [func \(m \*Model\[T\]\) NewPositionalArg\(placeholder string\) PositionalArg](<#func-modelt-newpositionalarg>)
   - [func \(m \*Model\[T\]\) NewPositionalArgs\(placeholders ...string\) \[\]PositionalArg](<#func-modelt-newpositionalargs>)
   - [func \(m \*Model\[T\]\) OnExecutorFinished\(\)](<#func-modelt-onexecutorfinished>)
@@ -324,23 +323,31 @@ type Arg struct {
 }
 ```
 
-## type [CommandMetadata](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/command_metadata.go#L12-L18>)
+## type [CommandMetadata](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/command_metadata.go#L20-L29>)
+
+CommandMetadata defines the metadata that the [Model](/input/commandinput/api#type-model) uses to get information about the supplied [suggestion.Suggestion](/suggestion/api#type-suggestion).
+You can extend this struct to provide additional metadata.
 
 ```go
 type CommandMetadata struct {
-    PositionalArgs      []PositionalArg
+    // PositionalArgs is the list of positional args that this suggestion accepts.
+    PositionalArgs []PositionalArg
+    // ShowFlagPlaceholder is whether or not the input should display a placeholder indicating that this command has flags available.
     ShowFlagPlaceholder bool
-    FlagPlaceholder     FlagPlaceholder
+    // FlagArgPlaceholder is the placeholder
+    FlagArgPlaceholder  FlagArgPlaceholder
     Level               int
     PreservePlaceholder bool
 }
 ```
 
-### func [MetadataFromPositionalArgs](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/command_metadata.go#L20>)
+### func [MetadataFromPositionalArgs](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/command_metadata.go#L32>)
 
 ```go
 func MetadataFromPositionalArgs(positionalArgs ...PositionalArg) CommandMetadata
 ```
+
+MetadataFromPositionalArgs is a convenience function for creating a [CommandMetadata](/input/commandinput/api#type-commandmetadata) from one or more [PositionalArg](/input/commandinput/api#type-positionalarg).
 
 <details><summary>Example</summary>
 <p>
@@ -376,46 +383,63 @@ func main() {
 </p>
 </details>
 
-### func \(CommandMetadata\) [GetFlagPlaceholder](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/command_metadata.go#L30>)
+### func \(CommandMetadata\) [GetFlagArgPlaceholder](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/command_metadata.go#L44>)
 
 ```go
-func (m CommandMetadata) GetFlagPlaceholder() FlagPlaceholder
+func (m CommandMetadata) GetFlagArgPlaceholder() FlagArgPlaceholder
 ```
 
-### func \(CommandMetadata\) [GetLevel](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/command_metadata.go#L38>)
+GetFlagArgPlaceholder returns the [FlagPlaceholder] for the flag's argument.
+
+### func \(CommandMetadata\) [GetLevel](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/command_metadata.go#L55>)
 
 ```go
 func (m CommandMetadata) GetLevel() int
 ```
 
-### func \(CommandMetadata\) [GetPositionalArgs](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/command_metadata.go#L26>)
+GetLevel returns the nesting level of the [suggestion.Suggestion](/suggestion/api#type-suggestion).
+For example, a level of 1 means the suggestion is nested one level higher than the root command.
+
+### func \(CommandMetadata\) [GetPositionalArgs](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/command_metadata.go#L39>)
 
 ```go
 func (m CommandMetadata) GetPositionalArgs() []PositionalArg
 ```
 
-### func \(CommandMetadata\) [GetPreservePlaceholder](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/command_metadata.go#L42>)
+GetPositionalArgs returns the list of [PositionalArg](/input/commandinput/api#type-positionalarg) for the associated [suggestion.Suggestion](/suggestion/api#type-suggestion).
+
+### func \(CommandMetadata\) [GetPreservePlaceholder](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/command_metadata.go#L60>)
 
 ```go
 func (m CommandMetadata) GetPreservePlaceholder() bool
 ```
 
-### func \(CommandMetadata\) [GetShowFlagPlaceholder](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/command_metadata.go#L34>)
+TODO: Figure out why we need this.
+
+### func \(CommandMetadata\) [GetShowFlagPlaceholder](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/command_metadata.go#L49>)
 
 ```go
 func (m CommandMetadata) GetShowFlagPlaceholder() bool
 ```
 
-## type [CommandMetadataAccessor](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/command_metadata.go#L4-L10>)
+GetShowFlagPlaceholder returns whether or not to show the placeholder indicating this [suggestion.Suggestion](/suggestion/api#type-suggestion) has available flags.
 
-CommandMetadataAccessor defines the interface that the [Model](/input/commandinput/api#type-model) uses to get information about the supplied list of [suggestion.Suggestion](/suggestion/api#type-suggestion).
+## type [CommandMetadataAccessor](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/command_metadata.go#L4-L16>)
+
+CommandMetadataAccessor defines the interface that the [Model](/input/commandinput/api#type-model) uses to get information about the supplied [suggestion.Suggestion](/suggestion/api#type-suggestion).
 
 ```go
 type CommandMetadataAccessor interface {
+    // GetPositionalArgs returns the list of PositionalArgs for the associated suggestion.
     GetPositionalArgs() []PositionalArg
-    GetFlagPlaceholder() FlagPlaceholder
+    // GetFlagArgPlaceholder returns the placeholder for the flag's argument.
+    GetFlagArgPlaceholder() FlagArgPlaceholder
+    // GetLevel returns the nesting level of the suggestion.
+    // For example, a level of 1 means the suggestion is nested one level higher than the root command.
     GetLevel() int
+    // TODO: Figure out why we need this.
     GetPreservePlaceholder() bool
+    // GetShowFlagPlaceholder returns whether or not to show the placeholder indicating this suggestion has available flags.
     GetShowFlagPlaceholder() bool
 }
 ```
@@ -427,6 +451,21 @@ type Flag struct {
     Name  input.Token
     Value *input.Token
 }
+```
+
+## type [FlagArgPlaceholder](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L39-L42>)
+
+```go
+type FlagArgPlaceholder struct {
+    Style lipgloss.Style
+    // contains filtered or unexported fields
+}
+```
+
+### func \(FlagArgPlaceholder\) [Text](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L44>)
+
+```go
+func (p FlagArgPlaceholder) Text() string
 ```
 
 ## type [FlagFormatter](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/formatters.go#L18-L21>)
@@ -442,10 +481,10 @@ type FlagFormatter struct {
 
 ```go
 type FlagInput struct {
-    Short       string
-    Long        string
-    Placeholder FlagPlaceholder
-    Description string
+    Short          string
+    Long           string
+    ArgPlaceholder FlagArgPlaceholder
+    Description    string
 }
 ```
 
@@ -465,21 +504,6 @@ func (f FlagInput) RequiresArg() bool
 
 ```go
 func (f FlagInput) ShortFlag() string
-```
-
-## type [FlagPlaceholder](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L39-L42>)
-
-```go
-type FlagPlaceholder struct {
-    Style lipgloss.Style
-    // contains filtered or unexported fields
-}
-```
-
-### func \(FlagPlaceholder\) [Text](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L44>)
-
-```go
-func (p FlagPlaceholder) Text() string
 ```
 
 ## type [FlagValueFormatter](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/formatters.go#L23-L27>)
@@ -671,10 +695,10 @@ func main() {
 	textInput := commandinput.New[commandinput.CommandMetadata]()
 	flags := []commandinput.FlagInput{
 		{
-			Short:       "i",
-			Long:        "interval",
-			Description: "refresh interval",
-			Placeholder: textInput.NewFlagPlaceholder("<value>"),
+			Short:          "i",
+			Long:           "interval",
+			Description:    "refresh interval",
+			ArgPlaceholder: textInput.NewFlagPlaceholder("<value>"),
 		},
 	}
 
@@ -687,7 +711,7 @@ func main() {
 	suggestions = textInput.FlagSuggestions("", flags,
 		func(flagInput commandinput.FlagInput) commandinput.CommandMetadata {
 			return commandinput.CommandMetadata{
-				FlagPlaceholder:     flagInput.Placeholder,
+				FlagArgPlaceholder:  flagInput.ArgPlaceholder,
 				PreservePlaceholder: true,
 			}
 		})
@@ -760,7 +784,7 @@ If there are no arguments, it returns nil.
 ### func \(\*Model\[T\]\) [NewFlagPlaceholder](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L164>)
 
 ```go
-func (m *Model[T]) NewFlagPlaceholder(placeholder string) FlagPlaceholder
+func (m *Model[T]) NewFlagPlaceholder(placeholder string) FlagArgPlaceholder
 ```
 
 NewFlagPlaceholder creates a flag placeholder for completions.
@@ -782,14 +806,14 @@ func main() {
 
 	flags := []commandinput.FlagInput{
 		{
-			Short:       "d",
-			Long:        "days",
-			Placeholder: textInput.NewFlagPlaceholder("<number of days>"),
-			Description: "Forecast days",
+			Short:          "d",
+			Long:           "days",
+			ArgPlaceholder: textInput.NewFlagPlaceholder("<number of days>"),
+			Description:    "Forecast days",
 		},
 	}
 
-	fmt.Println(flags[0].Placeholder.Text())
+	fmt.Println(flags[0].ArgPlaceholder.Text())
 }
 ```
 

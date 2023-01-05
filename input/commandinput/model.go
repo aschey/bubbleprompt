@@ -36,20 +36,20 @@ func (p PositionalArg) Placeholder() string {
 	return p.placeholder
 }
 
-type FlagPlaceholder struct {
+type FlagArgPlaceholder struct {
 	text  string
 	Style lipgloss.Style
 }
 
-func (p FlagPlaceholder) Text() string {
+func (p FlagArgPlaceholder) Text() string {
 	return p.text
 }
 
 type FlagInput struct {
-	Short       string
-	Long        string
-	Placeholder FlagPlaceholder
-	Description string
+	Short          string
+	Long           string
+	ArgPlaceholder FlagArgPlaceholder
+	Description    string
 }
 
 func (f FlagInput) ShortFlag() string {
@@ -67,7 +67,7 @@ func (f FlagInput) LongFlag() string {
 }
 
 func (f FlagInput) RequiresArg() bool {
-	return len(f.Placeholder.text) > 0
+	return len(f.ArgPlaceholder.text) > 0
 }
 
 // A Model is an input for handling CLI-style inputs.
@@ -161,8 +161,8 @@ func (m *Model[T]) NewPositionalArgs(placeholders ...string) []PositionalArg {
 }
 
 // NewFlagPlaceholder creates a flag placeholder for completions.
-func (m *Model[T]) NewFlagPlaceholder(placeholder string) FlagPlaceholder {
-	return FlagPlaceholder{
+func (m *Model[T]) NewFlagPlaceholder(placeholder string) FlagArgPlaceholder {
+	return FlagArgPlaceholder{
 		text:  placeholder,
 		Style: m.formatters.Flag.Placeholder,
 	}
@@ -321,9 +321,9 @@ func (m *Model[T]) getFlagSuggestion(flag FlagInput, isLong bool, isMulti bool, 
 
 	if suggestionFunc == nil {
 		metadata := *new(T)
-		placeholderField := reflect.ValueOf(&metadata).Elem().FieldByName("FlagPlaceholder")
+		placeholderField := reflect.ValueOf(&metadata).Elem().FieldByName("FlagArgPlaceholder")
 		if placeholderField.IsValid() {
-			placeholderField.Set(reflect.ValueOf(flag.Placeholder))
+			placeholderField.Set(reflect.ValueOf(flag.ArgPlaceholder))
 			suggestion.Metadata = metadata
 		}
 	} else {
@@ -358,7 +358,7 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion
 		// If no suggestions, leave args alone
 		if suggestion == nil {
 			// Don't reset current flag yet so we can still render the placeholder until the arg gets typed
-			if m.currentFlag != nil && m.currentFlag.Metadata.GetFlagPlaceholder().text == "" {
+			if m.currentFlag != nil && m.currentFlag.Metadata.GetFlagArgPlaceholder().text == "" {
 				m.currentFlag = nil
 			}
 			// Clear any temporary placeholders
@@ -454,7 +454,7 @@ func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T]) {
 			m.SetValue(string(textRunes[:cursor]) + suggestion.Text + string(trailingRunes))
 		} else if strings.HasPrefix(token, "-") &&
 			!strings.HasPrefix(token, "--") && len(tokenRunes) > 2 &&
-			suggestion.Metadata.GetFlagPlaceholder().text == "" {
+			suggestion.Metadata.GetFlagArgPlaceholder().text == "" {
 			// handle multi flag like -ab
 			if cursor == tokenPos.Start {
 				// If cursor is on the leading dash, replace the first two characters of the token ([-ab]c)

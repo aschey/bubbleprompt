@@ -43,14 +43,14 @@ func ExampleModel_NewFlagPlaceholder() {
 
 	flags := []commandinput.FlagInput{
 		{
-			Short:       "d",
-			Long:        "days",
-			Placeholder: textInput.NewFlagPlaceholder("<number of days>"),
-			Description: "Forecast days",
+			Short:          "d",
+			Long:           "days",
+			ArgPlaceholder: textInput.NewFlagPlaceholder("<number of days>"),
+			Description:    "Forecast days",
 		},
 	}
 
-	fmt.Println(flags[0].Placeholder.Text())
+	fmt.Println(flags[0].ArgPlaceholder.Text())
 	// Output: <number of days>
 }
 
@@ -58,10 +58,10 @@ func ExampleModel_FlagSuggestions() {
 	textInput := commandinput.New[commandinput.CommandMetadata]()
 	flags := []commandinput.FlagInput{
 		{
-			Short:       "i",
-			Long:        "interval",
-			Description: "refresh interval",
-			Placeholder: textInput.NewFlagPlaceholder("<value>"),
+			Short:          "i",
+			Long:           "interval",
+			Description:    "refresh interval",
+			ArgPlaceholder: textInput.NewFlagPlaceholder("<value>"),
 		},
 	}
 
@@ -74,7 +74,7 @@ func ExampleModel_FlagSuggestions() {
 	suggestions = textInput.FlagSuggestions("", flags,
 		func(flagInput commandinput.FlagInput) commandinput.CommandMetadata {
 			return commandinput.CommandMetadata{
-				FlagPlaceholder:     flagInput.Placeholder,
+				FlagArgPlaceholder:  flagInput.ArgPlaceholder,
 				PreservePlaceholder: true,
 			}
 		})

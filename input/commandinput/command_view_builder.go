@@ -68,7 +68,6 @@ func (b commandViewBuilder[T]) renderArgs() {
 			argStyle = b.model.args[i].argStyle
 		}
 		b.render([]rune(arg.Value), arg.Pos.Column, argStyle)
-
 	}
 }
 
@@ -92,7 +91,7 @@ func (b commandViewBuilder[T]) renderFlags() {
 	currentFlagPlaceholderRunes := []rune{}
 	if b.model.currentFlag != nil {
 		currentFlagRunes = []rune(b.model.currentFlag.Text)
-		currentFlagPlaceholderRunes = []rune(b.model.currentFlag.Metadata.GetFlagPlaceholder().text)
+		currentFlagPlaceholderRunes = []rune(b.model.currentFlag.Metadata.GetFlagArgPlaceholder().text)
 	}
 
 	for i, flag := range flags {

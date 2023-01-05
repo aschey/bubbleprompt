@@ -38,10 +38,10 @@ func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]suggestion.Sug
 	if len(completed) == 1 && parsed.Command.Value == "get" && parsed.Args[0].Value == "weather" {
 		flags := []commandinput.FlagInput{
 			{
-				Short:       "d",
-				Long:        "days",
-				Placeholder: m.textInput.NewFlagPlaceholder("<int>"),
-				Description: "Forecast days",
+				Short:          "d",
+				Long:           "days",
+				ArgPlaceholder: m.textInput.NewFlagPlaceholder("<int>"),
+				Description:    "Forecast days",
 			},
 		}
 		return m.textInput.FlagSuggestions(m.textInput.CurrentTokenBeforeCursor(), flags, nil), nil
@@ -174,16 +174,4 @@ func Example() {
 		fmt.Printf("Could not start program\n%v\n", err)
 		os.Exit(1)
 	}
-}
-
-func ExampleMetadataFromPositionalArgs() {
-	textInput := commandinput.New[commandinput.CommandMetadata]()
-	commandMetadata := commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<arg1>"))
-
-	suggestions := []suggestion.Suggestion[commandinput.CommandMetadata]{
-		{Text: "test", Metadata: commandMetadata},
-	}
-
-	fmt.Println(suggestions[0].Metadata.GetPositionalArgs()[0].Placeholder())
-	// Output: <arg1>
 }
