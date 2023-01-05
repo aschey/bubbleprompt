@@ -17,7 +17,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type cmdMetadata = commandinput.CmdMetadata
+type cmdMetadata = commandinput.CommandMetadata
 
 type model struct {
 	status statusModel

@@ -8,26 +8,26 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type cmdViewBuilder[T CmdMetadataAccessor] struct {
+type commandViewBuilder[T CommandMetadataAccessor] struct {
 	model            Model[T]
 	viewBuilder      *input.ViewBuilder
 	showPlaceholders bool
 	showCursor       bool
 }
 
-func newCmdViewBuilder[T CmdMetadataAccessor](model Model[T], viewMode input.ViewMode) cmdViewBuilder[T] {
+func newCmdViewBuilder[T CommandMetadataAccessor](model Model[T], viewMode input.ViewMode) commandViewBuilder[T] {
 	showCursor := !model.textinput.Cursor.Blink
 	if viewMode == input.Static {
 		showCursor = false
 	}
 	showPlaceholders := viewMode == input.Interactive
 	viewBuilder := input.NewViewBuilder(model.CursorIndex(), model.formatters.Cursor, model.defaultDelimiter, showCursor)
-	return cmdViewBuilder[T]{
+	return commandViewBuilder[T]{
 		model, viewBuilder, showPlaceholders, showCursor,
 	}
 }
 
-func (b cmdViewBuilder[T]) View() string {
+func (b commandViewBuilder[T]) View() string {
 	b.renderCommand()
 	b.renderPrefix()
 	b.renderArgs()
@@ -39,20 +39,20 @@ func (b cmdViewBuilder[T]) View() string {
 	return b.model.formatters.Prompt.Render(string(b.model.prompt)) + b.viewBuilder.View()
 }
 
-func (b cmdViewBuilder[T]) render(runes []rune, column int, style lipgloss.Style) {
-	if b.model.selectedTokenPos != nil && b.model.selectedTokenPos.Start == column-1 {
+func (b commandViewBuilder[T]) render(runes []rune, column int, style lipgloss.Style) {
+	if b.model.selectedTokenPosition != nil && b.model.selectedTokenPosition.Start == column-1 {
 		b.viewBuilder.Render(runes, column, b.model.formatters.SelectedText)
 	} else {
 		b.viewBuilder.Render(runes, column, style)
 	}
 }
 
-func (b cmdViewBuilder[T]) renderCommand() {
+func (b commandViewBuilder[T]) renderCommand() {
 	commandRunes := []rune(b.model.parsedText.Command.Value)
 	b.render(commandRunes, b.model.parsedText.Command.Pos.Column, b.model.formatters.Text)
 }
 
-func (b cmdViewBuilder[T]) renderPrefix() {
+func (b commandViewBuilder[T]) renderPrefix() {
 	commandRunes := []rune(b.model.parsedText.Command.Value)
 	if b.showPlaceholders &&
 		strings.HasPrefix(string(b.model.commandPlaceholder), b.model.Value()) &&
@@ -61,7 +61,7 @@ func (b cmdViewBuilder[T]) renderPrefix() {
 	}
 }
 
-func (b cmdViewBuilder[T]) renderArgs() {
+func (b commandViewBuilder[T]) renderArgs() {
 	for i, arg := range b.model.parsedText.Args.Value {
 		argStyle := lipgloss.NewStyle()
 		if i < len(b.model.args) {
@@ -72,7 +72,7 @@ func (b cmdViewBuilder[T]) renderArgs() {
 	}
 }
 
-func (b cmdViewBuilder[T]) renderCurrentArg() {
+func (b commandViewBuilder[T]) renderCurrentArg() {
 	// Render current arg if persist == true
 	currentArg := len(b.model.parsedText.Args.Value) - 1
 	if currentArg >= 0 && currentArg < len(b.model.args) {
@@ -86,7 +86,7 @@ func (b cmdViewBuilder[T]) renderCurrentArg() {
 	}
 }
 
-func (b cmdViewBuilder[T]) renderFlags() {
+func (b commandViewBuilder[T]) renderFlags() {
 	flags := b.model.parsedText.Flags.Value
 	currentFlagRunes := []rune{}
 	currentFlagPlaceholderRunes := []rune{}
@@ -100,8 +100,8 @@ func (b cmdViewBuilder[T]) renderFlags() {
 	}
 }
 
-func (b cmdViewBuilder[T]) renderFlag(i int, flag flag, currentFlagRunes []rune, currentFlagPlaceholderRunes []rune) {
-	currentPos := b.model.CurrentTokenPosRoundDown().Start
+func (b commandViewBuilder[T]) renderFlag(i int, flag flag, currentFlagRunes []rune, currentFlagPlaceholderRunes []rune) {
+	currentPos := b.model.CurrentTokenPositionRoundDown().Start
 	currentToken := b.model.CurrentTokenRoundDown()
 	flags := b.model.parsedText.Flags.Value
 	flagNameRunes := []rune(flag.Name)
@@ -144,7 +144,7 @@ func (b cmdViewBuilder[T]) renderFlag(i int, flag flag, currentFlagRunes []rune,
 	}
 }
 
-func (b cmdViewBuilder[T]) renderLastFlag(flags []flag, flag flag, currentFlagRunes []rune, currentFlagPlaceholderRunes []rune) {
+func (b commandViewBuilder[T]) renderLastFlag(flags []flag, flag flag, currentFlagRunes []rune, currentFlagPlaceholderRunes []rune) {
 	flagNameRunes := []rune(flag.Name)
 	argVal := ""
 	if len(flags) > 0 {
@@ -169,7 +169,7 @@ func (b cmdViewBuilder[T]) renderLastFlag(flags []flag, flag flag, currentFlagRu
 	}
 }
 
-func (b cmdViewBuilder[T]) renderFlagPlaceholders() {
+func (b commandViewBuilder[T]) renderFlagPlaceholders() {
 	args := b.model.args
 	if b.showPlaceholders && len(b.model.parsedText.Flags.Value) == 0 && b.model.showFlagPlaceholder {
 		args = append(args, arg{text: "[flags]", placeholderStyle: b.model.formatters.Flag.Placeholder})
@@ -178,7 +178,7 @@ func (b cmdViewBuilder[T]) renderFlagPlaceholders() {
 	// Render arg placeholders
 	startPlaceholder := len(b.model.parsedText.Args.Value) + len(b.model.parsedText.Flags.Value)
 	// Don't show arg placeholders if the current arg doesn't match the arg we're about to show placeholders for (the user moved the cursor over to the left)
-	all := b.model.AllValues()
+	all := b.model.Values()
 	if b.model.suggestionLevel > len(all)-1 || strings.HasPrefix(string(b.model.subcommandWithArgs), all[b.model.suggestionLevel]) {
 		if b.showPlaceholders && startPlaceholder < len(args) {
 			for _, arg := range args[startPlaceholder:] {
@@ -193,7 +193,7 @@ func (b cmdViewBuilder[T]) renderFlagPlaceholders() {
 	}
 }
 
-func (b cmdViewBuilder[T]) renderTrailingText() {
+func (b commandViewBuilder[T]) renderTrailingText() {
 	value := []rune(b.model.Value())
 	viewLen := b.viewBuilder.ViewLen()
 	if len(value) > viewLen {
@@ -202,7 +202,7 @@ func (b cmdViewBuilder[T]) renderTrailingText() {
 
 }
 
-func (b cmdViewBuilder[T]) flagValueStyle(value string) lipgloss.Style {
+func (b commandViewBuilder[T]) flagValueStyle(value string) lipgloss.Style {
 	if _, err := strconv.ParseInt(value, 10, 32); err == nil {
 		return b.model.formatters.FlagValue.Number
 	} else if _, err := strconv.ParseBool(value); err == nil {

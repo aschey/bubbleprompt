@@ -14,7 +14,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type cmdMetadata = commandinput.CmdMetadata
+type cmdMetadata = commandinput.CommandMetadata
 
 type model struct {
 	suggestions []suggestion.Suggestion[cmdMetadata]
@@ -64,7 +64,7 @@ func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]suggestion.Sug
 }
 
 func (m model) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
-	allValues := m.textInput.AllValues()
+	allValues := m.textInput.Values()
 	cmd := ""
 	args := []string{}
 	if len(allValues) > 0 {

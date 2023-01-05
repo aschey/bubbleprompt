@@ -236,7 +236,7 @@ Focused returns whether the keyboard is focused on the input.
 func (m *Model[T]) Init() tea.Cmd
 ```
 
-Init is part of the Input interface.
+Init is part of the [input.Input](/input/api#type-input) interface.
 It should not be invoked by users of this library.
 
 ### func \(\*Model\[T\]\) [OnExecutorFinished](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L229>)
@@ -245,7 +245,7 @@ It should not be invoked by users of this library.
 func (m *Model[T]) OnExecutorFinished()
 ```
 
-OnExecutorFinished is part of the Input interface.
+OnExecutorFinished is part of the [input.Input](/input/api#type-input) interface.
 It should not be invoked by users of this library.
 
 ### func \(\*Model\[T\]\) [OnSuggestionChanged](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L223>)
@@ -254,7 +254,7 @@ It should not be invoked by users of this library.
 func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T])
 ```
 
-OnSuggestionChanged is part of the Input interface.
+OnSuggestionChanged is part of the [input.Input](/input/api#type-input) interface.
 It should not be invoked by users of this library.
 
 ### func \(\*Model\[T\]\) [OnSuggestionUnselected](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L235>)
@@ -263,7 +263,7 @@ It should not be invoked by users of this library.
 func (m *Model[T]) OnSuggestionUnselected()
 ```
 
-OnSuggestionUnselected is part of the Input interface.
+OnSuggestionUnselected is part of the [input.Input](/input/api#type-input) interface.
 It should not be invoked by users of this library.
 
 ### func \(\*Model\[T\]\) [OnUpdateFinish](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L217>)
@@ -272,7 +272,7 @@ It should not be invoked by users of this library.
 func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion[T], isSelected bool) tea.Cmd
 ```
 
-OnUpdateFinish is part of the Input interface.
+OnUpdateFinish is part of the [input.Input](/input/api#type-input) interface.
 It should not be invoked by users of this library.
 
 ### func \(\*Model\[T\]\) [OnUpdateStart](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L193>)
@@ -281,8 +281,8 @@ It should not be invoked by users of this library.
 func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd
 ```
 
-OnUpdateStart is part of the Input interface.
-It  should not be invoked by end users.
+OnUpdateStart is part of the [input.Input](/input/api#type-input) interface.
+It should not be invoked by end users.
 
 ### func \(\*Model\[T\]\) [Prompt](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L176>)
 
@@ -316,7 +316,7 @@ operations on strings does not work well with some unicode characters.
 func (m *Model[T]) SetCursor(cursor int)
 ```
 
-Set cursor sets the cursor position.
+SetCursor sets the cursor position.
 
 ### func \(\*Model\[T\]\) [SetCursorMode](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L171>)
 
@@ -348,7 +348,7 @@ SetValue sets the text of the input.
 func (m *Model[T]) ShouldClearSuggestions(prevText []rune, msg tea.KeyMsg) bool
 ```
 
-ShouldClearSuggestions is part of the Input interface.
+ShouldClearSuggestions is part of the [input.Input](/input/api#type-input) interface.
 It should not be invoked by users of this library.
 
 ### func \(\*Model\[T\]\) [ShouldSelectSuggestion](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L205>)
@@ -357,7 +357,7 @@ It should not be invoked by users of this library.
 func (m *Model[T]) ShouldSelectSuggestion(suggestion suggestion.Suggestion[T]) bool
 ```
 
-ShouldSelectSuggestion is part of the Input interface.
+ShouldSelectSuggestion is part of the [input.Input](/input/api#type-input) interface.
 It should not be invoked by users of this library.
 
 ### func \(\*Model\[T\]\) [ShouldUnselectSuggestion](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L247>)
@@ -366,7 +366,7 @@ It should not be invoked by users of this library.
 func (m *Model[T]) ShouldUnselectSuggestion(prevText []rune, msg tea.KeyMsg) bool
 ```
 
-ShouldUnselectSuggestion is part of the Input interface.
+ShouldUnselectSuggestion is part of the [input.Input](/input/api#type-input) interface.
 It should not be invoked by users of this library.
 
 ### func \(\*Model\[T\]\) [SuggestionRunes](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L211>)
@@ -375,7 +375,7 @@ It should not be invoked by users of this library.
 func (m *Model[T]) SuggestionRunes(runes []rune) []rune
 ```
 
-SuggestionRunes is part of the Input interface.
+SuggestionRunes is part of the [input.Input](/input/api#type-input) interface.
 It should not be invoked by users of this library.
 
 ### func \(\*Model\[T\]\) [Tokens](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L83>)
@@ -410,7 +410,7 @@ Value returns the raw text entered by the user.
 func (m *Model[T]) View(viewMode input.ViewMode) string
 ```
 
-View is part of the Input interface.
+View is part of the [input.Input](/input/api#type-input) interface.
 It should not be invoked by users of this library.
 
 ### func \(\*Model\[T\]\) [WordTokenValues](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L72>)

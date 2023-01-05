@@ -41,6 +41,10 @@ type FlagPlaceholder struct {
 	Style lipgloss.Style
 }
 
+func (p FlagPlaceholder) Text() string {
+	return p.text
+}
+
 type FlagInput struct {
 	Short       string
 	Long        string
@@ -68,26 +72,26 @@ func (f FlagInput) RequiresArg() bool {
 
 // A Model is an input for handling CLI-style inputs.
 // It provides advanced features such as placeholders and context-aware suggestions.
-type Model[T CmdMetadataAccessor] struct {
-	textinput           textinput.Model
-	commandPlaceholder  []rune
-	subcommandWithArgs  string
-	suggestionLevel     int
-	prompt              string
-	defaultDelimiter    string
-	delimiterRegex      *regexp.Regexp
-	origArgs            []arg
-	args                []arg
-	showFlagPlaceholder bool
-	argIndex            int
-	currentFlag         *suggestion.Suggestion[T]
-	selectedTokenPos    *TokenPos
-	formatters          Formatters
-	parser              parser.Parser[statement]
-	parsedText          *statement
+type Model[T CommandMetadataAccessor] struct {
+	textinput             textinput.Model
+	commandPlaceholder    []rune
+	subcommandWithArgs    string
+	suggestionLevel       int
+	prompt                string
+	defaultDelimiter      string
+	delimiterRegex        *regexp.Regexp
+	origArgs              []arg
+	args                  []arg
+	showFlagPlaceholder   bool
+	argIndex              int
+	currentFlag           *suggestion.Suggestion[T]
+	selectedTokenPosition *TokenPosition
+	formatters            Formatters
+	parser                parser.Parser[statement]
+	parsedText            *statement
 }
 
-type TokenPos struct {
+type TokenPosition struct {
 	Start int
 	End   int
 	Index int
@@ -101,7 +105,7 @@ const (
 )
 
 // New creates a new model.
-func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T] {
+func New[T CommandMetadataAccessor](opts ...Option[T]) *Model[T] {
 	textinput := textinput.New()
 
 	formatters := DefaultFormatters()
@@ -123,7 +127,7 @@ func New[T CmdMetadataAccessor](opts ...Option[T]) *Model[T] {
 	return model
 }
 
-// Init is part of the Input interface. It should not be invoked by users of this library.
+// Init is part of the [input.Input] interface. It should not be invoked by users of this library.
 func (m *Model[T]) Init() tea.Cmd {
 	return m.textinput.Focus()
 }
@@ -164,15 +168,17 @@ func (m *Model[T]) NewFlagPlaceholder(placeholder string) FlagPlaceholder {
 	}
 }
 
-// ShouldSelectSuggestion is part of the Input interface. It should not be invoked by users of this library.
+// ShouldSelectSuggestion is part of the [input.Input] interface.
+// It should not be invoked by users of this library.
 func (m *Model[T]) ShouldSelectSuggestion(suggestion suggestion.Suggestion[T]) bool {
-	currentTokenPos := m.CurrentTokenPos()
+	currentTokenPos := m.CurrentTokenPosition()
 	currentToken := m.CurrentToken()
 	// Only select if cursor is at the end of the token or the input will cut off the part after the cursor
 	return m.CursorIndex() == currentTokenPos.End && currentToken == suggestion.Text
 }
 
-// ShouldUnselectSuggestion is part of the Input interface. It should not be invoked by users of this library.
+// ShouldUnselectSuggestion is part of the [input.Input] interface.
+// It should not be invoked by users of this library.
 func (m *Model[T]) ShouldUnselectSuggestion(prevRunes []rune, msg tea.KeyMsg) bool {
 	pos := m.CursorIndex()
 	switch msg.Type {
@@ -196,7 +202,8 @@ func (m *Model[T]) ShouldUnselectSuggestion(prevRunes []rune, msg tea.KeyMsg) bo
 	}
 }
 
-// ShouldClearSuggestions is part of the Input interface. It should not be invoked by users of this library.
+// ShouldClearSuggestions is part of the [input.Input] interface.
+// It should not be invoked by users of this library.
 func (m *Model[T]) ShouldClearSuggestions(prevText []rune, msg tea.KeyMsg) bool {
 	return m.isDelimiter(msg.String())
 }
@@ -235,7 +242,7 @@ func (m *Model[T]) CompletedArgsBeforeCursor() []string {
 	return args
 }
 
-// OnUpdateStart is part of the Input interface. It should not be invoked by users of this library.
+// OnUpdateStart is part of the [input.Input] interface. It should not be invoked by users of this library.
 func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
 	m.textinput, cmd = m.textinput.Update(msg)
@@ -275,7 +282,7 @@ func (m *Model[T]) FlagSuggestions(inputStr string, flags []FlagInput, suggestio
 }
 
 func (m *Model[T]) shouldSkipFlagSuggestions(flag FlagInput, inputRunes []rune, isMulti bool) bool {
-	tokenIndex := m.CurrentTokenPos().Index
+	tokenIndex := m.CurrentTokenPosition().Index
 	allTokens := m.Tokens()
 	prevToken := ""
 	if tokenIndex > 0 {
@@ -344,7 +351,8 @@ func (m *Model[T]) getPosArgs(metadata T) []arg {
 	return args
 }
 
-// OnUpdateFinish is part of the Input interface. It should not be invoked by users of this library.
+// OnUpdateFinish is part of the [input.Input] interface.
+// It should not be invoked by users of this library.
 func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion[T], isSelected bool) tea.Cmd {
 	if m.CommandCompleted() {
 		// If no suggestions, leave args alone
@@ -364,7 +372,7 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion
 			m.showFlagPlaceholder = suggestion.Metadata.GetShowFlagPlaceholder()
 			m.currentFlag = nil
 		}
-		index := m.CurrentTokenPos().Index
+		index := m.CurrentTokenPosition().Index
 
 		if len(suggestion.Metadata.GetPositionalArgs()) > 0 || index <= m.argIndex {
 			m.args = []arg{}
@@ -422,13 +430,13 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion
 	return nil
 }
 
-// OnSuggestionChanged is part of the Input interface. It should not be invoked by users of this library.
+// OnSuggestionChanged is part of the [input.Input] interface. It should not be invoked by users of this library.
 func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T]) {
 	token := m.CurrentToken()
 	tokenRunes := []rune(token)
 	suggestionRunes := []rune(suggestion.Text)
-	tokenPos := m.CurrentTokenPos()
-	m.selectedTokenPos = &tokenPos
+	tokenPos := m.CurrentTokenPosition()
+	m.selectedTokenPosition = &tokenPos
 
 	textRunes := m.Runes()
 	if tokenPos.Start > -1 {
@@ -466,12 +474,12 @@ func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T]) {
 	}
 }
 
-// OnSuggestionUnselected is part of the Input interface. It should not be invoked by users of this library.
+// OnSuggestionUnselected is part of the [input.Input] interface. It should not be invoked by users of this library.
 func (m *Model[T]) OnSuggestionUnselected() {
-	m.selectedTokenPos = nil
+	m.selectedTokenPosition = nil
 }
 
-// SuggestionRunes is part of the Input interface. It should not be invoked by users of this library.
+// SuggestionRunes is part of the [input.Input] interface. It should not be invoked by users of this library.
 func (m *Model[T]) SuggestionRunes(runes []rune) []rune {
 	expr, _ := m.parser.Parse(string(runes))
 	tokens := m.allTokens(expr)
@@ -507,6 +515,7 @@ func (m *Model[T]) ParsedValue() Statement {
 	return (*m.parsedText).toStatement()
 }
 
+// CommandBeforeCursor returns the portion of the command (first input token) before the cursor position.
 func (m *Model[T]) CommandBeforeCursor() string {
 	parsed := m.parsedText
 	commandRunes := []rune(parsed.Command.Value)
@@ -516,6 +525,7 @@ func (m *Model[T]) CommandBeforeCursor() string {
 	return string(commandRunes[:m.CursorIndex()])
 }
 
+// SetValue overwrites the entire input with the given string.
 func (m *Model[T]) SetValue(s string) {
 	m.textinput.SetValue(s)
 	expr, err := m.parser.Parse(m.Value())
@@ -526,6 +536,7 @@ func (m *Model[T]) SetValue(s string) {
 	m.parsedText = expr
 }
 
+// ResetValue clears the entire input.
 func (m *Model[T]) ResetValue() {
 	m.textinput.SetValue("")
 	m.parsedText = &statement{}
@@ -535,22 +546,25 @@ func (m *Model[T]) isDelimiter(s string) bool {
 	return m.delimiterRegex.MatchString(s)
 }
 
+// Tokens returns the entire input as a list of [input.Token].
 func (m Model[T]) Tokens() []input.Token {
 	return m.allTokens(m.parsedText)
 }
 
-func (m Model[T]) AllTokensBeforeCursor() []input.Token {
+// TokensBeforeCursor returns the tokenized input before the cursor position.
+func (m Model[T]) TokensBeforeCursor() []input.Token {
 	textBeforeCursor := m.Runes()[:m.CursorIndex()]
 
 	expr, _ := m.parser.Parse(string(textBeforeCursor))
 	return m.allTokens(expr)
 }
 
-func (m Model[T]) AllValuesBeforeCursor() []string {
-	tokens := m.AllTokensBeforeCursor()
+// ValuesBeforeCursor returns the token values of the entire input before the cursor position.
+func (m Model[T]) ValuesBeforeCursor() []string {
+	tokens := m.TokensBeforeCursor()
 	values := []string{}
 	for _, t := range tokens {
-		values = append(values, t.Value)
+		values = append(values, t.Unquote())
 	}
 	return values
 }
@@ -569,7 +583,8 @@ func (m Model[T]) allTokens(statement *statement) []input.Token {
 	return tokens
 }
 
-func (m Model[T]) AllValues() []string {
+// Values returns the tokenized input values.
+func (m Model[T]) Values() []string {
 	tokens := m.Tokens()
 	values := []string{}
 	for _, t := range tokens {
@@ -578,28 +593,37 @@ func (m Model[T]) AllValues() []string {
 	return values
 }
 
+// CursorIndex returns the cursor index in terms of number of unicode characters.
+// Use this to calculate input lengths in terms of number of characters entered.
 func (m Model[T]) CursorIndex() int {
 	return m.textinput.Position()
 }
 
+// CursorOffset returns the visual offset of the cursor in terms
+// of number of terminal cells. Use this for calculating visual dimensions
+// such as input width/height.
 func (m Model[T]) CursorOffset() int {
 	cursorIndex := m.CursorIndex()
 	runesBeforeCursor := m.Runes()[:cursorIndex]
 	return runewidth.StringWidth(string(runesBeforeCursor))
 }
 
+// SetCursor sets the cursor position.
 func (m *Model[T]) SetCursor(pos int) {
 	m.textinput.SetCursor(pos)
 }
 
+// SetCursorMode sets the mode of the cursor.
 func (m *Model[T]) SetCursorMode(cursorMode cursor.Mode) tea.Cmd {
 	return m.textinput.Cursor.SetMode(cursorMode)
 }
 
+// Prompt returns the terminal prompt.
 func (m *Model[T]) Prompt() string {
 	return string(m.prompt)
 }
 
+// SetPrompt sets the terminal prompt.
 func (m *Model[T]) SetPrompt(prompt string) {
 	m.prompt = prompt
 }
@@ -621,18 +645,21 @@ func (m Model[T]) cursorInToken(tokens []input.Token, pos int, roundingBehavior 
 		}
 		return cursor > tokens[pos-1].End() && cursor < tokens[pos].Start
 	}
-
 }
 
-func (m Model[T]) CurrentTokenPos() TokenPos {
-	return m.currentTokenPos(m.Tokens(), roundUp)
+// CurrentTokenPosition returns the [TokenPosition] of the token under the cursor.
+// If the cursor is between two tokens, it will take the token after the cursor.
+func (m Model[T]) CurrentTokenPosition() TokenPosition {
+	return m.currentTokenPosition(m.Tokens(), roundUp)
 }
 
-func (m Model[T]) CurrentTokenPosRoundDown() TokenPos {
-	return m.currentTokenPos(m.Tokens(), roundDown)
+// CurrentTokenPosition returns the [TokenPosition] of the token under the cursor.
+// If the cursor is between two tokens, it will take the token before the cursor.
+func (m Model[T]) CurrentTokenPositionRoundDown() TokenPosition {
+	return m.currentTokenPosition(m.Tokens(), roundDown)
 }
 
-func (m Model[T]) currentTokenPos(tokens []input.Token, roundingBehavior RoundingBehavior) TokenPos {
+func (m Model[T]) currentTokenPosition(tokens []input.Token, roundingBehavior RoundingBehavior) TokenPosition {
 	cursor := m.CursorIndex()
 	if len(tokens) > 0 {
 		last := tokens[len(tokens)-1]
@@ -645,7 +672,7 @@ func (m Model[T]) currentTokenPos(tokens []input.Token, roundingBehavior Roundin
 		}
 		// Check if cursor is at the end
 		if cursor > last.End() {
-			return TokenPos{
+			return TokenPosition{
 				Start: cursor,
 				End:   cursor,
 				Index: index,
@@ -654,7 +681,7 @@ func (m Model[T]) currentTokenPos(tokens []input.Token, roundingBehavior Roundin
 	}
 	for i := 0; i < len(tokens); i++ {
 		if m.cursorInToken(tokens, i, roundingBehavior) {
-			return TokenPos{
+			return TokenPosition{
 				Start: tokens[i].Start,
 				End:   tokens[i].End(),
 				Index: i,
@@ -662,23 +689,39 @@ func (m Model[T]) currentTokenPos(tokens []input.Token, roundingBehavior Roundin
 		}
 	}
 
-	return TokenPos{
+	return TokenPosition{
 		Start: -1,
 		End:   -1,
 		Index: -1,
 	}
 }
 
+// CurrentTokenBeforeCursor returns the portion of the current token before the cursor.
+// If the cursor is between two tokens, it will take the token after the cursor.
 func (m Model[T]) CurrentTokenBeforeCursor() string {
 	return string(m.currentTokenBeforeCursor(roundUp))
 }
 
+// CurrentTokenBeforeCursorRoundDown returns the portion of the current token before the cursor.
+// If the cursor is between two tokens, it will take the token before the cursor.
 func (m Model[T]) CurrentTokenBeforeCursorRoundDown() string {
 	return string(m.currentTokenBeforeCursor(roundDown))
 }
 
+// CurrentToken returns the token under the cursor.
+// If the cursor is between two tokens, it will take the token after the cursor.
+func (m Model[T]) CurrentToken() string {
+	return string(m.currentToken(m.Tokens(), roundUp))
+}
+
+// CurrentTokenRoundDown returns the token under the cursor.
+// If the cursor is between two tokens, it will take the token before the cursor.
+func (m Model[T]) CurrentTokenRoundDown() string {
+	return string(m.currentToken(m.Tokens(), roundDown))
+}
+
 func (m Model[T]) currentTokenBeforeCursor(roundingBehavior RoundingBehavior) []rune {
-	start := m.currentTokenPos(m.Tokens(), roundingBehavior).Start
+	start := m.currentTokenPosition(m.Tokens(), roundingBehavior).Start
 	cursor := m.CursorIndex()
 	if start > cursor {
 		return []rune("")
@@ -687,31 +730,27 @@ func (m Model[T]) currentTokenBeforeCursor(roundingBehavior RoundingBehavior) []
 	return val
 }
 
+// HasArgs returns whether the input has any positional arguments.
 func (m Model[T]) HasArgs() bool {
 	return len(m.parsedText.Args.Value) > 0
 }
 
-func (m Model[T]) CurrentToken() string {
-	return string(m.currentToken(m.Tokens(), roundUp))
-}
-
-func (m Model[T]) CurrentTokenRoundDown() string {
-	return string(m.currentToken(m.Tokens(), roundDown))
-}
-
 func (m Model[T]) currentToken(tokens []input.Token, roundingBehavior RoundingBehavior) []rune {
-	pos := m.currentTokenPos(tokens, roundingBehavior)
+	pos := m.currentTokenPosition(tokens, roundingBehavior)
 	return m.Runes()[pos.Start:pos.End]
 }
 
-func (m Model[T]) LastArg() *ident {
-	parsed := *m.parsedText
-	if len(parsed.Args.Value) == 0 {
+// LastArg returns the last positional argument in the input.
+// If there are no arguments, it returns nil.
+func (m Model[T]) LastArg() *input.Token {
+	parsed := m.ParsedValue()
+	if len(parsed.Args) == 0 {
 		return nil
 	}
-	return &parsed.Args.Value[len(parsed.Args.Value)-1]
+	return &parsed.Args[len(parsed.Args)-1]
 }
 
+// CommandCompleted returns whether the user finished typing the entire command (first token).
 func (m Model[T]) CommandCompleted() bool {
 	commandRunes := []rune(m.parsedText.Command.Value)
 	if m.parsedText == nil || len(commandRunes) == 0 {
@@ -720,12 +759,17 @@ func (m Model[T]) CommandCompleted() bool {
 	return m.CursorIndex() > m.parsedText.Command.Pos.Column-1+len(commandRunes)
 }
 
+// Blur removes the focus from the input.
 func (m *Model[T]) Blur() {
 	m.textinput.Blur()
 }
 
+// OnExecutorFinished is part of the [input.Input] interface.
+// It should not be invoked by users of this library.
 func (m *Model[T]) OnExecutorFinished() {}
 
+// View is part of the [input.Input] interface.
+// It should not be invoked by users of this library.
 func (m Model[T]) View(viewMode input.ViewMode) string {
 	viewBuilder := newCmdViewBuilder(m, viewMode)
 	return viewBuilder.View()

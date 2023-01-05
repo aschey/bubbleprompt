@@ -15,7 +15,7 @@ import (
 )
 
 type cmdMetadata struct {
-	commandinput.CmdMetadata
+	commandinput.CommandMetadata
 	children []suggestion.Suggestion[cmdMetadata]
 }
 
@@ -116,20 +116,20 @@ func main() {
 			Text:        "get",
 			Description: "retrieve things",
 			Metadata: cmdMetadata{
-				CmdMetadata: commandMetadata,
+				CommandMetadata: commandMetadata,
 				children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "secret",
 						Description: "get the secret",
 						Metadata: cmdMetadata{
-							CmdMetadata: commandinput.CmdMetadata{Level: 1},
+							CommandMetadata: commandinput.CommandMetadata{Level: 1},
 						},
 					},
 					{
 						Text:        "weather",
 						Description: "get the weather",
 						Metadata: cmdMetadata{
-							CmdMetadata: commandinput.CmdMetadata{
+							CommandMetadata: commandinput.CommandMetadata{
 								Level:               1,
 								ShowFlagPlaceholder: true,
 							},
@@ -142,13 +142,13 @@ func main() {
 			Text:        "set",
 			Description: "update things",
 			Metadata: cmdMetadata{
-				CmdMetadata: commandMetadata,
+				CommandMetadata: commandMetadata,
 				children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "secret",
 						Description: "update the secret",
 						Metadata: cmdMetadata{
-							CmdMetadata: commandinput.CmdMetadata{
+							CommandMetadata: commandinput.CommandMetadata{
 								Level:          1,
 								PositionalArgs: secretArgs,
 							},

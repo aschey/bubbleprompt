@@ -8,17 +8,17 @@ import (
 var leftPadding = 2
 var margin = 1
 
-type cmdMetadata = commandinput.CmdMetadata
+type cmdMetadata = commandinput.CommandMetadata
 
 func suggestions(textInput *commandinput.Model[cmdMetadata]) []suggestion.Suggestion[cmdMetadata] {
 	return []suggestion.Suggestion[cmdMetadata]{
-		{Text: "first-option", Description: "test desc", Metadata: commandinput.CmdMetadata{
+		{Text: "first-option", Description: "test desc", Metadata: commandinput.CommandMetadata{
 			PositionalArgs: textInput.NewPositionalArgs("[test placeholder1]", "[test placeholder2]"),
 		}},
-		{Text: "second-option", Description: "test desc2", Metadata: commandinput.CmdMetadata{
+		{Text: "second-option", Description: "test desc2", Metadata: commandinput.CommandMetadata{
 			PositionalArgs: textInput.NewPositionalArgs("[test placeholder]"),
 		}},
-		{Text: "third-option", Description: "test desc3", Metadata: commandinput.CmdMetadata{
+		{Text: "third-option", Description: "test desc3", Metadata: commandinput.CommandMetadata{
 			PositionalArgs: textInput.NewPositionalArgs("[flags]"),
 		}},
 		{Text: "fourth-option", Description: "test desc4"},
@@ -29,7 +29,7 @@ func suggestions(textInput *commandinput.Model[cmdMetadata]) []suggestion.Sugges
 
 func secondLevelSuggestions(textInput *commandinput.Model[cmdMetadata]) []suggestion.Suggestion[cmdMetadata] {
 	return []suggestion.Suggestion[cmdMetadata]{
-		{Text: "second-level", Description: "test desc", Metadata: commandinput.CmdMetadata{
+		{Text: "second-level", Description: "test desc", Metadata: commandinput.CommandMetadata{
 			PositionalArgs: textInput.NewPositionalArgs("[placeholder2]"),
 			Level:          1,
 		}},

@@ -162,7 +162,7 @@ func (m *Model[T]) CursorIndex() int {
 	return m.lexerModel.CursorIndex()
 }
 
-// Set cursor sets the cursor position.
+// SetCursor sets the cursor position.
 func (m *Model[T]) SetCursor(cursor int) {
 	m.lexerModel.SetCursor(cursor)
 }
@@ -182,67 +182,67 @@ func (m *Model[T]) SetPrompt(prompt string) {
 	m.lexerModel.SetPrompt(prompt)
 }
 
-// Init is part of the Input interface.
+// Init is part of the [input.Input] interface.
 // It should not be invoked by users of this library.
 func (m *Model[T]) Init() tea.Cmd {
 	return m.lexerModel.Init()
 }
 
-// OnUpdateStart is part of the Input interface.
-// It  should not be invoked by end users.
+// OnUpdateStart is part of the [input.Input] interface.
+// It should not be invoked by end users.
 func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	return m.lexerModel.OnUpdateStart(msg)
 }
 
-// View is part of the Input interface.
+// View is part of the [input.Input] interface.
 // It should not be invoked by users of this library.
 func (m *Model[T]) View(viewMode input.ViewMode) string {
 	return m.lexerModel.View(viewMode)
 }
 
-// ShouldSelectSuggestion is part of the Input interface.
+// ShouldSelectSuggestion is part of the [input.Input] interface.
 // It should not be invoked by users of this library.
 func (m *Model[T]) ShouldSelectSuggestion(suggestion suggestion.Suggestion[T]) bool {
 	return m.lexerModel.ShouldSelectSuggestion(suggestion)
 }
 
-// SuggestionRunes is part of the Input interface.
+// SuggestionRunes is part of the [input.Input] interface.
 // It should not be invoked by users of this library.
 func (m *Model[T]) SuggestionRunes(runes []rune) []rune {
 	return m.lexerModel.SuggestionRunes(runes)
 }
 
-// OnUpdateFinish is part of the Input interface.
+// OnUpdateFinish is part of the [input.Input] interface.
 // It should not be invoked by users of this library.
 func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion[T], isSelected bool) tea.Cmd {
 	return m.lexerModel.OnUpdateFinish(msg, suggestion, isSelected)
 }
 
-// OnSuggestionChanged is part of the Input interface.
+// OnSuggestionChanged is part of the [input.Input] interface.
 // It should not be invoked by users of this library.
 func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T]) {
 	m.lexerModel.OnSuggestionChanged(suggestion)
 }
 
-// OnExecutorFinished is part of the Input interface.
+// OnExecutorFinished is part of the [input.Input] interface.
 // It should not be invoked by users of this library.
 func (m *Model[T]) OnExecutorFinished() {
 	m.lexerModel.OnExecutorFinished()
 }
 
-// OnSuggestionUnselected is part of the Input interface.
+// OnSuggestionUnselected is part of the [input.Input] interface.
 // It should not be invoked by users of this library.
 func (m *Model[T]) OnSuggestionUnselected() {
 	m.lexerModel.OnSuggestionUnselected()
 }
 
-// ShouldClearSuggestions is part of the Input interface.
+// ShouldClearSuggestions is part of the [input.Input] interface.
 // It should not be invoked by users of this library.
 func (m *Model[T]) ShouldClearSuggestions(prevText []rune, msg tea.KeyMsg) bool {
 	return m.lexerModel.ShouldClearSuggestions(prevText, msg)
 }
 
-// ShouldUnselectSuggestion is part of the Input interface.
+// ShouldUnselectSuggestion is part of the [input.Input] interface.
 // It should not be invoked by users of this library.
 func (m *Model[T]) ShouldUnselectSuggestion(prevText []rune, msg tea.KeyMsg) bool {
 	return m.lexerModel.ShouldUnselectSuggestion(prevText, msg)

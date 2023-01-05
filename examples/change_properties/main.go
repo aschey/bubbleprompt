@@ -18,7 +18,7 @@ import (
 )
 
 type cmdMetadata struct {
-	commandinput.CmdMetadata
+	commandinput.CommandMetadata
 	children []suggestion.Suggestion[cmdMetadata]
 }
 
@@ -134,12 +134,12 @@ func main() {
 
 	commandMetadata := commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<command>"))
 	colorMetadata := cmdMetadata{
-		CmdMetadata: commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<color>")),
+		CommandMetadata: commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<color>")),
 	}
 	colorMetadata.Level = 1
 
 	childMetadata := cmdMetadata{
-		CmdMetadata: commandinput.CmdMetadata{
+		CommandMetadata: commandinput.CommandMetadata{
 			Level: 1,
 		},
 	}
@@ -149,7 +149,7 @@ func main() {
 			Text:        "cursor-mode",
 			Description: "set the cursor mode",
 			Metadata: cmdMetadata{
-				CmdMetadata: commandMetadata,
+				CommandMetadata: commandMetadata,
 				children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "blink",
@@ -165,7 +165,7 @@ func main() {
 						Text:        "hide",
 						Description: "no cursor",
 						Metadata: cmdMetadata{
-							CmdMetadata: commandinput.CmdMetadata{
+							CommandMetadata: commandinput.CommandMetadata{
 								Level: 1,
 							},
 						},
@@ -177,7 +177,7 @@ func main() {
 			Text:        "suggestion",
 			Description: "set suggestion styles",
 			Metadata: cmdMetadata{
-				CmdMetadata: commandMetadata,
+				CommandMetadata: commandMetadata,
 				children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "name",
@@ -196,7 +196,7 @@ func main() {
 			Text:        "input",
 			Description: "set input style",
 			Metadata: cmdMetadata{
-				CmdMetadata: commandMetadata,
+				CommandMetadata: commandMetadata,
 				children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "selected",
@@ -215,7 +215,7 @@ func main() {
 			Text:        "theme",
 			Description: "change theme",
 			Metadata: cmdMetadata{
-				CmdMetadata: commandMetadata,
+				CommandMetadata: commandMetadata,
 				children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "default",
@@ -234,7 +234,7 @@ func main() {
 			Text:        "scrollbar",
 			Description: "change the scrollbar",
 			Metadata: cmdMetadata{
-				CmdMetadata: commandMetadata,
+				CommandMetadata: commandMetadata,
 				children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "enable",
@@ -253,21 +253,21 @@ func main() {
 			Text:        "prompt",
 			Description: "set prompt text and foreground",
 			Metadata: cmdMetadata{
-				CmdMetadata: commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<value>"), textInput.NewPositionalArg("[color]")),
+				CommandMetadata: commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<value>"), textInput.NewPositionalArg("[color]")),
 			},
 		},
 		{
 			Text:        "max-suggestions",
 			Description: "set max suggestions",
 			Metadata: cmdMetadata{
-				CmdMetadata: commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<number of suggestions>")),
+				CommandMetadata: commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<number of suggestions>")),
 			},
 		},
 		{
 			Text:        "renderer",
 			Description: "change the renderer",
 			Metadata: cmdMetadata{
-				CmdMetadata: commandMetadata,
+				CommandMetadata: commandMetadata,
 				children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "unmanaged",
