@@ -1,0 +1,53 @@
+---
+slug: /input/commandinput/guide
+---
+
+# Guide
+
+## When to use
+
+This package can tokenize and format standard POSIX-style command line syntax.
+For example, the input `get weather --days 1` will be parsed into something resembling the following structure:
+
+```json
+{
+  "command": "get",
+  "args": ["weather"],
+  "flags": [
+    {
+      "name": "days",
+      "value": 1
+    }
+  ]
+}
+```
+
+## Placeholders
+
+We use placeholders to show the user what they need to type next.
+For example, when a user first opens a prompt, they may see something like this:
+
+<p>
+  <code>
+    <span style={{ color: "rgb(214, 222, 235)" }}>&gt; </span>
+    <span style={{ color: "#011627", background: "rgb(214, 222, 235)" }}>
+      g
+    </span>
+    <span style={{ color: "rgb(120, 120, 120)" }}>et </span>
+    <span style={{ color: "rgb(127, 219, 202)" }}>&lt;command&gt; [flags]</span>
+  </code>
+</p>
+
+<code>
+  <span style={{ color: "rgb(127, 219, 202)" }}>&lt;command&gt;</span>
+</code> is a placeholder which indicates that a subcommand is required as the next
+argument. Then, the second placeholder, <code>
+  <span style={{ color: "rgb(127, 219, 202)" }}>[flags]</span>
+</code>
+, indicates that there are flags available as optional arguments.
+
+It's important to note that positional arguments must come before flags in order to show the correct placeholders.
+This is because typically a command can accept many different combinations of flags, but only a finite number of positional arguments.
+If flags were allowed to come first, we wouldn't know where to show the placeholders for positional arguments.
+
+## Multi-level commands
