@@ -468,11 +468,15 @@ type FlagArgPlaceholder struct {
 func (p FlagArgPlaceholder) Text() string
 ```
 
-## type [FlagFormatter](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/formatters.go#L18-L21>)
+## type [FlagFormatter](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/formatters.go#L22-L27>)
+
+FlagFormatter handles styling for flags.
 
 ```go
 type FlagFormatter struct {
-    Flag        lipgloss.Style
+    // Flag handles styling for the flag itself.
+    Flag lipgloss.Style
+    // Placeholder handles styling for the placeholder that appears before the flag's argument is supplied (if applicable).
     Placeholder lipgloss.Style
 }
 ```
@@ -506,36 +510,74 @@ func (f FlagInput) RequiresArg() bool
 func (f FlagInput) ShortFlag() string
 ```
 
-## type [FlagValueFormatter](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/formatters.go#L23-L27>)
+## type [FlagValueFormatter](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/formatters.go#L30-L37>)
+
+FlagValueFormatter handles styling for different flag value data types.
 
 ```go
 type FlagValueFormatter struct {
+    // String handles styling for string values.
     String lipgloss.Style
-    Bool   lipgloss.Style
+    // Bool handles styling for boolean values.
+    Bool lipgloss.Style
+    // Number handles styling for numeric values.
     Number lipgloss.Style
 }
 ```
 
-## type [Formatters](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/formatters.go#L29-L38>)
+## type [Formatters](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/formatters.go#L40-L57>)
+
+Formatters handles styling for the command input.
 
 ```go
 type Formatters struct {
+    // PositionalArg handles styling for positional arguments.
     PositionalArg PositionalArgFormatter
-    Flag          FlagFormatter
-    FlagValue     FlagValueFormatter
-    Placeholder   lipgloss.Style
-    Prompt        lipgloss.Style
-    Text          lipgloss.Style
-    SelectedText  lipgloss.Style
-    Cursor        lipgloss.Style
+    // Flag handles styling for flags.
+    Flag FlagFormatter
+    // FlagValue handles styling for a flag's value (if applicable).
+    FlagValue FlagValueFormatter
+    // Placeholder handles styling for placeholder that's shown as the user types the current argument.
+    Placeholder lipgloss.Style
+    // Prompt handles styling for the prompt that's shown before the user input.
+    Prompt lipgloss.Style
+    // Command handles styling for the command.
+    Command lipgloss.Style
+    // SelectedText handles styling for the text that's selected by the suggestion manager.
+    SelectedText lipgloss.Style
+    // Cursor handles styling for the cursor.
+    Cursor lipgloss.Style
 }
 ```
 
-### func [DefaultFormatters](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/formatters.go#L40>)
+### func [DefaultFormatters](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/formatters.go#L61>)
 
 ```go
 func DefaultFormatters() Formatters
 ```
+
+DefaultFormatters initializes the [Formatters](/input/commandinput/api#type-formatters) with sensible defaults.
+You can modify any settings that you wish after calling this function.
+
+<details><summary>Example</summary>
+<p>
+
+```go
+package main
+
+import (
+	"github.com/aschey/bubbleprompt/input/commandinput"
+	"github.com/charmbracelet/lipgloss"
+)
+
+func main() {
+	defaultFormatters := commandinput.DefaultFormatters()
+	defaultFormatters.Cursor = lipgloss.NewStyle().Foreground(lipgloss.Color("128"))
+}
+```
+
+</p>
+</details>
 
 ## type [Model](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L75-L92>)
 
@@ -1162,12 +1204,16 @@ type PositionalArg struct {
 func (p PositionalArg) Placeholder() string
 ```
 
-## type [PositionalArgFormatter](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/formatters.go#L13-L16>)
+## type [PositionalArgFormatter](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/formatters.go#L14-L19>)
+
+PositionalArgFormatter handles styling for positional arguments.
 
 ```go
 type PositionalArgFormatter struct {
+    // Placeholder handles styling for the placeholder that appears before the argument is supplied.
     Placeholder lipgloss.Style
-    Arg         lipgloss.Style
+    // Arg handles styling for the argument that is supplied.
+    Arg lipgloss.Style
 }
 ```
 

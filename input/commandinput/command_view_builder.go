@@ -49,7 +49,7 @@ func (b commandViewBuilder[T]) render(runes []rune, column int, style lipgloss.S
 
 func (b commandViewBuilder[T]) renderCommand() {
 	commandRunes := []rune(b.model.parsedText.Command.Value)
-	b.render(commandRunes, b.model.parsedText.Command.Pos.Column, b.model.formatters.Text)
+	b.render(commandRunes, b.model.parsedText.Command.Pos.Column, b.model.formatters.Command)
 }
 
 func (b commandViewBuilder[T]) renderPrefix() {
