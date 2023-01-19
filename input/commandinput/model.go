@@ -26,32 +26,45 @@ type arg struct {
 	persist          bool
 }
 
+// PositionalArg is a positional arg placeholder for completions.
 type PositionalArg struct {
-	placeholder      string
+	placeholder string
+
 	PlaceholderStyle lipgloss.Style
 	ArgStyle         lipgloss.Style
 }
 
+// Placeholder returns the text value of the placeholder text.
 func (p PositionalArg) Placeholder() string {
 	return p.placeholder
 }
 
+// FlagArgPlaceholder is a flag placeholder for completions.
 type FlagArgPlaceholder struct {
 	text  string
 	Style lipgloss.Style
 }
 
+// Text returns the placeholder text.
 func (p FlagArgPlaceholder) Text() string {
 	return p.text
 }
 
+// FlagInput is used to generate a list of flag suggestions.
 type FlagInput struct {
-	Short          string
-	Long           string
+	// Short is a short (single letter) flag with a single dash.
+	// The leading dash can be optionally included.
+	Short string
+	// Long is a long (multi-letter) flag with multiple dashes.
+	// The leading dashes can optionally be included.
+	Long string
+	// ArgPlaceholder is the placeholder for the flag argument (if applicable).
 	ArgPlaceholder FlagArgPlaceholder
-	Description    string
+	// Description is the flag description.
+	Description string
 }
 
+// ShortFlag returns the Short property formatted as a flag with a leading dash.
 func (f FlagInput) ShortFlag() string {
 	if len(f.Short) > 0 && !strings.HasPrefix(f.Short, "-") {
 		return "-" + f.Short
@@ -59,6 +72,7 @@ func (f FlagInput) ShortFlag() string {
 	return f.Short
 }
 
+// ShortFlag returns the Long property formatted as a flag with the leading dashes.
 func (f FlagInput) LongFlag() string {
 	if len(f.Long) > 0 && !strings.HasPrefix(f.Long, "--") {
 		return "--" + f.Long
@@ -66,6 +80,8 @@ func (f FlagInput) LongFlag() string {
 	return f.Long
 }
 
+// RequiresArg returns whether or not the input has an argument placeholder.
+// If no placeholder is supplied, then it is assumed that the [FlagInput] does not require an argument.
 func (f FlagInput) RequiresArg() bool {
 	return len(f.ArgPlaceholder.text) > 0
 }
@@ -91,16 +107,20 @@ type Model[T CommandMetadataAccessor] struct {
 	parsedText            *statement
 }
 
+// TokenPosition contains information about where a particular token is located relative to the entire input.
 type TokenPosition struct {
+	// Start is the start position of the token.
 	Start int
-	End   int
+	// End is the end position of the token.
+	End int
+	// Index is the zero-based index of the token.
 	Index int
 }
 
-type RoundingBehavior int
+type roundingBehavior int
 
 const (
-	roundUp RoundingBehavior = iota
+	roundUp roundingBehavior = iota
 	roundDown
 )
 
@@ -257,7 +277,7 @@ func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	return cmd
 }
 
-// FlagSuggestions generates a slice of [suggestion.Suggestion] based on the input string and the slice of [FlagInput] supplied.
+// FlagSuggestions generates a list of [suggestion.Suggestion] based on the input string and the list of [FlagInput] supplied.
 // The last parameter can be used to customize the metadata for the returned suggestions.
 func (m *Model[T]) FlagSuggestions(inputStr string, flags []FlagInput, suggestionFunc func(FlagInput) T) []suggestion.Suggestion[T] {
 	inputRunes := []rune(inputStr)
@@ -628,7 +648,7 @@ func (m *Model[T]) SetPrompt(prompt string) {
 	m.prompt = prompt
 }
 
-func (m Model[T]) cursorInToken(tokens []input.Token, pos int, roundingBehavior RoundingBehavior) bool {
+func (m Model[T]) cursorInToken(tokens []input.Token, pos int, roundingBehavior roundingBehavior) bool {
 	cursor := m.CursorIndex()
 	isInToken := cursor >= tokens[pos].Start && cursor <= tokens[pos].End()
 	if isInToken {
@@ -659,7 +679,7 @@ func (m Model[T]) CurrentTokenPositionRoundDown() TokenPosition {
 	return m.currentTokenPosition(m.Tokens(), roundDown)
 }
 
-func (m Model[T]) currentTokenPosition(tokens []input.Token, roundingBehavior RoundingBehavior) TokenPosition {
+func (m Model[T]) currentTokenPosition(tokens []input.Token, roundingBehavior roundingBehavior) TokenPosition {
 	cursor := m.CursorIndex()
 	if len(tokens) > 0 {
 		last := tokens[len(tokens)-1]
@@ -720,7 +740,7 @@ func (m Model[T]) CurrentTokenRoundDown() string {
 	return string(m.currentToken(m.Tokens(), roundDown))
 }
 
-func (m Model[T]) currentTokenBeforeCursor(roundingBehavior RoundingBehavior) []rune {
+func (m Model[T]) currentTokenBeforeCursor(roundingBehavior roundingBehavior) []rune {
 	start := m.currentTokenPosition(m.Tokens(), roundingBehavior).Start
 	cursor := m.CursorIndex()
 	if start > cursor {
@@ -735,7 +755,7 @@ func (m Model[T]) HasArgs() bool {
 	return len(m.parsedText.Args.Value) > 0
 }
 
-func (m Model[T]) currentToken(tokens []input.Token, roundingBehavior RoundingBehavior) []rune {
+func (m Model[T]) currentToken(tokens []input.Token, roundingBehavior roundingBehavior) []rune {
 	pos := m.currentTokenPosition(tokens, roundingBehavior)
 	return m.Runes()[pos.Start:pos.End]
 }
