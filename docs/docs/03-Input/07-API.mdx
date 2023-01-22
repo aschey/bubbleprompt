@@ -11,7 +11,9 @@ import "github.com/aschey/bubbleprompt/input"
 ## Index
 
 - [type Input](<#type-input>)
+- [type RoundingBehavior](<#type-roundingbehavior>)
 - [type Token](<#type-token>)
+  - [func FindCurrentToken(runes []rune, tokens []Token, cursor int, roundingBehavior RoundingBehavior, isDelimiter func(s string, last Token) bool) Token](<#func-findcurrenttoken>)
   - [func TokenFromPos(value string, tokenType string, index int, pos lexer.Position) Token](<#func-tokenfrompos>)
   - [func \(t Token\) End\(\) int](<#func-token-end>)
   - [func \(t Token\) Unescape\(wrapper string\) string](<#func-token-unescape>)
@@ -26,7 +28,7 @@ import "github.com/aschey/bubbleprompt/input"
 - [type ViewMode](<#type-viewmode>)
 
 
-## type [Input](<https://github.com/aschey/bubbleprompt/blob/main/input/input.go#L16-L42>)
+## type [Input](<https://github.com/aschey/bubbleprompt/blob/main/input/input.go#L16-L44>)
 
 ```go
 type Input[T any] interface {
@@ -47,6 +49,8 @@ type Input[T any] interface {
     Prompt() string
     SetPrompt(prompt string)
     Tokens() []Token
+    CurrentToken() Token
+    CurrentTokenRoundDown() Token
     ShouldSelectSuggestion(suggestion suggestion.Suggestion[T]) bool
     SuggestionRunes(runes []rune) []rune
     OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion[T], isSelected bool) tea.Cmd
@@ -58,6 +62,19 @@ type Input[T any] interface {
 }
 ```
 
+## type [RoundingBehavior](<https://github.com/aschey/bubbleprompt/blob/main/input/token.go#L48>)
+
+```go
+type RoundingBehavior int
+```
+
+```go
+const (
+    RoundUp RoundingBehavior = iota
+    RoundDown
+)
+```
+
 ## type [Token](<https://github.com/aschey/bubbleprompt/blob/main/input/token.go#L10-L15>)
 
 ```go
@@ -67,6 +84,12 @@ type Token struct {
     Value string
     Index int
 }
+```
+
+### func [FindCurrentToken](<https://github.com/aschey/bubbleprompt/blob/main/input/token.go#L55>)
+
+```go
+func FindCurrentToken(runes []rune, tokens []Token, cursor int, roundingBehavior RoundingBehavior, isDelimiter func(s string, last Token) bool) Token
 ```
 
 ### func [TokenFromPos](<https://github.com/aschey/bubbleprompt/blob/main/input/token.go#L35>)

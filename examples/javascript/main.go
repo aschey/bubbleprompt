@@ -46,6 +46,10 @@ func (m model) valueSuggestions(value goja.Value) []suggestion.Suggestion[any] {
 	if value == nil {
 		return nil
 	}
+	// goja blows up if we try to call .String() on a null goja.Object
+	if obj, ok := value.(*goja.Object); ok && obj == nil {
+		return nil
+	}
 	strVal := value.String()
 	if strVal == "null" || strVal == "undefined" {
 		return nil
@@ -146,7 +150,7 @@ func main() {
 	textInput := parserinput.NewModel[any, statement](
 		parser.NewParticipleParser(participleParser),
 		lexerinput.WithDelimiterTokens[any]("Punct", "Whitespace", "And", "Or", "Eq"),
-		lexerinput.WithFormatter[any](parser.NewChromaFormatter(styles.SwapOff, styleLexer)),
+		lexerinput.WithTokenFormatter[any](parser.NewChromaFormatter(styles.SwapOff, styleLexer)),
 	)
 
 	vm := newVm()

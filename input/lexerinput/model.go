@@ -15,17 +15,19 @@ import (
 )
 
 type Model[T any] struct {
-	textinput        textinput.Model
-	lexer            parser.Lexer
-	formatter        parser.Formatter
-	selectedToken    *input.Token
-	tokens           []input.Token
-	formatterTokens  []parser.FormatterToken
-	delimiterTokens  []string
-	delimiters       []string
-	whitespaceTokens map[int]bool
-	prompt           string
-	err              error
+	textinput         textinput.Model
+	lexer             parser.Lexer
+	tokenFormatter    parser.Formatter
+	formatters        Formatters
+	selectedToken     *input.Token
+	tokens            []input.Token
+	formatterTokens   []parser.FormatterToken
+	delimiterTokens   []string
+	delimiters        []string
+	whitespaceTokens  map[int]bool
+	prompt            string
+	currentSuggestion *string
+	err               error
 }
 
 func NewModel[T any](lexer parser.Lexer, options ...Option[T]) *Model[T] {
@@ -37,6 +39,7 @@ func NewModel[T any](lexer parser.Lexer, options ...Option[T]) *Model[T] {
 		prompt:           "> ",
 		tokens:           []input.Token{},
 		formatterTokens:  []parser.FormatterToken{},
+		formatters:       DefaultFormatters(),
 		whitespaceTokens: make(map[int]bool),
 	}
 	for _, option := range options {
@@ -65,8 +68,8 @@ func (m *Model[T]) updateTokens() error {
 		return err
 	}
 
-	if m.formatter != nil {
-		m.formatterTokens, err = m.formatter.Lex(m.Value(), m.selectedToken)
+	if m.tokenFormatter != nil {
+		m.formatterTokens, err = m.tokenFormatter.Lex(m.Value(), m.selectedToken)
 		if err != nil {
 			return err
 		}
@@ -94,7 +97,7 @@ func (m *Model[T]) updateTokens() error {
 
 	// Check for trailing whitespace
 	if m.CursorIndex() > last {
-		fullTokens = append(fullTokens, m.createWhitespaceToken(last, m.CursorIndex(), index))
+		fullTokens = append(fullTokens, m.createWhitespaceToken(last, len([]rune(m.textinput.Value())), index))
 	}
 	m.tokens = fullTokens
 
@@ -119,18 +122,46 @@ func (m *Model[T]) Error() error {
 	return m.err
 }
 
-func (m *Model[T]) unstyledView(text []rune, showCursor bool) string {
-	viewBuilder := input.NewViewBuilder(m.CursorIndex(), lipgloss.NewStyle(), " ", showCursor)
+func (m *Model[T]) unstyledView(text []rune, showCursor bool, viewMode input.ViewMode) string {
+	viewBuilder := input.NewViewBuilder(m.CursorIndex(), m.formatters.Cursor, " ", showCursor)
 	viewBuilder.Render(text, 0, lipgloss.NewStyle())
-	return m.prompt + viewBuilder.View()
+	return m.renderWithPlaceholder(viewBuilder, viewMode)
 }
 
-func (m *Model[T]) styledView(formatterTokens []parser.FormatterToken, showCursor bool) string {
-	viewBuilder := input.NewViewBuilder(m.CursorIndex(), lipgloss.NewStyle(), " ", showCursor)
+func (m *Model[T]) styledView(formatterTokens []parser.FormatterToken, showCursor bool, viewMode input.ViewMode) string {
+	viewBuilder := input.NewViewBuilder(m.CursorIndex(), m.formatters.Cursor, " ", showCursor)
 	for _, token := range formatterTokens {
 		viewBuilder.Render([]rune(strings.TrimRight(token.Value, "\n")), viewBuilder.ViewLen(), token.Style)
 	}
+	return m.renderWithPlaceholder(viewBuilder, viewMode)
+}
 
+func (m *Model[T]) renderWithPlaceholder(viewBuilder *input.ViewBuilder, viewMode input.ViewMode) string {
+	if m.currentSuggestion != nil && viewMode == input.Interactive {
+		current := m.CurrentToken()
+		suggestionRunes := []rune(*m.currentSuggestion)
+		if current.Index > -1 {
+			value := current.Value
+			if m.IsDelimiterToken(current) {
+				if current.Index < len(m.Tokens())-1 {
+					// Cursor is before the last token, don't render placeholder
+					return m.prompt + viewBuilder.View()
+				}
+				// Current token is a delimiter, don't try to filter it on the prefix
+				value = ""
+			}
+			suggestionRunes = suggestionRunes[len([]rune(value)):]
+			// Render placeholder only if the prefix matches
+			if strings.HasPrefix(*m.currentSuggestion, value) {
+				viewBuilder.RenderPlaceholder(suggestionRunes, viewBuilder.ViewLen(), m.formatters.Placeholder)
+			}
+
+		} else {
+			// Nothing typed yet, always render the placeholder
+			viewBuilder.RenderPlaceholder(suggestionRunes, viewBuilder.ViewLen(), m.formatters.Placeholder)
+		}
+
+	}
 	return m.prompt + viewBuilder.View()
 }
 
@@ -139,19 +170,19 @@ func (m *Model[T]) View(viewMode input.ViewMode) string {
 	if viewMode == input.Static {
 		showCursor = false
 	}
-	if m.formatter == nil {
-		return m.unstyledView(m.Runes(), showCursor)
+	if m.tokenFormatter == nil {
+		return m.unstyledView(m.Runes(), showCursor, viewMode)
 	}
 
-	return m.styledView(m.formatterTokens, showCursor)
+	return m.styledView(m.formatterTokens, showCursor, viewMode)
 }
 
 func (m *Model[T]) FormatText(text string) string {
-	if m.formatter == nil {
-		return m.unstyledView([]rune(text), false)
+	if m.tokenFormatter == nil {
+		return m.unstyledView([]rune(text), false, input.Static)
 	}
-	formatterTokens, _ := m.formatter.Lex(text, nil)
-	return m.styledView(formatterTokens, false)
+	formatterTokens, _ := m.tokenFormatter.Lex(text, nil)
+	return m.styledView(formatterTokens, false, input.Static)
 }
 
 func (m *Model[T]) Focus() tea.Cmd {
@@ -207,6 +238,15 @@ func (m *Model[T]) SetCursorMode(cursorMode cursor.Mode) tea.Cmd {
 	return m.textinput.Cursor.SetMode(cursorMode)
 }
 
+// Formatters returns the formatters used by the input.
+func (m Model[T]) Formatters() Formatters {
+	return m.formatters
+}
+
+func (m *Model[T]) SetFormatters(formatters Formatters) {
+	m.formatters = formatters
+}
+
 func (m *Model[T]) Prompt() string {
 	return m.prompt
 }
@@ -221,24 +261,19 @@ func (m *Model[T]) ShouldSelectSuggestion(suggestion suggestion.Suggestion[T]) b
 	return m.CursorIndex() == token.End() && tokenStr == suggestion.Text
 }
 
-func (m *Model[T]) currentToken(runes []rune, tokenPos int) input.Token {
-	if len(m.tokens) == 0 {
-		return input.Token{Index: -1}
-	}
-	if len(m.Value()) == 0 {
-		return m.tokens[0]
-	}
+func (m *Model[T]) currentToken(runes []rune, tokenPos int, roundingBehavior input.RoundingBehavior) input.Token {
+	return input.FindCurrentToken(runes, m.tokens, m.CursorIndex(), roundingBehavior, func(s string, last input.Token) bool {
+		return m.IsDelimiterToken(last)
+	})
 
-	for i, token := range m.tokens {
-		if i == len(m.tokens)-1 || (tokenPos >= token.Start && tokenPos < token.End()) {
-			return token
-		}
-	}
-	return input.Token{Index: -1}
 }
 
 func (m *Model[T]) CurrentToken() input.Token {
-	return m.currentToken(m.Runes(), m.CursorIndex()-1)
+	return m.currentToken(m.Runes(), m.CursorIndex()-1, input.RoundUp)
+}
+
+func (m *Model[T]) CurrentTokenRoundDown() input.Token {
+	return m.currentToken(m.Runes(), m.CursorIndex()-1, input.RoundDown)
 }
 
 func (m *Model[T]) FindLast(filter func(token input.Token, symbol string) bool) *input.Token {
@@ -263,7 +298,7 @@ func (m *Model[T]) PreviousToken() *input.Token {
 }
 
 func (m *Model[T]) SuggestionRunes(runes []rune) []rune {
-	token := m.currentToken(runes, m.CursorIndex()-1)
+	token := m.currentToken(runes, m.CursorIndex()-1, input.RoundUp)
 	return []rune(token.Value)
 }
 
@@ -299,6 +334,11 @@ func (m *Model[T]) TokenValues() []string {
 }
 
 func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion[T], isSelected bool) tea.Cmd {
+	if suggestion == nil || isSelected {
+		m.currentSuggestion = nil
+	} else if !isSelected {
+		m.currentSuggestion = &suggestion.Text
+	}
 	return nil
 }
 
@@ -309,14 +349,11 @@ func (m *Model[T]) IsDelimiterToken(token input.Token) bool {
 
 func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T]) {
 	runes := m.Runes()
-	token := m.currentToken(runes, m.CursorIndex())
+	token := m.currentToken(runes, m.CursorIndex(), input.RoundUp)
 
 	if m.IsDelimiterToken(token) {
-		if m.CursorIndex() < len(runes) {
-			token = m.tokens[token.Index-1]
-			if m.IsDelimiterToken(token) {
-				token = input.Token{Start: token.End()}
-			}
+		if m.CursorIndex() < len(runes) && token.Index < len(m.tokens)-1 && !m.IsDelimiterToken(m.tokens[token.Index+1]) {
+			token = m.tokens[token.Index+1]
 		} else {
 			token = input.Token{
 				Start: token.End(),

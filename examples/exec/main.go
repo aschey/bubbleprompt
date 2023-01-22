@@ -52,13 +52,13 @@ type processFinishedMsg struct{ err error }
 
 func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]suggestion.Suggestion[cmdMetadata], error) {
 	if !m.textInput.CommandCompleted() {
-		return completer.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
+		return completer.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor().Value, m.suggestions), nil
 	}
 
 	parsed := m.textInput.ParsedValue()
 	if len(parsed.Args) > 0 && len(m.textInput.CompletedArgsBeforeCursor()) == 0 {
 		pathCompleter := completer.PathCompleter[cmdMetadata]{}
-		return pathCompleter.Complete(m.textInput.CurrentTokenBeforeCursor()), nil
+		return pathCompleter.Complete(m.textInput.CurrentTokenBeforeCursor().Value), nil
 	}
 	return nil, nil
 }

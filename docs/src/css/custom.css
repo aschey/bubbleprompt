@@ -49,3 +49,13 @@ code {
   background-color: var(--code-background-color);
   color: var(--code-foreground-color);
 }
+
+@keyframes blink {
+  50% {
+    color: #011627;
+    background: rgb(214, 222, 235);
+  }
+}
+.blink {
+  animation: blink 1s step-start 0s infinite;
+}

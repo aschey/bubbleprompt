@@ -44,7 +44,7 @@ func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]suggestion.Sug
 				Description:    "Forecast days",
 			},
 		}
-		return m.textInput.FlagSuggestions(m.textInput.CurrentTokenBeforeCursor(), flags, nil), nil
+		return m.textInput.FlagSuggestions(m.textInput.CurrentTokenBeforeCursor().Value, flags, nil), nil
 	}
 	return completer.GetRecursiveSuggestions(m.textInput.Tokens(), m.textInput.CursorIndex(), m.suggestions), nil
 }

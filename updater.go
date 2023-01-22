@@ -3,7 +3,6 @@ package prompt
 import (
 	"reflect"
 
-	"github.com/aschey/bubbleprompt/completer"
 	"github.com/aschey/bubbleprompt/executor"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/suggestion"
@@ -134,30 +133,26 @@ func (m *Model[T]) updateCompleting(msg tea.Msg, cmds []tea.Cmd, prevRunes []run
 
 func (m *Model[T]) selectSingle() {
 	// Programatically select the suggestion if it's the only one and the input matches the suggestion
-	if len(m.suggestionManager.Suggestions()) == 1 && m.textInput.ShouldSelectSuggestion(m.suggestionManager.Suggestions()[0]) {
-		m.suggestionManager.SelectSuggestion(m.suggestionManager.Suggestions()[0])
+	suggestions := m.suggestionManager.Suggestions()
+	if len(suggestions) > 0 {
+		firstSuggestion := suggestions[0]
+		// Nothing selected
+		// Select the first suggestion if it matches
+		if m.suggestionManager.SelectedSuggestion() == nil && len(suggestions) == 1 && m.textInput.ShouldSelectSuggestion(firstSuggestion) {
+			m.suggestionManager.SelectSuggestion(firstSuggestion)
+		}
 	}
+
 }
 
 func (m *Model[T]) finishUpdate(msg tea.Msg) tea.Cmd {
+	m.selectSingle()
 	suggestion := m.suggestionManager.SelectedSuggestion()
 	isSelected := suggestion != nil
 	if !isSelected {
-		// Nothing selected
-		// Select the first suggestion if it matches
-		m.selectSingle()
-
-		cursor := m.textInput.CursorIndex()
-		runes := m.typedRunes
-		// Get suggestion text before the cursor
-		if cursor < len(runes) {
-			runes = runes[:cursor]
-		}
-		typedSuggestionRunes := m.textInput.SuggestionRunes(runes)
-		filteredSuggestions := completer.FilterHasPrefix(string(typedSuggestionRunes), m.suggestionManager.Suggestions())
 		// Show placeholders for the first matching suggestion, but don't actually select it
-		if len(filteredSuggestions) > 0 {
-			suggestion = &filteredSuggestions[0]
+		if len(m.suggestionManager.Suggestions()) > 0 {
+			suggestion = &m.suggestionManager.Suggestions()[0]
 		}
 	}
 

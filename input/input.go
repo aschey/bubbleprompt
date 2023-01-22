@@ -31,6 +31,8 @@ type Input[T any] interface {
 	Prompt() string
 	SetPrompt(prompt string)
 	Tokens() []Token
+	CurrentToken() Token
+	CurrentTokenRoundDown() Token
 	ShouldSelectSuggestion(suggestion suggestion.Suggestion[T]) bool
 	SuggestionRunes(runes []rune) []rune
 	OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion[T], isSelected bool) tea.Cmd

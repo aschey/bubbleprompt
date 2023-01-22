@@ -153,6 +153,20 @@ var _ = Describe("Parser", func() {
 		})
 	})
 
+	When("the user enters a suggestion after two spaces", Ordered, func() {
+		BeforeAll(func() {
+			console.SendString("abcd  ")
+			console.SendString(tuitest.KeyLeft)
+			console.SendString(tuitest.KeyDown)
+		})
+
+		It("updates the correct token", func() {
+			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
+				return strings.Contains(state.NthOutputLine(0), "> abcd  abcd")
+			})
+		})
+	})
+
 	When("the user enters invalid input", Ordered, func() {
 		BeforeAll(func() {
 			console.SendString("'")

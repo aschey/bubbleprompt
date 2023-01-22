@@ -40,7 +40,7 @@ func (b commandViewBuilder[T]) View() string {
 }
 
 func (b commandViewBuilder[T]) render(runes []rune, column int, style lipgloss.Style) {
-	if b.model.selectedTokenPosition != nil && b.model.selectedTokenPosition.Start == column-1 {
+	if b.model.selectedToken != nil && b.model.selectedToken.Start == column-1 {
 		b.viewBuilder.Render(runes, column, b.model.formatters.SelectedText)
 	} else {
 		b.viewBuilder.Render(runes, column, style)
@@ -100,8 +100,7 @@ func (b commandViewBuilder[T]) renderFlags() {
 }
 
 func (b commandViewBuilder[T]) renderFlag(i int, flag flag, currentFlagRunes []rune, currentFlagPlaceholderRunes []rune) {
-	currentPos := b.model.CurrentTokenPositionRoundDown().Start
-	currentToken := b.model.CurrentTokenRoundDown()
+	token := b.model.CurrentTokenRoundDown()
 	flags := b.model.parsedText.Flags.Value
 	flagNameRunes := []rune(flag.Name)
 	flagValueRunes := []rune{}
@@ -119,10 +118,10 @@ func (b commandViewBuilder[T]) renderFlag(i int, flag flag, currentFlagRunes []r
 		}
 	}
 
-	flagIsCurrent := flag.Pos.Column-1 == currentPos
-	cursorBeforeEnd := currentPos < b.model.CursorIndex()
+	flagIsCurrent := flag.Pos.Column-1 == token.Start
+	cursorBeforeEnd := token.Start < b.model.CursorIndex()
 	beforeLastFlag := i < len(flags)-1
-	currentTokenIsNotFlag := len(currentToken) > 0 && !strings.HasPrefix(currentToken, "-")
+	currentTokenIsNotFlag := len(token.Value) > 0 && !strings.HasPrefix(token.Value, "-")
 
 	if !flagIsCurrent && (cursorBeforeEnd || beforeLastFlag || currentTokenIsNotFlag) {
 		if flag.Value != nil {
@@ -133,7 +132,7 @@ func (b commandViewBuilder[T]) renderFlag(i int, flag flag, currentFlagRunes []r
 		// Render current flag with placeholder info only if it's the last flag
 		if b.model.currentFlag != nil &&
 			i == len(flags)-1 &&
-			currentPos >= flag.Pos.Column-1 {
+			token.Start >= flag.Pos.Column-1 {
 			b.renderLastFlag(flags, flag, currentFlagRunes, currentFlagPlaceholderRunes)
 		}
 

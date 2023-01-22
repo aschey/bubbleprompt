@@ -25,12 +25,13 @@ For example, the input `get weather --days 1` will be parsed into something rese
 ## Placeholders
 
 We use placeholders to show the user what they need to type next.
+There are two types of placeholders - matching placeholders, which indicate that the suggestion indicated by the placeholder can be typed verbatim, and
 For example, when a user first opens a prompt, they may see something like this:
 
 <p>
   <code>
     <span style={{ color: "rgb(214, 222, 235)" }}>&gt; </span>
-    <span style={{ color: "#011627", background: "rgb(214, 222, 235)" }}>
+    <span style={{ color: "rgb(120, 120, 120)" }} class="blink">
       g
     </span>
     <span style={{ color: "rgb(120, 120, 120)" }}>et </span>
@@ -38,13 +39,9 @@ For example, when a user first opens a prompt, they may see something like this:
   </code>
 </p>
 
-<code>
-  <span style={{ color: "rgb(127, 219, 202)" }}>&lt;command&gt;</span>
-</code> is a placeholder which indicates that a subcommand is required as the next
-argument. Then, the second placeholder, <code>
-  <span style={{ color: "rgb(127, 219, 202)" }}>[flags]</span>
-</code>
-, indicates that there are flags available as optional arguments.
+The first placeholder, <code><span style={{ color: "rgb(120, 120, 120)" }}>get</span></code> indicates that this word can be typed
+verbatim. <code><span style={{ color: "rgb(127, 219, 202)" }}>&lt;command&gt;</span></code> is a placeholder which indicates that a subcommand is required as the next argument.
+Then, the second placeholder, <code><span style={{ color: "rgb(127, 219, 202)" }}>[flags]</span></code>, indicates that there are flags available as optional arguments.
 
 It's important to note that positional arguments must come before flags in order to show the correct placeholders.
 This is because typically a command can accept many different combinations of flags, but only a finite number of positional arguments.

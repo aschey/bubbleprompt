@@ -49,7 +49,7 @@ func New[T any](options ...Option[T]) *Model[T] {
 		lexerinput.NewModel(participleLexer,
 			append(settings.lexerOptions,
 				lexerinput.WithDelimiterTokens[T]("Delimiter"),
-				lexerinput.WithFormatter[T](formatter),
+				lexerinput.WithTokenFormatter[T](formatter),
 			)...),
 	}
 
@@ -59,6 +59,10 @@ func New[T any](options ...Option[T]) *Model[T] {
 // CurrentToken returns the token under the cursor.
 func (m *Model[T]) CurrentToken() input.Token {
 	return m.lexerModel.CurrentToken()
+}
+
+func (m *Model[T]) CurrentTokenRoundDown() input.Token {
+	return m.lexerModel.CurrentTokenRoundDown()
 }
 
 // CurrentTokenBeforeCursor returns the portion of the token under the cursor

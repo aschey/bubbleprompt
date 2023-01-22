@@ -145,6 +145,9 @@ func (m model) evaluatePropAccessor(parent *goja.Object, propAccessor propAccess
 }
 
 func (m model) evaluateAccessor(parent *goja.Object, accessor accessor) goja.Value {
+	if parent == nil {
+		return goja.Null()
+	}
 	var value goja.Value
 	switch {
 	case accessor.Indexer != nil:
@@ -174,5 +177,12 @@ func (m model) evaluateAccessor(parent *goja.Object, accessor accessor) goja.Val
 
 func (m model) evaluateIndexer(parent *goja.Object, indexer indexer) goja.Value {
 	val := m.evaluateExpression(parent, *indexer.Expression)
-	return parent.Get(val.String())
+	if val != nil {
+		val = parent.Get(val.String())
+		if val == nil {
+			return parent
+		}
+		return val
+	}
+	return goja.Null()
 }

@@ -19,14 +19,20 @@ func WithDelimiters[T any](delimiters ...string) Option[T] {
 	}
 }
 
-func WithFormatter[T any](formatter parser.Formatter) Option[T] {
+func WithTokenFormatter[T any](formatter parser.Formatter) Option[T] {
 	return func(model *Model[T]) {
-		model.formatter = formatter
+		model.tokenFormatter = formatter
 	}
 }
 
 func WithCursorMode[T any](cursorMode cursor.Mode) Option[T] {
 	return func(model *Model[T]) {
 		model.SetCursorMode(cursorMode)
+	}
+}
+
+func WithFormatters[T any](formatters Formatters) Option[T] {
+	return func(model *Model[T]) {
+		model.SetFormatters(formatters)
 	}
 }
