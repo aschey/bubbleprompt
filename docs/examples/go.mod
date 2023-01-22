@@ -14,7 +14,7 @@ require (
 	github.com/alecthomas/participle/v2 v2.0.0-beta.5 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52 v1.2.1 // indirect
-	github.com/charmbracelet/bubbles v0.14.1-0.20221118011100-925e5bd8ea4d // indirect
+	github.com/charmbracelet/bubbles v0.15.0 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/dlclark/regexp2 v1.8.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect

@@ -25,8 +25,8 @@ github.com/autarch/testify v1.2.2/go.mod h1:oDbHKfFv2/D5UtVrxkk90OKcb6P4/AqF1Pcf
 github.com/aymanbagabas/go-osc52 v1.0.3/go.mod h1:zT8H+Rk4VSabYN90pWyugflM3ZhpTZNC7cASDfUCdT4=
 github.com/aymanbagabas/go-osc52 v1.2.1 h1:q2sWUyDcozPLcLabEMd+a+7Ea2DitxZVN9hTxab9L4E=
 github.com/aymanbagabas/go-osc52 v1.2.1/go.mod h1:zT8H+Rk4VSabYN90pWyugflM3ZhpTZNC7cASDfUCdT4=
-github.com/charmbracelet/bubbles v0.14.1-0.20221118011100-925e5bd8ea4d h1:zcJGsLcbaQLq+LgULEO9Xeq8EGaNvJH+toHLMc4O9u0=
-github.com/charmbracelet/bubbles v0.14.1-0.20221118011100-925e5bd8ea4d/go.mod h1:/M7lAudSQTMllrJJEvootAXtt4luiHz/ZIc1APycndo=
+github.com/charmbracelet/bubbles v0.15.0 h1:c5vZ3woHV5W2b8YZI1q7v4ZNQaPetfHuoHzx+56Z6TI=
+github.com/charmbracelet/bubbles v0.15.0/go.mod h1:Y7gSFbBzlMpUDR/XM9MhZI374Q+1p1kluf1uLl8iK74=
 github.com/charmbracelet/harmonica v0.2.0/go.mod h1:KSri/1RMQOZLbw7AHqgcBycp8pgJnQMYYT8QZRqZ1Ao=
 github.com/charmbracelet/lipgloss v0.6.0 h1:1StyZB9vBSOyuZxQUcUwGr17JmojPNm87inij9N3wJY=
 github.com/charmbracelet/lipgloss v0.6.0/go.mod h1:tHh2wr34xcHjC2HCXIlGSG1jaDF0S0atAUvBMP6Ppuk=

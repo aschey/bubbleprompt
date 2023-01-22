@@ -6,10 +6,10 @@ require (
 	github.com/alecthomas/chroma/v2 v2.4.0
 	github.com/alecthomas/participle/v2 v2.0.0-beta.5
 	github.com/aschey/bubbleprompt v0.0.0
-	github.com/charmbracelet/bubbles v0.14.1-0.20221118011100-925e5bd8ea4d
+	github.com/charmbracelet/bubbles v0.15.0
 	github.com/charmbracelet/bubbletea v0.23.1
 	github.com/charmbracelet/lipgloss v0.6.0
-	github.com/dop251/goja v0.0.0-20230118114522-2c325f1ef691
+	github.com/dop251/goja v0.0.0-20230122112309-96b1610dd4f7
 
 )
 
