@@ -86,3 +86,26 @@ func ExampleModel_FlagSuggestions() {
 	// Text: --interval, Description: refresh interval
 	// Text: -i, Description: refresh interval, Preserve Placeholder: true
 }
+
+func ExampleModel_ParseUsage() {
+	textInput := commandinput.New[commandinput.CommandMetadata]()
+
+	usage := `<mandatory arg> [optional arg] 'quoted arg' "double quoted arg" normal-arg`
+	args, err := textInput.ParseUsage(usage)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%s\n%s\n%s\n%s\n%s",
+		args[0].Placeholder(),
+		args[1].Placeholder(),
+		args[2].Placeholder(),
+		args[3].Placeholder(),
+		args[4].Placeholder())
+
+	// Output:
+	// <mandatory arg>
+	// [optional arg]
+	// 'quoted arg'
+	// "double quoted arg"
+	// normal-arg
+}

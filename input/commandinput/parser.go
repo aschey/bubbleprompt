@@ -7,17 +7,17 @@ import (
 	"github.com/aschey/bubbleprompt/parser"
 )
 
-func (m *Model[T]) buildParser() {
+func buildCliParser(delimiterRegex string) *parser.ParticipleParser[statement] {
 	lexer := lexer.MustSimple([]lexer.SimpleRule{
 		{Name: "LongFlag", Pattern: `\-\-[^\s=\-]*`},
 		{Name: "ShortFlag", Pattern: `\-[^\s=\-]*`},
 		{Name: "Eq", Pattern: "="},
 		{Name: "QuotedString", Pattern: `("[^"]*"?)|('[^']*'?)`},
 		{Name: `String`, Pattern: `[^\-\s][^\s]*`},
-		{Name: "whitespace", Pattern: m.delimiterRegex.String()},
+		{Name: "whitespace", Pattern: delimiterRegex},
 	})
 	participleParser := participle.MustBuild[statement](participle.Lexer(lexer))
-	m.parser = parser.NewParticipleParser(participleParser)
+	return parser.NewParticipleParser(participleParser)
 }
 
 type statement struct {

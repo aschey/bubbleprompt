@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/alecthomas/participle/v2/lexer"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/parser"
 	"github.com/aschey/bubbleprompt/suggestion"
@@ -126,8 +127,33 @@ func New[T CommandMetadataAccessor](opts ...Option[T]) *Model[T] {
 		opt(model)
 	}
 
-	model.buildParser()
+	model.parser = buildCliParser(model.delimiterRegex.String())
 	return model
+}
+
+// ParseUsage generates a list of [PositionalArg] from a usage string.
+func (m *Model[T]) ParseUsage(placeholders string) ([]PositionalArg, error) {
+	definition := lexer.MustSimple([]lexer.SimpleRule{
+		{Name: "MandatoryArg", Pattern: `(<[^>]*>)`},
+		{Name: "OptionalArg", Pattern: `\[[^\]]*\]`},
+		{Name: "QuotedString", Pattern: `("[^"]*"?)|('[^']*'?)`},
+		{Name: `String`, Pattern: `[^\s]+`},
+		{Name: "whitespace", Pattern: `\s+`},
+	})
+	lex, err := definition.LexString("", placeholders)
+	if err != nil {
+		return nil, err
+	}
+	tokens, err := lexer.ConsumeAll(lex)
+	if err != nil {
+		return nil, err
+	}
+	positionalArgs := []PositionalArg{}
+	for _, token := range tokens {
+		positionalArgs = append(positionalArgs, m.NewPositionalArg(token.Value))
+	}
+
+	return positionalArgs, nil
 }
 
 // Init is part of the [input.Input] interface. It should not be invoked by users of this library.
