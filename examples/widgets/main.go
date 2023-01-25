@@ -107,14 +107,19 @@ type inputModel struct {
 	outputStyle lipgloss.Style
 }
 
-func (m inputModel) Complete(promptModel prompt.Model[cmdMetadata]) ([]suggestion.Suggestion[cmdMetadata], error) {
+func (m inputModel) Complete(
+	promptModel prompt.Model[cmdMetadata],
+) ([]suggestion.Suggestion[cmdMetadata], error) {
 	if m.textInput.CommandCompleted() {
 		return nil, nil
 	}
 	return completer.FilterHasPrefix(m.textInput.ParsedValue().Command.Value, m.suggestions), nil
 }
 
-func (m inputModel) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
+func (m inputModel) Execute(
+	input string,
+	promptModel *prompt.Model[cmdMetadata],
+) (tea.Model, error) {
 	parsed := m.textInput.ParsedValue()
 	switch parsed.Command.Value {
 	case "set-status":
@@ -167,7 +172,9 @@ func main() {
 		{
 			Text:        "set-status",
 			Description: "set statusbar text",
-			Metadata:    commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<text>")),
+			Metadata: commandinput.MetadataFromPositionalArgs(
+				textInput.NewPositionalArg("<text>"),
+			),
 		},
 		{
 			Text:        "think",
@@ -191,14 +198,18 @@ func main() {
 	promptModel := prompt.New[cmdMetadata](
 		inputModel,
 		textInput,
-		prompt.WithViewportRenderer[cmdMetadata](renderer.ViewportOffset{HeightOffset: statusBarHeight + padding}),
+		prompt.WithViewportRenderer[cmdMetadata](
+			renderer.ViewportOffset{HeightOffset: statusBarHeight + padding},
+		),
 	)
 
 	model := model{
 		prompt: promptModel,
 		status: statusModel{
 			statusText: "all systems go",
-			style:      lipgloss.NewStyle().Background(lipgloss.Color("2")).Foreground(lipgloss.Color("15")),
+			style: lipgloss.NewStyle().
+				Background(lipgloss.Color("2")).
+				Foreground(lipgloss.Color("15")),
 		},
 	}
 

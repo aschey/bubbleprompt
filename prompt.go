@@ -41,7 +41,11 @@ type Model[T any] struct {
 	err                     error
 }
 
-func New[T any](inputHandler InputHandler[T], textInput input.Input[T], opts ...Option[T]) Model[T] {
+func New[T any](
+	inputHandler InputHandler[T],
+	textInput input.Input[T],
+	opts ...Option[T],
+) Model[T] {
 	formatters := formatter.DefaultFormatters()
 	model := Model[T]{
 		suggestionManager: dropdown.NewDropdownSuggestionModel(textInput),

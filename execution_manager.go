@@ -14,7 +14,11 @@ type executionManager struct {
 	err            error
 }
 
-func newExecutorManager(inner tea.Model, errorTextStyle lipgloss.Style, err error) *executionManager {
+func newExecutorManager(
+	inner tea.Model,
+	errorTextStyle lipgloss.Style,
+	err error,
+) *executionManager {
 	return &executionManager{
 		inner:          inner,
 		errorTextStyle: errorTextStyle,

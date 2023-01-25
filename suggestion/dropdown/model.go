@@ -46,7 +46,9 @@ func NewDropdownSuggestionModel[T any](textInput input.Input[T]) *Model[T] {
 		selectionIndicator: "",
 		scrollbar:          " ",
 		scrollbarThumb:     " ",
-		prevRunes:          []rune(" "), // Need to set the previous text to something in order to force the initial render
+		prevRunes: []rune(
+			" ",
+		), // Need to set the previous text to something in order to force the initial render
 	}
 }
 
@@ -140,7 +142,9 @@ func (c Model[T]) ScrollbarBounds() (int, int) {
 	// The zero-based index of the first element that will be shown when the content is scrolled to the bottom
 	lastSegmentStart := contentHeight - windowHeight
 	scrollbarHeight := int(math.Max(float64(windowHeight-lastSegmentStart), 1))
-	scrollbarPos := float64(c.scrollPosition) * (float64(windowHeight-scrollbarHeight) / float64(lastSegmentStart))
+	scrollbarPos := float64(
+		c.scrollPosition,
+	) * (float64(windowHeight-scrollbarHeight) / float64(lastSegmentStart))
 
 	// If scrolling up, use ceiling operation to ensure the scrollbar is only at the top when the first row is shown
 	// otherwise use floor operation
@@ -326,7 +330,15 @@ func (c Model[T]) Render(paddingSize int, formatters formatter.Formatters) strin
 			}
 		}
 
-		line := cur.Render(selected, leftPadding, maxNameLen, maxDescLen, formatters, scrollbarView, c.SelectionIndicator())
+		line := cur.Render(
+			selected,
+			leftPadding,
+			maxNameLen,
+			maxDescLen,
+			formatters,
+			scrollbarView,
+			c.SelectionIndicator(),
+		)
 		prompts = append(prompts, line)
 	}
 

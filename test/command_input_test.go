@@ -42,20 +42,26 @@ var _ = Describe("Command Input", func() {
 
 		It("renders the placeholder", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return strings.Contains(state.NthOutputLine(0),
-					suggestions[0].Text+" "+suggestions[0].Metadata.PositionalArgs[0].Placeholder()+" "+suggestions[0].Metadata.PositionalArgs[1].Placeholder())
+				return strings.Contains(
+					state.NthOutputLine(0),
+					suggestions[0].Text+" "+suggestions[0].Metadata.PositionalArgs[0].Placeholder()+" "+suggestions[0].Metadata.PositionalArgs[1].Placeholder(),
+				)
 			})
 		})
 
 		It("applies the selected text styling", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return state.ForegroundColor(0, leftPadding).String() == commandinput.DefaultSelectedTextColor
+				return state.ForegroundColor(0, leftPadding).
+					String() ==
+					commandinput.DefaultSelectedTextColor
 			})
 		})
 
 		It("applies the selected placeholder styling", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return state.ForegroundColor(0, leftPadding+margin+len(suggestions[0].Text)).String() == commandinput.DefaultPlaceholderForeground
+				return state.ForegroundColor(0, leftPadding+margin+len(suggestions[0].Text)).
+					String() ==
+					commandinput.DefaultPlaceholderForeground
 			})
 		})
 
@@ -66,8 +72,10 @@ var _ = Describe("Command Input", func() {
 
 			It("renders the updated suggestion with placeholders", func() {
 				_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-					return strings.Contains(state.NthOutputLine(0),
-						suggestions[1].Text+" "+suggestions[1].Metadata.PositionalArgs[0].Placeholder())
+					return strings.Contains(
+						state.NthOutputLine(0),
+						suggestions[1].Text+" "+suggestions[1].Metadata.PositionalArgs[0].Placeholder(),
+					)
 				})
 			})
 		})
@@ -80,7 +88,9 @@ var _ = Describe("Command Input", func() {
 
 		It("selects the suggestion", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return state.ForegroundColor(0, leftPadding).String() == commandinput.DefaultSelectedTextColor
+				return state.ForegroundColor(0, leftPadding).
+					String() ==
+					commandinput.DefaultSelectedTextColor
 			})
 		})
 	})
@@ -94,8 +104,10 @@ var _ = Describe("Command Input", func() {
 
 		It("shows the subcommand suggestion", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return strings.Contains(state.NthOutputLine(0),
-					suggestions[1].Text+" "+secondLevelSuggestions[0].Text+" "+secondLevelSuggestions[0].Metadata.PositionalArgs[0].Placeholder())
+				return strings.Contains(
+					state.NthOutputLine(0),
+					suggestions[1].Text+" "+secondLevelSuggestions[0].Text+" "+secondLevelSuggestions[0].Metadata.PositionalArgs[0].Placeholder(),
+				)
 			})
 		})
 
@@ -109,7 +121,9 @@ var _ = Describe("Command Input", func() {
 					secondSuggestionStart := leftPadding + len(suggestions[1].Text) + margin
 
 					return state.ForegroundColor(0, leftPadding).Int() == tuitest.DefaultFG &&
-						state.ForegroundColor(0, secondSuggestionStart).String() == commandinput.DefaultSelectedTextColor
+						state.ForegroundColor(0, secondSuggestionStart).
+							String() ==
+							commandinput.DefaultSelectedTextColor
 				})
 			})
 		})
@@ -126,7 +140,10 @@ var _ = Describe("Command Input", func() {
 
 		It("shows the flag suggestion", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
-				return strings.Contains(state.NthOutputLine(1), "-"+flags[0].Short+"  "+flags[0].Description)
+				return strings.Contains(
+					state.NthOutputLine(1),
+					"-"+flags[0].Short+"  "+flags[0].Description,
+				)
 			})
 		})
 

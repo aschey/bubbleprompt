@@ -10,7 +10,13 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 )
 
-func testExecutor(console *tuitest.Console, in *string, backspace bool, doubleEnter bool, outStr string) {
+func testExecutor(
+	console *tuitest.Console,
+	in *string,
+	backspace bool,
+	doubleEnter bool,
+	outStr string,
+) {
 	if in != nil {
 		console.SendString(*in)
 		// Wait for typed input to render
@@ -105,7 +111,10 @@ var _ = Describe("Executor", func() {
 		It("renders the executor result", func() {
 			_, _ = console.WaitForDuration(func(state tuitest.TermState) bool {
 				secondLine := state.NthOutputLine(1)
-				return strings.Contains(secondLine, "selected suggestion is "+suggestions[0].Text) &&
+				return strings.Contains(
+					secondLine,
+					"selected suggestion is "+suggestions[0].Text,
+				) &&
 					!strings.Contains(secondLine, suggestions[0].Metadata.GetPositionalArgs()[0].Placeholder())
 			}, 100*time.Millisecond)
 		})

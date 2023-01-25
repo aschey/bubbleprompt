@@ -65,7 +65,10 @@ func equalsSeparator(check byte) bool {
 	return strings.ContainsAny(string(check), "/\\")
 }
 
-func (c *PathCompleter[T]) adjustSuggestions(suggestions []suggestion.Suggestion[T], sub string) []suggestion.Suggestion[T] {
+func (c *PathCompleter[T]) adjustSuggestions(
+	suggestions []suggestion.Suggestion[T],
+	sub string,
+) []suggestion.Suggestion[T] {
 	filteredSuggestions := FilterHasPrefix(sub, suggestions)
 
 	return filteredSuggestions

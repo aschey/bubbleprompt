@@ -28,8 +28,14 @@ type model struct {
 	outputStyle lipgloss.Style
 }
 
-func (m model) Complete(promptModel prompt.Model[metadata]) ([]suggestion.Suggestion[metadata], error) {
-	return completer.GetRecursiveSuggestions(m.textInput.WordTokens(), m.textInput.CursorIndex(), m.suggestions), nil
+func (m model) Complete(
+	promptModel prompt.Model[metadata],
+) ([]suggestion.Suggestion[metadata], error) {
+	return completer.GetRecursiveSuggestions(
+		m.textInput.WordTokens(),
+		m.textInput.CursorIndex(),
+		m.suggestions,
+	), nil
 }
 
 func (m model) Execute(input string, promptModel *prompt.Model[metadata]) (tea.Model, error) {

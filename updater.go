@@ -102,7 +102,11 @@ func (m *Model[T]) updateExecuting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool
 	return append(cmds, cmd), true
 }
 
-func (m *Model[T]) updateCompleting(msg tea.Msg, cmds []tea.Cmd, prevRunes []rune) ([]tea.Cmd, bool) {
+func (m *Model[T]) updateCompleting(
+	msg tea.Msg,
+	cmds []tea.Cmd,
+	prevRunes []rune,
+) ([]tea.Cmd, bool) {
 	scrollToBottom := false
 
 	switch msg := msg.(type) {
@@ -138,7 +142,8 @@ func (m *Model[T]) selectSingle() {
 		firstSuggestion := suggestions[0]
 		// Nothing selected
 		// Select the first suggestion if it matches
-		if m.suggestionManager.SelectedSuggestion() == nil && len(suggestions) == 1 && m.textInput.ShouldSelectSuggestion(firstSuggestion) {
+		if m.suggestionManager.SelectedSuggestion() == nil && len(suggestions) == 1 &&
+			m.textInput.ShouldSelectSuggestion(firstSuggestion) {
 			m.suggestionManager.SelectSuggestion(firstSuggestion)
 		}
 	}
@@ -162,8 +167,10 @@ func (m *Model[T]) finishUpdate(msg tea.Msg) tea.Cmd {
 func (m *Model[T]) finalizeExecutor(executorManager *executionManager) tea.Cmd {
 	m.suggestionManager.UnselectSuggestion()
 	// Store the final executor view in the history
-	// Need to store previous lines in a string instead of a []string in order to handle newlines from the tea.Model's View value properly
-	// When executing a tea.Model standalone, the output must end in a newline and if we use a []string to track newlines, we'll get a double newline here
+	// Need to store previous lines in a string instead of a []string in order
+	// to handle newlines from the tea.Model's View value properly
+	// When executing a tea.Model standalone, the output must end in a newline and
+	// if we use a []string to track newlines, we'll get a double newline here
 	m.renderer.AddOutput(executorManager.View())
 	m.textInput.OnExecutorFinished()
 	m.updateExecutor(nil)

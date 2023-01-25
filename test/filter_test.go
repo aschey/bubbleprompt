@@ -45,7 +45,8 @@ var _ = Describe("Filter", func() {
 
 		It("filters the suggestions", func() {
 			state, _ := console.WaitFor(func(state tuitest.TermState) bool {
-				return state.NumLines() == 3 && strings.Contains(state.NthOutputLine(2), suggestions[4].Description)
+				return state.NumLines() == 3 &&
+					strings.Contains(state.NthOutputLine(2), suggestions[4].Description)
 			})
 			lines = state.OutputLines()
 		})

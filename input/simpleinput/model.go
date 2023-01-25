@@ -218,7 +218,11 @@ func (m *Model[T]) SuggestionRunes(runes []rune) []rune {
 
 // OnUpdateFinish is part of the [input.Input] interface.
 // It should not be invoked by users of this library.
-func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion[T], isSelected bool) tea.Cmd {
+func (m *Model[T]) OnUpdateFinish(
+	msg tea.Msg,
+	suggestion *suggestion.Suggestion[T],
+	isSelected bool,
+) tea.Cmd {
 	return m.lexerModel.OnUpdateFinish(msg, suggestion, isSelected)
 }
 

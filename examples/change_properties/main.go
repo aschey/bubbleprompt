@@ -31,8 +31,14 @@ type model struct {
 	textInput   *commandinput.Model[cmdMetadata]
 }
 
-func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]suggestion.Suggestion[cmdMetadata], error) {
-	return completer.GetRecursiveSuggestions(m.textInput.Tokens(), m.textInput.CursorIndex(), m.suggestions), nil
+func (m model) Complete(
+	promptModel prompt.Model[cmdMetadata],
+) ([]suggestion.Suggestion[cmdMetadata], error) {
+	return completer.GetRecursiveSuggestions(
+		m.textInput.Tokens(),
+		m.textInput.CursorIndex(),
+		m.suggestions,
+	), nil
 }
 
 func (m model) Execute(inputStr string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
@@ -65,11 +71,20 @@ func (m model) Execute(inputStr string, promptModel *prompt.Model[cmdMetadata]) 
 	case "cursor-mode":
 		switch args[0].Value {
 		case "blink":
-			return executor.NewCmdModel("blinking cursor", m.textInput.SetCursorMode(cursor.CursorBlink)), nil
+			return executor.NewCmdModel(
+				"blinking cursor",
+				m.textInput.SetCursorMode(cursor.CursorBlink),
+			), nil
 		case "static":
-			return executor.NewCmdModel("static cursor", m.textInput.SetCursorMode(cursor.CursorStatic)), nil
+			return executor.NewCmdModel(
+				"static cursor",
+				m.textInput.SetCursorMode(cursor.CursorStatic),
+			), nil
 		case "hide":
-			return executor.NewCmdModel("blinking cursor", m.textInput.SetCursorMode(cursor.CursorHide)), nil
+			return executor.NewCmdModel(
+				"blinking cursor",
+				m.textInput.SetCursorMode(cursor.CursorHide),
+			), nil
 		}
 	case "suggestion":
 		if len(args) < 2 {
@@ -79,9 +94,13 @@ func (m model) Execute(inputStr string, promptModel *prompt.Model[cmdMetadata]) 
 
 		switch args[0].Value {
 		case "name":
-			promptFormatters.Name.Style = promptFormatters.Name.Style.Background(lipgloss.Color(color))
+			promptFormatters.Name.Style = promptFormatters.Name.Style.Background(
+				lipgloss.Color(color),
+			)
 		case "description":
-			promptFormatters.Description.Style = promptFormatters.Description.Style.Background(lipgloss.Color(color))
+			promptFormatters.Description.Style = promptFormatters.Description.Style.Background(
+				lipgloss.Color(color),
+			)
 		}
 
 	case "input":
@@ -92,7 +111,9 @@ func (m model) Execute(inputStr string, promptModel *prompt.Model[cmdMetadata]) 
 
 		switch args[0].Value {
 		case "selected":
-			inputFormatters.SelectedText = inputFormatters.SelectedText.Foreground(lipgloss.Color(color))
+			inputFormatters.SelectedText = inputFormatters.SelectedText.Foreground(
+				lipgloss.Color(color),
+			)
 		case "cursor":
 			inputFormatters.Cursor = inputFormatters.Cursor.Foreground(lipgloss.Color(color))
 		}
@@ -101,7 +122,9 @@ func (m model) Execute(inputStr string, promptModel *prompt.Model[cmdMetadata]) 
 		promptValue := args[0].Value
 		m.textInput.SetPrompt(promptValue + " ")
 		if len(args) > 1 {
-			inputFormatters.Prompt = inputFormatters.Prompt.Foreground(lipgloss.Color(args[1].Value))
+			inputFormatters.Prompt = inputFormatters.Prompt.Foreground(
+				lipgloss.Color(args[1].Value),
+			)
 		}
 
 	case "max-suggestions":
@@ -114,9 +137,15 @@ func (m model) Execute(inputStr string, promptModel *prompt.Model[cmdMetadata]) 
 	case "renderer":
 		switch args[0].Value {
 		case "viewport":
-			return executor.NewCmdModel("set viewport renderer", prompt.SetRenderer(renderer.NewViewportRenderer(renderer.ViewportOffset{}), true)), nil
+			return executor.NewCmdModel(
+				"set viewport renderer",
+				prompt.SetRenderer(renderer.NewViewportRenderer(renderer.ViewportOffset{}), true),
+			), nil
 		case "unmanaged":
-			return executor.NewCmdModel("set unmanaged renderer", prompt.SetRenderer(renderer.NewUnmanagedRenderer(), true)), nil
+			return executor.NewCmdModel(
+				"set unmanaged renderer",
+				prompt.SetRenderer(renderer.NewUnmanagedRenderer(), true),
+			), nil
 		}
 	}
 
@@ -132,9 +161,13 @@ func (m model) Update(msg tea.Msg) (prompt.InputHandler[cmdMetadata], tea.Cmd) {
 func main() {
 	textInput := commandinput.New[cmdMetadata]()
 
-	commandMetadata := commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<command>"))
+	commandMetadata := commandinput.MetadataFromPositionalArgs(
+		textInput.NewPositionalArg("<command>"),
+	)
 	colorMetadata := cmdMetadata{
-		CommandMetadata: commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<color>")),
+		CommandMetadata: commandinput.MetadataFromPositionalArgs(
+			textInput.NewPositionalArg("<color>"),
+		),
 	}
 	colorMetadata.Level = 1
 
@@ -253,14 +286,19 @@ func main() {
 			Text:        "prompt",
 			Description: "set prompt text and foreground",
 			Metadata: cmdMetadata{
-				CommandMetadata: commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<value>"), textInput.NewPositionalArg("[color]")),
+				CommandMetadata: commandinput.MetadataFromPositionalArgs(
+					textInput.NewPositionalArg("<value>"),
+					textInput.NewPositionalArg("[color]"),
+				),
 			},
 		},
 		{
 			Text:        "max-suggestions",
 			Description: "set max suggestions",
 			Metadata: cmdMetadata{
-				CommandMetadata: commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<number of suggestions>")),
+				CommandMetadata: commandinput.MetadataFromPositionalArgs(
+					textInput.NewPositionalArg("<number of suggestions>"),
+				),
 			},
 		},
 		{

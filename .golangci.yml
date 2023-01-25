@@ -22,7 +22,7 @@ linters:
     # re-enable once bubbletea is updated
     # - gomoddirectives
     - goprintffuncname
-    # - lll
+    - lll
     - misspell
     - nakedret
     # - nestif
@@ -33,5 +33,4 @@ linters:
 
 linters-settings:
   gocyclo:
-    # todo: lower this
-    min-complexity: 20
+    min-complexity: 15

@@ -37,9 +37,14 @@ type Statement struct {
 
 func (s statement) toStatement() Statement {
 	return Statement{
-		Command: input.TokenFromPos(s.Command.Value, "command", 0, s.Pos), //TokenValue{value: s.Command.Value},
-		Args:    s.Args.toArgs(1),
-		Flags:   s.Flags.toFlags(len(s.Args.Value) + 1),
+		Command: input.TokenFromPos(
+			s.Command.Value,
+			"command",
+			0,
+			s.Pos,
+		), //TokenValue{value: s.Command.Value},
+		Args:  s.Args.toArgs(1),
+		Flags: s.Flags.toFlags(len(s.Args.Value) + 1),
 	}
 }
 
@@ -56,7 +61,10 @@ type Arg struct {
 func (a args) toArgs(startIndex int) []input.Token {
 	args := []input.Token{}
 	for i, arg := range a.Value {
-		args = append(args, input.TokenFromPos(arg.Value, "arg", startIndex+i, arg.Pos)) //TokenValue{value: arg.Value})
+		args = append(
+			args,
+			input.TokenFromPos(arg.Value, "arg", startIndex+i, arg.Pos),
+		) //TokenValue{value: arg.Value})
 	}
 	return args
 }
@@ -89,7 +97,12 @@ func (f flag) toFlag(index int) Flag {
 	name := input.TokenFromPos(f.Name, "flag", index, f.Pos)
 	var value *input.Token = nil
 	if f.Value != nil {
-		v := input.TokenFromPos(f.Value.Value, "flagValue", index+1, f.Value.Pos) // {value: f.Value.Value}
+		v := input.TokenFromPos(
+			f.Value.Value,
+			"flagValue",
+			index+1,
+			f.Value.Pos,
+		) // {value: f.Value.Value}
 		value = &v
 	}
 	return Flag{

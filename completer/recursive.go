@@ -9,7 +9,11 @@ type Metadata[T any] interface {
 	Children() []suggestion.Suggestion[T]
 }
 
-func GetRecursiveSuggestions[T Metadata[T]](tokens []input.Token, cursor int, suggestions []suggestion.Suggestion[T]) []suggestion.Suggestion[T] {
+func GetRecursiveSuggestions[T Metadata[T]](
+	tokens []input.Token,
+	cursor int,
+	suggestions []suggestion.Suggestion[T],
+) []suggestion.Suggestion[T] {
 	if len(tokens) == 0 {
 		return suggestions
 	}

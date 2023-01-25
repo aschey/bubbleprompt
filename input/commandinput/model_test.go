@@ -78,8 +78,12 @@ func ExampleModel_FlagSuggestions() {
 				PreservePlaceholder: true,
 			}
 		})
-	fmt.Printf("Text: %s, Description: %s, Preserve Placeholder: %t\n",
-		suggestions[0].Text, suggestions[0].Description, suggestions[0].Metadata.PreservePlaceholder)
+	fmt.Printf(
+		"Text: %s, Description: %s, Preserve Placeholder: %t\n",
+		suggestions[0].Text,
+		suggestions[0].Description,
+		suggestions[0].Metadata.PreservePlaceholder,
+	)
 
 	// Output:
 	// Text: -i, Description: refresh interval

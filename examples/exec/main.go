@@ -50,9 +50,14 @@ func (m cmdModel) View() string {
 
 type processFinishedMsg struct{ err error }
 
-func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]suggestion.Suggestion[cmdMetadata], error) {
+func (m model) Complete(
+	promptModel prompt.Model[cmdMetadata],
+) ([]suggestion.Suggestion[cmdMetadata], error) {
 	if !m.textInput.CommandCompleted() {
-		return completer.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor().Value, m.suggestions), nil
+		return completer.FilterHasPrefix(
+			m.textInput.CurrentTokenBeforeCursor().Value,
+			m.suggestions,
+		), nil
 	}
 
 	parsed := m.textInput.ParsedValue()
@@ -86,7 +91,8 @@ func (m model) Update(msg tea.Msg) (prompt.InputHandler[cmdMetadata], tea.Cmd) {
 func main() {
 	fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.
 		Color("6")).
-		Render("Run an external command without exiting bubbleprompt.\nCurrently this only works well with commands that produce fullscreen output."))
+		Render("Run an external command without exiting bubbleprompt.\nCurrently this only works well with commands that produce fullscreen output."),
+	)
 	fmt.Println()
 
 	textInput := commandinput.New[cmdMetadata]()

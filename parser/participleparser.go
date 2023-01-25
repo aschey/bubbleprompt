@@ -7,7 +7,10 @@ type ParticipleParser[G any] struct {
 	parseOptions []participle.ParseOption
 }
 
-func NewParticipleParser[G any](parser *participle.Parser[G], parseOptions ...participle.ParseOption) *ParticipleParser[G] {
+func NewParticipleParser[G any](
+	parser *participle.Parser[G],
+	parseOptions ...participle.ParseOption,
+) *ParticipleParser[G] {
 	return &ParticipleParser[G]{parser: parser, parseOptions: parseOptions}
 }
 

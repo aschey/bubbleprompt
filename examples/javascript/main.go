@@ -79,7 +79,8 @@ func (m model) valueSuggestions(value goja.Value) []suggestion.Suggestion[any] {
 		prevToken = prev.Value
 	}
 
-	if datatype == objectType && currentBeforeCursor != "." && prevToken != "." && !objectVar.Equals(m.vm.GlobalObject()) {
+	if datatype == objectType && currentBeforeCursor != "." && prevToken != "." &&
+		!objectVar.Equals(m.vm.GlobalObject()) {
 		keyWrap = `"`
 		completable = strings.Trim(completable, `"`)
 	}
@@ -154,7 +155,9 @@ func main() {
 	)
 
 	vm := newVm()
-	_, _ = vm.RunString(`pizza = {mushroom: 'magic', cheese: true, meat: {pepperoni: 1, sausage: 2 }}`)
+	_, _ = vm.RunString(
+		`pizza = {mushroom: 'magic', cheese: true, meat: {pepperoni: 1, sausage: 2 }}`,
+	)
 	_, _ = vm.RunString(`food = ['hummus', 'wine', {pizza: pizza}]`)
 
 	model := model{

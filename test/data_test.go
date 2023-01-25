@@ -13,7 +13,10 @@ type cmdMetadata = commandinput.CommandMetadata
 func suggestions(textInput *commandinput.Model[cmdMetadata]) []suggestion.Suggestion[cmdMetadata] {
 	return []suggestion.Suggestion[cmdMetadata]{
 		{Text: "first-option", Description: "test desc", Metadata: commandinput.CommandMetadata{
-			PositionalArgs: textInput.NewPositionalArgs("[test placeholder1]", "[test placeholder2]"),
+			PositionalArgs: textInput.NewPositionalArgs(
+				"[test placeholder1]",
+				"[test placeholder2]",
+			),
 		}},
 		{Text: "second-option", Description: "test desc2", Metadata: commandinput.CommandMetadata{
 			PositionalArgs: textInput.NewPositionalArgs("[test placeholder]"),
@@ -27,7 +30,9 @@ func suggestions(textInput *commandinput.Model[cmdMetadata]) []suggestion.Sugges
 		{Text: "seventh-option", SuggestionText: "suggestion text", Description: "test desc7"}}
 }
 
-func secondLevelSuggestions(textInput *commandinput.Model[cmdMetadata]) []suggestion.Suggestion[cmdMetadata] {
+func secondLevelSuggestions(
+	textInput *commandinput.Model[cmdMetadata],
+) []suggestion.Suggestion[cmdMetadata] {
 	return []suggestion.Suggestion[cmdMetadata]{
 		{Text: "second-level", Description: "test desc", Metadata: commandinput.CommandMetadata{
 			PositionalArgs: textInput.NewPositionalArgs("[placeholder2]"),

@@ -13,7 +13,10 @@ type alternatingFormatter struct {
 	oddTextStyle  lipgloss.Style
 }
 
-func (f alternatingFormatter) Lex(input string, _selectedToken *input.Token) ([]parser.FormatterToken, error) {
+func (f alternatingFormatter) Lex(
+	input string,
+	_selectedToken *input.Token,
+) ([]parser.FormatterToken, error) {
 	tokens, err := f.lexer.Lex(input)
 
 	if err != nil {

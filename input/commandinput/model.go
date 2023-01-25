@@ -250,7 +250,8 @@ func (m *Model[T]) ArgsBeforeCursor() []string {
 }
 
 // CompletedArgsBeforeCursor returns the positional arguments before the cursor that have already been completed.
-// In other words, there needs to be a delimiter after the argument to indicate that the user has finished entering in that argument.
+// In other words, there needs to be a delimiter after the argument to indicate that the user has finished
+// entering in that argument.
 func (m *Model[T]) CompletedArgsBeforeCursor() []string {
 	args := []string{}
 	runesBeforeCursor := m.Runes()[:m.CursorIndex()]
@@ -261,7 +262,8 @@ func (m *Model[T]) CompletedArgsBeforeCursor() []string {
 		args = append(args, arg.Value)
 	}
 
-	if len(expr.Flags.Value) == 0 && len(runesBeforeCursor) > 0 && !m.isDelimiter(string(runesBeforeCursor[len(runesBeforeCursor)-1])) {
+	if len(expr.Flags.Value) == 0 && len(runesBeforeCursor) > 0 &&
+		!m.isDelimiter(string(runesBeforeCursor[len(runesBeforeCursor)-1])) {
 		if len(args) > 0 {
 			args = args[:len(args)-1]
 		}
@@ -285,16 +287,22 @@ func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	return cmd
 }
 
-// FlagSuggestions generates a list of [suggestion.Suggestion] based on the input string and the list of [FlagInput] supplied.
+// FlagSuggestions generates a list of [suggestion.Suggestion] based on
+// the input string and the list of [FlagInput] supplied.
 // The last parameter can be used to customize the metadata for the returned suggestions.
-func (m *Model[T]) FlagSuggestions(inputStr string, flags []FlagInput, suggestionFunc func(FlagInput) T) []suggestion.Suggestion[T] {
+func (m *Model[T]) FlagSuggestions(
+	inputStr string,
+	flags []FlagInput,
+	suggestionFunc func(FlagInput) T,
+) []suggestion.Suggestion[T] {
 	inputRunes := []rune(inputStr)
 	suggestions := []suggestion.Suggestion[T]{}
 	isLong := strings.HasPrefix(inputStr, "--")
 	isMulti := !isLong && strings.HasPrefix(inputStr, "-") && len(inputRunes) > 1
 
 	for _, flag := range flags {
-		// Don't show any flag suggestions if the current flag requires an arg unless the user skipped the arg and is now typing another flag that does not require an arg
+		// Don't show any flag suggestions if the current flag requires an arg
+		// unless the user skipped the arg and is now typing another flag that does not require an arg
 		if m.shouldSkipFlagSuggestions(flag, inputRunes, isMulti) {
 			return []suggestion.Suggestion[T]{}
 		}
@@ -302,7 +310,10 @@ func (m *Model[T]) FlagSuggestions(inputStr string, flags []FlagInput, suggestio
 		if ((isLong || flag.Short == "") && strings.HasPrefix(flag.LongFlag(), inputStr)) ||
 			strings.HasPrefix(flag.ShortFlag(), inputStr) || (isMulti && !flag.RequiresArg()) {
 
-			suggestions = append(suggestions, m.getFlagSuggestion(flag, isLong, isMulti, suggestionFunc))
+			suggestions = append(
+				suggestions,
+				m.getFlagSuggestion(flag, isLong, isMulti, suggestionFunc),
+			)
 		}
 	}
 
@@ -330,10 +341,16 @@ func (m *Model[T]) shouldSkipFlagSuggestions(flag FlagInput, inputRunes []rune, 
 	}
 	return ((isMulti && flag.Short == curFlagText) ||
 		prevToken == flag.ShortFlag() ||
-		prevToken == flag.LongFlag()) && flag.RequiresArg() && (!currentIsFlag || currentToken == flag.ShortFlag() || currentToken == flag.LongFlag())
+		prevToken == flag.LongFlag()) && flag.RequiresArg() &&
+		(!currentIsFlag || currentToken == flag.ShortFlag() || currentToken == flag.LongFlag())
 }
 
-func (m *Model[T]) getFlagSuggestion(flag FlagInput, isLong bool, isMulti bool, suggestionFunc func(FlagInput) T) suggestion.Suggestion[T] {
+func (m *Model[T]) getFlagSuggestion(
+	flag FlagInput,
+	isLong bool,
+	isMulti bool,
+	suggestionFunc func(FlagInput) T,
+) suggestion.Suggestion[T] {
 	suggestion := suggestion.Suggestion[T]{
 		Description: flag.Description,
 	}
@@ -381,7 +398,11 @@ func (m *Model[T]) getPosArgs(metadata T) []arg {
 
 // OnUpdateFinish is part of the [input.Input] interface.
 // It should not be invoked by users of this library.
-func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion[T], isSelected bool) tea.Cmd {
+func (m *Model[T]) OnUpdateFinish(
+	msg tea.Msg,
+	suggestion *suggestion.Suggestion[T],
+	isSelected bool,
+) tea.Cmd {
 	if m.CommandCompleted() {
 		// If no suggestions, leave args alone
 		if suggestion == nil {
@@ -417,7 +438,8 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion
 			m.args = append([]arg{}, m.origArgs...)
 		}
 		argIndex := index - 1
-		if argIndex >= 0 && argIndex < len(m.args) && !suggestion.Metadata.GetPreservePlaceholder() {
+		if argIndex >= 0 && argIndex < len(m.args) &&
+			!suggestion.Metadata.GetPreservePlaceholder() {
 			// Replace current arg with the suggestion
 			m.args[argIndex] = arg{
 				text:             suggestion.Text,
@@ -655,10 +677,19 @@ func (m *Model[T]) SetPrompt(prompt string) {
 	m.prompt = prompt
 }
 
-func (m Model[T]) currentToken(tokens []input.Token, roundingBehavior input.RoundingBehavior) input.Token {
-	return input.FindCurrentToken(m.Runes(), tokens, m.CursorIndex(), roundingBehavior, func(s string, last input.Token) bool {
-		return m.isDelimiter(s) || (strings.HasPrefix(last.Value, "-") && s == "=")
-	})
+func (m Model[T]) currentToken(
+	tokens []input.Token,
+	roundingBehavior input.RoundingBehavior,
+) input.Token {
+	return input.FindCurrentToken(
+		m.Runes(),
+		tokens,
+		m.CursorIndex(),
+		roundingBehavior,
+		func(s string, last input.Token) bool {
+			return m.isDelimiter(s) || (strings.HasPrefix(last.Value, "-") && s == "=")
+		},
+	)
 }
 
 // CurrentTokenBeforeCursor returns the portion of the current token before the cursor.

@@ -32,7 +32,9 @@ type model struct {
 	executorValueStyle lipgloss.Style
 }
 
-func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]suggestion.Suggestion[cmdMetadata], error) {
+func (m model) Complete(
+	promptModel prompt.Model[cmdMetadata],
+) ([]suggestion.Suggestion[cmdMetadata], error) {
 	parsed := m.textInput.ParsedValue()
 	completed := m.textInput.CompletedArgsBeforeCursor()
 	if len(completed) == 1 && parsed.Command.Value == "get" && parsed.Args[0].Value == "weather" {
@@ -44,9 +46,17 @@ func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]suggestion.Sug
 				Description:    "Forecast days",
 			},
 		}
-		return m.textInput.FlagSuggestions(m.textInput.CurrentTokenBeforeCursor().Value, flags, nil), nil
+		return m.textInput.FlagSuggestions(
+			m.textInput.CurrentTokenBeforeCursor().Value,
+			flags,
+			nil,
+		), nil
 	}
-	return completer.GetRecursiveSuggestions(m.textInput.Tokens(), m.textInput.CursorIndex(), m.suggestions), nil
+	return completer.GetRecursiveSuggestions(
+		m.textInput.Tokens(),
+		m.textInput.CursorIndex(),
+		m.suggestions,
+	), nil
 }
 
 func (m model) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
@@ -77,9 +87,13 @@ func (m model) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (te
 			}
 			days = m.executorValueStyle.Render(days)
 			value := m.executorValueStyle.Render("cloudy with a chance of meatballs")
-			return executor.NewStringModel(fmt.Sprintf("weather for the next %s day(s) is: %s", days, value)), nil
+			return executor.NewStringModel(
+				fmt.Sprintf("weather for the next %s day(s) is: %s", days, value),
+			), nil
 		case "secret":
-			return executor.NewStringModel("the secret is: " + m.executorValueStyle.Render(m.secret)), nil
+			return executor.NewStringModel(
+				"the secret is: " + m.executorValueStyle.Render(m.secret),
+			), nil
 		}
 	case "set":
 		switch arg.Value {
@@ -109,7 +123,9 @@ func Example() {
 	secretArgs := textInput.NewPositionalArgs("<secret value>")
 	secretArgs[0].ArgStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("6"))
 
-	commandMetadata := commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<command>"))
+	commandMetadata := commandinput.MetadataFromPositionalArgs(
+		textInput.NewPositionalArg("<command>"),
+	)
 
 	suggestions := []suggestion.Suggestion[cmdMetadata]{
 		{

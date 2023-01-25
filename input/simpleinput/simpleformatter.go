@@ -11,7 +11,10 @@ type simpleinputFormatter struct {
 	selectedTextStyle lipgloss.Style
 }
 
-func (f simpleinputFormatter) Lex(input string, selectedToken *input.Token) ([]parser.FormatterToken, error) {
+func (f simpleinputFormatter) Lex(
+	input string,
+	selectedToken *input.Token,
+) ([]parser.FormatterToken, error) {
 	tokens, err := f.lexer.Lex(input)
 
 	if err != nil {

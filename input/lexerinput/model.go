@@ -85,7 +85,10 @@ func (m *Model[T]) updateTokens() error {
 			if prevEnd < token.Start {
 				// This part of the input was ignored by the lexer
 				// so insert a dummy token to account for it
-				fullTokens = append(fullTokens, m.createWhitespaceToken(prevEnd, token.Start, index))
+				fullTokens = append(
+					fullTokens,
+					m.createWhitespaceToken(prevEnd, token.Start, index),
+				)
 				index++
 			}
 		}
@@ -97,7 +100,10 @@ func (m *Model[T]) updateTokens() error {
 
 	// Check for trailing whitespace
 	if m.CursorIndex() > last {
-		fullTokens = append(fullTokens, m.createWhitespaceToken(last, len([]rune(m.textinput.Value())), index))
+		fullTokens = append(
+			fullTokens,
+			m.createWhitespaceToken(last, len([]rune(m.textinput.Value())), index),
+		)
 	}
 	m.tokens = fullTokens
 
@@ -128,15 +134,26 @@ func (m *Model[T]) unstyledView(text []rune, showCursor bool, viewMode input.Vie
 	return m.renderWithPlaceholder(viewBuilder, viewMode)
 }
 
-func (m *Model[T]) styledView(formatterTokens []parser.FormatterToken, showCursor bool, viewMode input.ViewMode) string {
+func (m *Model[T]) styledView(
+	formatterTokens []parser.FormatterToken,
+	showCursor bool,
+	viewMode input.ViewMode,
+) string {
 	viewBuilder := input.NewViewBuilder(m.CursorIndex(), m.formatters.Cursor, " ", showCursor)
 	for _, token := range formatterTokens {
-		viewBuilder.Render([]rune(strings.TrimRight(token.Value, "\n")), viewBuilder.ViewLen(), token.Style)
+		viewBuilder.Render(
+			[]rune(strings.TrimRight(token.Value, "\n")),
+			viewBuilder.ViewLen(),
+			token.Style,
+		)
 	}
 	return m.renderWithPlaceholder(viewBuilder, viewMode)
 }
 
-func (m *Model[T]) renderWithPlaceholder(viewBuilder *input.ViewBuilder, viewMode input.ViewMode) string {
+func (m *Model[T]) renderWithPlaceholder(
+	viewBuilder *input.ViewBuilder,
+	viewMode input.ViewMode,
+) string {
 	if m.currentSuggestion != nil && viewMode == input.Interactive {
 		current := m.CurrentToken()
 		suggestionRunes := []rune(*m.currentSuggestion)
@@ -153,7 +170,11 @@ func (m *Model[T]) renderWithPlaceholder(viewBuilder *input.ViewBuilder, viewMod
 			suggestionRunes = suggestionRunes[len([]rune(value)):]
 			// Render placeholder only if the prefix matches
 			if strings.HasPrefix(*m.currentSuggestion, value) {
-				viewBuilder.RenderPlaceholder(suggestionRunes, viewBuilder.ViewLen(), m.formatters.Placeholder)
+				viewBuilder.RenderPlaceholder(
+					suggestionRunes,
+					viewBuilder.ViewLen(),
+					m.formatters.Placeholder,
+				)
 			}
 
 		} else {
@@ -261,10 +282,20 @@ func (m *Model[T]) ShouldSelectSuggestion(suggestion suggestion.Suggestion[T]) b
 	return m.CursorIndex() == token.End() && tokenStr == suggestion.Text
 }
 
-func (m *Model[T]) currentToken(runes []rune, tokenPos int, roundingBehavior input.RoundingBehavior) input.Token {
-	return input.FindCurrentToken(runes, m.tokens, m.CursorIndex(), roundingBehavior, func(s string, last input.Token) bool {
-		return m.IsDelimiterToken(last)
-	})
+func (m *Model[T]) currentToken(
+	runes []rune,
+	tokenPos int,
+	roundingBehavior input.RoundingBehavior,
+) input.Token {
+	return input.FindCurrentToken(
+		runes,
+		m.tokens,
+		m.CursorIndex(),
+		roundingBehavior,
+		func(s string, last input.Token) bool {
+			return m.IsDelimiterToken(last)
+		},
+	)
 
 }
 
@@ -333,7 +364,11 @@ func (m *Model[T]) TokenValues() []string {
 	return tokens
 }
 
-func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion[T], isSelected bool) tea.Cmd {
+func (m *Model[T]) OnUpdateFinish(
+	msg tea.Msg,
+	suggestion *suggestion.Suggestion[T],
+	isSelected bool,
+) tea.Cmd {
 	if suggestion == nil || isSelected {
 		m.currentSuggestion = nil
 	} else if !isSelected {
@@ -344,7 +379,9 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion
 
 func (m *Model[T]) IsDelimiterToken(token input.Token) bool {
 	// Dummy whitespace tokens won't be registered with the lexer so check them separately
-	return slices.Contains(m.delimiters, token.Value) || slices.Contains(m.delimiterTokens, token.Type) || m.whitespaceTokens[token.Start]
+	return slices.Contains(m.delimiters, token.Value) ||
+		slices.Contains(m.delimiterTokens, token.Type) ||
+		m.whitespaceTokens[token.Start]
 }
 
 func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T]) {
@@ -352,7 +389,8 @@ func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T]) {
 	token := m.currentToken(runes, m.CursorIndex(), input.RoundUp)
 
 	if m.IsDelimiterToken(token) {
-		if m.CursorIndex() < len(runes) && token.Index < len(m.tokens)-1 && !m.IsDelimiterToken(m.tokens[token.Index+1]) {
+		if m.CursorIndex() < len(runes) && token.Index < len(m.tokens)-1 &&
+			!m.IsDelimiterToken(m.tokens[token.Index+1]) {
 			token = m.tokens[token.Index+1]
 		} else {
 			token = input.Token{

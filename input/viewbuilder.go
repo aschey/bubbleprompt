@@ -17,8 +17,18 @@ type ViewBuilder struct {
 	showCursor  bool
 }
 
-func NewViewBuilder(cursor int, cursorStyle lipgloss.Style, delimiter string, showCursor bool) *ViewBuilder {
-	return &ViewBuilder{cursor: cursor, cursorStyle: cursorStyle, delimiter: delimiter, showCursor: showCursor}
+func NewViewBuilder(
+	cursor int,
+	cursorStyle lipgloss.Style,
+	delimiter string,
+	showCursor bool,
+) *ViewBuilder {
+	return &ViewBuilder{
+		cursor:      cursor,
+		cursorStyle: cursorStyle,
+		delimiter:   delimiter,
+		showCursor:  showCursor,
+	}
 }
 
 func (v ViewBuilder) View() string {
@@ -36,7 +46,9 @@ func (v *ViewBuilder) Render(newRunes []rune, column int, style lipgloss.Style) 
 
 	cursorPos := v.cursor
 	if offset+v.extraOffset > v.viewLen {
-		newRunes = append([]rune(strings.Repeat(string(v.delimiter), offset+v.extraOffset-v.viewLen)), newRunes...)
+		newRunes = append(
+			[]rune(strings.Repeat(string(v.delimiter), offset+v.extraOffset-v.viewLen)),
+			newRunes...)
 	}
 	if cursorPos >= v.viewLen && cursorPos < v.viewLen+len(newRunes) {
 		v.view += v.renderAllWithCursor(newRunes, cursorPos-v.viewLen, style)

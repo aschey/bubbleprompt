@@ -28,7 +28,10 @@ type changeTextMsg struct{}
 func suggestions(textInput *commandinput.Model[cmdMetadata]) []suggestion.Suggestion[cmdMetadata] {
 	return []suggestion.Suggestion[cmdMetadata]{
 		{Text: "first-option", Description: "test desc", Metadata: commandinput.CommandMetadata{
-			PositionalArgs: textInput.NewPositionalArgs("[test placeholder1]", "[test placeholder2]"),
+			PositionalArgs: textInput.NewPositionalArgs(
+				"[test placeholder1]",
+				"[test placeholder2]",
+			),
 		}},
 		{Text: "second-option", Description: "test desc2", Metadata: commandinput.CommandMetadata{
 			PositionalArgs: textInput.NewPositionalArgs("[test placeholder]"),
@@ -42,7 +45,9 @@ func suggestions(textInput *commandinput.Model[cmdMetadata]) []suggestion.Sugges
 		{Text: "seventh-option", SuggestionText: "suggestion text", Description: "test desc7"}}
 }
 
-func secondLevelSuggestions(textInput *commandinput.Model[cmdMetadata]) []suggestion.Suggestion[cmdMetadata] {
+func secondLevelSuggestions(
+	textInput *commandinput.Model[cmdMetadata],
+) []suggestion.Suggestion[cmdMetadata] {
 	return []suggestion.Suggestion[cmdMetadata]{
 		{Text: "second-level", Description: "test desc", Metadata: commandinput.CommandMetadata{
 			PositionalArgs: textInput.NewPositionalArgs("[placeholder2]"),
@@ -67,12 +72,18 @@ func (m model) Update(msg tea.Msg) (prompt.InputHandler[cmdMetadata], tea.Cmd) {
 	return m, nil
 }
 
-func (m model) Complete(promptModel prompt.Model[cmdMetadata]) ([]suggestion.Suggestion[cmdMetadata], error) {
+func (m model) Complete(
+	promptModel prompt.Model[cmdMetadata],
+) ([]suggestion.Suggestion[cmdMetadata], error) {
 	time.Sleep(100 * time.Millisecond)
 	suggestions := m.suggestions
 	if m.textInput.CommandCompleted() {
 		if m.textInput.ParsedValue().Command.Value == suggestions[2].Text {
-			return m.textInput.FlagSuggestions(m.textInput.CurrentTokenBeforeCursor().Value, flags, nil), nil
+			return m.textInput.FlagSuggestions(
+				m.textInput.CurrentTokenBeforeCursor().Value,
+				flags,
+				nil,
+			), nil
 		}
 		suggestions = secondLevelSuggestions(m.textInput)
 	}

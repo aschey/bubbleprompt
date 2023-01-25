@@ -52,11 +52,18 @@ const (
 	RoundDown
 )
 
-func FindCurrentToken(runes []rune, tokens []Token, cursor int, roundingBehavior RoundingBehavior, isDelimiter func(s string, last Token) bool) Token {
+func FindCurrentToken(
+	runes []rune,
+	tokens []Token,
+	cursor int,
+	roundingBehavior RoundingBehavior,
+	isDelimiter func(s string, last Token) bool,
+) Token {
 	if len(tokens) > 0 {
 		last := tokens[len(tokens)-1]
 		index := len(tokens) - 1
-		currentRuneIsDelimiter := cursor > 0 && len(runes) > 0 && isDelimiter(string(runes[cursor-1]), last)
+		currentRuneIsDelimiter := cursor > 0 && len(runes) > 0 &&
+			isDelimiter(string(runes[cursor-1]), last)
 		if roundingBehavior == RoundUp && currentRuneIsDelimiter {
 			// Haven't started a new token yet, but we have added a delimiter
 			// so we'll consider the current token finished

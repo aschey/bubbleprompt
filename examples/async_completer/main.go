@@ -70,7 +70,11 @@ func main() {
 		textInput,
 	)
 
-	fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Render("Type something and watch the suggestions update asynchronously"))
+	fmt.Println(
+		lipgloss.NewStyle().
+			Foreground(lipgloss.Color("6")).
+			Render("Type something and watch the suggestions update asynchronously"),
+	)
 	fmt.Println()
 	if _, err := tea.NewProgram(promptModel, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {
 		fmt.Printf("Could not start program\n%v\n", err)
