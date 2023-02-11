@@ -13,13 +13,11 @@ tasks:
       - cp .githooks/pre-commit .git/hooks/pre-commit
   test:
     cmds:
-      - ginkgo -v -race -p ./test
-      - go test .
-      - go test ./input/...
+      - go test ./... -skip "TestApp|TestBubbleprompt"
+      - ginkgo -v -race -p ./...
   covTest:
     cmds:
-      - go test .
-      - go test ./input/...
+      - go test ./... -skip "TestApp|TestBubbleprompt"
       - go test ./test -v -tuicover -tuicoverpkg ../...
   buildCoverage:
     deps: [covTest]
