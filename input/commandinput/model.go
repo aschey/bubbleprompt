@@ -404,80 +404,88 @@ func (m *Model[T]) OnUpdateFinish(
 	isSelected bool,
 ) tea.Cmd {
 	if m.CommandCompleted() {
-		// If no suggestions, leave args alone
-		if suggestion == nil {
-			// Don't reset current flag yet so we can still render the placeholder until the arg gets typed
-			if m.currentFlag != nil && m.currentFlag.Metadata.GetFlagArgPlaceholder().text == "" {
-				m.currentFlag = nil
-			}
-			// Clear any temporary placeholders
-			m.args = m.origArgs
-			return nil
-		}
-
-		if strings.HasPrefix(suggestion.Text, "-") {
-			m.currentFlag = suggestion
-		} else {
-			m.showFlagPlaceholder = suggestion.Metadata.GetShowFlagPlaceholder()
-			m.currentFlag = nil
-		}
-		index := m.CurrentToken().Index
-
-		if len(suggestion.Metadata.GetPositionalArgs()) > 0 || index <= m.argIndex {
-			m.args = []arg{}
-			m.origArgs = []arg{}
-			m.argIndex = index
-			m.subcommandWithArgs = suggestion.Text
-			m.suggestionLevel = suggestion.Metadata.GetLevel()
-
-			newArgs := m.getPosArgs(suggestion.Metadata)
-			m.args = append(m.args, newArgs...)
-			m.origArgs = append(m.origArgs, newArgs...)
-
-		} else {
-			m.args = append([]arg{}, m.origArgs...)
-		}
-		argIndex := index - 1
-		if argIndex >= 0 && argIndex < len(m.args) &&
-			!suggestion.Metadata.GetPreservePlaceholder() {
-			// Replace current arg with the suggestion
-			m.args[argIndex] = arg{
-				text:             suggestion.Text,
-				placeholderStyle: m.formatters.Placeholder,
-				argStyle:         m.args[argIndex].argStyle,
-				persist:          true,
-			}
-		}
+		m.onSubcommandUpdateFinish(suggestion)
 	} else {
-		m.args = []arg{}
-		m.origArgs = []arg{}
-		m.suggestionLevel = 0
-		if suggestion == nil {
-			// Didn't find any matching suggestions, reset
-			m.commandPlaceholder = []rune("")
-			m.subcommandWithArgs = ""
-		} else {
-			if !strings.HasPrefix(suggestion.Text, "-") {
-				m.showFlagPlaceholder = suggestion.Metadata.GetShowFlagPlaceholder()
-			}
-
-			m.commandPlaceholder = []rune(suggestion.Text)
-			m.subcommandWithArgs = suggestion.Text
-
-			for _, posArg := range suggestion.Metadata.GetPositionalArgs() {
-				newArg := arg{
-					text:             posArg.placeholder,
-					placeholderStyle: posArg.PlaceholderStyle,
-					argStyle:         posArg.ArgStyle,
-					persist:          false,
-				}
-				m.args = append(m.args, newArg)
-				m.origArgs = append(m.origArgs, newArg)
-			}
-		}
+		m.onCommandUpdateFinish(suggestion)
 	}
 
 	return nil
+}
+
+func (m *Model[T]) onSubcommandUpdateFinish(suggestion *suggestion.Suggestion[T]) {
+	// If no suggestions, leave args alone
+	if suggestion == nil {
+		// Don't reset current flag yet so we can still render the placeholder until the arg gets typed
+		if m.currentFlag != nil && m.currentFlag.Metadata.GetFlagArgPlaceholder().text == "" {
+			m.currentFlag = nil
+		}
+		// Clear any temporary placeholders
+		m.args = m.origArgs
+		return
+	}
+
+	if strings.HasPrefix(suggestion.Text, "-") {
+		m.currentFlag = suggestion
+	} else {
+		m.showFlagPlaceholder = suggestion.Metadata.GetShowFlagPlaceholder()
+		m.currentFlag = nil
+	}
+	index := m.CurrentToken().Index
+
+	if len(suggestion.Metadata.GetPositionalArgs()) > 0 || index <= m.argIndex {
+		m.args = []arg{}
+		m.origArgs = []arg{}
+		m.argIndex = index
+		m.subcommandWithArgs = suggestion.Text
+		m.suggestionLevel = suggestion.Metadata.GetLevel()
+
+		newArgs := m.getPosArgs(suggestion.Metadata)
+		m.args = append(m.args, newArgs...)
+		m.origArgs = append(m.origArgs, newArgs...)
+
+	} else {
+		m.args = append([]arg{}, m.origArgs...)
+	}
+	argIndex := index - 1
+	if argIndex >= 0 && argIndex < len(m.args) &&
+		!suggestion.Metadata.GetPreservePlaceholder() {
+		// Replace current arg with the suggestion
+		m.args[argIndex] = arg{
+			text:             suggestion.Text,
+			placeholderStyle: m.formatters.Placeholder,
+			argStyle:         m.args[argIndex].argStyle,
+			persist:          true,
+		}
+	}
+}
+
+func (m *Model[T]) onCommandUpdateFinish(suggestion *suggestion.Suggestion[T]) {
+	m.args = []arg{}
+	m.origArgs = []arg{}
+	m.suggestionLevel = 0
+	if suggestion == nil {
+		// Didn't find any matching suggestions, reset
+		m.commandPlaceholder = []rune("")
+		m.subcommandWithArgs = ""
+	} else {
+		if !strings.HasPrefix(suggestion.Text, "-") {
+			m.showFlagPlaceholder = suggestion.Metadata.GetShowFlagPlaceholder()
+		}
+
+		m.commandPlaceholder = []rune(suggestion.Text)
+		m.subcommandWithArgs = suggestion.Text
+
+		for _, posArg := range suggestion.Metadata.GetPositionalArgs() {
+			newArg := arg{
+				text:             posArg.placeholder,
+				placeholderStyle: posArg.PlaceholderStyle,
+				argStyle:         posArg.ArgStyle,
+				persist:          false,
+			}
+			m.args = append(m.args, newArg)
+			m.origArgs = append(m.origArgs, newArg)
+		}
+	}
 }
 
 // OnSuggestionChanged is part of the [input.Input] interface. It should not be invoked by users of this library.

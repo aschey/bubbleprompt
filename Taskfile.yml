@@ -14,7 +14,7 @@ tasks:
   test:
     cmds:
       - go test ./... -skip "TestApp|TestBubbleprompt"
-      - ginkgo -v -race -p ./...
+      - ginkgo -v -race -p ./test
   covTest:
     cmds:
       - go test ./... -skip "TestApp|TestBubbleprompt"

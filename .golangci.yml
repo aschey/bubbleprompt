@@ -25,7 +25,7 @@ linters:
     - lll
     - misspell
     - nakedret
-    # - nestif
+    - nestif
     - noctx
     - nolintlint
     - prealloc
@@ -34,3 +34,5 @@ linters:
 linters-settings:
   gocyclo:
     min-complexity: 15
+  nestif:
+    min-complexity: 10
