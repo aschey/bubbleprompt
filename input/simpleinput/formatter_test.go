@@ -18,7 +18,6 @@ func (f alternatingFormatter) Lex(
 	_selectedToken *input.Token,
 ) ([]parser.FormatterToken, error) {
 	tokens, err := f.lexer.Lex(input)
-
 	if err != nil {
 		return nil, err
 	}

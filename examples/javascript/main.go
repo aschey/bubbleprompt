@@ -21,9 +21,11 @@ import (
 	"github.com/dop251/goja"
 )
 
-const arrayType = "array"
-const objectType = "object"
-const stringType = "string"
+const (
+	arrayType  = "array"
+	objectType = "object"
+	stringType = "string"
+)
 
 type model struct {
 	textInput   *parserinput.Model[any, statement]
@@ -139,7 +141,6 @@ func (m model) Execute(input string, promptModel *prompt.Model[any]) (tea.Model,
 		default:
 			return m.textInput.FormatText(res.ToString().String()), nil
 		}
-
 	}), nil
 }
 

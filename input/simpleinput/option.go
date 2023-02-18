@@ -40,6 +40,7 @@ func WithFormatter[T any](formatterFunc func(lexer parser.Lexer) parser.Formatte
 		settings.formatterFunc = formatterFunc
 	}
 }
+
 func WithCursorMode[T any](cursorMode cursor.Mode) Option[T] {
 	return func(settings *settings[T]) {
 		settings.lexerOptions = append(

@@ -296,7 +296,6 @@ func (m *Model[T]) currentToken(
 			return m.IsDelimiterToken(last)
 		},
 	)
-
 }
 
 func (m *Model[T]) CurrentToken() input.Token {
@@ -407,7 +406,6 @@ func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T]) {
 	}
 	m.SetValue(string(newVal))
 	m.SetCursor(token.Start + len(suggestionRunes) - suggestion.CursorOffset)
-
 }
 
 func (m *Model[T]) OnSuggestionUnselected() {

@@ -68,7 +68,6 @@ var _ = Describe("Completer", func() {
 					String() ==
 					formatter.DefaultScrollbarColor
 			})
-
 		})
 	})
 
@@ -126,7 +125,6 @@ var _ = Describe("Completer", func() {
 				})
 			})
 		})
-
 	})
 
 	When("the user scrolls down", Ordered, func() {

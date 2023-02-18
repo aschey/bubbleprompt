@@ -11,19 +11,25 @@ type Formatters struct {
 	ScrollbarThumb    lipgloss.Style
 }
 
-var DefaultNameForeground = "243"
-var DefaultNameBackground = "7"
-var DefaultSelectedNameForeground = "8"
-var DefaultSelectedNameBackground = "14"
+var (
+	DefaultNameForeground         = "243"
+	DefaultNameBackground         = "7"
+	DefaultSelectedNameForeground = "8"
+	DefaultSelectedNameBackground = "14"
+)
 
-var DefaultDescriptionForeground = "255"
-var DefaultDescriptionBackground = "245"
-var DefaultSelectedDescriptionForeground = "0"
-var DefaultSelectedDescriptionBackground = "6"
-var DefaultErrorTextBackground = "1"
+var (
+	DefaultDescriptionForeground         = "255"
+	DefaultDescriptionBackground         = "245"
+	DefaultSelectedDescriptionForeground = "0"
+	DefaultSelectedDescriptionBackground = "6"
+	DefaultErrorTextBackground           = "1"
+)
 
-var DefaultScrollbarColor = "251"
-var DefaultScrollbarThumbColor = "255"
+var (
+	DefaultScrollbarColor      = "251"
+	DefaultScrollbarThumbColor = "255"
+)
 
 var DefaultIndicatorForeground = "8"
 
