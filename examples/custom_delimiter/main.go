@@ -52,7 +52,8 @@ func main() {
 		simpleinput.WithDelimiterRegex[metadata](`\s*\.\s*`),
 		simpleinput.WithTokenRegex[metadata](`[^\s\.]+`))
 	suggestions := []suggestion.Suggestion[metadata]{
-		{Text: "germany",
+		{
+			Text: "germany",
 			Metadata: metadata{
 				children: []suggestion.Suggestion[metadata]{
 					{
@@ -86,8 +87,10 @@ func main() {
 						},
 					},
 				},
-			}},
-		{Text: "canada",
+			},
+		},
+		{
+			Text: "canada",
 			Metadata: metadata{
 				children: []suggestion.Suggestion[metadata]{
 					{
@@ -121,8 +124,10 @@ func main() {
 						},
 					},
 				},
-			}},
-		{Text: "italy",
+			},
+		},
+		{
+			Text: "italy",
 			Metadata: metadata{
 				children: []suggestion.Suggestion[metadata]{
 					{
@@ -156,7 +161,8 @@ func main() {
 						},
 					},
 				},
-			}},
+			},
+		},
 	}
 
 	model := model{

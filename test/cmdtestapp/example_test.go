@@ -42,7 +42,8 @@ func suggestions(textInput *commandinput.Model[cmdMetadata]) []suggestion.Sugges
 		{Text: "fourth-option", Description: "test desc4"},
 		{Text: "fifth-option", Description: "test desc5"},
 		{Text: "sixth-option", Description: "test desc6"},
-		{Text: "seventh-option", SuggestionText: "suggestion text", Description: "test desc7"}}
+		{Text: "seventh-option", SuggestionText: "suggestion text", Description: "test desc7"},
+	}
 }
 
 func secondLevelSuggestions(

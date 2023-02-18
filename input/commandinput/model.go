@@ -260,7 +260,6 @@ func (m *Model[T]) CompletedArgsBeforeCursor() []string {
 		if len(args) > 0 {
 			args = args[:len(args)-1]
 		}
-
 	}
 	return args
 }

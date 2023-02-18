@@ -2,13 +2,15 @@ package commandinput
 
 import "github.com/charmbracelet/lipgloss"
 
-var DefaultPlaceholderForeground = "14"
-var DefaultCurrentPlaceholderSuggestion = "240"
-var DefaultSelectedTextColor = "10"
-var DefaultFlagForeground = "245"
-var DefaultFlagPlaceholderForeground = "14"
-var DefaultBoolFlagForeground = "13"
-var DefaultNumberFlagForeground = "5"
+var (
+	DefaultPlaceholderForeground        = "14"
+	DefaultCurrentPlaceholderSuggestion = "240"
+	DefaultSelectedTextColor            = "10"
+	DefaultFlagForeground               = "245"
+	DefaultFlagPlaceholderForeground    = "14"
+	DefaultBoolFlagForeground           = "13"
+	DefaultNumberFlagForeground         = "5"
+)
 
 // PositionalArgFormatter handles styling for positional arguments.
 type PositionalArgFormatter struct {

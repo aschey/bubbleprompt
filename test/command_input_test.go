@@ -127,7 +127,6 @@ var _ = Describe("Command Input", func() {
 				})
 			})
 		})
-
 	})
 
 	When("the user views a flag suggestion", Ordered, func() {

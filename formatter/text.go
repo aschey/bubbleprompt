@@ -32,5 +32,4 @@ func (t SuggestionText) Format(text string, maxLen int, selected bool) string {
 		PaddingRight(maxLen - runewidth.StringWidth(text) + 1).
 		Render(text)
 	return formattedText
-
 }

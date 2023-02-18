@@ -8,9 +8,11 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var testSuite *tuitest.Suite = nil
-var cmdTester *tuitest.Tester = nil
-var parserTester *tuitest.Tester = nil
+var (
+	testSuite    *tuitest.Suite  = nil
+	cmdTester    *tuitest.Tester = nil
+	parserTester *tuitest.Tester = nil
+)
 
 func getTester(binDir string) *tuitest.Tester {
 	tester, err := testSuite.NewTester(binDir,

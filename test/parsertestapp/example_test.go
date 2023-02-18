@@ -50,7 +50,6 @@ func (m model) Execute(input string, promptModel *prompt.Model[any]) (tea.Model,
 		}
 
 		return "", nil
-
 	}), nil
 }
 

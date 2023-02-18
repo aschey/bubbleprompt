@@ -107,7 +107,6 @@ func (b commandViewBuilder[T]) renderFlag(
 	currentFlagRunes []rune,
 	currentFlagPlaceholderRunes []rune,
 ) {
-
 	flagNameRunes := []rune(flag.Name)
 
 	b.render(flagNameRunes, flag.Pos.Column, b.model.formatters.Flag.Flag)
@@ -126,7 +125,6 @@ func (b commandViewBuilder[T]) renderFlag(
 	}
 
 	b.renderFlagValue(i, flag, currentFlagRunes, currentFlagPlaceholderRunes)
-
 }
 
 func (b commandViewBuilder[T]) renderFlagValue(
@@ -150,7 +148,6 @@ func (b commandViewBuilder[T]) renderFlagValue(
 		if flag.Value != nil {
 			b.render(flagValueRunes, flag.Value.Pos.Column, b.flagValueStyle(flag.Value.Value))
 		}
-
 	} else {
 		// Render current flag with placeholder info only if it's the last flag
 		if len(currentFlagRunes) > 0 &&
@@ -254,7 +251,6 @@ func (b commandViewBuilder[T]) renderTrailingText() {
 			lipgloss.NewStyle(),
 		)
 	}
-
 }
 
 func (b commandViewBuilder[T]) flagValueStyle(value string) lipgloss.Style {

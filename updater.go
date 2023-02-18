@@ -17,7 +17,7 @@ func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.Type {
 		// Ctrl+C should always shutdown the whole program regardless
-		//of what the executor is doing
+		// of what the executor is doing
 		case tea.KeyCtrlC:
 			shutdown = true
 			return m, tea.Quit
@@ -147,7 +147,6 @@ func (m *Model[T]) selectSingle() {
 			m.suggestionManager.SelectSuggestion(firstSuggestion)
 		}
 	}
-
 }
 
 func (m *Model[T]) finishUpdate(msg tea.Msg) tea.Cmd {

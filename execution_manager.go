@@ -39,7 +39,6 @@ func (m executionManager) Update(msg tea.Msg) (executionManager, tea.Cmd) {
 	} else {
 		return m, cmd
 	}
-
 }
 
 func (m executionManager) View() string {
@@ -48,5 +47,4 @@ func (m executionManager) View() string {
 	} else {
 		return m.inner.View()
 	}
-
 }

@@ -42,7 +42,7 @@ func (s statement) toStatement() Statement {
 			"command",
 			0,
 			s.Pos,
-		), //TokenValue{value: s.Command.Value},
+		),
 		Args:  s.Args.toArgs(1),
 		Flags: s.Flags.toFlags(len(s.Args.Value) + 1),
 	}
@@ -64,7 +64,7 @@ func (a args) toArgs(startIndex int) []input.Token {
 		args = append(
 			args,
 			input.TokenFromPos(arg.Value, "arg", startIndex+i, arg.Pos),
-		) //TokenValue{value: arg.Value})
+		)
 	}
 	return args
 }
