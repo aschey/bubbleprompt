@@ -83,7 +83,7 @@ type modelState[T CommandMetadataAccessor] struct {
 	selectedToken      *input.Token
 	selectedSuggestion *suggestion.Suggestion[T]
 	subcommand         *suggestion.Suggestion[T]
-	argNumber          int
+	// argNumber          int
 }
 
 func (m modelState[T]) isFlagSuggestion() bool {
@@ -275,6 +275,15 @@ func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 			m.parsedText = expr
 		}
 	}
+	allTokens := m.Tokens()
+	index := m.CurrentToken().Index
+	if len(allTokens) < len(m.states) {
+		m.states = m.states[:len(allTokens)]
+	}
+	if index > len(m.states)-1 {
+		newState := modelState[T]{}
+		m.states = append(m.states, newState)
+	}
 
 	return cmd
 }
@@ -319,7 +328,6 @@ func (m *Model[T]) currentState() modelState[T] {
 	} else {
 		return modelState[T]{}
 	}
-
 }
 
 func (m *Model[T]) shouldSkipFlagSuggestions(flag FlagInput, inputRunes []rune, isMulti bool) bool {
@@ -387,89 +395,11 @@ func (m *Model[T]) OnUpdateFinish(
 	suggestion *suggestion.Suggestion[T],
 	isSelected bool,
 ) tea.Cmd {
-	if m.CommandCompleted() {
-		m.onSubcommandUpdateFinish(suggestion)
-	} else {
-		m.onCommandUpdateFinish(suggestion)
-	}
-
-	return nil
-}
-
-func (m *Model[T]) onSubcommandUpdateFinish(suggestion *suggestion.Suggestion[T]) {
-	// If no suggestions, leave args alone
-	if suggestion == nil {
-		// Don't reset current flag yet so we can still render the placeholder until the arg gets typed
-		if m.currentFlag != nil && m.currentFlag.Metadata.GetFlagArgPlaceholder().text == "" {
-			m.currentFlag = nil
-		}
-		// Clear any temporary placeholders
-		m.args = m.origArgs
-		return
-	}
-
-	if strings.HasPrefix(suggestion.Text, "-") {
-		m.currentFlag = suggestion
-	} else {
-		m.showFlagPlaceholder = suggestion.Metadata.GetShowFlagPlaceholder()
-		m.currentFlag = nil
-	}
 	index := m.CurrentToken().Index
 
-	if len(suggestion.Metadata.GetPositionalArgs()) > 0 || index <= m.argIndex {
-		m.args = []arg{}
-		m.origArgs = []arg{}
-		m.argIndex = index
-		m.subcommandWithArgs = suggestion.Text
-		m.suggestionLevel = suggestion.Metadata.GetLevel()
+	m.states[index].selectedSuggestion = suggestion
 
-		newArgs := m.getPosArgs(suggestion.Metadata)
-		m.args = append(m.args, newArgs...)
-		m.origArgs = append(m.origArgs, newArgs...)
-
-	} else {
-		m.args = append([]arg{}, m.origArgs...)
-	}
-	argIndex := index - 1
-	if argIndex >= 0 && argIndex < len(m.args) &&
-		!suggestion.Metadata.GetPreservePlaceholder() {
-		// Replace current arg with the suggestion
-		m.args[argIndex] = arg{
-			text:             suggestion.Text,
-			placeholderStyle: m.formatters.Placeholder,
-			argStyle:         m.args[argIndex].argStyle,
-			persist:          true,
-		}
-	}
-}
-
-func (m *Model[T]) onCommandUpdateFinish(suggestion *suggestion.Suggestion[T]) {
-	m.args = []arg{}
-	m.origArgs = []arg{}
-	m.suggestionLevel = 0
-	if suggestion == nil {
-		// Didn't find any matching suggestions, reset
-		m.commandPlaceholder = []rune("")
-		m.subcommandWithArgs = ""
-	} else {
-		if !strings.HasPrefix(suggestion.Text, "-") {
-			m.showFlagPlaceholder = suggestion.Metadata.GetShowFlagPlaceholder()
-		}
-
-		m.commandPlaceholder = []rune(suggestion.Text)
-		m.subcommandWithArgs = suggestion.Text
-
-		for _, posArg := range suggestion.Metadata.GetPositionalArgs() {
-			newArg := arg{
-				text:             posArg.placeholder,
-				placeholderStyle: posArg.PlaceholderStyle,
-				argStyle:         posArg.ArgStyle,
-				persist:          false,
-			}
-			m.args = append(m.args, newArg)
-			m.origArgs = append(m.origArgs, newArg)
-		}
-	}
+	return nil
 }
 
 // OnSuggestionChanged is part of the [input.Input] interface. It should not be invoked by users of this library.
@@ -477,7 +407,7 @@ func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T]) {
 	token := m.CurrentToken()
 	tokenRunes := []rune(token.Value)
 	suggestionRunes := []rune(suggestion.Text)
-	m.selectedToken = &token
+	m.states[token.Index].selectedToken = &token
 
 	textRunes := m.Runes()
 	if token.Index > -1 {
@@ -517,7 +447,7 @@ func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T]) {
 
 // OnSuggestionUnselected is part of the [input.Input] interface. It should not be invoked by users of this library.
 func (m *Model[T]) OnSuggestionUnselected() {
-	m.selectedToken = nil
+	m.states[m.CurrentToken().Index].selectedToken = nil
 }
 
 // SuggestionRunes is part of the [input.Input] interface. It should not be invoked by users of this library.
