@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/alecthomas/participle/v2/lexer"
@@ -19,13 +18,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mattn/go-runewidth"
 )
-
-type arg struct {
-	text             string
-	placeholderStyle lipgloss.Style
-	argStyle         lipgloss.Style
-	persist          bool
-}
 
 // PositionalArg is a positional arg placeholder for completions.
 type PositionalArg struct {
@@ -87,25 +79,28 @@ func (f FlagInput) RequiresArg() bool {
 	return len(f.ArgPlaceholder.text) > 0
 }
 
+type modelState[T CommandMetadataAccessor] struct {
+	selectedToken      *input.Token
+	selectedSuggestion *suggestion.Suggestion[T]
+	subcommand         *suggestion.Suggestion[T]
+	argNumber          int
+}
+
+func (m modelState[T]) isFlagSuggestion() bool {
+	return m.selectedSuggestion != nil && strings.HasPrefix(m.selectedSuggestion.Text, "-")
+}
+
 // A Model is an input for handling CLI-style inputs.
 // It provides advanced features such as placeholders and context-aware suggestions.
 type Model[T CommandMetadataAccessor] struct {
-	textinput           textinput.Model
-	commandPlaceholder  []rune
-	subcommandWithArgs  string
-	suggestionLevel     int
-	prompt              string
-	defaultDelimiter    string
-	delimiterRegex      *regexp.Regexp
-	origArgs            []arg
-	args                []arg
-	showFlagPlaceholder bool
-	argIndex            int
-	currentFlag         *suggestion.Suggestion[T]
-	selectedToken       *input.Token
-	formatters          Formatters
-	parser              parser.Parser[statement]
-	parsedText          *statement
+	textinput        textinput.Model
+	prompt           string
+	defaultDelimiter string
+	delimiterRegex   *regexp.Regexp
+	formatters       Formatters
+	parser           parser.Parser[statement]
+	parsedText       *statement
+	states           []modelState[T]
 }
 
 // New creates a new model.
@@ -114,14 +109,12 @@ func New[T CommandMetadataAccessor](opts ...Option[T]) *Model[T] {
 
 	formatters := DefaultFormatters()
 	model := &Model[T]{
-		textinput:          textinput,
-		commandPlaceholder: []rune(""),
-		subcommandWithArgs: "",
-		prompt:             "> ",
-		formatters:         formatters,
-		parsedText:         &statement{},
-		delimiterRegex:     regexp.MustCompile(`\s+`),
-		defaultDelimiter:   " ",
+		textinput:        textinput,
+		prompt:           "> ",
+		formatters:       formatters,
+		parsedText:       &statement{},
+		delimiterRegex:   regexp.MustCompile(`\s+`),
+		defaultDelimiter: " ",
 	}
 	for _, opt := range opts {
 		opt(model)
@@ -320,6 +313,16 @@ func (m *Model[T]) FlagSuggestions(
 	return suggestions
 }
 
+func (m *Model[T]) currentState() modelState[T] {
+	index := m.CurrentToken().Index
+	if index >= 0 {
+		return m.states[index]
+	} else {
+		return modelState[T]{}
+	}
+
+}
+
 func (m *Model[T]) shouldSkipFlagSuggestions(flag FlagInput, inputRunes []rune, isMulti bool) bool {
 	tokenIndex := m.CurrentToken().Index
 	allTokens := m.Tokens()
@@ -376,24 +379,6 @@ func (m *Model[T]) getFlagSuggestion(
 	}
 
 	return suggestion
-}
-
-func (m *Model[T]) getPosArgs(metadata T) []arg {
-	args := []arg{}
-	for i := 0; i < metadata.GetLevel(); i++ {
-		args = append(args, arg{
-			text: strconv.FormatInt(int64(i), 10),
-		})
-	}
-	for _, posArg := range metadata.GetPositionalArgs() {
-		args = append(args, arg{
-			text:             posArg.placeholder,
-			placeholderStyle: posArg.PlaceholderStyle,
-			argStyle:         posArg.ArgStyle,
-			persist:          false,
-		})
-	}
-	return args
 }
 
 // OnUpdateFinish is part of the [input.Input] interface.

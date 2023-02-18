@@ -5,12 +5,14 @@ import (
 	"strings"
 
 	"github.com/aschey/bubbleprompt/input"
+	"github.com/aschey/bubbleprompt/suggestion"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type commandViewBuilder[T CommandMetadataAccessor] struct {
 	model            Model[T]
 	viewBuilder      *input.ViewBuilder
+	currentState     modelState[T]
 	showPlaceholders bool
 	showCursor       bool
 }
@@ -31,69 +33,54 @@ func newCmdViewBuilder[T CommandMetadataAccessor](
 		showCursor,
 	)
 	return commandViewBuilder[T]{
-		model, viewBuilder, showPlaceholders, showCursor,
+		model, viewBuilder, model.currentState(), showPlaceholders, showCursor,
 	}
 }
 
 func (b commandViewBuilder[T]) View() string {
-	b.renderCommand()
-	b.renderPrefix()
 	b.renderArgs()
-	b.renderCurrentArg()
 	b.renderFlags()
-	b.renderFlagPlaceholders()
+	//b.renderFlagPlaceholder()
 	b.renderTrailingText()
 
 	return b.model.formatters.Prompt.Render(string(b.model.prompt)) + b.viewBuilder.View()
 }
 
 func (b commandViewBuilder[T]) render(runes []rune, column int, style lipgloss.Style) {
-	if b.model.selectedToken != nil && b.model.selectedToken.Start == column-1 {
+	if b.currentState.selectedToken != nil && b.currentState.selectedToken.Start == column-1 {
 		b.viewBuilder.Render(runes, column, b.model.formatters.SelectedText)
 	} else {
 		b.viewBuilder.Render(runes, column, style)
 	}
 }
 
-func (b commandViewBuilder[T]) renderCommand() {
-	commandRunes := []rune(b.model.parsedText.Command.Value)
-	b.render(commandRunes, b.model.parsedText.Command.Pos.Column, b.model.formatters.Command)
-}
-
-func (b commandViewBuilder[T]) renderPrefix() {
-	commandRunes := []rune(b.model.parsedText.Command.Value)
-	if b.showPlaceholders &&
-		strings.HasPrefix(string(b.model.commandPlaceholder), b.model.Value()) &&
-		string(b.model.commandPlaceholder) != string(commandRunes) {
-		b.viewBuilder.Render(
-			b.model.commandPlaceholder[len(commandRunes):],
-			b.model.parsedText.Command.Pos.Column+len(commandRunes),
-			b.model.formatters.Placeholder,
-		)
-	}
-}
-
 func (b commandViewBuilder[T]) renderArgs() {
-	for i, arg := range b.model.parsedText.Args.Value {
-		argStyle := lipgloss.NewStyle()
-		if i < len(b.model.args) {
-			argStyle = b.model.args[i].argStyle
+	args := append([]ident{b.model.parsedText.Command}, b.model.parsedText.Args.Value...)
+	for i, arg := range args {
+
+		if i < len(args) {
+			if i == 0 {
+				b.render([]rune(arg.Value), arg.Pos.Column, b.model.formatters.Command)
+			} else {
+				b.render([]rune(arg.Value), arg.Pos.Column, b.model.formatters.PositionalArg.Arg)
+			}
+
+		} else {
+			state := b.model.states[i]
+			b.renderCurrentArg(i, arg, state.selectedSuggestion)
 		}
-		b.render([]rune(arg.Value), arg.Pos.Column, argStyle)
+
 	}
 }
 
-func (b commandViewBuilder[T]) renderCurrentArg() {
-	// Render current arg if persist == true
-	currentArg := len(b.model.parsedText.Args.Value) - 1
-	if currentArg >= 0 && currentArg < len(b.model.args) {
-		arg := b.model.args[currentArg]
-		argVal := b.model.parsedText.Args.Value[currentArg].Value
-		// Render the rest of the arg placeholder only if the prefix matches
-		if arg.persist && strings.HasPrefix(arg.text, argVal) {
-			tokenPos := len([]rune(argVal))
-			b.render([]rune(arg.text)[tokenPos:], b.viewBuilder.ViewLen(), arg.placeholderStyle)
-		}
+func (b commandViewBuilder[T]) renderArg() {
+}
+
+func (b commandViewBuilder[T]) renderCurrentArg(argIndex int, arg ident, suggestion *suggestion.Suggestion[T]) {
+	if suggestion != nil && strings.HasPrefix(suggestion.GetSuggestionText(), arg.Value) {
+		tokenPos := len([]rune(arg.Value))
+		suggestionRunes := []rune(suggestion.GetSuggestionText())
+		b.render([]rune(suggestionRunes[tokenPos:]), b.viewBuilder.ViewLen(), b.model.formatters.Placeholder)
 	}
 }
 
@@ -101,10 +88,11 @@ func (b commandViewBuilder[T]) renderFlags() {
 	flags := b.model.parsedText.Flags.Value
 	currentFlagRunes := []rune{}
 	currentFlagPlaceholderRunes := []rune{}
-	if b.model.currentFlag != nil {
-		currentFlagRunes = []rune(b.model.currentFlag.Text)
+	currentState := b.model.currentState()
+	if currentState.isFlagSuggestion() {
+		currentFlagRunes = []rune(b.model.CurrentToken().Value)
 		currentFlagPlaceholderRunes = []rune(
-			b.model.currentFlag.Metadata.GetFlagArgPlaceholder().text,
+			currentState.selectedSuggestion.Metadata.GetFlagArgPlaceholder().text,
 		)
 	}
 
@@ -124,7 +112,7 @@ func (b commandViewBuilder[T]) renderFlag(
 
 	b.render(flagNameRunes, flag.Pos.Column, b.model.formatters.Flag.Flag)
 
-	hasCurrentFlag := b.model.currentFlag != nil
+	hasCurrentFlag := len(currentFlagRunes) > 0
 	hasValue := flag.Value != nil
 	// Render delimiter only once the full flag has been typed
 	if !hasCurrentFlag || len(flagNameRunes) >= len(currentFlagRunes) || hasValue {
@@ -165,7 +153,7 @@ func (b commandViewBuilder[T]) renderFlagValue(
 
 	} else {
 		// Render current flag with placeholder info only if it's the last flag
-		if b.model.currentFlag != nil &&
+		if len(currentFlagRunes) > 0 &&
 			i == len(flags)-1 &&
 			token.Start >= flag.Pos.Column-1 {
 			b.renderLastFlag(flags, flag, currentFlagRunes, currentFlagPlaceholderRunes)
@@ -190,7 +178,7 @@ func (b commandViewBuilder[T]) renderLastFlag(
 	}
 
 	// Render the rest of the arg placeholder only if the prefix matches
-	if b.showPlaceholders && strings.HasPrefix(b.model.currentFlag.Text, argVal) {
+	if b.showPlaceholders && strings.HasPrefix(string(currentFlagRunes), argVal) {
 		tokenPos := len(argVal)
 		b.render(
 			currentFlagRunes[tokenPos:],
@@ -219,43 +207,42 @@ func (b commandViewBuilder[T]) renderLastFlag(
 	}
 }
 
-func (b commandViewBuilder[T]) renderFlagPlaceholders() {
-	args := b.model.args
-	if b.showPlaceholders && len(b.model.parsedText.Flags.Value) == 0 &&
-		b.model.showFlagPlaceholder {
-		args = append(
-			args,
-			arg{text: "[flags]", placeholderStyle: b.model.formatters.Flag.Placeholder},
-		)
-	}
-
-	// Render arg placeholders
-	startPlaceholder := len(b.model.parsedText.Args.Value) + len(b.model.parsedText.Flags.Value)
-	// Don't show arg placeholders if the current arg doesn't match the arg
-	// we're about to show placeholders for (the user moved the cursor over to the left)
-	all := b.model.Values()
-	if b.model.suggestionLevel > len(all)-1 ||
-		strings.HasPrefix(string(b.model.subcommandWithArgs), all[b.model.suggestionLevel]) {
-		if b.showPlaceholders && startPlaceholder < len(args) {
-			for _, arg := range args[startPlaceholder:] {
-				last := b.viewBuilder.Last()
-				if last == nil || !b.model.isDelimiter(string(*last)) {
-					b.viewBuilder.Render(
-						[]rune(b.model.defaultDelimiter),
-						b.viewBuilder.ViewLen(),
-						lipgloss.NewStyle(),
-					)
-				}
-
-				b.viewBuilder.Render(
-					[]rune(arg.text),
-					b.viewBuilder.ViewLen(),
-					arg.placeholderStyle,
-				)
-			}
-		}
-	}
-}
+// func (b commandViewBuilder[T]) renderFlagPlaceholder() {
+// 	if b.showPlaceholders && len(b.model.parsedText.Flags.Value) == 0 &&
+// 		b.currentState.selectedSuggestion.Metadata.GetShowFlagPlaceholder() {
+// 		b.viewBuilder.Render([]rune("[flags]"), b.viewBuilder.ViewLen(), b.model.formatters.Placeholder)
+// 		return
+// 	}
+// 	if b.model.CurrentToken().Index < len(b.model.Tokens())-1 {
+// 		return
+// 	}
+// 	subcommand := b.model.currentState().subcommand
+// 	if subcommand == nil {
+// 		return
+// 	}
+// 	if !b.model.currentState().isFlagSuggestion() {
+// 		return
+// 	}
+// 	flagSuggestion := b.model.currentState().selectedSuggestion.Metadata.GetFlagArgPlaceholder()
+// 	if flagSuggestion.text == "" {
+// 		return
+// 	}
+// 	if strings.HasPrefix(string(subcommand.GetSuggestionText()), b.model.Tokens()[b.model.currentState().argNumber].Value) {
+// 		last := b.viewBuilder.Last()
+// 		if last == nil || !b.model.isDelimiter(string(*last)) {
+// 			b.viewBuilder.Render(
+// 				[]rune(b.model.defaultDelimiter),
+// 				b.viewBuilder.ViewLen(),
+// 				lipgloss.NewStyle(),
+// 			)
+// 		}
+// 		b.viewBuilder.Render(
+// 			[]rune(flagSuggestion.text),
+// 			b.viewBuilder.ViewLen(),
+// 			b.model.Formatters().Placeholder,
+// 		)
+// 	}
+// }
 
 func (b commandViewBuilder[T]) renderTrailingText() {
 	value := []rune(b.model.Value())

@@ -9,7 +9,7 @@ type CommandMetadataAccessor interface {
 	GetFlagArgPlaceholder() FlagArgPlaceholder
 	// GetLevel returns the nesting level of the suggestion.
 	// For example, a level of 1 means the suggestion is nested one level higher than the root command.
-	GetLevel() int
+	//GetLevel() int
 	// TODO: Figure out why we need this.
 	GetPreservePlaceholder() bool
 	// GetShowFlagPlaceholder returns whether or not to show the placeholder
@@ -58,9 +58,9 @@ func (m CommandMetadata) GetShowFlagPlaceholder() bool {
 
 // GetLevel returns the nesting level of the [suggestion.Suggestion].
 // For example, a level of 1 means the suggestion is nested one level higher than the root command.
-func (m CommandMetadata) GetLevel() int {
-	return m.Level
-}
+// func (m CommandMetadata) GetLevel() int {
+// 	return m.Level
+// }
 
 // TODO: Figure out why we need this.
 func (m CommandMetadata) GetPreservePlaceholder() bool {
