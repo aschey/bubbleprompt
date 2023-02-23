@@ -70,7 +70,7 @@ func (b commandViewBuilder[T]) renderArgs() {
 }
 
 func (b commandViewBuilder[T]) renderCurrentArg(arg ident, suggestion *suggestion.Suggestion[T]) {
-	if suggestion != nil && strings.HasPrefix(suggestion.GetSuggestionText(), arg.Value) {
+	if len(arg.Value) > 0 && suggestion != nil && strings.HasPrefix(suggestion.GetSuggestionText(), arg.Value) {
 		tokenPos := len([]rune(arg.Value))
 		suggestionRunes := []rune(suggestion.GetSuggestionText())
 		b.render([]rune(suggestionRunes[tokenPos:]), b.viewBuilder.ViewLen(), b.model.formatters.Placeholder)
@@ -197,57 +197,56 @@ func (b commandViewBuilder[T]) renderLastFlag(
 	}
 }
 
-func (b commandViewBuilder[T]) renderPlaceholders() {
-	if b.showPlaceholders && len(b.model.parsedText.Flags.Value) == 0 &&
-		b.currentState.selectedSuggestion.Metadata.GetShowFlagPlaceholder() {
-		b.viewBuilder.Render([]rune("[flags]"), b.viewBuilder.ViewLen(), b.model.formatters.Placeholder)
-		return
-	}
-	if b.model.CurrentToken().Index < len(b.model.Tokens())-1 {
-		return
-	}
-	subcommand := b.model.currentState().subcommand
-	if subcommand == nil {
-		return
+func (b commandViewBuilder[T]) renderDelimiter() {
+	last := b.viewBuilder.Last()
+	if last != nil && !b.model.isDelimiter(string(*last)) {
+		b.viewBuilder.Render(
+			[]rune(b.model.defaultDelimiter),
+			b.viewBuilder.ViewLen(),
+			lipgloss.NewStyle(),
+		)
 	}
 }
 
-// func (b commandViewBuilder[T]) renderFlagPlaceholder() {
-// 	if b.showPlaceholders && len(b.model.parsedText.Flags.Value) == 0 &&
-// 		b.currentState.selectedSuggestion.Metadata.GetShowFlagPlaceholder() {
-// 		b.viewBuilder.Render([]rune("[flags]"), b.viewBuilder.ViewLen(), b.model.formatters.Placeholder)
-// 		return
-// 	}
-// 	if b.model.CurrentToken().Index < len(b.model.Tokens())-1 {
-// 		return
-// 	}
-// 	subcommand := b.model.currentState().subcommand
-// 	if subcommand == nil {
-// 		return
-// 	}
-// 	if !b.model.currentState().isFlagSuggestion() {
-// 		return
-// 	}
-// 	flagSuggestion := b.model.currentState().selectedSuggestion.Metadata.GetFlagArgPlaceholder()
-// 	if flagSuggestion.text == "" {
-// 		return
-// 	}
-// 	if strings.HasPrefix(string(subcommand.GetSuggestionText()), b.model.Tokens()[b.model.currentState().argNumber].Value) {
-// 		last := b.viewBuilder.Last()
-// 		if last == nil || !b.model.isDelimiter(string(*last)) {
-// 			b.viewBuilder.Render(
-// 				[]rune(b.model.defaultDelimiter),
-// 				b.viewBuilder.ViewLen(),
-// 				lipgloss.NewStyle(),
-// 			)
-// 		}
-// 		b.viewBuilder.Render(
-// 			[]rune(flagSuggestion.text),
-// 			b.viewBuilder.ViewLen(),
-// 			b.model.Formatters().Placeholder,
-// 		)
-// 	}
-// }
+func (b commandViewBuilder[T]) renderPlaceholders() {
+	if b.showPlaceholders && len(b.model.parsedText.Flags.Value) == 0 && b.currentState.selectedSuggestion != nil &&
+		b.currentState.selectedSuggestion.Metadata.GetShowFlagPlaceholder() {
+		b.renderDelimiter()
+		b.viewBuilder.Render([]rune("[flags]"), b.viewBuilder.ViewLen(), b.model.formatters.Flag.Placeholder)
+		return
+	}
+
+	currentToken := b.model.CurrentToken()
+	tokenLen := len(b.model.Tokens())
+	if currentToken.Index < tokenLen-1 {
+		return
+	}
+
+	currentState := b.model.currentState()
+	if currentToken.Value == "" && currentState.selectedSuggestion != nil {
+		b.renderDelimiter()
+		b.viewBuilder.Render(
+			[]rune(currentState.selectedSuggestion.GetSuggestionText()),
+			b.viewBuilder.ViewLen(),
+			b.model.formatters.Placeholder)
+	}
+
+	if currentState.subcommand == nil {
+		return
+	}
+
+	positionalArgs := currentState.subcommand.Metadata.GetPositionalArgs()
+	if currentState.argNumber < len(positionalArgs) {
+		for _, arg := range positionalArgs[currentState.argNumber:] {
+			b.renderDelimiter()
+			b.viewBuilder.Render(
+				[]rune(arg.placeholder),
+				b.viewBuilder.ViewLen(),
+				arg.PlaceholderStyle,
+			)
+		}
+	}
+}
 
 func (b commandViewBuilder[T]) renderTrailingText() {
 	value := []rune(b.model.Value())

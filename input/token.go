@@ -42,6 +42,7 @@ func TokenFromPos(value string, tokenType string, index int, pos lexer.Position)
 		Value: value,
 		Type:  tokenType,
 		Start: start,
+		Index: index,
 	}
 }
 
