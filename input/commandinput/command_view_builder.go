@@ -99,44 +99,16 @@ func (b commandViewBuilder[T]) renderFlag(
 
 	b.render(flagNameRunes, flag.Pos.Column, b.model.formatters.Flag.Flag)
 
-	hasValue := flag.Value != nil
-	// Render delimiter only once the full flag has been typed
-	if hasValue {
-		if flag.Delim != nil {
-			b.viewBuilder.Render(
-				[]rune(flag.Delim.Value),
-				flag.Delim.Pos.Column,
-				lipgloss.NewStyle(),
-			)
-		}
+	if flag.Delim != nil {
+		b.viewBuilder.Render(
+			[]rune(flag.Delim.Value),
+			flag.Delim.Pos.Column,
+			lipgloss.NewStyle(),
+		)
 	}
 
-	b.renderFlagValue(i, flag)
-}
-
-func (b commandViewBuilder[T]) renderFlagValue(
-	i int,
-	flag flag,
-) {
-	token := b.model.CurrentTokenRoundDown()
-	flags := b.model.parsedText.Flags.Value
-	flagIsCurrent := flag.Pos.Column-1 == token.Start
-	cursorBeforeEnd := token.Start < b.model.CursorIndex()
-	beforeLastFlag := i < len(flags)-1
-	currentTokenIsNotFlag := len(token.Value) > 0 && !strings.HasPrefix(token.Value, "-")
-	flagValueRunes := []rune{}
 	if flag.Value != nil {
-		flagValueRunes = []rune(flag.Value.Value)
-	}
-
-	if !flagIsCurrent && (cursorBeforeEnd || beforeLastFlag || currentTokenIsNotFlag) {
-		if flag.Value != nil {
-			b.render(flagValueRunes, flag.Value.Pos.Column, b.flagValueStyle(flag.Value.Value))
-		}
-	} else {
-		if flag.Value != nil {
-			b.render(flagValueRunes, flag.Value.Pos.Column, b.flagValueStyle(flag.Value.Value))
-		}
+		b.render([]rune(flag.Value.Value), flag.Value.Pos.Column, b.flagValueStyle(flag.Value.Value))
 	}
 }
 
@@ -209,15 +181,15 @@ func (b commandViewBuilder[T]) renderPlaceholders() {
 
 func (b commandViewBuilder[T]) renderFlagPlaceholder() {
 	currentState := b.model.currentState()
-	if currentState.isFlagSuggestion() {
-		flagArgPlaceholder := currentState.selectedSuggestion.Metadata.GetFlagArgPlaceholder()
+	currentToken := b.model.CurrentToken()
+	if currentState.isFlag() && (currentToken.Value == "" || strings.HasPrefix(currentToken.Value, "-")) {
+		flagArgPlaceholder := currentState.selectedFlag.Metadata.GetFlagArgPlaceholder()
 		if flagArgPlaceholder.text != "" {
 			b.renderFlagDelimiter()
 			b.viewBuilder.Render(
 				[]rune(flagArgPlaceholder.text),
 				b.viewBuilder.ViewLen(),
 				flagArgPlaceholder.Style)
-
 		}
 	}
 }

@@ -83,11 +83,16 @@ type modelState[T CommandMetadataAccessor] struct {
 	selectedToken      *input.Token
 	selectedSuggestion *suggestion.Suggestion[T]
 	subcommand         *suggestion.Suggestion[T]
+	selectedFlag       *suggestion.Suggestion[T]
 	argNumber          int
 }
 
 func (m modelState[T]) isFlagSuggestion() bool {
-	return m.selectedSuggestion != nil && strings.HasPrefix(m.selectedSuggestion.Text, "-")
+	return (m.selectedSuggestion != nil && strings.HasPrefix(m.selectedSuggestion.Text, "-"))
+}
+
+func (m modelState[T]) isFlag() bool {
+	return m.isFlagSuggestion() || m.selectedFlag != nil
 }
 
 // A Model is an input for handling CLI-style inputs.
@@ -276,11 +281,17 @@ func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 		}
 	}
 	allTokens := m.Tokens()
-	index := m.CurrentToken().Index
-	if len(allTokens) < len(m.states) {
-		m.states = m.states[:len(allTokens)]
+	tokenLen := len(allTokens)
+	current := m.CurrentToken()
+	if current.Value == "" {
+		// Started a new token but haven't typed anything yet
+		tokenLen += 1
 	}
-	if index > len(m.states)-1 {
+
+	if tokenLen < len(m.states) {
+		m.states = m.states[:tokenLen]
+	}
+	if current.Index > len(m.states)-1 {
 		newState := modelState[T]{}
 		m.states = append(m.states, newState)
 	}
@@ -398,12 +409,27 @@ func (m *Model[T]) OnUpdateFinish(
 	index := m.CurrentToken().Index
 
 	m.states[index].selectedSuggestion = suggestion
-	if suggestion != nil && len(suggestion.Metadata.GetPositionalArgs()) > 0 {
-		m.states[index].subcommand = suggestion
-		m.states[index].argNumber = 0
-	} else if index > 0 {
-		m.states[index].subcommand = m.states[index-1].subcommand
-		m.states[index].argNumber = m.states[index-1].argNumber + 1
+
+	if index > 0 {
+		subcommand := m.states[index-1].subcommand
+		if subcommand != nil && m.states[index-1].argNumber+1 <= len(subcommand.Metadata.GetPositionalArgs()) {
+			m.states[index].subcommand = m.states[index-1].subcommand
+			m.states[index].argNumber = m.states[index-1].argNumber + 1
+		}
+
+		if m.states[index-1].isFlag() {
+			m.states[index].selectedFlag = m.states[index-1].selectedFlag
+		}
+	}
+
+	if suggestion != nil {
+		if len(suggestion.Metadata.GetPositionalArgs()) > 0 {
+			m.states[index].subcommand = suggestion
+			m.states[index].argNumber = 0
+		}
+		if m.states[index].isFlagSuggestion() {
+			m.states[index].selectedFlag = suggestion
+		}
 	}
 
 	return nil
