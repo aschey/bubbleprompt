@@ -114,13 +114,13 @@ type Suggestion[T any] struct {
 func (s Suggestion[T]) GetSuggestionText() string
 ```
 
-### func \(Suggestion\[T\]\) [Key](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/suggestion.go#L41>)
+### func \(Suggestion\[T\]\) [Key](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/suggestion.go#L56>)
 
 ```go
 func (s Suggestion[T]) Key() *string
 ```
 
-### func \(Suggestion\[T\]\) [Render](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/suggestion.go#L26>)
+### func \(Suggestion\[T\]\) [Render](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/suggestion.go#L26-L34>)
 
 ```go
 func (s Suggestion[T]) Render(selected bool, leftPadding string, maxNameLen int, maxDescLen int, formatters formatter.Formatters, scrollbar string, indicator string) string

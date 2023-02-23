@@ -52,7 +52,6 @@ func secondLevelSuggestions(
 	return []suggestion.Suggestion[cmdMetadata]{
 		{Text: "second-level", Description: "test desc", Metadata: commandinput.CommandMetadata{
 			PositionalArgs: textInput.NewPositionalArgs("[placeholder2]"),
-			Level:          1,
 		}},
 	}
 }

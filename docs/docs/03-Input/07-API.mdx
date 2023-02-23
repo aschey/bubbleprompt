@@ -62,7 +62,7 @@ type Input[T any] interface {
 }
 ```
 
-## type [RoundingBehavior](<https://github.com/aschey/bubbleprompt/blob/main/input/token.go#L48>)
+## type [RoundingBehavior](<https://github.com/aschey/bubbleprompt/blob/main/input/token.go#L49>)
 
 ```go
 type RoundingBehavior int
@@ -86,7 +86,7 @@ type Token struct {
 }
 ```
 
-### func [FindCurrentToken](<https://github.com/aschey/bubbleprompt/blob/main/input/token.go#L55>)
+### func [FindCurrentToken](<https://github.com/aschey/bubbleprompt/blob/main/input/token.go#L56-L62>)
 
 ```go
 func FindCurrentToken(runes []rune, tokens []Token, cursor int, roundingBehavior RoundingBehavior, isDelimiter func(s string, last Token) bool) Token
@@ -124,37 +124,37 @@ type ViewBuilder struct {
 }
 ```
 
-### func [NewViewBuilder](<https://github.com/aschey/bubbleprompt/blob/main/input/viewbuilder.go#L20>)
+### func [NewViewBuilder](<https://github.com/aschey/bubbleprompt/blob/main/input/viewbuilder.go#L20-L25>)
 
 ```go
 func NewViewBuilder(cursor int, cursorStyle lipgloss.Style, delimiter string, showCursor bool) *ViewBuilder
 ```
 
-### func \(ViewBuilder\) [Last](<https://github.com/aschey/bubbleprompt/blob/main/input/viewbuilder.go#L60>)
+### func \(ViewBuilder\) [Last](<https://github.com/aschey/bubbleprompt/blob/main/input/viewbuilder.go#L72>)
 
 ```go
 func (v ViewBuilder) Last() *byte
 ```
 
-### func \(\*ViewBuilder\) [Render](<https://github.com/aschey/bubbleprompt/blob/main/input/viewbuilder.go#L31>)
+### func \(\*ViewBuilder\) [Render](<https://github.com/aschey/bubbleprompt/blob/main/input/viewbuilder.go#L41>)
 
 ```go
 func (v *ViewBuilder) Render(newRunes []rune, column int, style lipgloss.Style)
 ```
 
-### func \(\*ViewBuilder\) [RenderPlaceholder](<https://github.com/aschey/bubbleprompt/blob/main/input/viewbuilder.go#L54>)
+### func \(\*ViewBuilder\) [RenderPlaceholder](<https://github.com/aschey/bubbleprompt/blob/main/input/viewbuilder.go#L66>)
 
 ```go
 func (v *ViewBuilder) RenderPlaceholder(newRunes []rune, offset int, style lipgloss.Style)
 ```
 
-### func \(ViewBuilder\) [View](<https://github.com/aschey/bubbleprompt/blob/main/input/viewbuilder.go#L24>)
+### func \(ViewBuilder\) [View](<https://github.com/aschey/bubbleprompt/blob/main/input/viewbuilder.go#L34>)
 
 ```go
 func (v ViewBuilder) View() string
 ```
 
-### func \(\*ViewBuilder\) [ViewLen](<https://github.com/aschey/bubbleprompt/blob/main/input/viewbuilder.go#L50>)
+### func \(\*ViewBuilder\) [ViewLen](<https://github.com/aschey/bubbleprompt/blob/main/input/viewbuilder.go#L62>)
 
 ```go
 func (v *ViewBuilder) ViewLen() int

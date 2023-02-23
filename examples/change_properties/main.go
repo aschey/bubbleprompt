@@ -169,12 +169,9 @@ func main() {
 			textInput.NewPositionalArg("<color>"),
 		),
 	}
-	colorMetadata.Level = 1
 
 	childMetadata := cmdMetadata{
-		CommandMetadata: commandinput.CommandMetadata{
-			Level: 1,
-		},
+		CommandMetadata: commandinput.CommandMetadata{},
 	}
 
 	suggestions := []suggestion.Suggestion[cmdMetadata]{
@@ -198,9 +195,7 @@ func main() {
 						Text:        "hide",
 						Description: "no cursor",
 						Metadata: cmdMetadata{
-							CommandMetadata: commandinput.CommandMetadata{
-								Level: 1,
-							},
+							CommandMetadata: commandinput.CommandMetadata{},
 						},
 					},
 				},

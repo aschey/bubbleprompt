@@ -106,79 +106,79 @@ type Model[T any] struct {
 func NewModel[T any](lexer parser.Lexer, options ...Option[T]) *Model[T]
 ```
 
-### func \(\*Model\[T\]\) [Blur](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L219>)
+### func \(\*Model\[T\]\) [Blur](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L240>)
 
 ```go
 func (m *Model[T]) Blur()
 ```
 
-### func \(\*Model\[T\]\) [CompletableTokenBeforeCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L387>)
+### func \(\*Model\[T\]\) [CompletableTokenBeforeCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L423>)
 
 ```go
 func (m *Model[T]) CompletableTokenBeforeCursor() string
 ```
 
-### func \(\*Model\[T\]\) [CurrentToken](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L271>)
+### func \(\*Model\[T\]\) [CurrentToken](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L301>)
 
 ```go
 func (m *Model[T]) CurrentToken() input.Token
 ```
 
-### func \(\*Model\[T\]\) [CurrentTokenBeforeCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L396>)
+### func \(\*Model\[T\]\) [CurrentTokenBeforeCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L432>)
 
 ```go
 func (m *Model[T]) CurrentTokenBeforeCursor() string
 ```
 
-### func \(\*Model\[T\]\) [CurrentTokenRoundDown](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L275>)
+### func \(\*Model\[T\]\) [CurrentTokenRoundDown](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L305>)
 
 ```go
 func (m *Model[T]) CurrentTokenRoundDown() input.Token
 ```
 
-### func \(\*Model\[T\]\) [CursorIndex](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L223>)
+### func \(\*Model\[T\]\) [CursorIndex](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L244>)
 
 ```go
 func (m *Model[T]) CursorIndex() int
 ```
 
-### func \(\*Model\[T\]\) [CursorOffset](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L227>)
+### func \(\*Model\[T\]\) [CursorOffset](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L248>)
 
 ```go
 func (m *Model[T]) CursorOffset() int
 ```
 
-### func \(\*Model\[T\]\) [Error](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L121>)
+### func \(\*Model\[T\]\) [Error](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L127>)
 
 ```go
 func (m *Model[T]) Error() error
 ```
 
-### func \(\*Model\[T\]\) [FindLast](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L279>)
+### func \(\*Model\[T\]\) [FindLast](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L309>)
 
 ```go
 func (m *Model[T]) FindLast(filter func(token input.Token, symbol string) bool) *input.Token
 ```
 
-### func \(\*Model\[T\]\) [Focus](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L188>)
+### func \(\*Model\[T\]\) [Focus](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L209>)
 
 ```go
 func (m *Model[T]) Focus() tea.Cmd
 ```
 
-### func \(\*Model\[T\]\) [Focused](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L192>)
+### func \(\*Model\[T\]\) [Focused](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L213>)
 
 ```go
 func (m *Model[T]) Focused() bool
 ```
 
-### func \(\*Model\[T\]\) [FormatText](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L180>)
+### func \(\*Model\[T\]\) [FormatText](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L201>)
 
 ```go
 func (m *Model[T]) FormatText(text string) string
 ```
 
-### func \(Model\[T\]\) [Formatters](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L242>)
+### func \(Model\[T\]\) [Formatters](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L263>)
 
 ```go
 func (m Model[T]) Formatters() Formatters
@@ -192,145 +192,145 @@ Formatters returns the formatters used by the input.
 func (m *Model[T]) Init() tea.Cmd
 ```
 
-### func \(\*Model\[T\]\) [IsDelimiterToken](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L345>)
+### func \(\*Model\[T\]\) [IsDelimiterToken](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L379>)
 
 ```go
 func (m *Model[T]) IsDelimiterToken(token input.Token) bool
 ```
 
-### func \(\*Model\[T\]\) [OnExecutorFinished](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L411>)
+### func \(\*Model\[T\]\) [OnExecutorFinished](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L447>)
 
 ```go
 func (m *Model[T]) OnExecutorFinished()
 ```
 
-### func \(\*Model\[T\]\) [OnSuggestionChanged](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L350>)
+### func \(\*Model\[T\]\) [OnSuggestionChanged](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L386>)
 
 ```go
 func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T])
 ```
 
-### func \(\*Model\[T\]\) [OnSuggestionUnselected](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L375>)
+### func \(\*Model\[T\]\) [OnSuggestionUnselected](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L411>)
 
 ```go
 func (m *Model[T]) OnSuggestionUnselected()
 ```
 
-### func \(\*Model\[T\]\) [OnUpdateFinish](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L336>)
+### func \(\*Model\[T\]\) [OnUpdateFinish](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L366-L370>)
 
 ```go
 func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion[T], isSelected bool) tea.Cmd
 ```
 
-### func \(\*Model\[T\]\) [OnUpdateStart](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L107>)
+### func \(\*Model\[T\]\) [OnUpdateStart](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L113>)
 
 ```go
 func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd
 ```
 
-### func \(\*Model\[T\]\) [PreviousToken](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L292>)
+### func \(\*Model\[T\]\) [PreviousToken](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L322>)
 
 ```go
 func (m *Model[T]) PreviousToken() *input.Token
 ```
 
-### func \(\*Model\[T\]\) [Prompt](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L250>)
+### func \(\*Model\[T\]\) [Prompt](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L271>)
 
 ```go
 func (m *Model[T]) Prompt() string
 ```
 
-### func \(\*Model\[T\]\) [ResetValue](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L204>)
+### func \(\*Model\[T\]\) [ResetValue](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L225>)
 
 ```go
 func (m *Model[T]) ResetValue()
 ```
 
-### func \(\*Model\[T\]\) [Runes](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L200>)
+### func \(\*Model\[T\]\) [Runes](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L221>)
 
 ```go
 func (m *Model[T]) Runes() []rune
 ```
 
-### func \(\*Model\[T\]\) [SetCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L233>)
+### func \(\*Model\[T\]\) [SetCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L254>)
 
 ```go
 func (m *Model[T]) SetCursor(cursor int)
 ```
 
-### func \(\*Model\[T\]\) [SetCursorMode](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L237>)
+### func \(\*Model\[T\]\) [SetCursorMode](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L258>)
 
 ```go
 func (m *Model[T]) SetCursorMode(cursorMode cursor.Mode) tea.Cmd
 ```
 
-### func \(\*Model\[T\]\) [SetFormatters](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L246>)
+### func \(\*Model\[T\]\) [SetFormatters](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L267>)
 
 ```go
 func (m *Model[T]) SetFormatters(formatters Formatters)
 ```
 
-### func \(\*Model\[T\]\) [SetPrompt](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L254>)
+### func \(\*Model\[T\]\) [SetPrompt](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L275>)
 
 ```go
 func (m *Model[T]) SetPrompt(prompt string)
 ```
 
-### func \(\*Model\[T\]\) [SetValue](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L209>)
+### func \(\*Model\[T\]\) [SetValue](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L230>)
 
 ```go
 func (m *Model[T]) SetValue(value string)
 ```
 
-### func \(\*Model\[T\]\) [ShouldClearSuggestions](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L379>)
+### func \(\*Model\[T\]\) [ShouldClearSuggestions](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L415>)
 
 ```go
 func (m *Model[T]) ShouldClearSuggestions(prevText []rune, msg tea.KeyMsg) bool
 ```
 
-### func \(\*Model\[T\]\) [ShouldSelectSuggestion](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L258>)
+### func \(\*Model\[T\]\) [ShouldSelectSuggestion](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L279>)
 
 ```go
 func (m *Model[T]) ShouldSelectSuggestion(suggestion suggestion.Suggestion[T]) bool
 ```
 
-### func \(\*Model\[T\]\) [ShouldUnselectSuggestion](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L383>)
+### func \(\*Model\[T\]\) [ShouldUnselectSuggestion](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L419>)
 
 ```go
 func (m *Model[T]) ShouldUnselectSuggestion(prevText []rune, msg tea.KeyMsg) bool
 ```
 
-### func \(\*Model\[T\]\) [SuggestionRunes](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L300>)
+### func \(\*Model\[T\]\) [SuggestionRunes](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L330>)
 
 ```go
 func (m *Model[T]) SuggestionRunes(runes []rune) []rune
 ```
 
-### func \(\*Model\[T\]\) [TokenValues](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L328>)
+### func \(\*Model\[T\]\) [TokenValues](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L358>)
 
 ```go
 func (m *Model[T]) TokenValues() []string
 ```
 
-### func \(\*Model\[T\]\) [Tokens](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L305>)
+### func \(\*Model\[T\]\) [Tokens](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L335>)
 
 ```go
 func (m *Model[T]) Tokens() []input.Token
 ```
 
-### func \(\*Model\[T\]\) [TokensBeforeCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L309>)
+### func \(\*Model\[T\]\) [TokensBeforeCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L339>)
 
 ```go
 func (m *Model[T]) TokensBeforeCursor() []input.Token
 ```
 
-### func \(\*Model\[T\]\) [Value](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L196>)
+### func \(\*Model\[T\]\) [Value](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L217>)
 
 ```go
 func (m *Model[T]) Value() string
 ```
 
-### func \(\*Model\[T\]\) [View](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L168>)
+### func \(\*Model\[T\]\) [View](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/model.go#L189>)
 
 ```go
 func (m *Model[T]) View(viewMode input.ViewMode) string

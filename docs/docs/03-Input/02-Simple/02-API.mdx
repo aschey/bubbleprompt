@@ -246,7 +246,7 @@ func (m *Model[T]) Init() tea.Cmd
 Init is part of the [input.Input](/input/api#type-input) interface.
 It should not be invoked by users of this library.
 
-### func \(\*Model\[T\]\) [OnExecutorFinished](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L233>)
+### func \(\*Model\[T\]\) [OnExecutorFinished](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L237>)
 
 ```go
 func (m *Model[T]) OnExecutorFinished()
@@ -255,7 +255,7 @@ func (m *Model[T]) OnExecutorFinished()
 OnExecutorFinished is part of the [input.Input](/input/api#type-input) interface.
 It should not be invoked by users of this library.
 
-### func \(\*Model\[T\]\) [OnSuggestionChanged](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L227>)
+### func \(\*Model\[T\]\) [OnSuggestionChanged](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L231>)
 
 ```go
 func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T])
@@ -264,7 +264,7 @@ func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T])
 OnSuggestionChanged is part of the [input.Input](/input/api#type-input) interface.
 It should not be invoked by users of this library.
 
-### func \(\*Model\[T\]\) [OnSuggestionUnselected](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L239>)
+### func \(\*Model\[T\]\) [OnSuggestionUnselected](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L243>)
 
 ```go
 func (m *Model[T]) OnSuggestionUnselected()
@@ -273,7 +273,7 @@ func (m *Model[T]) OnSuggestionUnselected()
 OnSuggestionUnselected is part of the [input.Input](/input/api#type-input) interface.
 It should not be invoked by users of this library.
 
-### func \(\*Model\[T\]\) [OnUpdateFinish](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L221>)
+### func \(\*Model\[T\]\) [OnUpdateFinish](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L221-L225>)
 
 ```go
 func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion[T], isSelected bool) tea.Cmd
@@ -349,7 +349,7 @@ func (m *Model[T]) SetValue(value string)
 
 SetValue sets the text of the input.
 
-### func \(\*Model\[T\]\) [ShouldClearSuggestions](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L245>)
+### func \(\*Model\[T\]\) [ShouldClearSuggestions](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L249>)
 
 ```go
 func (m *Model[T]) ShouldClearSuggestions(prevText []rune, msg tea.KeyMsg) bool
@@ -367,7 +367,7 @@ func (m *Model[T]) ShouldSelectSuggestion(suggestion suggestion.Suggestion[T]) b
 ShouldSelectSuggestion is part of the [input.Input](/input/api#type-input) interface.
 It should not be invoked by users of this library.
 
-### func \(\*Model\[T\]\) [ShouldUnselectSuggestion](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L251>)
+### func \(\*Model\[T\]\) [ShouldUnselectSuggestion](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L255>)
 
 ```go
 func (m *Model[T]) ShouldUnselectSuggestion(prevText []rune, msg tea.KeyMsg) bool
@@ -453,7 +453,7 @@ This does not include delimiter tokens.
 type Option[T any] func(settings *settings[T])
 ```
 
-### func [WithCursorMode](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/option.go#L43>)
+### func [WithCursorMode](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/option.go#L44>)
 
 ```go
 func WithCursorMode[T any](cursorMode cursor.Mode) Option[T]
@@ -532,9 +532,11 @@ type alternatingFormatter struct {
 	oddTextStyle  lipgloss.Style
 }
 
-func (f alternatingFormatter) Lex(input string, _selectedToken *input.Token) ([]parser.FormatterToken, error) {
+func (f alternatingFormatter) Lex(
+	input string,
+	_selectedToken *input.Token,
+) ([]parser.FormatterToken, error) {
 	tokens, err := f.lexer.Lex(input)
-
 	if err != nil {
 		return nil, err
 	}
