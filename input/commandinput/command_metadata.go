@@ -9,7 +9,7 @@ type CommandMetadataAccessor interface {
 	GetFlagArgPlaceholder() FlagArgPlaceholder
 	// GetLevel returns the nesting level of the suggestion.
 	// For example, a level of 1 means the suggestion is nested one level higher than the root command.
-	//GetLevel() int
+	// GetLevel() int
 	// TODO: Figure out why we need this.
 	GetPreservePlaceholder() bool
 	// GetShowFlagPlaceholder returns whether or not to show the placeholder
@@ -27,8 +27,8 @@ type CommandMetadata struct {
 	// indicating that this command has flags available.
 	ShowFlagPlaceholder bool
 	// FlagArgPlaceholder is the placeholder
-	FlagArgPlaceholder  FlagArgPlaceholder
-	Level               int
+	FlagArgPlaceholder FlagArgPlaceholder
+	// Level               int
 	PreservePlaceholder bool
 }
 

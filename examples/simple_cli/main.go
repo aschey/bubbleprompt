@@ -138,7 +138,7 @@ func main() {
 						Text:        "secret",
 						Description: "get the secret",
 						Metadata: cmdMetadata{
-							CommandMetadata: commandinput.CommandMetadata{Level: 1},
+							CommandMetadata: commandinput.CommandMetadata{},
 						},
 					},
 					{
@@ -146,7 +146,6 @@ func main() {
 						Description: "get the weather",
 						Metadata: cmdMetadata{
 							CommandMetadata: commandinput.CommandMetadata{
-								Level:               1,
 								ShowFlagPlaceholder: true,
 							},
 						},
@@ -165,7 +164,6 @@ func main() {
 						Description: "update the secret",
 						Metadata: cmdMetadata{
 							CommandMetadata: commandinput.CommandMetadata{
-								Level:          1,
 								PositionalArgs: secretArgs,
 							},
 						},

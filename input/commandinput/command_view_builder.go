@@ -40,7 +40,7 @@ func newCmdViewBuilder[T CommandMetadataAccessor](
 func (b commandViewBuilder[T]) View() string {
 	b.renderArgs()
 	b.renderFlags()
-	//b.renderFlagPlaceholder()
+	b.renderPlaceholders()
 	b.renderTrailingText()
 
 	return b.model.formatters.Prompt.Render(string(b.model.prompt)) + b.viewBuilder.View()
@@ -55,28 +55,21 @@ func (b commandViewBuilder[T]) render(runes []rune, column int, style lipgloss.S
 }
 
 func (b commandViewBuilder[T]) renderArgs() {
-	args := append([]ident{b.model.parsedText.Command}, b.model.parsedText.Args.Value...)
-	for i, arg := range args {
-
-		if i < len(args) {
-			if i == 0 {
-				b.render([]rune(arg.Value), arg.Pos.Column, b.model.formatters.Command)
-			} else {
-				b.render([]rune(arg.Value), arg.Pos.Column, b.model.formatters.PositionalArg.Arg)
-			}
-
-		} else {
-			state := b.model.states[i]
-			b.renderCurrentArg(i, arg, state.selectedSuggestion)
+	command := b.model.parsedText.Command
+	args := b.model.parsedText.Args.Value
+	b.render([]rune(command.Value), command.Pos.Column, b.model.formatters.Command)
+	if len(args) == 0 {
+		b.renderCurrentArg(command, b.model.states[0].selectedSuggestion)
+	} else {
+		for _, arg := range args {
+			b.render([]rune(arg.Value), arg.Pos.Column, b.model.formatters.PositionalArg.Arg)
 		}
 
+		b.renderCurrentArg(args[len(args)-1], b.model.states[len(args)].selectedSuggestion)
 	}
 }
 
-func (b commandViewBuilder[T]) renderArg() {
-}
-
-func (b commandViewBuilder[T]) renderCurrentArg(argIndex int, arg ident, suggestion *suggestion.Suggestion[T]) {
+func (b commandViewBuilder[T]) renderCurrentArg(arg ident, suggestion *suggestion.Suggestion[T]) {
 	if suggestion != nil && strings.HasPrefix(suggestion.GetSuggestionText(), arg.Value) {
 		tokenPos := len([]rune(arg.Value))
 		suggestionRunes := []rune(suggestion.GetSuggestionText())
@@ -201,6 +194,21 @@ func (b commandViewBuilder[T]) renderLastFlag(
 				b.model.formatters.Flag.Placeholder,
 			)
 		}
+	}
+}
+
+func (b commandViewBuilder[T]) renderPlaceholders() {
+	if b.showPlaceholders && len(b.model.parsedText.Flags.Value) == 0 &&
+		b.currentState.selectedSuggestion.Metadata.GetShowFlagPlaceholder() {
+		b.viewBuilder.Render([]rune("[flags]"), b.viewBuilder.ViewLen(), b.model.formatters.Placeholder)
+		return
+	}
+	if b.model.CurrentToken().Index < len(b.model.Tokens())-1 {
+		return
+	}
+	subcommand := b.model.currentState().subcommand
+	if subcommand == nil {
+		return
 	}
 }
 

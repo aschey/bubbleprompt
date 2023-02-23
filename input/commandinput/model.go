@@ -83,7 +83,7 @@ type modelState[T CommandMetadataAccessor] struct {
 	selectedToken      *input.Token
 	selectedSuggestion *suggestion.Suggestion[T]
 	subcommand         *suggestion.Suggestion[T]
-	// argNumber          int
+	argNumber          int
 }
 
 func (m modelState[T]) isFlagSuggestion() bool {
@@ -398,6 +398,13 @@ func (m *Model[T]) OnUpdateFinish(
 	index := m.CurrentToken().Index
 
 	m.states[index].selectedSuggestion = suggestion
+	if len(suggestion.Metadata.GetPositionalArgs()) > 0 {
+		m.states[index].subcommand = suggestion
+		m.states[index].argNumber = 0
+	} else if index > 0 {
+		m.states[index].subcommand = m.states[index-1].subcommand
+		m.states[index].argNumber = m.states[index-1].argNumber + 1
+	}
 
 	return nil
 }
