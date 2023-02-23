@@ -42,6 +42,7 @@ func (b commandViewBuilder[T]) View() string {
 	b.renderFlags()
 	b.renderFlagsPlaceholder()
 	b.renderPlaceholders()
+	b.renderFlagPlaceholder()
 	b.renderTrailingText()
 
 	return b.model.formatters.Prompt.Render(string(b.model.prompt)) + b.viewBuilder.View()
@@ -60,19 +61,19 @@ func (b commandViewBuilder[T]) renderArgs() {
 	args := b.model.parsedText.Args.Value
 	b.render([]rune(command.Value), command.Pos.Column, b.model.formatters.Command)
 	if len(args) == 0 {
-		b.renderCurrentArg(command, b.model.states[0].selectedSuggestion)
+		b.renderCurrentArg(command.Value, b.model.states[0].selectedSuggestion)
 	} else {
 		for _, arg := range args {
 			b.render([]rune(arg.Value), arg.Pos.Column, b.model.formatters.PositionalArg.Arg)
 		}
 
-		b.renderCurrentArg(args[len(args)-1], b.model.states[len(args)].selectedSuggestion)
+		b.renderCurrentArg(args[len(args)-1].Value, b.model.states[len(args)].selectedSuggestion)
 	}
 }
 
-func (b commandViewBuilder[T]) renderCurrentArg(arg ident, suggestion *suggestion.Suggestion[T]) {
-	if len(arg.Value) > 0 && suggestion != nil && strings.HasPrefix(suggestion.GetSuggestionText(), arg.Value) {
-		tokenPos := len([]rune(arg.Value))
+func (b commandViewBuilder[T]) renderCurrentArg(arg string, suggestion *suggestion.Suggestion[T]) {
+	if len(arg) > 0 && suggestion != nil && strings.HasPrefix(suggestion.GetSuggestionText(), arg) {
+		tokenPos := len([]rune(arg))
 		suggestionRunes := []rune(suggestion.GetSuggestionText())
 		b.render([]rune(suggestionRunes[tokenPos:]), b.viewBuilder.ViewLen(), b.model.formatters.Placeholder)
 	}
@@ -80,35 +81,27 @@ func (b commandViewBuilder[T]) renderCurrentArg(arg ident, suggestion *suggestio
 
 func (b commandViewBuilder[T]) renderFlags() {
 	flags := b.model.parsedText.Flags.Value
-	currentFlagRunes := []rune{}
-	currentFlagPlaceholderRunes := []rune{}
-	currentState := b.model.currentState()
-	if currentState.isFlagSuggestion() {
-		currentFlagRunes = []rune(b.model.CurrentToken().Value)
-		currentFlagPlaceholderRunes = []rune(
-			currentState.selectedSuggestion.Metadata.GetFlagArgPlaceholder().text,
-		)
-	}
 
 	for i, flag := range flags {
-		b.renderFlag(i, flag, currentFlagRunes, currentFlagPlaceholderRunes)
+		b.renderFlag(i, flag)
+	}
+
+	if len(flags) > 0 && b.currentState.isFlagSuggestion() {
+		b.renderCurrentArg(flags[len(flags)-1].Name, b.currentState.selectedSuggestion)
 	}
 }
 
 func (b commandViewBuilder[T]) renderFlag(
 	i int,
 	flag flag,
-	currentFlagRunes []rune,
-	currentFlagPlaceholderRunes []rune,
 ) {
 	flagNameRunes := []rune(flag.Name)
 
 	b.render(flagNameRunes, flag.Pos.Column, b.model.formatters.Flag.Flag)
 
-	hasCurrentFlag := len(currentFlagRunes) > 0
 	hasValue := flag.Value != nil
 	// Render delimiter only once the full flag has been typed
-	if !hasCurrentFlag || len(flagNameRunes) >= len(currentFlagRunes) || hasValue {
+	if hasValue {
 		if flag.Delim != nil {
 			b.viewBuilder.Render(
 				[]rune(flag.Delim.Value),
@@ -118,14 +111,12 @@ func (b commandViewBuilder[T]) renderFlag(
 		}
 	}
 
-	b.renderFlagValue(i, flag, currentFlagRunes, currentFlagPlaceholderRunes)
+	b.renderFlagValue(i, flag)
 }
 
 func (b commandViewBuilder[T]) renderFlagValue(
 	i int,
 	flag flag,
-	currentFlagRunes []rune,
-	currentFlagPlaceholderRunes []rune,
 ) {
 	token := b.model.CurrentTokenRoundDown()
 	flags := b.model.parsedText.Flags.Value
@@ -143,57 +134,8 @@ func (b commandViewBuilder[T]) renderFlagValue(
 			b.render(flagValueRunes, flag.Value.Pos.Column, b.flagValueStyle(flag.Value.Value))
 		}
 	} else {
-		// Render current flag with placeholder info only if it's the last flag
-		if len(currentFlagRunes) > 0 &&
-			i == len(flags)-1 &&
-			token.Start >= flag.Pos.Column-1 {
-			b.renderLastFlag(flags, flag, currentFlagRunes, currentFlagPlaceholderRunes)
-		}
-
 		if flag.Value != nil {
 			b.render(flagValueRunes, flag.Value.Pos.Column, b.flagValueStyle(flag.Value.Value))
-		}
-	}
-}
-
-func (b commandViewBuilder[T]) renderLastFlag(
-	flags []flag,
-	flag flag,
-	currentFlagRunes []rune,
-	currentFlagPlaceholderRunes []rune,
-) {
-	flagNameRunes := []rune(flag.Name)
-	argVal := ""
-	if len(flags) > 0 {
-		argVal = flags[len(flags)-1].Name
-	}
-
-	// Render the rest of the arg placeholder only if the prefix matches
-	if b.showPlaceholders && strings.HasPrefix(string(currentFlagRunes), argVal) {
-		tokenPos := len(argVal)
-		b.render(
-			currentFlagRunes[tokenPos:],
-			b.viewBuilder.ViewLen(),
-			b.model.formatters.Placeholder,
-		)
-	}
-
-	if len(currentFlagPlaceholderRunes) > 0 &&
-		flagNameRunes[len(flagNameRunes)-1] != '-' {
-		if !b.model.isDelimiter(string(*b.viewBuilder.Last())) && *b.viewBuilder.Last() != '=' {
-			b.viewBuilder.Render(
-				[]rune(b.model.defaultDelimiter),
-				b.viewBuilder.ViewLen(),
-				lipgloss.NewStyle(),
-			)
-		}
-
-		if b.showPlaceholders && flag.Value == nil {
-			b.viewBuilder.RenderPlaceholder(
-				currentFlagPlaceholderRunes,
-				b.viewBuilder.ViewLen(),
-				b.model.formatters.Flag.Placeholder,
-			)
 		}
 	}
 }
@@ -201,6 +143,17 @@ func (b commandViewBuilder[T]) renderLastFlag(
 func (b commandViewBuilder[T]) renderDelimiter() {
 	last := b.viewBuilder.Last()
 	if last != nil && !b.model.isDelimiter(string(*last)) {
+		b.viewBuilder.Render(
+			[]rune(b.model.defaultDelimiter),
+			b.viewBuilder.ViewLen(),
+			lipgloss.NewStyle(),
+		)
+	}
+}
+
+func (b commandViewBuilder[T]) renderFlagDelimiter() {
+	last := b.viewBuilder.Last()
+	if last != nil && !(b.model.isDelimiter(string(*last)) || *last == '=') {
 		b.viewBuilder.Render(
 			[]rune(b.model.defaultDelimiter),
 			b.viewBuilder.ViewLen(),
@@ -250,6 +203,21 @@ func (b commandViewBuilder[T]) renderPlaceholders() {
 				b.viewBuilder.ViewLen(),
 				arg.PlaceholderStyle,
 			)
+		}
+	}
+}
+
+func (b commandViewBuilder[T]) renderFlagPlaceholder() {
+	currentState := b.model.currentState()
+	if currentState.isFlagSuggestion() {
+		flagArgPlaceholder := currentState.selectedSuggestion.Metadata.GetFlagArgPlaceholder()
+		if flagArgPlaceholder.text != "" {
+			b.renderFlagDelimiter()
+			b.viewBuilder.Render(
+				[]rune(flagArgPlaceholder.text),
+				b.viewBuilder.ViewLen(),
+				flagArgPlaceholder.Style)
+
 		}
 	}
 }
