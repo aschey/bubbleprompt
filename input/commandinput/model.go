@@ -395,14 +395,10 @@ func (m *Model[T]) OnUpdateFinish(
 	suggestion *suggestion.Suggestion[T],
 	isSelected bool,
 ) tea.Cmd {
-	if suggestion == nil {
-		return nil
-	}
-
 	index := m.CurrentToken().Index
 
 	m.states[index].selectedSuggestion = suggestion
-	if len(suggestion.Metadata.GetPositionalArgs()) > 0 {
+	if suggestion != nil && len(suggestion.Metadata.GetPositionalArgs()) > 0 {
 		m.states[index].subcommand = suggestion
 		m.states[index].argNumber = 0
 	} else if index > 0 {

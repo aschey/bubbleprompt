@@ -40,6 +40,7 @@ func newCmdViewBuilder[T CommandMetadataAccessor](
 func (b commandViewBuilder[T]) View() string {
 	b.renderArgs()
 	b.renderFlags()
+	b.renderFlagsPlaceholder()
 	b.renderPlaceholders()
 	b.renderTrailingText()
 
@@ -208,14 +209,15 @@ func (b commandViewBuilder[T]) renderDelimiter() {
 	}
 }
 
-func (b commandViewBuilder[T]) renderPlaceholders() {
+func (b commandViewBuilder[T]) renderFlagsPlaceholder() {
 	if b.showPlaceholders && len(b.model.parsedText.Flags.Value) == 0 && b.currentState.selectedSuggestion != nil &&
 		b.currentState.selectedSuggestion.Metadata.GetShowFlagPlaceholder() {
 		b.renderDelimiter()
 		b.viewBuilder.Render([]rune("[flags]"), b.viewBuilder.ViewLen(), b.model.formatters.Flag.Placeholder)
-		return
 	}
+}
 
+func (b commandViewBuilder[T]) renderPlaceholders() {
 	currentToken := b.model.CurrentToken()
 	tokenLen := len(b.model.Tokens())
 	if currentToken.Index < tokenLen-1 {
@@ -236,8 +238,12 @@ func (b commandViewBuilder[T]) renderPlaceholders() {
 	}
 
 	positionalArgs := currentState.subcommand.Metadata.GetPositionalArgs()
-	if currentState.argNumber < len(positionalArgs) {
-		for _, arg := range positionalArgs[currentState.argNumber:] {
+	argNumber := currentState.argNumber
+	if len(currentToken.Value) == 0 && argNumber > 0 {
+		argNumber--
+	}
+	if argNumber < len(positionalArgs) {
+		for _, arg := range positionalArgs[argNumber:] {
 			b.renderDelimiter()
 			b.viewBuilder.Render(
 				[]rune(arg.placeholder),
