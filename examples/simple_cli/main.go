@@ -30,6 +30,7 @@ type model struct {
 	textInput          *commandinput.Model[cmdMetadata]
 	secret             string
 	executorValueStyle lipgloss.Style
+	filterer           completer.RecursiveFilterer[cmdMetadata]
 }
 
 func (m model) Complete(
@@ -52,7 +53,7 @@ func (m model) Complete(
 			nil,
 		), nil
 	}
-	return completer.GetRecursiveSuggestions(
+	return m.filterer.GetRecursiveSuggestions(
 		m.textInput.Tokens(),
 		m.textInput.CursorIndex(),
 		m.suggestions,
@@ -177,6 +178,7 @@ func main() {
 		textInput:          textInput,
 		secret:             "hunter2",
 		executorValueStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("13")),
+		filterer:           completer.NewRecursiveFilterer[cmdMetadata](),
 	}
 
 	promptModel := prompt.New[cmdMetadata](

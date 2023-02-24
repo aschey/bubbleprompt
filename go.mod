@@ -12,7 +12,8 @@ require (
 	github.com/mattn/go-runewidth v0.0.14
 	github.com/onsi/ginkgo/v2 v2.8.3
 	github.com/onsi/gomega v1.27.1
-	golang.org/x/exp v0.0.0-20230223210539-50820d90acfd
+	github.com/sahilm/fuzzy v0.1.0
+	golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2
 )
 
 require (

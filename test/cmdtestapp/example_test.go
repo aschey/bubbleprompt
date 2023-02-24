@@ -21,6 +21,7 @@ type model struct {
 	suggestions []suggestion.Suggestion[cmdMetadata]
 	textInput   *commandinput.Model[cmdMetadata]
 	inc         int
+	filterer    completer.Filterer[cmdMetadata]
 }
 
 type changeTextMsg struct{}
@@ -87,7 +88,7 @@ func (m model) Complete(
 		}
 		suggestions = secondLevelSuggestions(m.textInput)
 	}
-	return completer.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor().Value, suggestions), nil
+	return m.filterer.Filter(m.textInput.CurrentTokenBeforeCursor().Value, suggestions), nil
 }
 
 func (m model) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
@@ -132,7 +133,11 @@ func TestApp(t *testing.T) {
 	commandinput.DefaultCurrentPlaceholderSuggestion = "8"
 
 	textInput := commandinput.New[cmdMetadata]()
-	m := model{suggestions: suggestions(textInput), textInput: textInput}
+	m := model{
+		suggestions: suggestions(textInput),
+		textInput:   textInput,
+		filterer:    completer.NewPrefixFilter[cmdMetadata](),
+	}
 
 	promptModel := prompt.New[cmdMetadata](
 		m,

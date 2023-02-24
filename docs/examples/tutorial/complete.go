@@ -2,7 +2,6 @@ package tutorial
 
 import (
 	prompt "github.com/aschey/bubbleprompt"
-	"github.com/aschey/bubbleprompt/completer"
 	"github.com/aschey/bubbleprompt/suggestion"
 )
 
@@ -14,5 +13,5 @@ func (m model) Complete(promptModel prompt.Model[any]) ([]suggestion.Suggestion[
 	}
 
 	// Filter suggestions based on the text before the cursor
-	return completer.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
+	return m.filterer.Filter(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
 }

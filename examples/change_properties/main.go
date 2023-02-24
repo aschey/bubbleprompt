@@ -29,12 +29,13 @@ func (c cmdMetadata) Children() []suggestion.Suggestion[cmdMetadata] {
 type model struct {
 	suggestions []suggestion.Suggestion[cmdMetadata]
 	textInput   *commandinput.Model[cmdMetadata]
+	filterer    completer.RecursiveFilterer[cmdMetadata]
 }
 
 func (m model) Complete(
 	promptModel prompt.Model[cmdMetadata],
 ) ([]suggestion.Suggestion[cmdMetadata], error) {
-	return completer.GetRecursiveSuggestions(
+	return m.filterer.GetRecursiveSuggestions(
 		m.textInput.Tokens(),
 		m.textInput.CursorIndex(),
 		m.suggestions,
@@ -319,6 +320,7 @@ func main() {
 	appModel := model{
 		suggestions: suggestions,
 		textInput:   textInput,
+		filterer:    completer.NewRecursiveFilterer[cmdMetadata](),
 	}
 
 	promptModel := prompt.New[cmdMetadata](

@@ -19,6 +19,7 @@ type cmdMetadata = commandinput.CommandMetadata
 type model struct {
 	suggestions []suggestion.Suggestion[cmdMetadata]
 	textInput   *commandinput.Model[cmdMetadata]
+	filterer    completer.Filterer[cmdMetadata]
 }
 
 type cmdModel struct {
@@ -54,7 +55,7 @@ func (m model) Complete(
 	promptModel prompt.Model[cmdMetadata],
 ) ([]suggestion.Suggestion[cmdMetadata], error) {
 	if !m.textInput.CommandCompleted() {
-		return completer.FilterHasPrefix(
+		return m.filterer.Filter(
 			m.textInput.CurrentTokenBeforeCursor().Value,
 			m.suggestions,
 		), nil
@@ -104,7 +105,11 @@ func main() {
 		{Text: "top"},
 		{Text: "htop"},
 	}
-	model := model{suggestions: suggestions, textInput: textInput}
+	model := model{
+		suggestions: suggestions,
+		textInput:   textInput,
+		filterer:    completer.NewPrefixFilter[cmdMetadata](),
+	}
 
 	promptModel := prompt.New[cmdMetadata](
 		model,

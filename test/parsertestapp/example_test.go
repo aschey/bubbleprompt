@@ -30,6 +30,7 @@ type Statement struct {
 type model struct {
 	textInput   *parserinput.Model[any, Statement]
 	suggestions []suggestion.Suggestion[any]
+	filterer    completer.Filterer[any]
 }
 
 func (m model) Complete(promptModel prompt.Model[any]) ([]suggestion.Suggestion[any], error) {
@@ -39,7 +40,7 @@ func (m model) Complete(promptModel prompt.Model[any]) ([]suggestion.Suggestion[
 		{Text: "def"},
 		{Text: "abcdef"},
 	}
-	return completer.FilterHasPrefix(current, suggestions), nil
+	return m.filterer.Filter(current, suggestions), nil
 }
 
 func (m model) Execute(input string, promptModel *prompt.Model[any]) (tea.Model, error) {
@@ -78,6 +79,7 @@ func TestApp(t *testing.T) {
 	model := model{
 		suggestions: []suggestion.Suggestion[any]{},
 		textInput:   textInput,
+		filterer:    completer.NewPrefixFilter[any](),
 	}
 
 	promptModel := prompt.New[any](

@@ -1,6 +1,7 @@
 package tutorial
 
 import (
+	"github.com/aschey/bubbleprompt/completer"
 	"github.com/aschey/bubbleprompt/input/simpleinput"
 	"github.com/aschey/bubbleprompt/suggestion"
 	"github.com/charmbracelet/lipgloss"
@@ -15,4 +16,5 @@ type model struct {
 	outputStyle lipgloss.Style
 	// Number of times the user enters some input
 	numChoices int64
+	filterer   completer.Filterer[any]
 }

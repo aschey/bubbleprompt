@@ -19,6 +19,7 @@ type model struct {
 	textInput   *simpleinput.Model[any]
 	outputStyle lipgloss.Style
 	numChoices  int64
+	filterer    completer.Filterer[any]
 }
 
 func (m model) Complete(promptModel prompt.Model[any]) ([]suggestion.Suggestion[any], error) {
@@ -26,7 +27,7 @@ func (m model) Complete(promptModel prompt.Model[any]) ([]suggestion.Suggestion[
 		return nil, nil
 	}
 
-	return completer.FilterHasPrefix(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
+	return m.filterer.Filter(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
 }
 
 func (m model) Execute(input string, promptModel *prompt.Model[any]) (tea.Model, error) {
@@ -66,6 +67,7 @@ func main() {
 		suggestions: suggestions,
 		textInput:   textInput,
 		outputStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("13")),
+		filterer:    completer.NewPrefixFilter[any](),
 	}
 
 	promptModel := prompt.New[any](model, textInput)

@@ -12,8 +12,9 @@ import (
 )
 
 type PathCompleter[T any] struct {
-	Filter        func(de fs.DirEntry) bool
+	DirFilter     func(de fs.DirEntry) bool
 	IgnoreCase    bool
+	Filterer      Filterer[T]
 	fileListCache map[string][]suggestion.Suggestion[T]
 }
 
@@ -30,20 +31,20 @@ func cleanFilePath(path string) (dir string, base string, err error) {
 	if len(path) >= 1 && equalsSeparator(path[len(path)-1]) {
 		endsWithSeparator = true
 	}
-
+	stripLast := false
+	if strings.HasSuffix(path, ".") {
+		// filepath functions treat "." as current directory
+		// Need to add something to the end to treat the "." as a normal character
+		// Ensure we do this before performing any filepath operations
+		path += "!"
+		stripLast = true
+	}
 	if len(path) >= 2 && path[0:1] == "~" && equalsSeparator(path[1]) {
 		me, err := user.Current()
 		if err != nil {
 			return "", "", err
 		}
 		path = filepath.Join(me.HomeDir, path[1:])
-	}
-	stripLast := false
-	if strings.HasSuffix(path, ".") {
-		// filepath functions treat "." as current directory
-		// Need to add something to the end to treat the "." as a normal character
-		path += "!"
-		stripLast = true
 	}
 
 	path = filepath.Clean(os.ExpandEnv(path))
@@ -69,9 +70,16 @@ func (c *PathCompleter[T]) adjustSuggestions(
 	suggestions []suggestion.Suggestion[T],
 	sub string,
 ) []suggestion.Suggestion[T] {
-	filteredSuggestions := FilterHasPrefix(sub, suggestions)
+	filteredSuggestions := c.getFilterer().Filter(sub, suggestions)
 
 	return filteredSuggestions
+}
+
+func (c *PathCompleter[T]) getFilterer() Filterer[T] {
+	if c.Filterer == nil {
+		c.Filterer = NewPrefixFilter[T]()
+	}
+	return c.Filterer
 }
 
 func (c *PathCompleter[T]) Complete(path string) []suggestion.Suggestion[T] {
@@ -108,7 +116,7 @@ func (c *PathCompleter[T]) Complete(path string) []suggestion.Suggestion[T] {
 
 	suggests := make([]suggestion.Suggestion[T], 0, len(files))
 	for _, f := range files {
-		if c.Filter != nil && !c.Filter(f) {
+		if c.DirFilter != nil && !c.DirFilter(f) {
 			continue
 		}
 		full := filepath.Join(filePath, f.Name())

@@ -31,6 +31,7 @@ type model struct {
 	textInput   *parserinput.Model[any, statement]
 	suggestions []suggestion.Suggestion[any]
 	vm          *vm
+	filterer    completer.Filterer[any]
 }
 
 func (m model) globalSuggestions() []suggestion.Suggestion[any] {
@@ -41,7 +42,7 @@ func (m model) globalSuggestions() []suggestion.Suggestion[any] {
 		suggestions = append(suggestions, suggestion.Suggestion[any]{Text: v})
 	}
 
-	return completer.FilterHasPrefix(currentBeforeCursor, suggestions)
+	return m.filterer.Filter(currentBeforeCursor, suggestions)
 }
 
 func (m model) valueSuggestions(value goja.Value) []suggestion.Suggestion[any] {
@@ -95,7 +96,7 @@ func (m model) valueSuggestions(value goja.Value) []suggestion.Suggestion[any] {
 		})
 	}
 
-	return completer.FilterHasPrefix(completable, suggestions)
+	return m.filterer.Filter(completable, suggestions)
 }
 
 func (m model) Complete(promptModel prompt.Model[any]) ([]suggestion.Suggestion[any], error) {
@@ -165,6 +166,7 @@ func main() {
 		suggestions: []suggestion.Suggestion[any]{},
 		textInput:   textInput,
 		vm:          vm,
+		filterer:    completer.NewPrefixFilter[any](),
 	}
 
 	promptModel := prompt.New[any](

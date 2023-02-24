@@ -9,7 +9,15 @@ type Metadata[T any] interface {
 	Children() []suggestion.Suggestion[T]
 }
 
-func GetRecursiveSuggestions[T Metadata[T]](
+type RecursiveFilterer[T Metadata[T]] struct {
+	Filterer Filterer[T]
+}
+
+func NewRecursiveFilterer[T Metadata[T]]() RecursiveFilterer[T] {
+	return RecursiveFilterer[T]{}
+}
+
+func (f RecursiveFilterer[T]) GetRecursiveSuggestions(
 	tokens []input.Token,
 	cursor int,
 	suggestions []suggestion.Suggestion[T],
@@ -24,18 +32,26 @@ func GetRecursiveSuggestions[T Metadata[T]](
 		if prefixEnd < 0 {
 			return []suggestion.Suggestion[T]{}
 		}
-		return FilterHasPrefix(string([]rune(token.Value)[:cursor-token.Start]), suggestions)
+
+		return f.getFilterer().Filter(string([]rune(token.Value)[:cursor-token.Start]), suggestions)
 	}
-	for _, s := range suggestions {
-		if s.GetSuggestionText() == token.Value {
-			if s.Metadata.Children() != nil {
-				children := s.Metadata.Children()
+	for _, sug := range suggestions {
+		if sug.GetSuggestionText() == token.Value {
+			if sug.Metadata.Children() != nil {
+				children := sug.Metadata.Children()
 				if children != nil {
-					return GetRecursiveSuggestions(tokens[1:], cursor, children)
+					return f.GetRecursiveSuggestions(tokens[1:], cursor, children)
 				}
 			}
 			return []suggestion.Suggestion[T]{}
 		}
 	}
 	return []suggestion.Suggestion[T]{}
+}
+
+func (s *RecursiveFilterer[T]) getFilterer() Filterer[T] {
+	if s.Filterer == nil {
+		s.Filterer = NewPrefixFilter[T]()
+	}
+	return s.Filterer
 }

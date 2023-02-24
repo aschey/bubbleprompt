@@ -26,12 +26,13 @@ type model struct {
 	suggestions []suggestion.Suggestion[metadata]
 	textInput   *simpleinput.Model[metadata]
 	outputStyle lipgloss.Style
+	filterer    completer.RecursiveFilterer[metadata]
 }
 
 func (m model) Complete(
 	promptModel prompt.Model[metadata],
 ) ([]suggestion.Suggestion[metadata], error) {
-	return completer.GetRecursiveSuggestions(
+	return m.filterer.GetRecursiveSuggestions(
 		m.textInput.WordTokens(),
 		m.textInput.CursorIndex(),
 		m.suggestions,
@@ -169,6 +170,7 @@ func main() {
 		suggestions: suggestions,
 		textInput:   textInput,
 		outputStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("13")),
+		filterer:    completer.NewRecursiveFilterer[metadata](),
 	}
 
 	promptModel := prompt.New[metadata](

@@ -28,7 +28,8 @@ require (
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.14.0 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
-	golang.org/x/exp v0.0.0-20230223210539-50820d90acfd // indirect
+	github.com/sahilm/fuzzy v0.1.0 // indirect
+	golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/term v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect

@@ -1,6 +1,7 @@
 package tutorial
 
 import (
+	"github.com/aschey/bubbleprompt/completer"
 	"github.com/aschey/bubbleprompt/input/simpleinput"
 	"github.com/aschey/bubbleprompt/suggestion"
 	"github.com/charmbracelet/lipgloss"
@@ -26,6 +27,7 @@ func main3() {
 		textInput:   textInput,
 		// Add some coloring to the foreground of our output to make it look pretty
 		outputStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("13")),
+		filterer:    completer.NewPrefixFilter[any](),
 	}
 	_ = model
 }

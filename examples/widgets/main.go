@@ -105,6 +105,7 @@ type inputModel struct {
 	textInput   *commandinput.Model[cmdMetadata]
 	editText    string
 	outputStyle lipgloss.Style
+	filterer    completer.Filterer[cmdMetadata]
 }
 
 func (m inputModel) Complete(
@@ -113,7 +114,7 @@ func (m inputModel) Complete(
 	if m.textInput.CommandCompleted() {
 		return nil, nil
 	}
-	return completer.FilterHasPrefix(m.textInput.ParsedValue().Command.Value, m.suggestions), nil
+	return m.filterer.Filter(m.textInput.ParsedValue().Command.Value, m.suggestions), nil
 }
 
 func (m inputModel) Execute(
@@ -191,6 +192,7 @@ func main() {
 		suggestions: suggestions,
 		textInput:   textInput,
 		outputStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("13")),
+		filterer:    completer.NewPrefixFilter[cmdMetadata](),
 	}
 
 	statusBarHeight := 1
