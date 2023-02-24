@@ -148,7 +148,9 @@ func (m *Model[T]) ParseUsage(placeholders string) ([]PositionalArg, error) {
 	}
 	positionalArgs := []PositionalArg{}
 	for _, token := range tokens {
-		positionalArgs = append(positionalArgs, m.NewPositionalArg(token.Value))
+		if token.Type != lexer.EOF {
+			positionalArgs = append(positionalArgs, m.NewPositionalArg(token.Value))
+		}
 	}
 
 	return positionalArgs, nil
