@@ -83,3 +83,17 @@ tasks:
         --template-file file=./docs/templates/file.gotxt \
         --template frontmatter="" \
         --output ./docs/docs/05-Suggestion/02-API.mdx ./suggestion
+      - |
+        gomarkdoc \
+        --template-file package=./docs/templates/package.gotxt \
+        --template-file text=./docs/templates/text.gotxt \
+        --template-file file=./docs/templates/file.gotxt \
+        --template frontmatter="" \
+        --output ./docs/docs/08-Utilities/01-Completer/02-API.mdx ./completer
+      - |
+        gomarkdoc \
+        --template-file package=./docs/templates/package.gotxt \
+        --template-file text=./docs/templates/text.gotxt \
+        --template-file file=./docs/templates/file.gotxt \
+        --template frontmatter="" \
+        --output ./docs/docs/08-Utilities/02-Executor/02-API.mdx ./executor
