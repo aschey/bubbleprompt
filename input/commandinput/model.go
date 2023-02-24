@@ -132,7 +132,7 @@ func New[T CommandMetadataAccessor](opts ...Option[T]) *Model[T] {
 // ParseUsage generates a list of [PositionalArg] from a usage string.
 func (m *Model[T]) ParseUsage(placeholders string) ([]PositionalArg, error) {
 	definition := lexer.MustSimple([]lexer.SimpleRule{
-		{Name: "MandatoryArg", Pattern: `(<[^>]*>)`},
+		{Name: "RequiredArg", Pattern: `(<[^>]*>)`},
 		{Name: "OptionalArg", Pattern: `\[[^\]]*\]`},
 		{Name: "QuotedString", Pattern: `("[^"]*"?)|('[^']*'?)`},
 		{Name: `String`, Pattern: `[^\s]+`},

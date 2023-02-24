@@ -16,7 +16,7 @@ func buildCliParser(delimiterRegex string) *parser.ParticipleParser[statement] {
 		},
 		"Standard": {
 			{Name: "QuotedString", Pattern: `("[^"]*"?)|('[^']*'?)`},
-			{Name: "String", Pattern: `[^\-\s][^\s]*`},
+			{Name: "String", Pattern: `[^\s]+`},
 		},
 		"Flag": {
 			{Name: "Eq", Pattern: `\s*=\s*`, Action: lexer.Pop()},
