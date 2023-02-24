@@ -40,9 +40,9 @@ func newCmdViewBuilder[T CommandMetadataAccessor](
 func (b commandViewBuilder[T]) View() string {
 	b.renderArgs()
 	b.renderFlags()
-	b.renderFlagsPlaceholder()
 	b.renderPlaceholders()
 	b.renderFlagPlaceholder()
+	b.renderFlagsPlaceholder()
 	b.renderTrailingText()
 
 	return b.model.formatters.Prompt.Render(string(b.model.prompt)) + b.viewBuilder.View()
@@ -135,8 +135,11 @@ func (b commandViewBuilder[T]) renderFlagDelimiter() {
 }
 
 func (b commandViewBuilder[T]) renderFlagsPlaceholder() {
-	if b.showPlaceholders && len(b.model.parsedText.Flags.Value) == 0 && b.currentState.selectedSuggestion != nil &&
-		b.currentState.selectedSuggestion.Metadata.GetShowFlagPlaceholder() {
+	currentHasFlags := b.currentState.selectedSuggestion != nil &&
+		b.currentState.selectedSuggestion.Metadata.GetShowFlagPlaceholder()
+	subcommandHasFlags := b.currentState.subcommand != nil &&
+		b.currentState.subcommand.Metadata.GetShowFlagPlaceholder()
+	if b.showPlaceholders && len(b.model.parsedText.Flags.Value) == 0 && (currentHasFlags || subcommandHasFlags) {
 		b.renderDelimiter()
 		b.viewBuilder.Render([]rune("[flags]"), b.viewBuilder.ViewLen(), b.model.formatters.Flag.Placeholder)
 	}
