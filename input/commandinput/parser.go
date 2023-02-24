@@ -8,15 +8,25 @@ import (
 )
 
 func buildCliParser(delimiterRegex string) *parser.ParticipleParser[statement] {
-	lexer := lexer.MustSimple([]lexer.SimpleRule{
-		{Name: "LongFlag", Pattern: `\-\-[^\s=\-]*`},
-		{Name: "ShortFlag", Pattern: `\-[^\s=\-]*`},
-		{Name: "Eq", Pattern: "="},
-		{Name: "QuotedString", Pattern: `("[^"]*"?)|('[^']*'?)`},
-		{Name: `String`, Pattern: `[^\-\s][^\s]*`},
-		{Name: "whitespace", Pattern: delimiterRegex},
+	lexer := lexer.MustStateful(lexer.Rules{
+		"Root": {
+			{Name: "Flag", Pattern: `\-{1,2}[^\s=\-]*`, Action: lexer.Push("Flag")},
+			lexer.Include("Standard"),
+			{Name: "Whitespace", Pattern: delimiterRegex},
+		},
+		"Standard": {
+			{Name: "QuotedString", Pattern: `("[^"]*"?)|('[^']*'?)`},
+			{Name: "String", Pattern: `[^\-\s][^\s]*`},
+		},
+		"Flag": {
+			{Name: "Eq", Pattern: `\s*=\s*`, Action: lexer.Pop()},
+			lexer.Include("Standard"),
+			{Name: "FlagWhitespace", Pattern: delimiterRegex, Action: lexer.Pop()},
+		},
 	})
-	participleParser := participle.MustBuild[statement](participle.Lexer(lexer))
+	participleParser := participle.MustBuild[statement](
+		participle.Lexer(lexer),
+		participle.Elide("Whitespace", "FlagWhitespace"))
 	return parser.NewParticipleParser(participleParser)
 }
 
@@ -88,7 +98,7 @@ func (f flags) toFlags(startIndex int) []Flag {
 
 type flag struct {
 	Pos   lexer.Position
-	Name  string `parser:"( @ShortFlag | @LongFlag )"`
+	Name  string `parser:"( @Flag )"`
 	Delim *delim `parser:"@@?"`
 	Value *ident `parser:"@@?"`
 }
@@ -102,7 +112,7 @@ func (f flag) toFlag(index int) Flag {
 			"flagValue",
 			index+1,
 			f.Value.Pos,
-		) // {value: f.Value.Value}
+		)
 		value = &v
 	}
 	return Flag{

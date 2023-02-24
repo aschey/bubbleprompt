@@ -164,7 +164,7 @@ func (b commandViewBuilder[T]) renderPlaceholders() {
 
 	positionalArgs := currentState.subcommand.Metadata.GetPositionalArgs()
 	argNumber := currentState.argNumber
-	if len(currentToken.Value) == 0 && argNumber > 0 {
+	if len(currentToken.Value) == 0 && argNumber > 0 && currentState.selectedSuggestion == nil {
 		argNumber--
 	}
 	if argNumber < len(positionalArgs) {
