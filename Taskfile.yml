@@ -7,7 +7,6 @@ tasks:
   setup:
     cmds:
       - go install github.com/onsi/ginkgo/v2/ginkgo@latest
-      - go install github.com/princjef/gomarkdoc/cmd/gomarkdoc@latest
       - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b "$(go env GOPATH)/bin"
       - echo "Installing git hooks..."
       - cp .githooks/pre-commit .git/hooks/pre-commit
