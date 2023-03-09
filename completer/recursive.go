@@ -6,7 +6,7 @@ import (
 )
 
 type Metadata[T any] interface {
-	Children() []suggestion.Suggestion[T]
+	GetChildren() []suggestion.Suggestion[T]
 }
 
 type RecursiveFilterer[T Metadata[T]] struct {
@@ -37,8 +37,8 @@ func (f RecursiveFilterer[T]) GetRecursiveSuggestions(
 	}
 	for _, sug := range suggestions {
 		if sug.GetSuggestionText() == token.Value {
-			if sug.Metadata.Children() != nil {
-				children := sug.Metadata.Children()
+			if sug.Metadata.GetChildren() != nil {
+				children := sug.Metadata.GetChildren()
 				if children != nil {
 					return f.GetRecursiveSuggestions(tokens[1:], cursor, children)
 				}

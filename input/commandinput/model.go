@@ -4,7 +4,6 @@ package commandinput
 
 import (
 	"fmt"
-	"reflect"
 	"regexp"
 	"strings"
 
@@ -79,11 +78,11 @@ func (f FlagInput) RequiresArg() bool {
 	return len(f.ArgPlaceholder.text) > 0
 }
 
-type modelState[T CommandMetadataAccessor] struct {
+type modelState[T any] struct {
 	selectedToken      *input.Token
-	selectedSuggestion *suggestion.Suggestion[T]
-	subcommand         *suggestion.Suggestion[T]
-	selectedFlag       *suggestion.Suggestion[T]
+	selectedSuggestion *suggestion.Suggestion[CommandMetadata[T]]
+	subcommand         *suggestion.Suggestion[CommandMetadata[T]]
+	selectedFlag       *suggestion.Suggestion[CommandMetadata[T]]
 	argNumber          int
 }
 
@@ -97,7 +96,7 @@ func (m modelState[T]) isFlag() bool {
 
 // A Model is an input for handling CLI-style inputs.
 // It provides advanced features such as placeholders and context-aware suggestions.
-type Model[T CommandMetadataAccessor] struct {
+type Model[T any] struct {
 	textinput        textinput.Model
 	prompt           string
 	defaultDelimiter string
@@ -109,7 +108,7 @@ type Model[T CommandMetadataAccessor] struct {
 }
 
 // New creates a new model.
-func New[T CommandMetadataAccessor](opts ...Option[T]) *Model[T] {
+func New[T any](opts ...Option[T]) *Model[T] {
 	textinput := textinput.New()
 
 	formatters := DefaultFormatters()
@@ -199,7 +198,7 @@ func (m *Model[T]) NewFlagPlaceholder(placeholder string) FlagArgPlaceholder {
 
 // ShouldSelectSuggestion is part of the [input.Input] interface.
 // It should not be invoked by users of this library.
-func (m *Model[T]) ShouldSelectSuggestion(suggestion suggestion.Suggestion[T]) bool {
+func (m *Model[T]) ShouldSelectSuggestion(suggestion suggestion.Suggestion[CommandMetadata[T]]) bool {
 	currentToken := m.CurrentToken()
 	// Only select if cursor is at the end of the token or the input will cut off the part after the cursor
 	return m.CursorIndex() == currentToken.End() && currentToken.Value == suggestion.Text
@@ -307,10 +306,10 @@ func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 func (m *Model[T]) FlagSuggestions(
 	inputStr string,
 	flags []FlagInput,
-	suggestionFunc func(FlagInput) T,
-) []suggestion.Suggestion[T] {
+	suggestionFunc func(FlagInput) CommandMetadata[T],
+) []suggestion.Suggestion[CommandMetadata[T]] {
 	inputRunes := []rune(inputStr)
-	suggestions := []suggestion.Suggestion[T]{}
+	suggestions := []suggestion.Suggestion[CommandMetadata[T]]{}
 	isLong := strings.HasPrefix(inputStr, "--")
 	isMulti := !isLong && strings.HasPrefix(inputStr, "-") && len(inputRunes) > 1
 
@@ -318,7 +317,7 @@ func (m *Model[T]) FlagSuggestions(
 		// Don't show any flag suggestions if the current flag requires an arg
 		// unless the user skipped the arg and is now typing another flag that does not require an arg
 		if m.shouldSkipFlagSuggestions(flag, inputRunes, isMulti) {
-			return []suggestion.Suggestion[T]{}
+			return []suggestion.Suggestion[CommandMetadata[T]]{}
 		}
 
 		if ((isLong || flag.Short == "") && strings.HasPrefix(flag.LongFlag(), inputStr)) ||
@@ -372,9 +371,9 @@ func (m *Model[T]) getFlagSuggestion(
 	flag FlagInput,
 	isLong bool,
 	isMulti bool,
-	suggestionFunc func(FlagInput) T,
-) suggestion.Suggestion[T] {
-	suggestion := suggestion.Suggestion[T]{
+	suggestionFunc func(FlagInput) CommandMetadata[T],
+) suggestion.Suggestion[CommandMetadata[T]] {
+	suggestion := suggestion.Suggestion[CommandMetadata[T]]{
 		Description: flag.Description,
 	}
 	if isLong {
@@ -388,11 +387,8 @@ func (m *Model[T]) getFlagSuggestion(
 	}
 
 	if suggestionFunc == nil {
-		metadata := *new(T)
-		placeholderField := reflect.ValueOf(&metadata).Elem().FieldByName("FlagArgPlaceholder")
-		if placeholderField.IsValid() {
-			placeholderField.Set(reflect.ValueOf(flag.ArgPlaceholder))
-			suggestion.Metadata = metadata
+		suggestion.Metadata = CommandMetadata[T]{
+			FlagArgPlaceholder: flag.ArgPlaceholder,
 		}
 	} else {
 		suggestion.Metadata = suggestionFunc(flag)
@@ -405,7 +401,7 @@ func (m *Model[T]) getFlagSuggestion(
 // It should not be invoked by users of this library.
 func (m *Model[T]) OnUpdateFinish(
 	msg tea.Msg,
-	suggestion *suggestion.Suggestion[T],
+	suggestion *suggestion.Suggestion[CommandMetadata[T]],
 	isSelected bool,
 ) tea.Cmd {
 	index := m.CurrentToken().Index
@@ -414,9 +410,12 @@ func (m *Model[T]) OnUpdateFinish(
 
 	if index > 0 {
 		subcommand := m.states[index-1].subcommand
-		if subcommand != nil && m.states[index-1].argNumber+1 <= len(subcommand.Metadata.GetPositionalArgs()) {
+		if subcommand != nil && m.states[index-1].argNumber+1 <= len(subcommand.Metadata.PositionalArgs) {
 			m.states[index].subcommand = m.states[index-1].subcommand
 			m.states[index].argNumber = m.states[index-1].argNumber + 1
+		} else {
+			m.states[index].subcommand = nil
+			m.states[index].argNumber = 0
 		}
 
 		if m.states[index-1].isFlag() {
@@ -425,8 +424,11 @@ func (m *Model[T]) OnUpdateFinish(
 	}
 
 	if suggestion != nil {
-		if len(suggestion.Metadata.GetPositionalArgs()) > 0 {
+		if len(suggestion.Metadata.PositionalArgs) > 0 {
 			m.states[index].subcommand = suggestion
+			m.states[index].argNumber = 0
+		} else if index == 0 {
+			m.states[index].subcommand = nil
 			m.states[index].argNumber = 0
 		}
 		if m.states[index].isFlagSuggestion() {
@@ -438,7 +440,7 @@ func (m *Model[T]) OnUpdateFinish(
 }
 
 // OnSuggestionChanged is part of the [input.Input] interface. It should not be invoked by users of this library.
-func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T]) {
+func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[CommandMetadata[T]]) {
 	token := m.CurrentToken()
 	tokenRunes := []rune(token.Value)
 	suggestionRunes := []rune(suggestion.Text)
@@ -460,7 +462,7 @@ func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T]) {
 			m.SetValue(string(textRunes[:cursor]) + suggestion.Text + string(trailingRunes))
 		} else if strings.HasPrefix(token.Value, "-") &&
 			!strings.HasPrefix(token.Value, "--") && len(tokenRunes) > 2 &&
-			suggestion.Metadata.GetFlagArgPlaceholder().text == "" {
+			suggestion.Metadata.FlagArgPlaceholder.text == "" {
 			// handle multi flag like -ab
 			if cursor == token.Start {
 				// If cursor is on the leading dash, replace the first two characters of the token ([-ab]c)

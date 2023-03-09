@@ -14,20 +14,13 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type cmdMetadata struct {
-	commandinput.CommandMetadata
-	children []suggestion.Suggestion[cmdMetadata]
-}
-
 type secretMsg string
 
-func (c cmdMetadata) Children() []suggestion.Suggestion[cmdMetadata] {
-	return c.children
-}
+type cmdMetadata = commandinput.CommandMetadata[any]
 
 type model struct {
 	suggestions        []suggestion.Suggestion[cmdMetadata]
-	textInput          *commandinput.Model[cmdMetadata]
+	textInput          *commandinput.Model[any]
 	secret             string
 	executorValueStyle lipgloss.Style
 	filterer           completer.RecursiveFilterer[cmdMetadata]
@@ -120,35 +113,26 @@ func (m model) Update(msg tea.Msg) (prompt.InputHandler[cmdMetadata], tea.Cmd) {
 }
 
 func Example() {
-	textInput := commandinput.New[cmdMetadata]()
+	textInput := commandinput.New[any]()
 	secretArgs := textInput.NewPositionalArgs("<secret value>")
 	secretArgs[0].ArgStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("6"))
-
-	commandMetadata := commandinput.MetadataFromPositionalArgs(
-		textInput.NewPositionalArg("<command>"),
-	)
 
 	suggestions := []suggestion.Suggestion[cmdMetadata]{
 		{
 			Text:        "get",
 			Description: "retrieve things",
 			Metadata: cmdMetadata{
-				CommandMetadata: commandMetadata,
-				children: []suggestion.Suggestion[cmdMetadata]{
+				PositionalArgs: textInput.NewPositionalArgs("<command"),
+				Children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "secret",
 						Description: "get the secret",
-						Metadata: cmdMetadata{
-							CommandMetadata: commandinput.CommandMetadata{},
-						},
 					},
 					{
 						Text:        "weather",
 						Description: "get the weather",
 						Metadata: cmdMetadata{
-							CommandMetadata: commandinput.CommandMetadata{
-								ShowFlagPlaceholder: true,
-							},
+							ShowFlagPlaceholder: true,
 						},
 					},
 				},
@@ -158,15 +142,12 @@ func Example() {
 			Text:        "set",
 			Description: "update things",
 			Metadata: cmdMetadata{
-				CommandMetadata: commandMetadata,
-				children: []suggestion.Suggestion[cmdMetadata]{
+				Children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "secret",
 						Description: "update the secret",
 						Metadata: cmdMetadata{
-							CommandMetadata: commandinput.CommandMetadata{
-								PositionalArgs: secretArgs,
-							},
+							PositionalArgs: secretArgs,
 						},
 					},
 				},

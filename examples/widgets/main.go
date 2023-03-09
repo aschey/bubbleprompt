@@ -17,7 +17,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type cmdMetadata = commandinput.CommandMetadata
+type cmdMetadata = commandinput.CommandMetadata[any]
 
 type model struct {
 	status statusModel
@@ -102,7 +102,7 @@ func (m statusModel) Update(msg tea.Msg) (statusModel, tea.Cmd) {
 
 type inputModel struct {
 	suggestions []suggestion.Suggestion[cmdMetadata]
-	textInput   *commandinput.Model[cmdMetadata]
+	textInput   *commandinput.Model[any]
 	editText    string
 	outputStyle lipgloss.Style
 	filterer    completer.Filterer[cmdMetadata]
@@ -166,21 +166,21 @@ func (m inputModel) Update(msg tea.Msg) (prompt.InputHandler[cmdMetadata], tea.C
 }
 
 func main() {
-	textInput := commandinput.New[cmdMetadata]()
+	textInput := commandinput.New[any]()
 	secondsArg := textInput.NewPositionalArg("<seconds>")
 	secondsArg.ArgStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("13"))
 	suggestions := []suggestion.Suggestion[cmdMetadata]{
 		{
 			Text:        "set-status",
 			Description: "set statusbar text",
-			Metadata: commandinput.MetadataFromPositionalArgs(
+			Metadata: commandinput.MetadataFromPositionalArgs[any](
 				textInput.NewPositionalArg("<text>"),
 			),
 		},
 		{
 			Text:        "think",
 			Description: "just think for a bit",
-			Metadata:    commandinput.MetadataFromPositionalArgs(secondsArg),
+			Metadata:    commandinput.MetadataFromPositionalArgs[any](secondsArg),
 		},
 		{
 			Text:        "edit",

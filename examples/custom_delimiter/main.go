@@ -18,7 +18,7 @@ type metadata struct {
 	children []suggestion.Suggestion[metadata]
 }
 
-func (m metadata) Children() []suggestion.Suggestion[metadata] {
+func (m metadata) GetChildren() []suggestion.Suggestion[metadata] {
 	return m.children
 }
 

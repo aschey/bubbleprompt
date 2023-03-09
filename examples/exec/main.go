@@ -14,11 +14,11 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type cmdMetadata = commandinput.CommandMetadata
+type cmdMetadata = commandinput.CommandMetadata[any]
 
 type model struct {
 	suggestions []suggestion.Suggestion[cmdMetadata]
-	textInput   *commandinput.Model[cmdMetadata]
+	textInput   *commandinput.Model[any]
 	filterer    completer.Filterer[cmdMetadata]
 }
 
@@ -96,8 +96,8 @@ func main() {
 	)
 	fmt.Println()
 
-	textInput := commandinput.New[cmdMetadata]()
-	filenameArg := commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("[filename]"))
+	textInput := commandinput.New[any]()
+	filenameArg := commandinput.MetadataFromPositionalArgs[any](textInput.NewPositionalArg("[filename]"))
 	suggestions := []suggestion.Suggestion[cmdMetadata]{
 		{Text: "vim", Metadata: filenameArg},
 		{Text: "emacs", Metadata: filenameArg},

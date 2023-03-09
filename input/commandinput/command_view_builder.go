@@ -9,7 +9,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type commandViewBuilder[T CommandMetadataAccessor] struct {
+type commandViewBuilder[T any] struct {
 	model            Model[T]
 	viewBuilder      *input.ViewBuilder
 	currentState     modelState[T]
@@ -17,7 +17,7 @@ type commandViewBuilder[T CommandMetadataAccessor] struct {
 	showCursor       bool
 }
 
-func newCmdViewBuilder[T CommandMetadataAccessor](
+func newCmdViewBuilder[T any](
 	model Model[T],
 	viewMode input.ViewMode,
 ) commandViewBuilder[T] {
@@ -71,7 +71,7 @@ func (b commandViewBuilder[T]) renderArgs() {
 	}
 }
 
-func (b commandViewBuilder[T]) renderCurrentArg(arg string, suggestion *suggestion.Suggestion[T]) {
+func (b commandViewBuilder[T]) renderCurrentArg(arg string, suggestion *suggestion.Suggestion[CommandMetadata[T]]) {
 	if len(arg) > 0 && suggestion != nil && strings.HasPrefix(suggestion.GetSuggestionText(), arg) {
 		tokenPos := len([]rune(arg))
 		suggestionRunes := []rune(suggestion.GetSuggestionText())
@@ -136,9 +136,9 @@ func (b commandViewBuilder[T]) renderFlagDelimiter() {
 
 func (b commandViewBuilder[T]) renderFlagsPlaceholder() {
 	currentHasFlags := b.currentState.selectedSuggestion != nil &&
-		b.currentState.selectedSuggestion.Metadata.GetShowFlagPlaceholder()
+		b.currentState.selectedSuggestion.Metadata.ShowFlagPlaceholder
 	subcommandHasFlags := b.currentState.subcommand != nil &&
-		b.currentState.subcommand.Metadata.GetShowFlagPlaceholder()
+		b.currentState.subcommand.Metadata.ShowFlagPlaceholder
 	if b.showPlaceholders && len(b.model.parsedText.Flags.Value) == 0 && (currentHasFlags || subcommandHasFlags) {
 		b.renderDelimiter()
 		b.viewBuilder.Render([]rune("[flags]"), b.viewBuilder.ViewLen(), b.model.formatters.Flag.Placeholder)
@@ -165,7 +165,7 @@ func (b commandViewBuilder[T]) renderPlaceholders() {
 		return
 	}
 
-	positionalArgs := currentState.subcommand.Metadata.GetPositionalArgs()
+	positionalArgs := currentState.subcommand.Metadata.PositionalArgs
 	argNumber := currentState.argNumber
 	if len(currentToken.Value) == 0 && argNumber > 0 && currentState.selectedSuggestion == nil {
 		argNumber--
@@ -186,7 +186,7 @@ func (b commandViewBuilder[T]) renderFlagPlaceholder() {
 	currentState := b.model.currentState()
 	currentToken := b.model.CurrentToken()
 	if currentState.isFlag() && (currentToken.Value == "" || strings.HasPrefix(currentToken.Value, "-")) {
-		flagArgPlaceholder := currentState.selectedFlag.Metadata.GetFlagArgPlaceholder()
+		flagArgPlaceholder := currentState.selectedFlag.Metadata.FlagArgPlaceholder
 		if flagArgPlaceholder.text != "" {
 			b.renderFlagDelimiter()
 			b.viewBuilder.Render(

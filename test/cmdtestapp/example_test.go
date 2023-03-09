@@ -15,29 +15,29 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type cmdMetadata = commandinput.CommandMetadata
+type cmdMetadata = commandinput.CommandMetadata[any]
 
 type model struct {
 	suggestions []suggestion.Suggestion[cmdMetadata]
-	textInput   *commandinput.Model[cmdMetadata]
+	textInput   *commandinput.Model[any]
 	inc         int
 	filterer    completer.Filterer[cmdMetadata]
 }
 
 type changeTextMsg struct{}
 
-func suggestions(textInput *commandinput.Model[cmdMetadata]) []suggestion.Suggestion[cmdMetadata] {
+func suggestions(textInput *commandinput.Model[any]) []suggestion.Suggestion[cmdMetadata] {
 	return []suggestion.Suggestion[cmdMetadata]{
-		{Text: "first-option", Description: "test desc", Metadata: commandinput.CommandMetadata{
+		{Text: "first-option", Description: "test desc", Metadata: cmdMetadata{
 			PositionalArgs: textInput.NewPositionalArgs(
 				"[test placeholder1]",
 				"[test placeholder2]",
 			),
 		}},
-		{Text: "second-option", Description: "test desc2", Metadata: commandinput.CommandMetadata{
+		{Text: "second-option", Description: "test desc2", Metadata: cmdMetadata{
 			PositionalArgs: textInput.NewPositionalArgs("[test placeholder]"),
 		}},
-		{Text: "third-option", Description: "test desc3", Metadata: commandinput.CommandMetadata{
+		{Text: "third-option", Description: "test desc3", Metadata: cmdMetadata{
 			PositionalArgs: textInput.NewPositionalArgs("[flags]"),
 		}},
 		{Text: "fourth-option", Description: "test desc4"},
@@ -48,10 +48,10 @@ func suggestions(textInput *commandinput.Model[cmdMetadata]) []suggestion.Sugges
 }
 
 func secondLevelSuggestions(
-	textInput *commandinput.Model[cmdMetadata],
+	textInput *commandinput.Model[any],
 ) []suggestion.Suggestion[cmdMetadata] {
 	return []suggestion.Suggestion[cmdMetadata]{
-		{Text: "second-level", Description: "test desc", Metadata: commandinput.CommandMetadata{
+		{Text: "second-level", Description: "test desc", Metadata: cmdMetadata{
 			PositionalArgs: textInput.NewPositionalArgs("[placeholder2]"),
 		}},
 	}
@@ -132,7 +132,7 @@ func TestApp(t *testing.T) {
 
 	commandinput.DefaultCurrentPlaceholderSuggestion = "8"
 
-	textInput := commandinput.New[cmdMetadata]()
+	textInput := commandinput.New[any]()
 	m := model{
 		suggestions: suggestions(textInput),
 		textInput:   textInput,

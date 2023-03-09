@@ -8,13 +8,13 @@ import (
 )
 
 func ExampleMetadataFromPositionalArgs() {
-	textInput := commandinput.New[commandinput.CommandMetadata]()
-	commandMetadata := commandinput.MetadataFromPositionalArgs(textInput.NewPositionalArg("<arg1>"))
+	textInput := commandinput.New[commandinput.CommandMetadata[any]]()
+	commandMetadata := commandinput.MetadataFromPositionalArgs[any](textInput.NewPositionalArg("<arg1>"))
 
-	suggestions := []suggestion.Suggestion[commandinput.CommandMetadata]{
+	suggestions := []suggestion.Suggestion[commandinput.CommandMetadata[any]]{
 		{Text: "test", Metadata: commandMetadata},
 	}
 
-	fmt.Println(suggestions[0].Metadata.GetPositionalArgs()[0].Placeholder())
+	fmt.Println(suggestions[0].Metadata.PositionalArgs[0].Placeholder())
 	// Output: <arg1>
 }

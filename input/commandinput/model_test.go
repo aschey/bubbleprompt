@@ -8,38 +8,38 @@ import (
 )
 
 func ExampleModel_NewPositionalArg() {
-	textInput := commandinput.New[commandinput.CommandMetadata]()
-	commandMetadata := commandinput.CommandMetadata{
+	textInput := commandinput.New[commandinput.CommandMetadata[any]]()
+	commandMetadata := commandinput.CommandMetadata[any]{
 		PositionalArgs: []commandinput.PositionalArg{textInput.NewPositionalArg("<arg1>")},
 	}
 
-	suggestions := []suggestion.Suggestion[commandinput.CommandMetadata]{
+	suggestions := []suggestion.Suggestion[commandinput.CommandMetadata[any]]{
 		{Text: "test", Metadata: commandMetadata},
 	}
 
-	fmt.Println(suggestions[0].Metadata.GetPositionalArgs()[0].Placeholder())
+	fmt.Println(suggestions[0].Metadata.PositionalArgs[0].Placeholder())
 	// Output: <arg1>
 }
 
 func ExampleModel_NewPositionalArgs() {
-	textInput := commandinput.New[commandinput.CommandMetadata]()
-	commandMetadata := commandinput.CommandMetadata{
+	textInput := commandinput.New[commandinput.CommandMetadata[any]]()
+	commandMetadata := commandinput.CommandMetadata[any]{
 		PositionalArgs: textInput.NewPositionalArgs("<arg1>", "<arg2>"),
 	}
 
-	suggestions := []suggestion.Suggestion[commandinput.CommandMetadata]{
+	suggestions := []suggestion.Suggestion[commandinput.CommandMetadata[any]]{
 		{Text: "test", Metadata: commandMetadata},
 	}
 
-	fmt.Println(suggestions[0].Metadata.GetPositionalArgs()[0].Placeholder())
-	fmt.Println(suggestions[0].Metadata.GetPositionalArgs()[1].Placeholder())
+	fmt.Println(suggestions[0].Metadata.PositionalArgs[0].Placeholder())
+	fmt.Println(suggestions[0].Metadata.PositionalArgs[1].Placeholder())
 	// Output:
 	// <arg1>
 	// <arg2>
 }
 
 func ExampleModel_NewFlagPlaceholder() {
-	textInput := commandinput.New[commandinput.CommandMetadata]()
+	textInput := commandinput.New[commandinput.CommandMetadata[any]]()
 
 	flags := []commandinput.FlagInput{
 		{
@@ -55,7 +55,7 @@ func ExampleModel_NewFlagPlaceholder() {
 }
 
 func ExampleModel_FlagSuggestions() {
-	textInput := commandinput.New[commandinput.CommandMetadata]()
+	textInput := commandinput.New[any]()
 	flags := []commandinput.FlagInput{
 		{
 			Short:          "i",
@@ -72,8 +72,8 @@ func ExampleModel_FlagSuggestions() {
 	fmt.Printf("Text: %s, Description: %s\n", suggestions[0].Text, suggestions[0].Description)
 
 	suggestions = textInput.FlagSuggestions("", flags,
-		func(flagInput commandinput.FlagInput) commandinput.CommandMetadata {
-			return commandinput.CommandMetadata{
+		func(flagInput commandinput.FlagInput) commandinput.CommandMetadata[any] {
+			return commandinput.CommandMetadata[any]{
 				FlagArgPlaceholder:  flagInput.ArgPlaceholder,
 				PreservePlaceholder: true,
 			}
@@ -92,7 +92,7 @@ func ExampleModel_FlagSuggestions() {
 }
 
 func ExampleModel_ParseUsage() {
-	textInput := commandinput.New[commandinput.CommandMetadata]()
+	textInput := commandinput.New[commandinput.CommandMetadata[any]]()
 
 	usage := `<mandatory arg> [optional arg] 'quoted arg' "double quoted arg" normal-arg`
 	args, err := textInput.ParseUsage(usage)

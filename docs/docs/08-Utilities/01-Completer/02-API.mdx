@@ -58,7 +58,7 @@ func (f FuzzyFilter[T]) Filter(search string, suggestions []suggestion.Suggestio
 
 ```go
 type Metadata[T any] interface {
-    Children() []suggestion.Suggestion[T]
+    GetChildren() []suggestion.Suggestion[T]
 }
 ```
 

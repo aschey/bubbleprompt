@@ -115,7 +115,7 @@ var _ = Describe("Executor", func() {
 					secondLine,
 					"selected suggestion is "+suggestions[0].Text,
 				) &&
-					!strings.Contains(secondLine, suggestions[0].Metadata.GetPositionalArgs()[0].Placeholder())
+					!strings.Contains(secondLine, suggestions[0].Metadata.PositionalArgs[0].Placeholder())
 			}, 100*time.Millisecond)
 		})
 	})

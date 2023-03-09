@@ -17,18 +17,11 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type cmdMetadata struct {
-	commandinput.CommandMetadata
-	children []suggestion.Suggestion[cmdMetadata]
-}
-
-func (c cmdMetadata) Children() []suggestion.Suggestion[cmdMetadata] {
-	return c.children
-}
+type cmdMetadata = commandinput.CommandMetadata[any]
 
 type model struct {
 	suggestions []suggestion.Suggestion[cmdMetadata]
-	textInput   *commandinput.Model[cmdMetadata]
+	textInput   *commandinput.Model[any]
 	filterer    completer.RecursiveFilterer[cmdMetadata]
 }
 
@@ -160,44 +153,31 @@ func (m model) Update(msg tea.Msg) (prompt.InputHandler[cmdMetadata], tea.Cmd) {
 }
 
 func main() {
-	textInput := commandinput.New[cmdMetadata]()
+	textInput := commandinput.New[any]()
 
-	commandMetadata := commandinput.MetadataFromPositionalArgs(
-		textInput.NewPositionalArg("<command>"),
+	commandArgs := textInput.NewPositionalArgs("<command>")
+	colorMetadata := commandinput.MetadataFromPositionalArgs[any](
+		textInput.NewPositionalArg("<color>"),
 	)
-	colorMetadata := cmdMetadata{
-		CommandMetadata: commandinput.MetadataFromPositionalArgs(
-			textInput.NewPositionalArg("<color>"),
-		),
-	}
-
-	childMetadata := cmdMetadata{
-		CommandMetadata: commandinput.CommandMetadata{},
-	}
 
 	suggestions := []suggestion.Suggestion[cmdMetadata]{
 		{
 			Text:        "cursor-mode",
 			Description: "set the cursor mode",
 			Metadata: cmdMetadata{
-				CommandMetadata: commandMetadata,
-				children: []suggestion.Suggestion[cmdMetadata]{
+				PositionalArgs: commandArgs,
+				Children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "blink",
 						Description: "blinking cursor",
-						Metadata:    childMetadata,
 					},
 					{
 						Text:        "static",
 						Description: "normal cursor",
-						Metadata:    childMetadata,
 					},
 					{
 						Text:        "hide",
 						Description: "no cursor",
-						Metadata: cmdMetadata{
-							CommandMetadata: commandinput.CommandMetadata{},
-						},
 					},
 				},
 			},
@@ -206,8 +186,8 @@ func main() {
 			Text:        "suggestion",
 			Description: "set suggestion styles",
 			Metadata: cmdMetadata{
-				CommandMetadata: commandMetadata,
-				children: []suggestion.Suggestion[cmdMetadata]{
+				PositionalArgs: commandArgs,
+				Children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "name",
 						Description: "set suggestion name background",
@@ -225,8 +205,8 @@ func main() {
 			Text:        "input",
 			Description: "set input style",
 			Metadata: cmdMetadata{
-				CommandMetadata: commandMetadata,
-				children: []suggestion.Suggestion[cmdMetadata]{
+				PositionalArgs: commandArgs,
+				Children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "selected",
 						Description: "set selected suggestion foreground",
@@ -244,17 +224,15 @@ func main() {
 			Text:        "theme",
 			Description: "change theme",
 			Metadata: cmdMetadata{
-				CommandMetadata: commandMetadata,
-				children: []suggestion.Suggestion[cmdMetadata]{
+				PositionalArgs: commandArgs,
+				Children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "default",
 						Description: "enable default theme",
-						Metadata:    childMetadata,
 					},
 					{
 						Text:        "minimal",
 						Description: "enable the minimal theme",
-						Metadata:    childMetadata,
 					},
 				},
 			},
@@ -263,17 +241,15 @@ func main() {
 			Text:        "scrollbar",
 			Description: "change the scrollbar",
 			Metadata: cmdMetadata{
-				CommandMetadata: commandMetadata,
-				children: []suggestion.Suggestion[cmdMetadata]{
+				PositionalArgs: commandArgs,
+				Children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "enable",
 						Description: "enable the scrollbar",
-						Metadata:    childMetadata,
 					},
 					{
 						Text:        "disable",
 						Description: "disable the scrollbar",
-						Metadata:    childMetadata,
 					},
 				},
 			},
@@ -281,37 +257,31 @@ func main() {
 		{
 			Text:        "prompt",
 			Description: "set prompt text and foreground",
-			Metadata: cmdMetadata{
-				CommandMetadata: commandinput.MetadataFromPositionalArgs(
-					textInput.NewPositionalArg("<value>"),
-					textInput.NewPositionalArg("[color]"),
-				),
-			},
+			Metadata: commandinput.MetadataFromPositionalArgs[any](
+				textInput.NewPositionalArg("<value>"),
+				textInput.NewPositionalArg("[color]"),
+			),
 		},
 		{
 			Text:        "max-suggestions",
 			Description: "set max suggestions",
-			Metadata: cmdMetadata{
-				CommandMetadata: commandinput.MetadataFromPositionalArgs(
-					textInput.NewPositionalArg("<number of suggestions>"),
-				),
-			},
+			Metadata: commandinput.MetadataFromPositionalArgs[any](
+				textInput.NewPositionalArg("<number of suggestions>"),
+			),
 		},
 		{
 			Text:        "renderer",
 			Description: "change the renderer",
 			Metadata: cmdMetadata{
-				CommandMetadata: commandMetadata,
-				children: []suggestion.Suggestion[cmdMetadata]{
+				PositionalArgs: commandArgs,
+				Children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "unmanaged",
 						Description: "use the unmanaged renderer",
-						Metadata:    childMetadata,
 					},
 					{
 						Text:        "viewport",
 						Description: "use the viewport renderer",
-						Metadata:    childMetadata,
 					},
 				},
 			},
