@@ -15,7 +15,7 @@ type CommandMetadata[T any] struct {
 	FlagArgPlaceholder  FlagArgPlaceholder
 	PreservePlaceholder bool
 	Children            []suggestion.Suggestion[CommandMetadata[T]]
-	Extra               []T
+	Extra               T
 }
 
 // MetadataFromPositionalArgs is a convenience function for creating a [CommandMetadata]

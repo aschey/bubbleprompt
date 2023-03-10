@@ -405,7 +405,9 @@ func (m *Model[T]) OnUpdateFinish(
 	isSelected bool,
 ) tea.Cmd {
 	index := m.CurrentToken().Index
-
+	if index > len(m.states) {
+		panic("Completer returned multiple tokens")
+	}
 	m.states[index].selectedSuggestion = suggestion
 
 	if index > 0 {
