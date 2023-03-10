@@ -233,7 +233,9 @@ func (m *Model[T]) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 		cmds = append(cmds, m.finalizeExecutor(executorManager))
 	} else {
 		m.updateExecutor(executorManager)
-		cmds = append(cmds, executorManager.Init())
+		// Need to explicitly notify the child model of the current window size.
+		// Since the bubbletea event loop is already running, this won't happen automatically.
+		cmds = append(cmds, tea.Sequence(executorManager.Init(), func() tea.Msg { return m.size }))
 	}
 
 	return append(cmds, m.suggestionManager.ResetSuggestions())
