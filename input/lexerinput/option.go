@@ -13,6 +13,12 @@ func WithDelimiterTokens[T any](tokens ...string) Option[T] {
 	}
 }
 
+func WithPrompt[T any](prompt string) Option[T] {
+	return func(model *Model[T]) {
+		model.prompt = prompt
+	}
+}
+
 func WithDelimiters[T any](delimiters ...string) Option[T] {
 	return func(model *Model[T]) {
 		model.delimiters = delimiters

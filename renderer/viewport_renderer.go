@@ -10,16 +10,19 @@ import (
 type ViewportRenderer struct {
 	viewport viewport.Model
 	history  string
-	offset   ViewportOffset
+	settings viewportSettings
 }
 
-type ViewportOffset struct {
-	WidthOffset  int
-	HeightOffset int
-}
-
-func NewViewportRenderer(offset ViewportOffset) *ViewportRenderer {
-	return &ViewportRenderer{offset: offset}
+func NewViewportRenderer(options ...ViewportOption) *ViewportRenderer {
+	settings := viewportSettings{
+		widthOffset:  0,
+		heightOffset: 0,
+		useHistory:   true,
+	}
+	for _, option := range options {
+		option(&settings)
+	}
+	return &ViewportRenderer{settings: settings}
 }
 
 func (v *ViewportRenderer) View() string {
@@ -33,8 +36,8 @@ func (v *ViewportRenderer) Initialize(msg tea.WindowSizeMsg) {
 }
 
 func (v *ViewportRenderer) SetSize(msg tea.WindowSizeMsg) {
-	v.viewport.Width = msg.Width - v.offset.WidthOffset
-	v.viewport.Height = msg.Height - v.offset.HeightOffset
+	v.viewport.Width = msg.Width - v.settings.widthOffset
+	v.viewport.Height = msg.Height - v.settings.heightOffset
 }
 
 func (v *ViewportRenderer) Update(msg tea.Msg) (Renderer, tea.Cmd) {
@@ -53,12 +56,16 @@ func (v *ViewportRenderer) GetHistory() string {
 }
 
 func (v *ViewportRenderer) SetHistory(history string) tea.Cmd {
-	v.history = internal.AddNewlineIfMissing(history)
+	if v.settings.useHistory {
+		v.history = internal.AddNewlineIfMissing(history)
+	}
 	return nil
 }
 
 func (v *ViewportRenderer) AddOutput(output string) {
-	v.history += internal.AddNewlineIfMissing(output)
+	if v.settings.useHistory {
+		v.history += internal.AddNewlineIfMissing(output)
+	}
 }
 
 func (v *ViewportRenderer) FinishUpdate() tea.Cmd {

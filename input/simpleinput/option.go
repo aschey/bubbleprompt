@@ -49,3 +49,12 @@ func WithCursorMode[T any](cursorMode cursor.Mode) Option[T] {
 		)
 	}
 }
+
+func WithPrompt[T any](prompt string) Option[T] {
+	return func(settings *settings[T]) {
+		settings.lexerOptions = append(
+			settings.lexerOptions,
+			lexerinput.WithPrompt[T](prompt),
+		)
+	}
+}

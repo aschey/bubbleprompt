@@ -20,9 +20,9 @@ func WithUnmanagedRenderer[T any]() Option[T] {
 	}
 }
 
-func WithViewportRenderer[T any](offset renderer.ViewportOffset) Option[T] {
+func WithViewportRenderer[T any]() Option[T] {
 	return func(model *Model[T]) {
-		model.renderer = renderer.NewViewportRenderer(offset)
+		model.renderer = renderer.NewViewportRenderer()
 	}
 }
 

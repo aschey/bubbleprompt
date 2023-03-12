@@ -60,6 +60,7 @@ import "github.com/aschey/bubbleprompt/input/lexerinput"
   - [func WithDelimiterTokens[T any](tokens ...string) Option[T]](<#func-withdelimitertokens>)
   - [func WithDelimiters[T any](delimiters ...string) Option[T]](<#func-withdelimiters>)
   - [func WithFormatters[T any](formatters Formatters) Option[T]](<#func-withformatters>)
+  - [func WithPrompt[T any](prompt string) Option[T]](<#func-withprompt>)
   - [func WithTokenFormatter[T any](formatter parser.Formatter) Option[T]](<#func-withtokenformatter>)
 
 
@@ -342,7 +343,7 @@ func (m *Model[T]) View(viewMode input.ViewMode) string
 type Option[T any] func(model *Model[T])
 ```
 
-### func [WithCursorMode](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/option.go#L28>)
+### func [WithCursorMode](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/option.go#L34>)
 
 ```go
 func WithCursorMode[T any](cursorMode cursor.Mode) Option[T]
@@ -354,19 +355,25 @@ func WithCursorMode[T any](cursorMode cursor.Mode) Option[T]
 func WithDelimiterTokens[T any](tokens ...string) Option[T]
 ```
 
-### func [WithDelimiters](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/option.go#L16>)
+### func [WithDelimiters](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/option.go#L22>)
 
 ```go
 func WithDelimiters[T any](delimiters ...string) Option[T]
 ```
 
-### func [WithFormatters](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/option.go#L34>)
+### func [WithFormatters](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/option.go#L40>)
 
 ```go
 func WithFormatters[T any](formatters Formatters) Option[T]
 ```
 
-### func [WithTokenFormatter](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/option.go#L22>)
+### func [WithPrompt](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/option.go#L16>)
+
+```go
+func WithPrompt[T any](prompt string) Option[T]
+```
+
+### func [WithTokenFormatter](<https://github.com/aschey/bubbleprompt/blob/main/input/lexerinput/option.go#L28>)
 
 ```go
 func WithTokenFormatter[T any](formatter parser.Formatter) Option[T]

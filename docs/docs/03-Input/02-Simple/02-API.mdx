@@ -151,6 +151,7 @@ func main() {
   - [func WithCursorMode[T any](cursorMode cursor.Mode) Option[T]](<#func-withcursormode>)
   - [func WithDelimiterRegex[T any](delimiterRegex string) Option[T]](<#func-withdelimiterregex>)
   - [func WithFormatter[T any](formatterFunc func(lexer parser.Lexer) parser.Formatter) Option[T]](<#func-withformatter>)
+  - [func WithPrompt[T any](prompt string) Option[T]](<#func-withprompt>)
   - [func WithSelectedTextStyle[T any](style lipgloss.Style) Option[T]](<#func-withselectedtextstyle>)
   - [func WithTokenRegex[T any](tokenRegex string) Option[T]](<#func-withtokenregex>)
 
@@ -570,6 +571,12 @@ func main() {
 
 </p>
 </details>
+
+### func [WithPrompt](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/option.go#L53>)
+
+```go
+func WithPrompt[T any](prompt string) Option[T]
+```
 
 ### func [WithSelectedTextStyle](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/option.go#L32>)
 
