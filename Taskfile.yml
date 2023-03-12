@@ -97,3 +97,10 @@ tasks:
         --template-file file=./docs/templates/file.gotxt \
         --template frontmatter="" \
         --output ./docs/docs/08-Utilities/02-Executor/02-API.mdx ./executor
+      - |
+        gomarkdoc \
+        --template-file package=./docs/templates/package.gotxt \
+        --template-file text=./docs/templates/text.gotxt \
+        --template-file file=./docs/templates/file.gotxt \
+        --template frontmatter="" \
+        --output ./docs/docs/06-Renderer/02-API.mdx ./renderer
