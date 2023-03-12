@@ -111,7 +111,7 @@ func main() {
 	}
 
 	ppModel := prompt.New[any](pmodel, textInput,
-		prompt.WithRenderer[any](renderer.NewViewportRenderer(renderer.WithUseHistory(false))))
+		prompt.WithViewportRenderer[any](renderer.WithUseHistory(false)))
 
 	fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Render("Pick a fruit!"))
 	fmt.Println()

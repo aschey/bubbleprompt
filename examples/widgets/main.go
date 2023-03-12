@@ -201,7 +201,7 @@ func main() {
 		inputModel,
 		textInput,
 		prompt.WithViewportRenderer[cmdMetadata](
-			renderer.ViewportOffset{HeightOffset: statusBarHeight + padding},
+			renderer.WithHeightOffset(statusBarHeight+padding),
 		),
 	)
 

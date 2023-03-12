@@ -85,7 +85,7 @@ func TestApp(t *testing.T) {
 	promptModel := prompt.New[any](
 		model,
 		textInput,
-		prompt.WithViewportRenderer[any](renderer.ViewportOffset{HeightOffset: 1}),
+		prompt.WithViewportRenderer[any](renderer.WithHeightOffset(1)),
 	)
 
 	if _, err := tea.NewProgram(promptModel, tea.WithFilter(prompt.MsgFilter)).Run(); err != nil {

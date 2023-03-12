@@ -133,7 +133,7 @@ func (m model) Execute(inputStr string, promptModel *prompt.Model[cmdMetadata]) 
 		case "viewport":
 			return executor.NewCmdModel(
 				"set viewport renderer",
-				prompt.SetRenderer(renderer.NewViewportRenderer(renderer.ViewportOffset{}), true),
+				prompt.SetRenderer(renderer.NewViewportRenderer(), true),
 			), nil
 		case "unmanaged":
 			return executor.NewCmdModel(
