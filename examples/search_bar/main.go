@@ -35,10 +35,7 @@ func newModel() searchbar.Model[any] {
 		filterer:    completer.NewPrefixFilter[any](),
 	}
 
-	ppModel := prompt.New[any](pmodel, textInput,
-		prompt.WithUnmanagedRenderer[any]())
-
-	return searchbar.New(ppModel, newListModel())
+	return searchbar.New[any](pmodel, newListModel())
 }
 
 type promptModel struct {
@@ -156,7 +153,7 @@ func (m listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmd := m.Model.SetItems(msg)
 		return m, cmd
 	case tea.WindowSizeMsg:
-		m.Model.SetSize(msg.Width, msg.Height-3)
+		m.Model.SetSize(msg.Width, msg.Height)
 		return m, nil
 	}
 	list, cmd := m.Model.Update(msg)

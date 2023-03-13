@@ -14,13 +14,13 @@ func WithFormatters[T any](formatters formatter.Formatters) Option[T] {
 	}
 }
 
-func WithUnmanagedRenderer[T any]() Option[T] {
+func WithUnmanagedRenderer[T any](opts ...renderer.Option) Option[T] {
 	return func(model *Model[T]) {
-		model.renderer = renderer.NewUnmanagedRenderer()
+		model.renderer = renderer.NewUnmanagedRenderer(opts...)
 	}
 }
 
-func WithViewportRenderer[T any](opts ...renderer.ViewportOption) Option[T] {
+func WithViewportRenderer[T any](opts ...renderer.Option) Option[T] {
 	return func(model *Model[T]) {
 		model.renderer = renderer.NewViewportRenderer(opts...)
 	}

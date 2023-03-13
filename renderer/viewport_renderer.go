@@ -10,11 +10,11 @@ import (
 type ViewportRenderer struct {
 	viewport viewport.Model
 	history  string
-	settings viewportSettings
+	settings rendererSettings
 }
 
-func NewViewportRenderer(options ...ViewportOption) *ViewportRenderer {
-	settings := viewportSettings{
+func NewViewportRenderer(options ...Option) *ViewportRenderer {
+	settings := rendererSettings{
 		widthOffset:  0,
 		heightOffset: 0,
 		useHistory:   true,

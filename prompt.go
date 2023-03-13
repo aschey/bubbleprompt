@@ -51,7 +51,7 @@ func New[T any](
 		suggestionManager: dropdown.NewDropdownSuggestionModel(textInput),
 		inputHandler:      inputHandler,
 		textInput:         textInput,
-		renderer:          &renderer.UnmanagedRenderer{},
+		renderer:          renderer.NewUnmanagedRenderer(),
 		formatters:        formatters,
 	}
 

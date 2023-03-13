@@ -2,6 +2,7 @@ package searchbar
 
 import (
 	prompt "github.com/aschey/bubbleprompt"
+	"github.com/aschey/bubbleprompt/input/simpleinput"
 	"github.com/aschey/bubbleprompt/renderer"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -14,11 +15,21 @@ type Model[T any] struct {
 	searchBar    string
 }
 
-func New[T any](promptModel prompt.Model[T], contentModel tea.Model) Model[T] {
+func New[T any](inputHandler prompt.InputHandler[T], contentModel tea.Model) Model[T] {
+	textInput := simpleinput.New(simpleinput.WithPrompt[T](""))
+	promptModel := prompt.New[T](inputHandler, textInput,
+		prompt.WithUnmanagedRenderer[T](renderer.WithUseHistory(false)))
+
 	searchbarWidth := 50
 	searchText := "Search:"
 	searchBar := lipgloss.NewStyle().PaddingRight(searchbarWidth).Border(lipgloss.RoundedBorder()).Render(searchText)
-	return Model[T]{promptModel: promptModel, contentModel: contentModel, searchBar: searchBar, searchText: searchText}
+
+	return Model[T]{
+		promptModel:  promptModel,
+		contentModel: contentModel,
+		searchBar:    searchBar,
+		searchText:   searchText,
+	}
 }
 
 func (m Model[T]) Init() tea.Cmd {

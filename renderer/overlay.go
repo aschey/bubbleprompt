@@ -6,6 +6,7 @@ import (
 
 	"github.com/mattn/go-runewidth"
 	"github.com/muesli/ansi"
+	"github.com/muesli/reflow/dedent"
 	"github.com/muesli/reflow/truncate"
 	"github.com/muesli/termenv"
 )
@@ -90,7 +91,13 @@ func PlaceOverlay(x int, y int, fg string, bg string, opts ...WhitespaceOption) 
 		}
 
 		fgLine := fgLines[i-y]
-		b.WriteString(fgLine)
+
+		dedentedFg := dedent.String(fgLine)
+		// Calculate leading whitespace
+		leadingWs := ansi.PrintableRuneWidth(fgLine) - ansi.PrintableRuneWidth(dedentedFg)
+		// Render the background text where the foreground has leading whitesoace
+		b.WriteString(truncate.String(cutLeft(bgLine, x), uint(leadingWs)))
+		b.WriteString(dedentedFg)
 		pos += ansi.PrintableRuneWidth(fgLine)
 
 		right := cutLeft(bgLine, pos)
