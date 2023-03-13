@@ -33,3 +33,9 @@ func (t SuggestionText) Format(text string, maxLen int, selected bool) string {
 		Render(text)
 	return formattedText
 }
+
+func (t SuggestionText) HasBackground() bool {
+	_, hasNoBackground := t.Style.GetBackground().(lipgloss.NoColor)
+	_, hasNoSelectedBackground := t.SelectedStyle.GetBackground().(lipgloss.NoColor)
+	return !(hasNoBackground && hasNoSelectedBackground)
+}

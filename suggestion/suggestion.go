@@ -25,7 +25,6 @@ func (s Suggestion[T]) GetSuggestionText() string {
 
 func (s Suggestion[T]) Render(
 	selected bool,
-	leftPadding string,
 	maxNameLen int,
 	maxDescLen int,
 	formatters formatter.Formatters,
@@ -38,15 +37,19 @@ func (s Suggestion[T]) Render(
 		selectedIndicator = strings.Repeat(" ", runewidth.StringWidth(indicator))
 	}
 	description := ""
+	middlePadding := ""
 	if maxDescLen > 0 {
 		description = formatters.Description.Format(s.Description, maxDescLen, selected)
+		if !formatters.Name.HasBackground() && !formatters.Description.HasBackground() {
+			middlePadding = " "
+		}
 	}
 
 	line := lipgloss.JoinHorizontal(
 		lipgloss.Bottom,
-		leftPadding,
 		selectedIndicator,
 		name,
+		middlePadding,
 		description,
 		scrollbar,
 	)

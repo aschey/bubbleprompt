@@ -9,6 +9,7 @@ type Formatters struct {
 	SelectedIndicator lipgloss.Style
 	Scrollbar         lipgloss.Style
 	ScrollbarThumb    lipgloss.Style
+	Suggestions       lipgloss.Style
 }
 
 var (
@@ -75,18 +76,25 @@ func DefaultFormatters() Formatters {
 }
 
 func (f Formatters) Minimal() Formatters {
-	f.Name.Style.UnsetBackground()
-	f.Name.SelectedStyle.UnsetBackground()
-	f.Name.Style.Foreground(lipgloss.Color(DefaultNameBackground))
-	f.Name.SelectedStyle.Foreground(lipgloss.Color(DefaultSelectedNameBackground))
+	f.Name.Style = f.Name.Style.
+		UnsetBackground().
+		Foreground(lipgloss.Color(DefaultNameBackground))
 
-	f.Description.Style.UnsetBackground()
-	f.Description.SelectedStyle.UnsetBackground()
-	f.Description.Style.Foreground(lipgloss.Color(DefaultDescriptionBackground))
-	f.Description.SelectedStyle.Foreground(lipgloss.Color(DefaultSelectedDescriptionBackground))
+	f.Name.SelectedStyle = f.Name.SelectedStyle.
+		UnsetBackground().
+		Foreground(lipgloss.Color(DefaultSelectedNameBackground))
 
-	f.Scrollbar.Background(lipgloss.Color("237"))
-	f.ScrollbarThumb.Background(lipgloss.Color("240"))
+	f.Description.Style = f.Description.Style.
+		UnsetBackground().
+		Foreground(lipgloss.Color(DefaultDescriptionBackground))
+
+	f.Description.SelectedStyle = f.Description.SelectedStyle.
+		UnsetBackground().
+		Foreground(lipgloss.Color(DefaultSelectedDescriptionBackground))
+
+	f.Scrollbar = f.Scrollbar.Background(lipgloss.Color("237"))
+	f.ScrollbarThumb = f.ScrollbarThumb.Background(lipgloss.Color("240"))
+	f.Suggestions = f.Suggestions.Border(lipgloss.RoundedBorder())
 
 	return f
 }

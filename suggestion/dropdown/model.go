@@ -2,7 +2,6 @@ package dropdown
 
 import (
 	"math"
-	"strings"
 
 	"github.com/aschey/bubbleprompt/formatter"
 	"github.com/aschey/bubbleprompt/input"
@@ -309,12 +308,6 @@ func (c Model[T]) Render(paddingSize int, formatters formatter.Formatters) strin
 	visibleSuggestions := c.VisibleSuggestions()
 	scrollbarStart, scrollbarEnd := c.ScrollbarBounds()
 
-	// Add left offset
-	leftPadding := lipgloss.
-		NewStyle().
-		PaddingLeft(paddingSize).
-		Render("")
-
 	prompts := []string{}
 	listPosition := c.SelectedIndex() - c.ScrollPosition()
 	scrollbar := formatters.Scrollbar.Render(c.Scrollbar())
@@ -332,7 +325,6 @@ func (c Model[T]) Render(paddingSize int, formatters formatter.Formatters) strin
 
 		line := cur.Render(
 			selected,
-			leftPadding,
 			maxNameLen,
 			maxDescLen,
 			formatters,
@@ -341,8 +333,22 @@ func (c Model[T]) Render(paddingSize int, formatters formatter.Formatters) strin
 		)
 		prompts = append(prompts, line)
 	}
+	hasBorder := formatters.Suggestions.GetBorderLeft()
 
-	return strings.Join(prompts, "\n")
+	allPrompts := lipgloss.JoinVertical(lipgloss.Left, prompts...)
+
+	if hasBorder {
+		borderPadding := 2
+		return formatters.Suggestions.Copy().
+			MarginLeft(paddingSize - borderPadding).
+			PaddingLeft(1).
+			Render(allPrompts)
+	} else {
+		return formatters.Suggestions.
+			Copy().
+			PaddingLeft(paddingSize).
+			Render(allPrompts)
+	}
 }
 
 func (m *Model[T]) EnableScrollbar() {
