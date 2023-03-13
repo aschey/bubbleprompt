@@ -7,6 +7,7 @@ import (
 
 type UnmanagedRenderer struct {
 	content        string
+	useHistory     bool
 	currentHistory string
 	totalHistory   string
 }
@@ -32,9 +33,11 @@ func (u *UnmanagedRenderer) SetContent(content string) {
 }
 
 func (u *UnmanagedRenderer) SetHistory(history string) tea.Cmd {
-	u.totalHistory = history
-	if len(history) > 0 {
-		return tea.Println(internal.TrimNewline(history))
+	if u.useHistory {
+		u.totalHistory = history
+		if len(history) > 0 {
+			return tea.Println(internal.TrimNewline(history))
+		}
 	}
 	return nil
 }
@@ -44,25 +47,30 @@ func (u *UnmanagedRenderer) GetHistory() string {
 }
 
 func (u *UnmanagedRenderer) AddOutput(output string) {
-	if len(u.currentHistory) > 0 {
-		u.currentHistory = internal.AddNewlineIfMissing(u.currentHistory)
-	}
-	if len(u.totalHistory) > 0 {
-		u.totalHistory = internal.AddNewlineIfMissing(u.totalHistory)
-	}
+	if u.useHistory {
+		if len(u.currentHistory) > 0 {
+			u.currentHistory = internal.AddNewlineIfMissing(u.currentHistory)
+		}
+		if len(u.totalHistory) > 0 {
+			u.totalHistory = internal.AddNewlineIfMissing(u.totalHistory)
+		}
 
-	u.currentHistory += internal.TrimNewline(output)
-	u.totalHistory += internal.TrimNewline(output)
+		u.currentHistory += internal.TrimNewline(output)
+		u.totalHistory += internal.TrimNewline(output)
+	}
 }
 
 func (u *UnmanagedRenderer) GotoBottom(msg tea.Msg) {}
 
 func (u *UnmanagedRenderer) FinishUpdate() tea.Cmd {
-	if len(u.currentHistory) == 0 {
-		return nil
-	}
-	currentHistory := u.currentHistory
-	u.currentHistory = ""
+	if u.useHistory {
+		if len(u.currentHistory) == 0 {
+			return nil
+		}
+		currentHistory := u.currentHistory
+		u.currentHistory = ""
 
-	return tea.Println(currentHistory)
+		return tea.Println(currentHistory)
+	}
+	return nil
 }

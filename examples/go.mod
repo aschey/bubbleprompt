@@ -28,6 +28,7 @@ require (
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.14.0 // indirect
+	github.com/peterhellberg/swapi v0.0.0-20230222134402-c0bd79f5129c // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/sahilm/fuzzy v0.1.0 // indirect
 	golang.org/x/exp v0.0.0-20230307190834-24139beb5833 // indirect
