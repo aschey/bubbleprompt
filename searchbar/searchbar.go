@@ -15,8 +15,9 @@ type Model[T any] struct {
 }
 
 func New[T any](promptModel prompt.Model[T], contentModel tea.Model) Model[T] {
+	searchbarWidth := 50
 	searchText := "Search:"
-	searchBar := lipgloss.NewStyle().PaddingRight(50).Border(lipgloss.RoundedBorder()).Render(searchText)
+	searchBar := lipgloss.NewStyle().PaddingRight(searchbarWidth).Border(lipgloss.RoundedBorder()).Render(searchText)
 	return Model[T]{promptModel: promptModel, contentModel: contentModel, searchBar: searchBar, searchText: searchText}
 }
 
@@ -32,7 +33,11 @@ func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.contentModel, cmd = m.contentModel.Update(tea.WindowSizeMsg{Width: msg.Width, Height: msg.Height - 3})
+		borderSize := 1
+		m.contentModel, cmd = m.contentModel.Update(tea.WindowSizeMsg{
+			Width:  msg.Width,
+			Height: msg.Height - (borderSize*2 + 1),
+		})
 	default:
 		m.contentModel, cmd = m.contentModel.Update(msg)
 	}
@@ -43,5 +48,6 @@ func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model[T]) View() string {
 	view := lipgloss.JoinVertical(lipgloss.Left, m.searchBar, m.contentModel.View())
-	return renderer.PlaceOverlay(len(m.searchText)+2, 1, m.promptModel.View(), view)
+	spacing := 2
+	return renderer.PlaceOverlay(len(m.searchText)+spacing, 1, m.promptModel.View(), view)
 }
