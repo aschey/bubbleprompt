@@ -3,7 +3,6 @@ package suggestion
 import (
 	"strings"
 
-	"github.com/aschey/bubbleprompt/formatter"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mattn/go-runewidth"
 )
@@ -27,7 +26,7 @@ func (s Suggestion[T]) Render(
 	selected bool,
 	maxNameLen int,
 	maxDescLen int,
-	formatters formatter.Formatters,
+	formatters Formatters,
 	scrollbar string,
 	indicator string,
 ) string {

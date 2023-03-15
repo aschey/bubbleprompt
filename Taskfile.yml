@@ -43,7 +43,7 @@ tasks:
         --template-file text=./docs/templates/text.gotxt \
         --template-file file=./docs/templates/file.gotxt \
         --template frontmatter="" \
-        --output ./docs/docs/03-Input/07-API.mdx ./input
+        --output ./docs/docs/04-Input/07-API.mdx ./input
       - |
         gomarkdoc \
         --template-file package=./docs/templates/package.gotxt \
@@ -51,7 +51,7 @@ tasks:
         --template-file file=./docs/templates/file.gotxt \
         --template-file frontmatter=./docs/templates/frontmatter.gotxt \
         --template slug=/input/simpleinput/api \
-        --output ./docs/docs/03-Input/02-Simple/02-API.mdx ./input/simpleinput
+        --output ./docs/docs/04-Input/02-Simple/02-API.mdx ./input/simpleinput
       - |
         gomarkdoc \
         --template-file package=./docs/templates/package.gotxt \
@@ -59,7 +59,7 @@ tasks:
         --template-file file=./docs/templates/file.gotxt \
         --template-file frontmatter=./docs/templates/frontmatter.gotxt \
         --template slug=/input/commandinput/api \
-        --output ./docs/docs/03-Input/03-Command/02-API.mdx ./input/commandinput
+        --output ./docs/docs/04-Input/03-Command/02-API.mdx ./input/commandinput
       - |
         gomarkdoc \
         --template-file package=./docs/templates/package.gotxt \
@@ -67,7 +67,7 @@ tasks:
         --template-file file=./docs/templates/file.gotxt \
         --template-file frontmatter=./docs/templates/frontmatter.gotxt \
         --template slug=/input/lexerinput/api \
-        --output ./docs/docs/03-Input/04-Lexer/02-API.mdx ./input/lexerinput
+        --output ./docs/docs/04-Input/04-Lexer/02-API.mdx ./input/lexerinput
       - |
         gomarkdoc \
         --template-file package=./docs/templates/package.gotxt \
@@ -75,32 +75,46 @@ tasks:
         --template-file file=./docs/templates/file.gotxt \
         --template-file frontmatter=./docs/templates/frontmatter.gotxt \
         --template slug=/input/parserinput/api \
-        --output ./docs/docs/03-Input/05-Parser/02-API.mdx ./input/parserinput
+        --output ./docs/docs/04-Input/05-Parser/02-API.mdx ./input/parserinput
       - |
         gomarkdoc \
         --template-file package=./docs/templates/package.gotxt \
         --template-file text=./docs/templates/text.gotxt \
         --template-file file=./docs/templates/file.gotxt \
         --template frontmatter="" \
-        --output ./docs/docs/05-Suggestion/02-API.mdx ./suggestion
+        --output ./docs/docs/06-Suggestion/02-API.mdx ./suggestion
       - |
         gomarkdoc \
         --template-file package=./docs/templates/package.gotxt \
         --template-file text=./docs/templates/text.gotxt \
         --template-file file=./docs/templates/file.gotxt \
         --template frontmatter="" \
-        --output ./docs/docs/08-Utilities/01-Completer/02-API.mdx ./completer
+        --output ./docs/docs/06-Suggestion/01-Dropdown/02-API.mdx ./suggestion/dropdown
       - |
         gomarkdoc \
         --template-file package=./docs/templates/package.gotxt \
         --template-file text=./docs/templates/text.gotxt \
         --template-file file=./docs/templates/file.gotxt \
         --template frontmatter="" \
-        --output ./docs/docs/08-Utilities/02-Executor/02-API.mdx ./executor
+        --output ./docs/docs/09-Utilities/01-Completer/02-API.mdx ./completer
       - |
         gomarkdoc \
         --template-file package=./docs/templates/package.gotxt \
         --template-file text=./docs/templates/text.gotxt \
         --template-file file=./docs/templates/file.gotxt \
         --template frontmatter="" \
-        --output ./docs/docs/06-Renderer/02-API.mdx ./renderer
+        --output ./docs/docs/09-Utilities/02-Executor/02-API.mdx ./executor
+      - |
+        gomarkdoc \
+        --template-file package=./docs/templates/package.gotxt \
+        --template-file text=./docs/templates/text.gotxt \
+        --template-file file=./docs/templates/file.gotxt \
+        --template frontmatter="" \
+        --output ./docs/docs/07-Renderer/02-API.mdx ./renderer
+      - |
+        gomarkdoc \
+        --template-file package=./docs/templates/package.gotxt \
+        --template-file text=./docs/templates/text.gotxt \
+        --template-file file=./docs/templates/file.gotxt \
+        --template frontmatter="" \
+        --output ./docs/docs/03-Prompt/02-API.mdx .

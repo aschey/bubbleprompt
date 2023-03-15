@@ -1,7 +1,6 @@
 package suggestion
 
 import (
-	"github.com/aschey/bubbleprompt/formatter"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -31,6 +30,8 @@ type Manager[T any] interface {
 	ScrollPosition() int
 	Scrollbar() string
 	ScrollbarThumb() string
-	Render(paddingSize int, formatters formatter.Formatters) string
+	Render(paddingSize int) string
 	ShouldChangeListPosition(msg tea.Msg) bool
+	Formatters() Formatters
+	SetFormatters(formatters Formatters)
 }

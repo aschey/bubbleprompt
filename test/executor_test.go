@@ -4,8 +4,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aschey/bubbleprompt/formatter"
 	"github.com/aschey/bubbleprompt/input/commandinput"
+	"github.com/aschey/bubbleprompt/suggestion"
 	tuitest "github.com/aschey/tui-tester"
 	. "github.com/onsi/ginkgo/v2"
 )
@@ -130,7 +130,7 @@ var _ = Describe("Executor", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				return strings.Contains(state.NthOutputLine(0), "> error") &&
 					strings.Contains(state.NthOutputLine(1), "bad things") &&
-					state.BackgroundColor(1, 0).String() == formatter.DefaultErrorTextBackground
+					state.BackgroundColor(1, 0).String() == suggestion.DefaultErrorTextBackground
 			})
 		})
 	})

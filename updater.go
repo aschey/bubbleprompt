@@ -44,8 +44,7 @@ func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.inputHandler, cmd = m.inputHandler.Update(msg)
 	cmds = append(cmds, cmd)
 
-	// Order is important here, there's some strange freezing behavior
-	// that happens if we update the text input before the viewport
+	// Order is important here
 	m.renderer, cmd = m.renderer.Update(msg)
 	cmds = append(cmds, cmd)
 
@@ -72,7 +71,8 @@ func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmd = m.finishUpdate(msg)
 	cmds = append(cmds, cmd)
 
-	m.renderer.SetContent(m.render())
+	m.renderer.SetInput(m.renderInput())
+	m.renderer.SetBody(m.renderBody())
 	cmd = m.renderer.FinishUpdate()
 	cmds = append(cmds, cmd)
 
@@ -170,7 +170,7 @@ func (m *Model[T]) finalizeExecutor(executorManager *executionManager) tea.Cmd {
 	// to handle newlines from the tea.Model's View value properly
 	// When executing a tea.Model standalone, the output must end in a newline and
 	// if we use a []string to track newlines, we'll get a double newline here
-	m.renderer.AddOutput(executorManager.View())
+	m.renderer.AddHistory(executorManager.View())
 	m.textInput.OnExecutorFinished()
 	m.updateExecutor(nil)
 	return func() tea.Msg { return ExecutorFinishedMsg(executorManager.inner) }
@@ -221,10 +221,10 @@ func (m *Model[T]) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 	// Store the user input including the prompt state and the executor result
 	// Pass in the static flag to signal to the text input to exclude interactive elements
 	// such as placeholders and the cursor
-	m.renderer.AddOutput(m.textInput.View(input.Static))
+	m.renderer.AddHistory(m.textInput.View(input.Static))
 	m.textInput.ResetValue()
 
-	executorManager := newExecutorManager(innerExecutor, m.formatters.ErrorText, err)
+	executorManager := newExecutorManager(innerExecutor, m.suggestionManager.Formatters().ErrorText, err)
 
 	// Performance optimization: if this is a string model, we don't need to go through the whole update cycle
 	// Just call the view method once and finalize the result

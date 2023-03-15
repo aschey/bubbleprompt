@@ -8,7 +8,6 @@ import (
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
 	"github.com/aschey/bubbleprompt/executor"
-	"github.com/aschey/bubbleprompt/formatter"
 	"github.com/aschey/bubbleprompt/input/commandinput"
 	"github.com/aschey/bubbleprompt/renderer"
 	"github.com/aschey/bubbleprompt/suggestion"
@@ -42,17 +41,16 @@ func (m model) Execute(inputStr string, promptModel *prompt.Model[cmdMetadata]) 
 		return nil, fmt.Errorf("At least one argument is required")
 	}
 	inputFormatters := m.textInput.Formatters()
-	promptFormatters := promptModel.Formatters()
+	promptFormatters := promptModel.SuggestionManager().Formatters()
 
 	switch parsed.Command.Value {
 	case "theme":
 		switch args[0].Value {
 		case "default":
-			promptFormatters = formatter.DefaultFormatters()
+			promptFormatters = suggestion.DefaultFormatters()
 			promptModel.SuggestionManager().SetSelectionIndicator("")
 		case "minimal":
-			promptFormatters = formatter.DefaultFormatters().Minimal()
-			promptModel.SuggestionManager().SetSelectionIndicator("> ")
+			promptFormatters = suggestion.DefaultFormatters().Minimal()
 		}
 	case "scrollbar":
 		switch args[0].Value {
@@ -120,6 +118,9 @@ func (m model) Execute(inputStr string, promptModel *prompt.Model[cmdMetadata]) 
 				lipgloss.Color(args[1].Value),
 			)
 		}
+	case "indicator":
+		indicator := args[0].Value
+		promptModel.SuggestionManager().SetSelectionIndicator(indicator + " ")
 
 	case "max-suggestions":
 		maxSuggestions, err := strconv.ParseInt(args[0].Value, 10, 64)
@@ -144,7 +145,7 @@ func (m model) Execute(inputStr string, promptModel *prompt.Model[cmdMetadata]) 
 	}
 
 	m.textInput.SetFormatters(inputFormatters)
-	promptModel.SetFormatters(promptFormatters)
+	promptModel.SuggestionManager().SetFormatters(promptFormatters)
 	return executor.NewStringModel("input updated"), nil
 }
 
@@ -253,6 +254,11 @@ func main() {
 					},
 				},
 			},
+		},
+		{
+			Text:        "indicator",
+			Description: "set the selection indicator",
+			Metadata:    commandinput.MetadataFromPositionalArgs[any](textInput.NewPositionalArg("<indicator>")),
 		},
 		{
 			Text:        "prompt",

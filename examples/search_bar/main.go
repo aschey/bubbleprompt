@@ -13,7 +13,6 @@ import (
 	"github.com/aschey/bubbleprompt/suggestion"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/peterhellberg/swapi"
 )
 
@@ -31,19 +30,16 @@ func newModel() searchbar.Model[any] {
 		swapiClient: swapi.DefaultClient,
 		suggestions: suggestions,
 		textInput:   textInput,
-		outputStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("13")),
 		filterer:    completer.NewPrefixFilter[any](),
 	}
 
-	return searchbar.New[any](pmodel, newListModel())
+	return searchbar.New[any](pmodel, textInput, newListModel())
 }
 
 type promptModel struct {
 	swapiClient *swapi.Client
 	suggestions []suggestion.Suggestion[any]
 	textInput   *simpleinput.Model[any]
-	outputStyle lipgloss.Style
-	numChoices  int64
 	filterer    completer.Filterer[any]
 }
 
@@ -117,9 +113,6 @@ func (m promptModel) getItems(input string) []list.Item {
 }
 
 func (m promptModel) Update(msg tea.Msg) (prompt.InputHandler[any], tea.Cmd) {
-	if msg, ok := msg.(tea.KeyMsg); ok && msg.Type == tea.KeyEnter {
-		m.numChoices++
-	}
 	return m, nil
 }
 

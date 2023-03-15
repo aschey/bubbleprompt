@@ -1,16 +1,15 @@
 package prompt
 
 import (
-	"github.com/aschey/bubbleprompt/formatter"
 	"github.com/aschey/bubbleprompt/renderer"
 	"github.com/aschey/bubbleprompt/suggestion"
 )
 
 type Option[T any] func(model *Model[T])
 
-func WithFormatters[T any](formatters formatter.Formatters) Option[T] {
+func WithFormatters[T any](formatters suggestion.Formatters) Option[T] {
 	return func(model *Model[T]) {
-		model.formatters = formatters
+		model.suggestionManager.SetFormatters(formatters)
 	}
 }
 

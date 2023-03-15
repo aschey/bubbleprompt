@@ -1,4 +1,4 @@
-package formatter
+package suggestion
 
 import "github.com/charmbracelet/lipgloss"
 

@@ -3,7 +3,6 @@ package dropdown
 import (
 	"math"
 
-	"github.com/aschey/bubbleprompt/formatter"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/suggestion"
 	tea "github.com/charmbracelet/bubbletea"
@@ -33,22 +32,29 @@ type Model[T any] struct {
 	selectionIndicator string
 	scrollbar          string
 	scrollbarThumb     string
+	formatters         suggestion.Formatters
 	err                error
 }
 
-func NewDropdownSuggestionModel[T any](textInput input.Input[T]) *Model[T] {
+func NewDropdownSuggestionModel[T any](textInput input.Input[T], options ...Option[T]) *Model[T] {
 	defaultMaxSuggestions := 6
-	return &Model[T]{
+	m := &Model[T]{
 		textInput:          textInput,
 		state:              idle,
 		maxSuggestions:     defaultMaxSuggestions,
 		selectionIndicator: "",
 		scrollbar:          " ",
 		scrollbarThumb:     " ",
+		formatters:         suggestion.DefaultFormatters(),
 		prevRunes: []rune(
 			" ",
 		), // Need to set the previous text to something in order to force the initial render
 	}
+	for _, option := range options {
+		option(m)
+	}
+
+	return m
 }
 
 func (m *Model[T]) Init() tea.Cmd {
@@ -283,9 +289,9 @@ func (m *Model[T]) SelectedSuggestion() *suggestion.Suggestion[T] {
 	return nil
 }
 
-func (c Model[T]) Render(paddingSize int, formatters formatter.Formatters) string {
+func (c Model[T]) Render(paddingSize int) string {
 	if c.Error() != nil {
-		return formatters.ErrorText.Render(c.Error().Error())
+		return c.formatters.ErrorText.Render(c.Error().Error())
 	}
 	maxNameLen := 0
 	maxDescLen := 0
@@ -310,8 +316,8 @@ func (c Model[T]) Render(paddingSize int, formatters formatter.Formatters) strin
 
 	prompts := []string{}
 	listPosition := c.SelectedIndex() - c.ScrollPosition()
-	scrollbar := formatters.Scrollbar.Render(c.Scrollbar())
-	scrollbarThumb := formatters.ScrollbarThumb.Render(c.ScrollbarThumb())
+	scrollbar := c.formatters.Scrollbar.Render(c.Scrollbar())
+	scrollbarThumb := c.formatters.ScrollbarThumb.Render(c.ScrollbarThumb())
 	for i, cur := range visibleSuggestions {
 		selected := i == listPosition
 		scrollbarView := ""
@@ -327,24 +333,25 @@ func (c Model[T]) Render(paddingSize int, formatters formatter.Formatters) strin
 			selected,
 			maxNameLen,
 			maxDescLen,
-			formatters,
+			c.formatters,
 			scrollbarView,
 			c.SelectionIndicator(),
 		)
 		prompts = append(prompts, line)
 	}
-	hasBorder := formatters.Suggestions.GetBorderLeft()
+	hasBorder := c.formatters.Suggestions.GetBorderLeft()
 
 	allPrompts := lipgloss.JoinVertical(lipgloss.Left, prompts...)
 
 	if hasBorder {
 		borderPadding := 2
-		return formatters.Suggestions.Copy().
+		return c.formatters.Suggestions.
+			Copy().
 			MarginLeft(paddingSize - borderPadding).
 			PaddingLeft(1).
 			Render(allPrompts)
 	} else {
-		return formatters.Suggestions.
+		return c.formatters.Suggestions.
 			Copy().
 			PaddingLeft(paddingSize).
 			Render(allPrompts)
@@ -375,6 +382,14 @@ func (m *Model[T]) SelectionIndicator() string {
 
 func (m *Model[T]) SetSelectionIndicator(selectionIndicator string) {
 	m.selectionIndicator = selectionIndicator
+}
+
+func (m *Model[T]) Formatters() suggestion.Formatters {
+	return m.formatters
+}
+
+func (m *Model[T]) SetFormatters(formatters suggestion.Formatters) {
+	m.formatters = formatters
 }
 
 func (m *Model[T]) Suggestions() []suggestion.Suggestion[T] {

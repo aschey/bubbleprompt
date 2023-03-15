@@ -1,0 +1,264 @@
+
+
+<div class="api">
+
+# dropdown
+
+```go
+import "github.com/aschey/bubbleprompt/suggestion/dropdown"
+```
+
+## Index
+
+- [type Model](<#type-model>)
+  - [func NewDropdownSuggestionModel[T any](textInput input.Input[T], options ...Option[T]) *Model[T]](<#func-newdropdownsuggestionmodel>)
+  - [func \(m \*Model\[T\]\) ClearSuggestions\(\)](<#func-modelt-clearsuggestions>)
+  - [func \(m \*Model\[T\]\) DisableScrollbar\(\)](<#func-modelt-disablescrollbar>)
+  - [func \(m \*Model\[T\]\) EnableScrollbar\(\)](<#func-modelt-enablescrollbar>)
+  - [func \(m \*Model\[T\]\) Error\(\) error](<#func-modelt-error>)
+  - [func \(m \*Model\[T\]\) Formatters\(\) suggestion.Formatters](<#func-modelt-formatters>)
+  - [func \(m \*Model\[T\]\) Init\(\) tea.Cmd](<#func-modelt-init>)
+  - [func \(m \*Model\[T\]\) IsSuggestionSelected\(\) bool](<#func-modelt-issuggestionselected>)
+  - [func \(m \*Model\[T\]\) MaxSuggestions\(\) int](<#func-modelt-maxsuggestions>)
+  - [func \(m \*Model\[T\]\) NextSuggestion\(\)](<#func-modelt-nextsuggestion>)
+  - [func \(m \*Model\[T\]\) PreviousSuggestion\(\)](<#func-modelt-previoussuggestion>)
+  - [func \(c Model\[T\]\) Render\(paddingSize int\) string](<#func-modelt-render>)
+  - [func \(m \*Model\[T\]\) ResetSuggestions\(\) tea.Cmd](<#func-modelt-resetsuggestions>)
+  - [func \(m \*Model\[T\]\) ScrollPosition\(\) int](<#func-modelt-scrollposition>)
+  - [func \(m \*Model\[T\]\) Scrollbar\(\) string](<#func-modelt-scrollbar>)
+  - [func \(c Model\[T\]\) ScrollbarBounds\(\) \(int, int\)](<#func-modelt-scrollbarbounds>)
+  - [func \(m \*Model\[T\]\) ScrollbarThumb\(\) string](<#func-modelt-scrollbarthumb>)
+  - [func \(m \*Model\[T\]\) SelectSuggestion\(suggestion suggestion.Suggestion\[T\]\)](<#func-modelt-selectsuggestion>)
+  - [func \(m \*Model\[T\]\) SelectedIndex\(\) int](<#func-modelt-selectedindex>)
+  - [func \(m \*Model\[T\]\) SelectedSuggestion\(\) \*suggestion.Suggestion\[T\]](<#func-modelt-selectedsuggestion>)
+  - [func \(m \*Model\[T\]\) SelectionIndicator\(\) string](<#func-modelt-selectionindicator>)
+  - [func \(m \*Model\[T\]\) SetFormatters\(formatters suggestion.Formatters\)](<#func-modelt-setformatters>)
+  - [func \(m \*Model\[T\]\) SetMaxSuggestions\(maxSuggestions int\)](<#func-modelt-setmaxsuggestions>)
+  - [func \(m \*Model\[T\]\) SetSelectionIndicator\(selectionIndicator string\)](<#func-modelt-setselectionindicator>)
+  - [func \(m \*Model\[T\]\) ShouldChangeListPosition\(msg tea.Msg\) bool](<#func-modelt-shouldchangelistposition>)
+  - [func \(m \*Model\[T\]\) Suggestions\(\) \[\]suggestion.Suggestion\[T\]](<#func-modelt-suggestions>)
+  - [func \(m \*Model\[T\]\) UnselectSuggestion\(\)](<#func-modelt-unselectsuggestion>)
+  - [func \(m \*Model\[T\]\) Update\(msg tea.Msg\) tea.Cmd](<#func-modelt-update>)
+  - [func \(m \*Model\[T\]\) UpdateSuggestions\(\) tea.Cmd](<#func-modelt-updatesuggestions>)
+  - [func \(m \*Model\[T\]\) VisibleSuggestions\(\) \[\]suggestion.Suggestion\[T\]](<#func-modelt-visiblesuggestions>)
+- [type Option](<#type-option>)
+  - [func WithFormatters[T any](formatters suggestion.Formatters) Option[T]](<#func-withformatters>)
+  - [func WithMaxSuggestions[T any](maxSuggestions int) Option[T]](<#func-withmaxsuggestions>)
+  - [func WithSelectionIndicator[T any](indicator string) Option[T]](<#func-withselectionindicator>)
+
+
+## type [Model](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L20-L37>)
+
+```go
+type Model[T any] struct {
+    // contains filtered or unexported fields
+}
+```
+
+### func [NewDropdownSuggestionModel](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L39>)
+
+```go
+func NewDropdownSuggestionModel[T any](textInput input.Input[T], options ...Option[T]) *Model[T]
+```
+
+### func \(\*Model\[T\]\) [ClearSuggestions](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L222>)
+
+```go
+func (m *Model[T]) ClearSuggestions()
+```
+
+### func \(\*Model\[T\]\) [DisableScrollbar](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L370>)
+
+```go
+func (m *Model[T]) DisableScrollbar()
+```
+
+### func \(\*Model\[T\]\) [EnableScrollbar](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L365>)
+
+```go
+func (m *Model[T]) EnableScrollbar()
+```
+
+### func \(\*Model\[T\]\) [Error](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L417>)
+
+```go
+func (m *Model[T]) Error() error
+```
+
+### func \(\*Model\[T\]\) [Formatters](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L391>)
+
+```go
+func (m *Model[T]) Formatters() suggestion.Formatters
+```
+
+### func \(\*Model\[T\]\) [Init](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L60>)
+
+```go
+func (m *Model[T]) Init() tea.Cmd
+```
+
+### func \(\*Model\[T\]\) [IsSuggestionSelected](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L232>)
+
+```go
+func (m *Model[T]) IsSuggestionSelected() bool
+```
+
+### func \(\*Model\[T\]\) [MaxSuggestions](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L375>)
+
+```go
+func (m *Model[T]) MaxSuggestions() int
+```
+
+### func \(\*Model\[T\]\) [NextSuggestion](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L236>)
+
+```go
+func (m *Model[T]) NextSuggestion()
+```
+
+### func \(\*Model\[T\]\) [PreviousSuggestion](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L253>)
+
+```go
+func (m *Model[T]) PreviousSuggestion()
+```
+
+### func \(Model\[T\]\) [Render](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L292>)
+
+```go
+func (c Model[T]) Render(paddingSize int) string
+```
+
+### func \(\*Model\[T\]\) [ResetSuggestions](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L202>)
+
+```go
+func (m *Model[T]) ResetSuggestions() tea.Cmd
+```
+
+### func \(\*Model\[T\]\) [ScrollPosition](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L421>)
+
+```go
+func (m *Model[T]) ScrollPosition() int
+```
+
+### func \(\*Model\[T\]\) [Scrollbar](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L425>)
+
+```go
+func (m *Model[T]) Scrollbar() string
+```
+
+### func \(Model\[T\]\) [ScrollbarBounds](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L144>)
+
+```go
+func (c Model[T]) ScrollbarBounds() (int, int)
+```
+
+### func \(\*Model\[T\]\) [ScrollbarThumb](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L429>)
+
+```go
+func (m *Model[T]) ScrollbarThumb() string
+```
+
+### func \(\*Model\[T\]\) [SelectSuggestion](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L227>)
+
+```go
+func (m *Model[T]) SelectSuggestion(suggestion suggestion.Suggestion[T])
+```
+
+### func \(\*Model\[T\]\) [SelectedIndex](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L270>)
+
+```go
+func (m *Model[T]) SelectedIndex() int
+```
+
+### func \(\*Model\[T\]\) [SelectedSuggestion](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L281>)
+
+```go
+func (m *Model[T]) SelectedSuggestion() *suggestion.Suggestion[T]
+```
+
+### func \(\*Model\[T\]\) [SelectionIndicator](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L383>)
+
+```go
+func (m *Model[T]) SelectionIndicator() string
+```
+
+### func \(\*Model\[T\]\) [SetFormatters](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L395>)
+
+```go
+func (m *Model[T]) SetFormatters(formatters suggestion.Formatters)
+```
+
+### func \(\*Model\[T\]\) [SetMaxSuggestions](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L379>)
+
+```go
+func (m *Model[T]) SetMaxSuggestions(maxSuggestions int)
+```
+
+### func \(\*Model\[T\]\) [SetSelectionIndicator](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L387>)
+
+```go
+func (m *Model[T]) SetSelectionIndicator(selectionIndicator string)
+```
+
+### func \(\*Model\[T\]\) [ShouldChangeListPosition](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L433>)
+
+```go
+func (m *Model[T]) ShouldChangeListPosition(msg tea.Msg) bool
+```
+
+### func \(\*Model\[T\]\) [Suggestions](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L399>)
+
+```go
+func (m *Model[T]) Suggestions() []suggestion.Suggestion[T]
+```
+
+### func \(\*Model\[T\]\) [UnselectSuggestion](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L215>)
+
+```go
+func (m *Model[T]) UnselectSuggestion()
+```
+
+### func \(\*Model\[T\]\) [Update](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L65>)
+
+```go
+func (m *Model[T]) Update(msg tea.Msg) tea.Cmd
+```
+
+### func \(\*Model\[T\]\) [UpdateSuggestions](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L166>)
+
+```go
+func (m *Model[T]) UpdateSuggestions() tea.Cmd
+```
+
+### func \(\*Model\[T\]\) [VisibleSuggestions](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L411>)
+
+```go
+func (m *Model[T]) VisibleSuggestions() []suggestion.Suggestion[T]
+```
+
+## type [Option](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/option.go#L5>)
+
+```go
+type Option[T any] func(model *Model[T])
+```
+
+### func [WithFormatters](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/option.go#L19>)
+
+```go
+func WithFormatters[T any](formatters suggestion.Formatters) Option[T]
+```
+
+### func [WithMaxSuggestions](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/option.go#L7>)
+
+```go
+func WithMaxSuggestions[T any](maxSuggestions int) Option[T]
+```
+
+### func [WithSelectionIndicator](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/option.go#L13>)
+
+```go
+func WithSelectionIndicator[T any](indicator string) Option[T]
+```
+
+</div>
+
+Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)

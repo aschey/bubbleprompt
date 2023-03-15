@@ -1,7 +1,6 @@
 package prompt
 
 import (
-	"github.com/aschey/bubbleprompt/formatter"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/renderer"
 	"github.com/aschey/bubbleprompt/suggestion"
@@ -31,7 +30,6 @@ type Model[T any] struct {
 	inputHandler            InputHandler[T]
 	textInput               input.Input[T]
 	renderer                renderer.Renderer
-	formatters              formatter.Formatters
 	executionManager        *executionManager
 	modelState              modelState
 	lastTypedCursorPosition int
@@ -46,13 +44,12 @@ func New[T any](
 	textInput input.Input[T],
 	opts ...Option[T],
 ) Model[T] {
-	formatters := formatter.DefaultFormatters()
+	// formatters := formatter.DefaultFormatters()
 	model := Model[T]{
 		suggestionManager: dropdown.NewDropdownSuggestionModel(textInput),
 		inputHandler:      inputHandler,
 		textInput:         textInput,
 		renderer:          renderer.NewUnmanagedRenderer(),
-		formatters:        formatters,
 	}
 
 	for _, opt := range opts {
@@ -66,16 +63,12 @@ func (m *Model[T]) SuggestionManager() suggestion.Manager[T] {
 	return m.suggestionManager
 }
 
-func (m Model[T]) Formatters() formatter.Formatters {
-	return m.formatters
-}
-
-func (m *Model[T]) SetFormatters(formatters formatter.Formatters) {
-	m.formatters = formatters
-}
-
 func (m Model[T]) TextInput() input.Input[T] {
 	return m.textInput
+}
+
+func (m Model[T]) Renderer() renderer.Renderer {
+	return m.renderer
 }
 
 type rendererMsg struct {

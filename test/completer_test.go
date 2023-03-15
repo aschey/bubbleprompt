@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aschey/bubbleprompt/formatter"
 	"github.com/aschey/bubbleprompt/input/commandinput"
+	"github.com/aschey/bubbleprompt/suggestion"
 	tuitest "github.com/aschey/tui-tester"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -56,7 +56,7 @@ var _ = Describe("Completer", func() {
 				for i := 1; i < 6; i++ {
 					if state.BackgroundColor(1, promptWidth).
 						String() !=
-						formatter.DefaultScrollbarThumbColor {
+						suggestion.DefaultScrollbarThumbColor {
 						return false
 					}
 				}
@@ -66,7 +66,7 @@ var _ = Describe("Completer", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				return state.BackgroundColor(6, promptWidth).
 					String() ==
-					formatter.DefaultScrollbarColor
+					suggestion.DefaultScrollbarColor
 			})
 		})
 	})
@@ -82,7 +82,7 @@ var _ = Describe("Completer", func() {
 				_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 					return state.BackgroundColor(1, leftPadding+longestNameLength+margin).
 						String() ==
-						formatter.DefaultSelectedNameBackground
+						suggestion.DefaultSelectedNameBackground
 				})
 			},
 		)
@@ -93,7 +93,7 @@ var _ = Describe("Completer", func() {
 				_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 					return state.BackgroundColor(1, leftPadding+longestNameLength+2*margin+longestDescLength+margin).
 						String() ==
-						formatter.DefaultSelectedDescriptionBackground
+						suggestion.DefaultSelectedDescriptionBackground
 				})
 			},
 		)
@@ -108,7 +108,7 @@ var _ = Describe("Completer", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				return state.BackgroundColor(1, leftPadding).
 					String() ==
-					formatter.DefaultSelectedNameBackground
+					suggestion.DefaultSelectedNameBackground
 			})
 		})
 
@@ -121,7 +121,7 @@ var _ = Describe("Completer", func() {
 				_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 					return state.BackgroundColor(1, leftPadding+len(suggestions[0].Text)+1).
 						String() ==
-						formatter.DefaultNameBackground
+						suggestion.DefaultNameBackground
 				})
 			})
 		})
@@ -139,7 +139,7 @@ var _ = Describe("Completer", func() {
 				for i := 2; i < 7; i++ {
 					if state.BackgroundColor(i, promptWidth).
 						String() !=
-						formatter.DefaultScrollbarThumbColor {
+						suggestion.DefaultScrollbarThumbColor {
 						return false
 					}
 				}
@@ -149,7 +149,7 @@ var _ = Describe("Completer", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				return state.BackgroundColor(1, promptWidth).
 					String() ==
-					formatter.DefaultScrollbarColor
+					suggestion.DefaultScrollbarColor
 			})
 		})
 
@@ -165,7 +165,7 @@ var _ = Describe("Completer", func() {
 					for i := 1; i < 6; i++ {
 						if state.BackgroundColor(1, promptWidth).
 							String() !=
-							formatter.DefaultScrollbarThumbColor {
+							suggestion.DefaultScrollbarThumbColor {
 							return false
 						}
 					}
@@ -175,7 +175,7 @@ var _ = Describe("Completer", func() {
 				_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 					return state.BackgroundColor(6, promptWidth).
 						String() ==
-						formatter.DefaultScrollbarColor
+						suggestion.DefaultScrollbarColor
 				})
 			})
 		})
@@ -200,7 +200,7 @@ var _ = Describe("Completer", func() {
 		It("moves the suggestions to match the cursor", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				return state.BackgroundColor(1, 3).Int() == tuitest.DefaultBG &&
-					fmt.Sprint(state.BackgroundColor(1, 4)) == formatter.DefaultNameBackground
+					fmt.Sprint(state.BackgroundColor(1, 4)) == suggestion.DefaultNameBackground
 			})
 		})
 	})
@@ -211,7 +211,7 @@ var _ = Describe("Completer", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				return state.ForegroundColor(1, leftPadding+margin).
 					String() ==
-					formatter.DefaultSelectedNameForeground
+					suggestion.DefaultSelectedNameForeground
 			})
 			console.SendString(" ")
 		})
@@ -233,7 +233,7 @@ var _ = Describe("Completer", func() {
 			_, _ = console.WaitFor(func(state tuitest.TermState) bool {
 				return state.ForegroundColor(6, leftPadding+margin).
 					String() ==
-					formatter.DefaultSelectedNameForeground
+					suggestion.DefaultSelectedNameForeground
 			})
 			console.SendString(tuitest.KeyDown)
 		})
@@ -242,7 +242,7 @@ var _ = Describe("Completer", func() {
 			_, _ = console.WaitForDuration(func(state tuitest.TermState) bool {
 				return state.ForegroundColor(6, leftPadding+margin).
 					String() ==
-					formatter.DefaultNameForeground
+					suggestion.DefaultNameForeground
 			}, 100*time.Millisecond)
 		})
 	})

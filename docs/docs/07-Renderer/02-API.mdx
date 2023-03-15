@@ -1,0 +1,308 @@
+
+
+<div class="api">
+
+# renderer
+
+```go
+import "github.com/aschey/bubbleprompt/renderer"
+```
+
+## Index
+
+- [func AddNewlineIfMissing(s string) string](<#func-addnewlineifmissing>)
+- [func CountNewlines(s string) int](<#func-countnewlines>)
+- [func PlaceOverlay(x int, y int, fg string, bg string, opts ...WhitespaceOption) string](<#func-placeoverlay>)
+- [func TrimNewline(s string) string](<#func-trimnewline>)
+- [func Unescape(s string, wrapper string) string](<#func-unescape>)
+- [type Option](<#type-option>)
+  - [func WithHeightOffset(offset int) Option](<#func-withheightoffset>)
+  - [func WithUseHistory(useHistory bool) Option](<#func-withusehistory>)
+  - [func WithWidthOffset(offset int) Option](<#func-withwidthoffset>)
+- [type Renderer](<#type-renderer>)
+- [type UnmanagedRenderer](<#type-unmanagedrenderer>)
+  - [func NewUnmanagedRenderer(options ...Option) *UnmanagedRenderer](<#func-newunmanagedrenderer>)
+  - [func \(u \*UnmanagedRenderer\) AddHistory\(output string\)](<#func-unmanagedrenderer-addhistory>)
+  - [func \(u \*UnmanagedRenderer\) Body\(\) string](<#func-unmanagedrenderer-body>)
+  - [func \(u \*UnmanagedRenderer\) FinishUpdate\(\) tea.Cmd](<#func-unmanagedrenderer-finishupdate>)
+  - [func \(u \*UnmanagedRenderer\) GetHistory\(\) string](<#func-unmanagedrenderer-gethistory>)
+  - [func \(u \*UnmanagedRenderer\) GotoBottom\(msg tea.Msg\)](<#func-unmanagedrenderer-gotobottom>)
+  - [func \(u \*UnmanagedRenderer\) Initialize\(msg tea.WindowSizeMsg\)](<#func-unmanagedrenderer-initialize>)
+  - [func \(u \*UnmanagedRenderer\) Input\(\) string](<#func-unmanagedrenderer-input>)
+  - [func \(u \*UnmanagedRenderer\) SetBody\(body string\)](<#func-unmanagedrenderer-setbody>)
+  - [func \(u \*UnmanagedRenderer\) SetHistory\(history string\) tea.Cmd](<#func-unmanagedrenderer-sethistory>)
+  - [func \(u \*UnmanagedRenderer\) SetInput\(input string\)](<#func-unmanagedrenderer-setinput>)
+  - [func \(u \*UnmanagedRenderer\) SetSize\(msg tea.WindowSizeMsg\)](<#func-unmanagedrenderer-setsize>)
+  - [func \(u \*UnmanagedRenderer\) Update\(msg tea.Msg\) \(Renderer, tea.Cmd\)](<#func-unmanagedrenderer-update>)
+  - [func \(u \*UnmanagedRenderer\) View\(\) string](<#func-unmanagedrenderer-view>)
+- [type ViewportRenderer](<#type-viewportrenderer>)
+  - [func NewViewportRenderer(options ...Option) *ViewportRenderer](<#func-newviewportrenderer>)
+  - [func \(v \*ViewportRenderer\) AddHistory\(output string\)](<#func-viewportrenderer-addhistory>)
+  - [func \(v \*ViewportRenderer\) FinishUpdate\(\) tea.Cmd](<#func-viewportrenderer-finishupdate>)
+  - [func \(v \*ViewportRenderer\) GetHistory\(\) string](<#func-viewportrenderer-gethistory>)
+  - [func \(v \*ViewportRenderer\) GotoBottom\(msg tea.Msg\)](<#func-viewportrenderer-gotobottom>)
+  - [func \(v \*ViewportRenderer\) Initialize\(msg tea.WindowSizeMsg\)](<#func-viewportrenderer-initialize>)
+  - [func \(v \*ViewportRenderer\) SetBody\(body string\)](<#func-viewportrenderer-setbody>)
+  - [func \(v \*ViewportRenderer\) SetHistory\(history string\) tea.Cmd](<#func-viewportrenderer-sethistory>)
+  - [func \(v \*ViewportRenderer\) SetInput\(input string\)](<#func-viewportrenderer-setinput>)
+  - [func \(v \*ViewportRenderer\) SetSize\(msg tea.WindowSizeMsg\)](<#func-viewportrenderer-setsize>)
+  - [func \(v \*ViewportRenderer\) Update\(msg tea.Msg\) \(Renderer, tea.Cmd\)](<#func-viewportrenderer-update>)
+  - [func \(v \*ViewportRenderer\) View\(\) string](<#func-viewportrenderer-view>)
+- [type WhitespaceOption](<#type-whitespaceoption>)
+
+
+## func [AddNewlineIfMissing](<https://github.com/aschey/bubbleprompt/blob/main/renderer/overlay.go#L14>)
+
+```go
+func AddNewlineIfMissing(s string) string
+```
+
+## func [CountNewlines](<https://github.com/aschey/bubbleprompt/blob/main/renderer/overlay.go#L26>)
+
+```go
+func CountNewlines(s string) int
+```
+
+## func [PlaceOverlay](<https://github.com/aschey/bubbleprompt/blob/main/renderer/overlay.go#L47>)
+
+```go
+func PlaceOverlay(x int, y int, fg string, bg string, opts ...WhitespaceOption) string
+```
+
+## func [TrimNewline](<https://github.com/aschey/bubbleprompt/blob/main/renderer/overlay.go#L22>)
+
+```go
+func TrimNewline(s string) string
+```
+
+## func [Unescape](<https://github.com/aschey/bubbleprompt/blob/main/renderer/overlay.go#L36>)
+
+```go
+func Unescape(s string, wrapper string) string
+```
+
+## type [Option](<https://github.com/aschey/bubbleprompt/blob/main/renderer/option.go#L9>)
+
+```go
+type Option func(settings *rendererSettings)
+```
+
+### func [WithHeightOffset](<https://github.com/aschey/bubbleprompt/blob/main/renderer/option.go#L17>)
+
+```go
+func WithHeightOffset(offset int) Option
+```
+
+### func [WithUseHistory](<https://github.com/aschey/bubbleprompt/blob/main/renderer/option.go#L23>)
+
+```go
+func WithUseHistory(useHistory bool) Option
+```
+
+### func [WithWidthOffset](<https://github.com/aschey/bubbleprompt/blob/main/renderer/option.go#L11>)
+
+```go
+func WithWidthOffset(offset int) Option
+```
+
+## type [Renderer](<https://github.com/aschey/bubbleprompt/blob/main/renderer/renderer.go#L7-L19>)
+
+```go
+type Renderer interface {
+    View() string
+    Initialize(msg tea.WindowSizeMsg)
+    SetSize(msg tea.WindowSizeMsg)
+    Update(msg tea.Msg) (Renderer, tea.Cmd)
+    FinishUpdate() tea.Cmd
+    SetInput(input string)
+    SetBody(suggestions string)
+    AddHistory(output string)
+    GotoBottom(msg tea.Msg)
+    GetHistory() string
+    SetHistory(history string) tea.Cmd
+}
+```
+
+## type [UnmanagedRenderer](<https://github.com/aschey/bubbleprompt/blob/main/renderer/unmanaged_renderer.go#L8-L14>)
+
+```go
+type UnmanagedRenderer struct {
+    // contains filtered or unexported fields
+}
+```
+
+### func [NewUnmanagedRenderer](<https://github.com/aschey/bubbleprompt/blob/main/renderer/unmanaged_renderer.go#L16>)
+
+```go
+func NewUnmanagedRenderer(options ...Option) *UnmanagedRenderer
+```
+
+### func \(\*UnmanagedRenderer\) [AddHistory](<https://github.com/aschey/bubbleprompt/blob/main/renderer/unmanaged_renderer.go#L70>)
+
+```go
+func (u *UnmanagedRenderer) AddHistory(output string)
+```
+
+### func \(\*UnmanagedRenderer\) [Body](<https://github.com/aschey/bubbleprompt/blob/main/renderer/unmanaged_renderer.go#L52>)
+
+```go
+func (u *UnmanagedRenderer) Body() string
+```
+
+### func \(\*UnmanagedRenderer\) [FinishUpdate](<https://github.com/aschey/bubbleprompt/blob/main/renderer/unmanaged_renderer.go#L86>)
+
+```go
+func (u *UnmanagedRenderer) FinishUpdate() tea.Cmd
+```
+
+### func \(\*UnmanagedRenderer\) [GetHistory](<https://github.com/aschey/bubbleprompt/blob/main/renderer/unmanaged_renderer.go#L66>)
+
+```go
+func (u *UnmanagedRenderer) GetHistory() string
+```
+
+### func \(\*UnmanagedRenderer\) [GotoBottom](<https://github.com/aschey/bubbleprompt/blob/main/renderer/unmanaged_renderer.go#L84>)
+
+```go
+func (u *UnmanagedRenderer) GotoBottom(msg tea.Msg)
+```
+
+### func \(\*UnmanagedRenderer\) [Initialize](<https://github.com/aschey/bubbleprompt/blob/main/renderer/unmanaged_renderer.go#L32>)
+
+```go
+func (u *UnmanagedRenderer) Initialize(msg tea.WindowSizeMsg)
+```
+
+### func \(\*UnmanagedRenderer\) [Input](<https://github.com/aschey/bubbleprompt/blob/main/renderer/unmanaged_renderer.go#L48>)
+
+```go
+func (u *UnmanagedRenderer) Input() string
+```
+
+### func \(\*UnmanagedRenderer\) [SetBody](<https://github.com/aschey/bubbleprompt/blob/main/renderer/unmanaged_renderer.go#L44>)
+
+```go
+func (u *UnmanagedRenderer) SetBody(body string)
+```
+
+### func \(\*UnmanagedRenderer\) [SetHistory](<https://github.com/aschey/bubbleprompt/blob/main/renderer/unmanaged_renderer.go#L56>)
+
+```go
+func (u *UnmanagedRenderer) SetHistory(history string) tea.Cmd
+```
+
+### func \(\*UnmanagedRenderer\) [SetInput](<https://github.com/aschey/bubbleprompt/blob/main/renderer/unmanaged_renderer.go#L40>)
+
+```go
+func (u *UnmanagedRenderer) SetInput(input string)
+```
+
+### func \(\*UnmanagedRenderer\) [SetSize](<https://github.com/aschey/bubbleprompt/blob/main/renderer/unmanaged_renderer.go#L34>)
+
+```go
+func (u *UnmanagedRenderer) SetSize(msg tea.WindowSizeMsg)
+```
+
+### func \(\*UnmanagedRenderer\) [Update](<https://github.com/aschey/bubbleprompt/blob/main/renderer/unmanaged_renderer.go#L36>)
+
+```go
+func (u *UnmanagedRenderer) Update(msg tea.Msg) (Renderer, tea.Cmd)
+```
+
+### func \(\*UnmanagedRenderer\) [View](<https://github.com/aschey/bubbleprompt/blob/main/renderer/unmanaged_renderer.go#L28>)
+
+```go
+func (u *UnmanagedRenderer) View() string
+```
+
+## type [ViewportRenderer](<https://github.com/aschey/bubbleprompt/blob/main/renderer/viewport_renderer.go#L10-L16>)
+
+```go
+type ViewportRenderer struct {
+    // contains filtered or unexported fields
+}
+```
+
+### func [NewViewportRenderer](<https://github.com/aschey/bubbleprompt/blob/main/renderer/viewport_renderer.go#L18>)
+
+```go
+func NewViewportRenderer(options ...Option) *ViewportRenderer
+```
+
+### func \(\*ViewportRenderer\) [AddHistory](<https://github.com/aschey/bubbleprompt/blob/main/renderer/viewport_renderer.go#L77>)
+
+```go
+func (v *ViewportRenderer) AddHistory(output string)
+```
+
+### func \(\*ViewportRenderer\) [FinishUpdate](<https://github.com/aschey/bubbleprompt/blob/main/renderer/viewport_renderer.go#L83>)
+
+```go
+func (v *ViewportRenderer) FinishUpdate() tea.Cmd
+```
+
+### func \(\*ViewportRenderer\) [GetHistory](<https://github.com/aschey/bubbleprompt/blob/main/renderer/viewport_renderer.go#L66>)
+
+```go
+func (v *ViewportRenderer) GetHistory() string
+```
+
+### func \(\*ViewportRenderer\) [GotoBottom](<https://github.com/aschey/bubbleprompt/blob/main/renderer/viewport_renderer.go#L87>)
+
+```go
+func (v *ViewportRenderer) GotoBottom(msg tea.Msg)
+```
+
+### func \(\*ViewportRenderer\) [Initialize](<https://github.com/aschey/bubbleprompt/blob/main/renderer/viewport_renderer.go#L34>)
+
+```go
+func (v *ViewportRenderer) Initialize(msg tea.WindowSizeMsg)
+```
+
+### func \(\*ViewportRenderer\) [SetBody](<https://github.com/aschey/bubbleprompt/blob/main/renderer/viewport_renderer.go#L57>)
+
+```go
+func (v *ViewportRenderer) SetBody(body string)
+```
+
+### func \(\*ViewportRenderer\) [SetHistory](<https://github.com/aschey/bubbleprompt/blob/main/renderer/viewport_renderer.go#L70>)
+
+```go
+func (v *ViewportRenderer) SetHistory(history string) tea.Cmd
+```
+
+### func \(\*ViewportRenderer\) [SetInput](<https://github.com/aschey/bubbleprompt/blob/main/renderer/viewport_renderer.go#L52>)
+
+```go
+func (v *ViewportRenderer) SetInput(input string)
+```
+
+### func \(\*ViewportRenderer\) [SetSize](<https://github.com/aschey/bubbleprompt/blob/main/renderer/viewport_renderer.go#L40>)
+
+```go
+func (v *ViewportRenderer) SetSize(msg tea.WindowSizeMsg)
+```
+
+### func \(\*ViewportRenderer\) [Update](<https://github.com/aschey/bubbleprompt/blob/main/renderer/viewport_renderer.go#L45>)
+
+```go
+func (v *ViewportRenderer) Update(msg tea.Msg) (Renderer, tea.Cmd)
+```
+
+### func \(\*ViewportRenderer\) [View](<https://github.com/aschey/bubbleprompt/blob/main/renderer/viewport_renderer.go#L30>)
+
+```go
+func (v *ViewportRenderer) View() string
+```
+
+## type [WhitespaceOption](<https://github.com/aschey/bubbleprompt/blob/main/renderer/overlay.go#L224>)
+
+WhitespaceOption sets a styling rule for rendering whitespace.
+
+```go
+type WhitespaceOption func(*whitespace)
+```
+
+</div>
+
+Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)

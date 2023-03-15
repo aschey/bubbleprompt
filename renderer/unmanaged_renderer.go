@@ -6,7 +6,8 @@ import (
 )
 
 type UnmanagedRenderer struct {
-	content        string
+	input          string
+	body           string
 	currentHistory string
 	totalHistory   string
 	settings       rendererSettings
@@ -25,7 +26,7 @@ func NewUnmanagedRenderer(options ...Option) *UnmanagedRenderer {
 }
 
 func (u *UnmanagedRenderer) View() string {
-	return u.content
+	return u.input + "\n" + u.body
 }
 
 func (u *UnmanagedRenderer) Initialize(msg tea.WindowSizeMsg) {}
@@ -36,8 +37,20 @@ func (u *UnmanagedRenderer) Update(msg tea.Msg) (Renderer, tea.Cmd) {
 	return u, nil
 }
 
-func (u *UnmanagedRenderer) SetContent(content string) {
-	u.content = content
+func (u *UnmanagedRenderer) SetInput(input string) {
+	u.input = input
+}
+
+func (u *UnmanagedRenderer) SetBody(body string) {
+	u.body = body
+}
+
+func (u *UnmanagedRenderer) Input() string {
+	return u.input
+}
+
+func (u *UnmanagedRenderer) Body() string {
+	return u.body
 }
 
 func (u *UnmanagedRenderer) SetHistory(history string) tea.Cmd {
@@ -54,7 +67,7 @@ func (u *UnmanagedRenderer) GetHistory() string {
 	return u.totalHistory
 }
 
-func (u *UnmanagedRenderer) AddOutput(output string) {
+func (u *UnmanagedRenderer) AddHistory(output string) {
 	if u.settings.useHistory {
 		if len(u.currentHistory) > 0 {
 			u.currentHistory = internal.AddNewlineIfMissing(u.currentHistory)

@@ -8,15 +8,15 @@ require (
 	github.com/aschey/tui-tester v0.0.0-20221013025214-ee61efd9b285
 	github.com/charmbracelet/bubbles v0.15.0
 	github.com/charmbracelet/bubbletea v0.23.2
-	github.com/charmbracelet/lipgloss v0.6.0
+	github.com/charmbracelet/lipgloss v0.7.1
 	github.com/mattn/go-runewidth v0.0.14
 	github.com/muesli/ansi v0.0.0-20230307104941-78d3738a59f2
 	github.com/muesli/reflow v0.3.0
-	github.com/muesli/termenv v0.14.0
-	github.com/onsi/ginkgo/v2 v2.9.0
-	github.com/onsi/gomega v1.27.2
+	github.com/muesli/termenv v0.15.1
+	github.com/onsi/ginkgo/v2 v2.9.1
+	github.com/onsi/gomega v1.27.4
 	github.com/sahilm/fuzzy v0.1.0
-	golang.org/x/exp v0.0.0-20230307190834-24139beb5833
+	golang.org/x/exp v0.0.0-20230314191032-db074128a8ec
 )
 
 require (
@@ -25,14 +25,14 @@ require (
 	github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2 // indirect
 	github.com/aschey/termtest v0.7.2-0.20220625211044-3c495615a51f // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
-	github.com/aymanbagabas/go-osc52 v1.2.2 // indirect
+	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/creack/pty v1.1.18 // indirect
 	github.com/dlclark/regexp2 v1.8.1 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
-	github.com/google/pprof v0.0.0-20230228050547-1710fef4ab10 // indirect
+	github.com/google/pprof v0.0.0-20230309165930-d61513b1440d // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect

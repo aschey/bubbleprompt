@@ -1,0 +1,156 @@
+
+
+<div class="api">
+
+# prompt
+
+```go
+import "github.com/aschey/bubbleprompt"
+```
+
+## Index
+
+- [func MsgFilter(_ tea.Model, msg tea.Msg) tea.Msg](<#func-msgfilter>)
+- [func SetRenderer(r renderer.Renderer, retainHistory bool) tea.Cmd](<#func-setrenderer>)
+- [type ExecutorFinishedMsg](<#type-executorfinishedmsg>)
+- [type InputHandler](<#type-inputhandler>)
+- [type Model](<#type-model>)
+  - [func New[T any](inputHandler InputHandler[T], textInput input.Input[T], opts ...Option[T]) Model[T]](<#func-new>)
+  - [func \(m Model\[T\]\) Init\(\) tea.Cmd](<#func-modelt-init>)
+  - [func \(m Model\[T\]\) Renderer\(\) renderer.Renderer](<#func-modelt-renderer>)
+  - [func \(m \*Model\[T\]\) SuggestionManager\(\) suggestion.Manager\[T\]](<#func-modelt-suggestionmanager>)
+  - [func \(m Model\[T\]\) SuggestionOffset\(\) int](<#func-modelt-suggestionoffset>)
+  - [func \(m Model\[T\]\) TextInput\(\) input.Input\[T\]](<#func-modelt-textinput>)
+  - [func \(m Model\[T\]\) Update\(msg tea.Msg\) \(tea.Model, tea.Cmd\)](<#func-modelt-update>)
+  - [func \(m Model\[T\]\) View\(\) string](<#func-modelt-view>)
+- [type Option](<#type-option>)
+  - [func WithFormatters[T any](formatters suggestion.Formatters) Option[T]](<#func-withformatters>)
+  - [func WithRenderer[T any](r renderer.Renderer) Option[T]](<#func-withrenderer>)
+  - [func WithSuggestionManager[T any](manager suggestion.Manager[T]) Option[T]](<#func-withsuggestionmanager>)
+  - [func WithUnmanagedRenderer[T any](opts ...renderer.Option) Option[T]](<#func-withunmanagedrenderer>)
+  - [func WithViewportRenderer[T any](opts ...renderer.Option) Option[T]](<#func-withviewportrenderer>)
+
+
+## func [MsgFilter](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L100>)
+
+```go
+func MsgFilter(_ tea.Model, msg tea.Msg) tea.Msg
+```
+
+## func [SetRenderer](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L87>)
+
+```go
+func SetRenderer(r renderer.Renderer, retainHistory bool) tea.Cmd
+```
+
+## type [ExecutorFinishedMsg](<https://github.com/aschey/bubbleprompt/blob/main/execution_manager.go#L9>)
+
+```go
+type ExecutorFinishedMsg tea.Model
+```
+
+## type [InputHandler](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L22-L26>)
+
+```go
+type InputHandler[T any] interface {
+    Update(msg tea.Msg) (InputHandler[T], tea.Cmd)
+    Execute(input string, prompt *Model[T]) (tea.Model, error)
+    Complete(prompt Model[T]) ([]suggestion.Suggestion[T], error)
+}
+```
+
+## type [Model](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L28-L40>)
+
+```go
+type Model[T any] struct {
+    // contains filtered or unexported fields
+}
+```
+
+### func [New](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L42-L46>)
+
+```go
+func New[T any](inputHandler InputHandler[T], textInput input.Input[T], opts ...Option[T]) Model[T]
+```
+
+### func \(Model\[T\]\) [Init](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L108>)
+
+```go
+func (m Model[T]) Init() tea.Cmd
+```
+
+### func \(Model\[T\]\) [Renderer](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L78>)
+
+```go
+func (m Model[T]) Renderer() renderer.Renderer
+```
+
+### func \(\*Model\[T\]\) [SuggestionManager](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L62>)
+
+```go
+func (m *Model[T]) SuggestionManager() suggestion.Manager[T]
+```
+
+### func \(Model\[T\]\) [SuggestionOffset](<https://github.com/aschey/bubbleprompt/blob/main/render.go#L20>)
+
+```go
+func (m Model[T]) SuggestionOffset() int
+```
+
+### func \(Model\[T\]\) [TextInput](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L74>)
+
+```go
+func (m Model[T]) TextInput() input.Input[T]
+```
+
+### func \(Model\[T\]\) [Update](<https://github.com/aschey/bubbleprompt/blob/main/updater.go#L12>)
+
+```go
+func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd)
+```
+
+### func \(Model\[T\]\) [View](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L112>)
+
+```go
+func (m Model[T]) View() string
+```
+
+## type [Option](<https://github.com/aschey/bubbleprompt/blob/main/option.go#L8>)
+
+```go
+type Option[T any] func(model *Model[T])
+```
+
+### func [WithFormatters](<https://github.com/aschey/bubbleprompt/blob/main/option.go#L10>)
+
+```go
+func WithFormatters[T any](formatters suggestion.Formatters) Option[T]
+```
+
+### func [WithRenderer](<https://github.com/aschey/bubbleprompt/blob/main/option.go#L28>)
+
+```go
+func WithRenderer[T any](r renderer.Renderer) Option[T]
+```
+
+### func [WithSuggestionManager](<https://github.com/aschey/bubbleprompt/blob/main/option.go#L34>)
+
+```go
+func WithSuggestionManager[T any](manager suggestion.Manager[T]) Option[T]
+```
+
+### func [WithUnmanagedRenderer](<https://github.com/aschey/bubbleprompt/blob/main/option.go#L16>)
+
+```go
+func WithUnmanagedRenderer[T any](opts ...renderer.Option) Option[T]
+```
+
+### func [WithViewportRenderer](<https://github.com/aschey/bubbleprompt/blob/main/option.go#L22>)
+
+```go
+func WithViewportRenderer[T any](opts ...renderer.Option) Option[T]
+```
+
+</div>
+
+Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)

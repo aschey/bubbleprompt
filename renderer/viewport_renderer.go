@@ -10,6 +10,8 @@ import (
 type ViewportRenderer struct {
 	viewport viewport.Model
 	history  string
+	input    string
+	body     string
 	settings rendererSettings
 }
 
@@ -47,8 +49,18 @@ func (v *ViewportRenderer) Update(msg tea.Msg) (Renderer, tea.Cmd) {
 	return v, cmd
 }
 
-func (v *ViewportRenderer) SetContent(content string) {
-	v.viewport.SetContent(v.history + content)
+func (v *ViewportRenderer) SetInput(input string) {
+	v.input = input
+	v.updateContent()
+}
+
+func (v *ViewportRenderer) SetBody(body string) {
+	v.body = body
+	v.updateContent()
+}
+
+func (v *ViewportRenderer) updateContent() {
+	v.viewport.SetContent(v.history + v.input + "\n" + v.body)
 }
 
 func (v *ViewportRenderer) GetHistory() string {
@@ -62,7 +74,7 @@ func (v *ViewportRenderer) SetHistory(history string) tea.Cmd {
 	return nil
 }
 
-func (v *ViewportRenderer) AddOutput(output string) {
+func (v *ViewportRenderer) AddHistory(output string) {
 	if v.settings.useHistory {
 		v.history += internal.AddNewlineIfMissing(output)
 	}

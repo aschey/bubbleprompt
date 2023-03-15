@@ -17,10 +17,7 @@ func (m Model[T]) renderExecuting() string {
 	return internal.AddNewlineIfMissing(textView)
 }
 
-func (m Model[T]) renderCompleting() string {
-	// If an item is selected, parse out the text portion and apply formatting
-	textView := internal.AddNewlineIfMissing(m.textInput.View(input.Interactive))
-
+func (m Model[T]) SuggestionOffset() int {
 	// Calculate left offset for suggestions
 	// Choosing a prompt via arrow keys or tab shouldn't change the prompt position
 	// so we use the last typed cursor position instead of the current position
@@ -30,13 +27,28 @@ func (m Model[T]) renderCompleting() string {
 	if paddingSize < 0 {
 		paddingSize = 0
 	}
-	prompts := m.suggestionManager.Render(paddingSize, m.formatters)
-	textView += prompts
-
-	return textView
+	return paddingSize
 }
 
-func (m Model[T]) render() string {
+func (m Model[T]) renderCompleting() string {
+	paddingSize := m.SuggestionOffset()
+	prompts := m.suggestionManager.Render(paddingSize)
+	return prompts
+}
+
+func (m Model[T]) renderInput() string {
+	switch m.modelState {
+	case executing:
+		return ""
+	case completing:
+		// If an item is selected, parse out the text portion and apply formatting
+		return internal.TrimNewline(m.textInput.View(input.Interactive))
+	default:
+		return ""
+	}
+}
+
+func (m Model[T]) renderBody() string {
 	lines := ""
 	contentHeight := 0
 	switch m.modelState {

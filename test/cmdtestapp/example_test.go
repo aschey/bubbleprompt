@@ -9,7 +9,6 @@ import (
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
 	"github.com/aschey/bubbleprompt/executor"
-	"github.com/aschey/bubbleprompt/formatter"
 	"github.com/aschey/bubbleprompt/input/commandinput"
 	"github.com/aschey/bubbleprompt/suggestion"
 	tea "github.com/charmbracelet/bubbletea"
@@ -119,16 +118,16 @@ func (m model) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (te
 }
 
 func TestApp(t *testing.T) {
-	formatter.DefaultNameForeground = "15"
-	formatter.DefaultSelectedNameForeground = "8"
+	suggestion.DefaultNameForeground = "15"
+	suggestion.DefaultSelectedNameForeground = "8"
 
-	formatter.DefaultDescriptionForeground = "15"
-	formatter.DefaultDescriptionBackground = "13"
-	formatter.DefaultSelectedDescriptionForeground = "8"
-	formatter.DefaultSelectedDescriptionBackground = "13"
+	suggestion.DefaultDescriptionForeground = "15"
+	suggestion.DefaultDescriptionBackground = "13"
+	suggestion.DefaultSelectedDescriptionForeground = "8"
+	suggestion.DefaultSelectedDescriptionBackground = "13"
 
-	formatter.DefaultScrollbarColor = "8"
-	formatter.DefaultScrollbarThumbColor = "15"
+	suggestion.DefaultScrollbarColor = "8"
+	suggestion.DefaultScrollbarThumbColor = "15"
 
 	commandinput.DefaultCurrentPlaceholderSuggestion = "8"
 
