@@ -39,7 +39,7 @@ html[data-theme="dark"] {
   --ifm-heading-color: var(--ifm-color-primary-light);
   --ifm-color-emphasis-100: #0b141c;
 
-  --search-local-highlight-color: #152d42;
+  --search-local-hit-active-color: var(--ifm-background-color);
 
   --code-background-color: #04101a;
   --code-foreground-color: rgb(173, 219, 103);
