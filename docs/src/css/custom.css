@@ -34,11 +34,20 @@ html[data-theme="dark"] {
   --ifm-color-primary-lightest: #ffffff;
 
   --text-secondary: #c0b8c7;
+  --ifm-color-content-secondary: #99959c;
 
   --ifm-heading-color: var(--ifm-color-primary-light);
+  --ifm-color-emphasis-100: #0b141c;
 
-  --code-background-color: #011627;
+  --search-local-highlight-color: #152d42;
+
+  --code-background-color: #04101a;
   --code-foreground-color: rgb(173, 219, 103);
+ 
+}
+
+input[type="search"]:focus {
+    outline: 2px solid var(--ifm-color-content-secondary);
 }
 
 .api p {
@@ -48,6 +57,10 @@ html[data-theme="dark"] {
 code {
   background-color: var(--code-background-color);
   color: var(--code-foreground-color);
+}
+
+mark {
+  background-color: var(--ifm-color-primary)
 }
 
 @keyframes blink {
