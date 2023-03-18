@@ -6,37 +6,59 @@ import (
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/input"
 	"github.com/aschey/bubbleprompt/renderer"
-	"github.com/aschey/bubbleprompt/suggestion"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/ansi"
 )
 
 type Model[T any] struct {
-	promptModel  prompt.Model[T]
-	contentModel tea.Model
-	searchText   string
-	searchBar    string
+	promptModel      prompt.Model[T]
+	contentModel     tea.Model
+	settings         searchbarSettings[T]
+	searchbarHeight  int
+	placeholderStart int
+	placeholderLine  int
+	searchBar        string
 }
 
-func New[T any](inputHandler prompt.InputHandler[T], textInput input.Input[T],
-	contentModel tea.Model, options ...prompt.Option[T],
+func NewSimple[T any](inputHandler prompt.InputHandler[T], textInput input.Input[T],
+	contentModel tea.Model, options ...Option[T],
 ) Model[T] {
-	formatters := suggestion.DefaultFormatters().Minimal()
-	formatters.Suggestions = formatters.Suggestions.Border(lipgloss.RoundedBorder(), false, true, true)
+	defaultMaxWith := 50
+	settings := searchbarSettings[T]{
+		maxWidth:       defaultMaxWith,
+		label:          "Search:",
+		searchbarStyle: lipgloss.NewStyle(),
+		promptOptions:  []prompt.Option[T]{},
+	}
+
+	for _, option := range options {
+		option(&settings)
+	}
+
 	promptModel := prompt.New(inputHandler, textInput,
-		append(options,
-			prompt.WithUnmanagedRenderer[T](renderer.WithUseHistory(false)),
-			prompt.WithFormatters[T](formatters))...)
+		append(settings.promptOptions,
+			prompt.WithUnmanagedRenderer[T](renderer.WithUseHistory(false)))...)
 
-	searchbarWidth := 50
-	searchText := "Search:"
-	searchBar := lipgloss.NewStyle().PaddingRight(searchbarWidth).Border(lipgloss.RoundedBorder()).Render(searchText)
-
+	searchBar := settings.searchbarStyle.PaddingRight(settings.maxWidth).Render(settings.label)
+	searchbarLines := strings.Split(searchBar, "\n")
+	searchbarHeight := len(searchbarLines)
+	placeholderStart := 0
+	placeholderLine := 0
+	for i, line := range searchbarLines {
+		if textIndex := strings.Index(line, settings.label); textIndex > -1 {
+			placeholderLine = i
+			placeholderStart = ansi.PrintableRuneWidth(line[:textIndex])
+		}
+	}
 	return Model[T]{
-		promptModel:  promptModel,
-		contentModel: contentModel,
-		searchBar:    searchBar,
-		searchText:   searchText,
+		promptModel:      promptModel,
+		contentModel:     contentModel,
+		searchBar:        searchBar,
+		settings:         settings,
+		searchbarHeight:  searchbarHeight,
+		placeholderStart: placeholderStart,
+		placeholderLine:  placeholderLine,
 	}
 }
 
@@ -52,10 +74,9 @@ func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		borderSize := 1
 		m.contentModel, cmd = m.contentModel.Update(tea.WindowSizeMsg{
 			Width:  msg.Width,
-			Height: msg.Height - (borderSize*2 + 1),
+			Height: msg.Height - m.searchbarHeight,
 		})
 	default:
 		m.contentModel, cmd = m.contentModel.Update(msg)
@@ -65,23 +86,23 @@ func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
+func (m Model[T]) PromptModel() *prompt.Model[T] {
+	return &m.promptModel
+}
+
+func (m Model[T]) OverlayX() int {
+	return len(m.settings.label) + m.placeholderStart + 1
+}
+
+func (m Model[T]) OverlayY() int {
+	return m.placeholderLine
+}
+
+func (m Model[T]) BaseView() string {
+	return lipgloss.JoinVertical(lipgloss.Left, m.searchBar, m.contentModel.View())
+}
+
 func (m Model[T]) View() string {
-	view := lipgloss.JoinVertical(lipgloss.Left, m.searchBar, m.contentModel.View())
-	spacing := 2
-	promptRenderer := m.promptModel.Renderer().(*renderer.UnmanagedRenderer)
-	suggestionManager := m.promptModel.SuggestionManager()
-	vis := suggestionManager.VisibleSuggestions()
-	maxNameLen := 0
-	for _, vis := range vis {
-		if len(vis.GetSuggestionText()) > maxNameLen {
-			maxNameLen = len(vis.GetSuggestionText())
-		}
-	}
-	offset := m.promptModel.SuggestionOffset() - spacing
-	if offset < 0 {
-		offset = 0
-	}
-	topView := strings.Repeat(" ", offset) + "╮" + strings.Repeat(" ", maxNameLen+spacing) + "╭"
-	promptView := lipgloss.JoinVertical(lipgloss.Left, "  "+promptRenderer.Input(), topView, promptRenderer.Body())
-	return renderer.PlaceOverlay(len(m.searchText), 1, promptView, view)
+	view := m.BaseView()
+	return renderer.PlaceOverlay(m.OverlayX(), m.OverlayY(), m.promptModel.View(), view)
 }

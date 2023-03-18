@@ -37,9 +37,7 @@ func (m model) Complete(
 func (m model) Execute(inputStr string, promptModel *prompt.Model[cmdMetadata]) (tea.Model, error) {
 	parsed := m.textInput.ParsedValue()
 	args := parsed.Args
-	if len(args) == 0 {
-		return nil, fmt.Errorf("At least one argument is required")
-	}
+
 	inputFormatters := m.textInput.Formatters()
 	promptFormatters := promptModel.SuggestionManager().Formatters()
 
@@ -111,13 +109,18 @@ func (m model) Execute(inputStr string, promptModel *prompt.Model[cmdMetadata]) 
 		}
 
 	case "prompt":
-		promptValue := args[0].Value
-		m.textInput.SetPrompt(promptValue + " ")
-		if len(args) > 1 {
-			inputFormatters.Prompt = inputFormatters.Prompt.Foreground(
-				lipgloss.Color(args[1].Value),
-			)
+		if len(args) == 0 {
+			m.textInput.SetPrompt("")
+		} else {
+			promptValue := args[0].Value
+			m.textInput.SetPrompt(promptValue + " ")
+			if len(args) > 1 {
+				inputFormatters.Prompt = inputFormatters.Prompt.Foreground(
+					lipgloss.Color(args[1].Value),
+				)
+			}
 		}
+
 	case "indicator":
 		indicator := args[0].Value
 		promptModel.SuggestionManager().SetSelectionIndicator(indicator + " ")
@@ -262,9 +265,9 @@ func main() {
 		},
 		{
 			Text:        "prompt",
-			Description: "set prompt text and foreground",
+			Description: "set prompt text and foreground. Leave empty to unset.",
 			Metadata: commandinput.MetadataFromPositionalArgs[any](
-				textInput.NewPositionalArg("<value>"),
+				textInput.NewPositionalArg("[value]"),
 				textInput.NewPositionalArg("[color]"),
 			),
 		},

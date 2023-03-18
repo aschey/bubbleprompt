@@ -4,20 +4,23 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
 	"github.com/aschey/bubbleprompt/executor"
 	"github.com/aschey/bubbleprompt/input/simpleinput"
+	"github.com/aschey/bubbleprompt/renderer"
 	"github.com/aschey/bubbleprompt/searchbar"
 	"github.com/aschey/bubbleprompt/suggestion"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/peterhellberg/swapi"
 )
 
-func newModel() searchbar.Model[any] {
-	textInput := simpleinput.New(simpleinput.WithPrompt[any](""))
+func newModel() customSearchbar {
+	textInput := simpleinput.New(simpleinput.WithPrompt[any]("  "))
 	suggestions := []suggestion.Suggestion[any]{
 		{Text: "people"},
 		{Text: "planets"},
@@ -33,7 +36,55 @@ func newModel() searchbar.Model[any] {
 		filterer:    completer.NewPrefixFilter[any](),
 	}
 
-	return searchbar.New[any](pmodel, textInput, newListModel())
+	suggestionStyle := suggestion.DefaultFormatters().Minimal()
+	suggestionStyle.Suggestions.Border(lipgloss.RoundedBorder(), false, true, true)
+
+	searchModel := searchbar.NewSimple[any](pmodel, textInput, newListModel(),
+		searchbar.WithSearchbarStyle[any](lipgloss.NewStyle().Border(lipgloss.RoundedBorder())),
+		searchbar.WithPromptOptions(prompt.WithFormatters[any](suggestionStyle)))
+	return customSearchbar{model: searchModel}
+}
+
+type customSearchbar struct {
+	model searchbar.Model[any]
+}
+
+func (s customSearchbar) Init() tea.Cmd {
+	return s.model.Init()
+}
+
+func (s customSearchbar) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	model, cmd := s.model.Update(msg)
+	s.model = model.(searchbar.Model[any])
+	return s, cmd
+}
+
+func (s customSearchbar) View() string {
+	promptModel := s.model.PromptModel()
+
+	suggestionManager := promptModel.SuggestionManager()
+	vis := suggestionManager.VisibleSuggestions()
+	maxNameLen := 0
+	for _, vis := range vis {
+		if len(vis.GetSuggestionText()) > maxNameLen {
+			maxNameLen = len(vis.GetSuggestionText())
+		}
+	}
+	offset := promptModel.SuggestionOffset()
+	if offset < 0 {
+		offset = 0
+	}
+
+	view := s.model.BaseView()
+
+	promptRenderer := promptModel.Renderer().(*renderer.UnmanagedRenderer)
+
+	borderWidth := 2
+	topView := lipgloss.NewStyle().
+		PaddingLeft(offset - borderWidth).
+		Render("╮" + strings.Repeat(" ", maxNameLen+borderWidth) + "╭")
+	overlayView := lipgloss.JoinVertical(lipgloss.Left, promptRenderer.Input(), topView, promptRenderer.Body())
+	return renderer.PlaceOverlay(s.model.OverlayX()-borderWidth, s.model.OverlayY(), overlayView, view)
 }
 
 type promptModel struct {
