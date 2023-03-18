@@ -17,6 +17,7 @@ type Manager[T any] interface {
 	SelectedIndex() int
 	Suggestions() []Suggestion[T]
 	VisibleSuggestions() []Suggestion[T]
+	MaxSuggestionWidth() (int, int)
 	SelectSuggestion(suggestion Suggestion[T])
 	UnselectSuggestion()
 	IsSuggestionSelected() bool

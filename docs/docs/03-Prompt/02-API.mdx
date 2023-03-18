@@ -31,13 +31,13 @@ import "github.com/aschey/bubbleprompt"
   - [func WithViewportRenderer[T any](opts ...renderer.Option) Option[T]](<#func-withviewportrenderer>)
 
 
-## func [MsgFilter](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L100>)
+## func [MsgFilter](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L92>)
 
 ```go
 func MsgFilter(_ tea.Model, msg tea.Msg) tea.Msg
 ```
 
-## func [SetRenderer](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L87>)
+## func [SetRenderer](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L79>)
 
 ```go
 func SetRenderer(r renderer.Renderer, retainHistory bool) tea.Cmd
@@ -73,13 +73,13 @@ type Model[T any] struct {
 func New[T any](inputHandler InputHandler[T], textInput input.Input[T], opts ...Option[T]) Model[T]
 ```
 
-### func \(Model\[T\]\) [Init](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L108>)
+### func \(Model\[T\]\) [Init](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L100>)
 
 ```go
 func (m Model[T]) Init() tea.Cmd
 ```
 
-### func \(Model\[T\]\) [Renderer](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L78>)
+### func \(Model\[T\]\) [Renderer](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L70>)
 
 ```go
 func (m Model[T]) Renderer() renderer.Renderer
@@ -97,7 +97,7 @@ func (m *Model[T]) SuggestionManager() suggestion.Manager[T]
 func (m Model[T]) SuggestionOffset() int
 ```
 
-### func \(Model\[T\]\) [TextInput](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L74>)
+### func \(Model\[T\]\) [TextInput](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L66>)
 
 ```go
 func (m Model[T]) TextInput() input.Input[T]
@@ -109,7 +109,7 @@ func (m Model[T]) TextInput() input.Input[T]
 func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd)
 ```
 
-### func \(Model\[T\]\) [View](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L112>)
+### func \(Model\[T\]\) [View](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L104>)
 
 ```go
 func (m Model[T]) View() string

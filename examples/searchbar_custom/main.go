@@ -20,7 +20,7 @@ import (
 )
 
 func newModel() customSearchbar {
-	textInput := simpleinput.New(simpleinput.WithPrompt[any]("  "))
+	textInput := simpleinput.New[any]()
 	suggestions := []suggestion.Suggestion[any]{
 		{Text: "people"},
 		{Text: "planets"},
@@ -39,7 +39,7 @@ func newModel() customSearchbar {
 	suggestionStyle := suggestion.DefaultFormatters().Minimal()
 	suggestionStyle.Suggestions.Border(lipgloss.RoundedBorder(), false, true, true)
 
-	searchModel := searchbar.NewSimple[any](pmodel, textInput, newListModel(),
+	searchModel := searchbar.New[any](pmodel, textInput, newListModel(),
 		searchbar.WithSearchbarStyle[any](lipgloss.NewStyle().Border(lipgloss.RoundedBorder())),
 		searchbar.WithPromptOptions(prompt.WithFormatters[any](suggestionStyle)))
 	return customSearchbar{model: searchModel}
@@ -61,30 +61,24 @@ func (s customSearchbar) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (s customSearchbar) View() string {
 	promptModel := s.model.PromptModel()
-
 	suggestionManager := promptModel.SuggestionManager()
-	vis := suggestionManager.VisibleSuggestions()
-	maxNameLen := 0
-	for _, vis := range vis {
-		if len(vis.GetSuggestionText()) > maxNameLen {
-			maxNameLen = len(vis.GetSuggestionText())
-		}
+	if len(suggestionManager.Suggestions()) == 0 {
+		return s.model.View()
 	}
+
+	maxNameLen, _ := suggestionManager.MaxSuggestionWidth()
 	offset := promptModel.SuggestionOffset()
-	if offset < 0 {
-		offset = 0
-	}
 
 	view := s.model.BaseView()
 
-	promptRenderer := promptModel.Renderer().(*renderer.UnmanagedRenderer)
-
 	borderWidth := 2
+
 	topView := lipgloss.NewStyle().
 		PaddingLeft(offset - borderWidth).
 		Render("╮" + strings.Repeat(" ", maxNameLen+borderWidth) + "╭")
-	overlayView := lipgloss.JoinVertical(lipgloss.Left, promptRenderer.Input(), topView, promptRenderer.Body())
-	return renderer.PlaceOverlay(s.model.OverlayX()-borderWidth, s.model.OverlayY(), overlayView, view)
+
+	overlayView := lipgloss.JoinVertical(lipgloss.Left, s.model.Input(), topView, s.model.Body())
+	return renderer.PlaceOverlay(s.model.OverlayX(), s.model.OverlayY(), overlayView, view)
 }
 
 type promptModel struct {

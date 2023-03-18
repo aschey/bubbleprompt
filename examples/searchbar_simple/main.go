@@ -17,7 +17,7 @@ import (
 )
 
 func newModel() searchbar.Model[any] {
-	textInput := simpleinput.New(simpleinput.WithPrompt[any](""))
+	textInput := simpleinput.New[any]()
 	suggestions := []suggestion.Suggestion[any]{
 		{Text: "people"},
 		{Text: "planets"},
@@ -33,7 +33,7 @@ func newModel() searchbar.Model[any] {
 		filterer:    completer.NewPrefixFilter[any](),
 	}
 
-	return searchbar.NewSimple[any](pmodel, textInput, newListModel())
+	return searchbar.New[any](pmodel, textInput, newListModel())
 }
 
 type promptModel struct {

@@ -289,15 +289,14 @@ func (m *Model[T]) SelectedSuggestion() *suggestion.Suggestion[T] {
 	return nil
 }
 
-func (c Model[T]) Render(paddingSize int) string {
-	if c.Error() != nil {
-		return c.formatters.ErrorText.Render(c.Error().Error())
-	}
+func (c Model[T]) MaxSuggestionWidth() (int, int) {
+	suggestions := c.Suggestions()
+
 	maxNameLen := 0
 	maxDescLen := 0
 
 	// Determine longest name and description to calculate padding
-	for _, cur := range c.Suggestions() {
+	for _, cur := range suggestions {
 		suggestionText := cur.GetSuggestionText()
 		textWidth := runewidth.StringWidth(suggestionText)
 		if textWidth > maxNameLen {
@@ -309,6 +308,22 @@ func (c Model[T]) Render(paddingSize int) string {
 			maxDescLen = descWidth
 		}
 	}
+
+	return maxNameLen, maxDescLen
+}
+
+func (c Model[T]) Render(paddingSize int) string {
+	if c.Error() != nil {
+		return c.formatters.ErrorText.Render(c.Error().Error())
+	}
+
+	suggestions := c.Suggestions()
+	if len(suggestions) == 0 {
+		return ""
+	}
+
+	maxNameLen, maxDescLen := c.MaxSuggestionWidth()
+
 	numSuggestions := len(c.Suggestions())
 
 	visibleSuggestions := c.VisibleSuggestions()

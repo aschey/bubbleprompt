@@ -113,7 +113,7 @@ func DefaultFormatters() Formatters
 func (f Formatters) Minimal() Formatters
 ```
 
-## type [Manager](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/manager.go#L7-L37>)
+## type [Manager](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/manager.go#L7-L38>)
 
 ```go
 type Manager[T any] interface {
@@ -129,6 +129,7 @@ type Manager[T any] interface {
     SelectedIndex() int
     Suggestions() []Suggestion[T]
     VisibleSuggestions() []Suggestion[T]
+    MaxSuggestionWidth() (int, int)
     SelectSuggestion(suggestion Suggestion[T])
     UnselectSuggestion()
     IsSuggestionSelected() bool

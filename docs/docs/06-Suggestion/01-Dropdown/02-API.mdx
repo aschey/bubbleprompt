@@ -19,6 +19,7 @@ import "github.com/aschey/bubbleprompt/suggestion/dropdown"
   - [func \(m \*Model\[T\]\) Formatters\(\) suggestion.Formatters](<#func-modelt-formatters>)
   - [func \(m \*Model\[T\]\) Init\(\) tea.Cmd](<#func-modelt-init>)
   - [func \(m \*Model\[T\]\) IsSuggestionSelected\(\) bool](<#func-modelt-issuggestionselected>)
+  - [func \(c Model\[T\]\) MaxSuggestionWidth\(\) \(int, int\)](<#func-modelt-maxsuggestionwidth>)
   - [func \(m \*Model\[T\]\) MaxSuggestions\(\) int](<#func-modelt-maxsuggestions>)
   - [func \(m \*Model\[T\]\) NextSuggestion\(\)](<#func-modelt-nextsuggestion>)
   - [func \(m \*Model\[T\]\) PreviousSuggestion\(\)](<#func-modelt-previoussuggestion>)
@@ -67,25 +68,25 @@ func NewDropdownSuggestionModel[T any](textInput input.Input[T], options ...Opti
 func (m *Model[T]) ClearSuggestions()
 ```
 
-### func \(\*Model\[T\]\) [DisableScrollbar](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L370>)
+### func \(\*Model\[T\]\) [DisableScrollbar](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L381>)
 
 ```go
 func (m *Model[T]) DisableScrollbar()
 ```
 
-### func \(\*Model\[T\]\) [EnableScrollbar](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L365>)
+### func \(\*Model\[T\]\) [EnableScrollbar](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L376>)
 
 ```go
 func (m *Model[T]) EnableScrollbar()
 ```
 
-### func \(\*Model\[T\]\) [Error](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L417>)
+### func \(\*Model\[T\]\) [Error](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L428>)
 
 ```go
 func (m *Model[T]) Error() error
 ```
 
-### func \(\*Model\[T\]\) [Formatters](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L391>)
+### func \(\*Model\[T\]\) [Formatters](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L402>)
 
 ```go
 func (m *Model[T]) Formatters() suggestion.Formatters
@@ -103,7 +104,13 @@ func (m *Model[T]) Init() tea.Cmd
 func (m *Model[T]) IsSuggestionSelected() bool
 ```
 
-### func \(\*Model\[T\]\) [MaxSuggestions](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L375>)
+### func \(Model\[T\]\) [MaxSuggestionWidth](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L292>)
+
+```go
+func (c Model[T]) MaxSuggestionWidth() (int, int)
+```
+
+### func \(\*Model\[T\]\) [MaxSuggestions](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L386>)
 
 ```go
 func (m *Model[T]) MaxSuggestions() int
@@ -121,7 +128,7 @@ func (m *Model[T]) NextSuggestion()
 func (m *Model[T]) PreviousSuggestion()
 ```
 
-### func \(Model\[T\]\) [Render](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L292>)
+### func \(Model\[T\]\) [Render](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L315>)
 
 ```go
 func (c Model[T]) Render(paddingSize int) string
@@ -133,13 +140,13 @@ func (c Model[T]) Render(paddingSize int) string
 func (m *Model[T]) ResetSuggestions() tea.Cmd
 ```
 
-### func \(\*Model\[T\]\) [ScrollPosition](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L421>)
+### func \(\*Model\[T\]\) [ScrollPosition](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L432>)
 
 ```go
 func (m *Model[T]) ScrollPosition() int
 ```
 
-### func \(\*Model\[T\]\) [Scrollbar](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L425>)
+### func \(\*Model\[T\]\) [Scrollbar](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L436>)
 
 ```go
 func (m *Model[T]) Scrollbar() string
@@ -151,7 +158,7 @@ func (m *Model[T]) Scrollbar() string
 func (c Model[T]) ScrollbarBounds() (int, int)
 ```
 
-### func \(\*Model\[T\]\) [ScrollbarThumb](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L429>)
+### func \(\*Model\[T\]\) [ScrollbarThumb](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L440>)
 
 ```go
 func (m *Model[T]) ScrollbarThumb() string
@@ -175,37 +182,37 @@ func (m *Model[T]) SelectedIndex() int
 func (m *Model[T]) SelectedSuggestion() *suggestion.Suggestion[T]
 ```
 
-### func \(\*Model\[T\]\) [SelectionIndicator](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L383>)
+### func \(\*Model\[T\]\) [SelectionIndicator](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L394>)
 
 ```go
 func (m *Model[T]) SelectionIndicator() string
 ```
 
-### func \(\*Model\[T\]\) [SetFormatters](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L395>)
+### func \(\*Model\[T\]\) [SetFormatters](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L406>)
 
 ```go
 func (m *Model[T]) SetFormatters(formatters suggestion.Formatters)
 ```
 
-### func \(\*Model\[T\]\) [SetMaxSuggestions](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L379>)
+### func \(\*Model\[T\]\) [SetMaxSuggestions](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L390>)
 
 ```go
 func (m *Model[T]) SetMaxSuggestions(maxSuggestions int)
 ```
 
-### func \(\*Model\[T\]\) [SetSelectionIndicator](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L387>)
+### func \(\*Model\[T\]\) [SetSelectionIndicator](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L398>)
 
 ```go
 func (m *Model[T]) SetSelectionIndicator(selectionIndicator string)
 ```
 
-### func \(\*Model\[T\]\) [ShouldChangeListPosition](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L433>)
+### func \(\*Model\[T\]\) [ShouldChangeListPosition](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L444>)
 
 ```go
 func (m *Model[T]) ShouldChangeListPosition(msg tea.Msg) bool
 ```
 
-### func \(\*Model\[T\]\) [Suggestions](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L399>)
+### func \(\*Model\[T\]\) [Suggestions](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L410>)
 
 ```go
 func (m *Model[T]) Suggestions() []suggestion.Suggestion[T]
@@ -229,7 +236,7 @@ func (m *Model[T]) Update(msg tea.Msg) tea.Cmd
 func (m *Model[T]) UpdateSuggestions() tea.Cmd
 ```
 
-### func \(\*Model\[T\]\) [VisibleSuggestions](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L411>)
+### func \(\*Model\[T\]\) [VisibleSuggestions](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/dropdown/model.go#L422>)
 
 ```go
 func (m *Model[T]) VisibleSuggestions() []suggestion.Suggestion[T]

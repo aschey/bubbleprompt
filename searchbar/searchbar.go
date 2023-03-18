@@ -19,9 +19,10 @@ type Model[T any] struct {
 	placeholderStart int
 	placeholderLine  int
 	searchBar        string
+	borderWidth      int
 }
 
-func NewSimple[T any](inputHandler prompt.InputHandler[T], textInput input.Input[T],
+func New[T any](inputHandler prompt.InputHandler[T], textInput input.Input[T],
 	contentModel tea.Model, options ...Option[T],
 ) Model[T] {
 	defaultMaxWith := 50
@@ -39,6 +40,14 @@ func NewSimple[T any](inputHandler prompt.InputHandler[T], textInput input.Input
 	promptModel := prompt.New(inputHandler, textInput,
 		append(settings.promptOptions,
 			prompt.WithUnmanagedRenderer[T](renderer.WithUseHistory(false)))...)
+	borderWidth := 0
+	hasBorder := promptModel.SuggestionManager().Formatters().Suggestions.GetBorderLeft()
+	if hasBorder {
+		borderWidth = 2
+		textInput.SetPrompt("  ")
+	} else {
+		textInput.SetPrompt("")
+	}
 
 	searchBar := settings.searchbarStyle.PaddingRight(settings.maxWidth).Render(settings.label)
 	searchbarLines := strings.Split(searchBar, "\n")
@@ -59,6 +68,7 @@ func NewSimple[T any](inputHandler prompt.InputHandler[T], textInput input.Input
 		searchbarHeight:  searchbarHeight,
 		placeholderStart: placeholderStart,
 		placeholderLine:  placeholderLine,
+		borderWidth:      borderWidth,
 	}
 }
 
@@ -91,7 +101,7 @@ func (m Model[T]) PromptModel() *prompt.Model[T] {
 }
 
 func (m Model[T]) OverlayX() int {
-	return len(m.settings.label) + m.placeholderStart + 1
+	return len(m.settings.label) + m.placeholderStart + 1 - m.borderWidth
 }
 
 func (m Model[T]) OverlayY() int {
@@ -102,7 +112,24 @@ func (m Model[T]) BaseView() string {
 	return lipgloss.JoinVertical(lipgloss.Left, m.searchBar, m.contentModel.View())
 }
 
+func (m Model[T]) Input() string {
+	promptRenderer := m.promptModel.Renderer().(*renderer.UnmanagedRenderer)
+	return promptRenderer.Input()
+}
+
+func (m Model[T]) Body() string {
+	promptRenderer := m.promptModel.Renderer().(*renderer.UnmanagedRenderer)
+	return promptRenderer.Body()
+}
+
+func (m Model[T]) OverlayView() string {
+	if len(m.promptModel.SuggestionManager().Suggestions()) == 0 {
+		return m.promptModel.View()
+	}
+
+	return lipgloss.JoinVertical(lipgloss.Left, m.Input(), m.Body())
+}
+
 func (m Model[T]) View() string {
-	view := m.BaseView()
-	return renderer.PlaceOverlay(m.OverlayX(), m.OverlayY(), m.promptModel.View(), view)
+	return renderer.PlaceOverlay(m.OverlayX(), m.OverlayY(), m.OverlayView(), m.BaseView())
 }
