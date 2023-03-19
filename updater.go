@@ -34,7 +34,7 @@ func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				cmds = append(cmds, m.renderer.SetHistory(currentHistory))
 			}
 		}
-	case suggestion.CompleteMsg:
+	case suggestion.CompleteMsg, suggestion.RefreshSuggestionsMessage[T]:
 		cmds = append(cmds, func() tea.Msg {
 			filtered, err := m.inputHandler.Complete(m)
 			return suggestion.SuggestionMsg[T]{Suggestions: filtered, Err: err}

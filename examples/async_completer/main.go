@@ -29,32 +29,38 @@ func (m model) Execute(input string, promptModel *prompt.Model[any]) (tea.Model,
 	return nil, nil
 }
 
-type updateMsg struct{}
+func generateSuggestions(maxSeconds int) func() []suggestion.Suggestion[any] {
+	return func() []suggestion.Suggestion[any] {
+		time.Sleep(time.Duration(rand.Intn(maxSeconds)) * time.Second)
+		suggestions := []suggestion.Suggestion[any]{}
+		for i := 0; i < rand.Intn(5); i++ {
+			suggestions = append(suggestions, suggestion.Suggestion[any]{Text: fmt.Sprintf("suggestion%d", i)})
+		}
+		return suggestions
+	}
+}
+
+func (m model) Init() tea.Cmd {
+	return suggestion.RefreshSuggestions(generateSuggestions(1))
+}
 
 func (m model) Update(msg tea.Msg) (prompt.InputHandler[any], tea.Cmd) {
-	switch msg.(type) {
-	case updateMsg:
-		m.numSuggestions++
-		m.suggestions = []suggestion.Suggestion[any]{}
-		for i := 0; i < m.numSuggestions; i++ {
-			m.suggestions = append(m.suggestions, suggestion.Suggestion[any]{Text: fmt.Sprintf("suggestion%d", i)})
-		}
-		return m, suggestion.OneShotCompleter(0)
+	switch msg := msg.(type) {
+	case suggestion.RefreshSuggestionsMessage[any]:
+		m.suggestions = msg
+		return m, tea.Batch(suggestion.Complete, suggestion.RefreshSuggestions(generateSuggestions(5)))
+
 	case tea.KeyMsg:
-		m.numSuggestions = rand.Intn(5)
-		return m, func() tea.Msg {
-			time.Sleep(time.Duration(rand.Intn(5)) * time.Second)
-			return updateMsg{}
-		}
+		return m, suggestion.RefreshSuggestions(generateSuggestions(1))
 	}
 
-	if m.initCounter < 7 {
-		m.initCounter++
-		return m, func() tea.Msg {
-			time.Sleep(time.Duration(rand.Intn(m.initCounter)) * time.Second)
-			return updateMsg{}
-		}
-	}
+	// if m.initCounter < 7 {
+	// 	m.initCounter++
+	// 	return m, func() tea.Msg {
+	// 		time.Sleep(time.Duration(rand.Intn(m.initCounter)) * time.Second)
+	// 		return updateMsg{}
+	// 	}
+	// }
 	return m, nil
 }
 

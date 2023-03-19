@@ -85,6 +85,10 @@ func (m model) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (te
 	return cmdModel{cmd: exec.Command(cmd, args...)}, nil
 }
 
+func (m model) Init() tea.Cmd {
+	return nil
+}
+
 func (m model) Update(msg tea.Msg) (prompt.InputHandler[cmdMetadata], tea.Cmd) {
 	return m, nil
 }

@@ -24,6 +24,14 @@ func OneShotCompleter(nextTrigger time.Duration) tea.Cmd {
 	})
 }
 
+type RefreshSuggestionsMessage[T any] []Suggestion[T]
+
+func RefreshSuggestions[T any](init func() []Suggestion[T]) tea.Cmd {
+	return func() tea.Msg {
+		return RefreshSuggestionsMessage[T](init())
+	}
+}
+
 type CompleteMsg struct{}
 
 type SuggestionMsg[T any] struct {

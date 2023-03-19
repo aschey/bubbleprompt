@@ -20,6 +20,7 @@ const (
 )
 
 type InputHandler[T any] interface {
+	Init() tea.Cmd
 	Update(msg tea.Msg) (InputHandler[T], tea.Cmd)
 	Execute(input string, prompt *Model[T]) (tea.Model, error)
 	Complete(prompt Model[T]) ([]suggestion.Suggestion[T], error)
@@ -98,7 +99,7 @@ func MsgFilter(_ tea.Model, msg tea.Msg) tea.Msg {
 }
 
 func (m Model[T]) Init() tea.Cmd {
-	return tea.Batch(m.textInput.Init(), m.suggestionManager.Init())
+	return tea.Batch(m.textInput.Init(), m.suggestionManager.Init(), m.inputHandler.Init())
 }
 
 func (m Model[T]) View() string {

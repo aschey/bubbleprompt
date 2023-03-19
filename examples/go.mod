@@ -10,7 +10,6 @@ require (
 	github.com/charmbracelet/bubbletea v0.23.2
 	github.com/charmbracelet/lipgloss v0.7.1
 	github.com/dop251/goja v0.0.0-20230304130813-e2f543bf4b4c
-	github.com/peterhellberg/swapi v0.0.0-20230222134402-c0bd79f5129c
 
 )
 

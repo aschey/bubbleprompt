@@ -14,6 +14,7 @@ import "github.com/aschey/bubbleprompt/suggestion"
 - [func Complete() tea.Msg](<#func-complete>)
 - [func OneShotCompleter(nextTrigger time.Duration) tea.Cmd](<#func-oneshotcompleter>)
 - [func PeriodicCompleter(nextTrigger time.Duration) tea.Cmd](<#func-periodiccompleter>)
+- [func RefreshSuggestions[T any](init func() []Suggestion[T]) tea.Cmd](<#func-refreshsuggestions>)
 - [type CompleteMsg](<#type-completemsg>)
 - [type Formatters](<#type-formatters>)
   - [func DefaultFormatters() Formatters](<#func-defaultformatters>)
@@ -21,6 +22,7 @@ import "github.com/aschey/bubbleprompt/suggestion"
 - [type Manager](<#type-manager>)
 - [type OneShotCompleterMsg](<#type-oneshotcompletermsg>)
 - [type PeriodicCompleterMsg](<#type-periodiccompletermsg>)
+- [type RefreshSuggestionsMessage](<#type-refreshsuggestionsmessage>)
 - [type Suggestion](<#type-suggestion>)
   - [func \(s Suggestion\[T\]\) GetSuggestionText\(\) string](<#func-suggestiont-getsuggestiontext>)
   - [func \(s Suggestion\[T\]\) Key\(\) \*string](<#func-suggestiont-key>)
@@ -63,7 +65,7 @@ var (
 var DefaultIndicatorForeground = "8"
 ```
 
-## func [Complete](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/commands.go#L34>)
+## func [Complete](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/commands.go#L42>)
 
 ```go
 func Complete() tea.Msg
@@ -81,7 +83,13 @@ func OneShotCompleter(nextTrigger time.Duration) tea.Cmd
 func PeriodicCompleter(nextTrigger time.Duration) tea.Cmd
 ```
 
-## type [CompleteMsg](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/commands.go#L27>)
+## func [RefreshSuggestions](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/commands.go#L29>)
+
+```go
+func RefreshSuggestions[T any](init func() []Suggestion[T]) tea.Cmd
+```
+
+## type [CompleteMsg](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/commands.go#L35>)
 
 ```go
 type CompleteMsg struct{}
@@ -164,6 +172,12 @@ type PeriodicCompleterMsg struct {
 }
 ```
 
+## type [RefreshSuggestionsMessage](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/commands.go#L27>)
+
+```go
+type RefreshSuggestionsMessage[T any] []Suggestion[T]
+```
+
 ## type [Suggestion](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/suggestion.go#L10-L16>)
 
 ```go
@@ -194,7 +208,7 @@ func (s Suggestion[T]) Key() *string
 func (s Suggestion[T]) Render(selected bool, maxNameLen int, maxDescLen int, formatters Formatters, scrollbar string, indicator string) string
 ```
 
-## type [SuggestionMsg](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/commands.go#L29-L32>)
+## type [SuggestionMsg](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/commands.go#L37-L40>)
 
 ```go
 type SuggestionMsg[T any] struct {

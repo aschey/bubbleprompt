@@ -53,6 +53,10 @@ func (m model) Execute(input string, promptModel *prompt.Model[any]) (tea.Model,
 	}), nil
 }
 
+func (m model) Init() tea.Cmd {
+	return nil
+}
+
 func (m model) Update(msg tea.Msg) (prompt.InputHandler[any], tea.Cmd) {
 	return m, nil
 }

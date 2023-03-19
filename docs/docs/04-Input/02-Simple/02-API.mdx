@@ -63,6 +63,10 @@ func (m model) formatOutput(choice string) string {
 		m.outputStyle.Render(strconv.FormatInt(m.numChoices, 10)))
 }
 
+func (m model) Init() tea.Cmd {
+	return nil
+}
+
 func (m model) Update(msg tea.Msg) (prompt.InputHandler[any], tea.Cmd) {
 	if msg, ok := msg.(tea.KeyMsg); ok && msg.Type == tea.KeyEnter {
 		m.numChoices++

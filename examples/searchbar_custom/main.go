@@ -1,8 +1,10 @@
 package main
 
 import (
-	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"strings"
 
@@ -16,37 +18,87 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/peterhellberg/swapi"
 )
 
-func newModel() customSearchbar {
-	textInput := simpleinput.New[any]()
-	suggestions := []suggestion.Suggestion[any]{
-		{Text: "people"},
-		{Text: "planets"},
-		{Text: "species"},
-		{Text: "starships"},
-		{Text: "vehicles"},
+type url string
+
+func getSections() []suggestion.Suggestion[url] {
+	res, _ := http.Get("https://swapi.dev/api/")
+	body, _ := io.ReadAll(res.Body)
+	sections := make(map[string]string)
+	_ = json.Unmarshal(body, &sections)
+	suggestions := []suggestion.Suggestion[url]{}
+	for section, sectionUrl := range sections {
+		suggestions = append(suggestions, suggestion.Suggestion[url]{
+			Text:     section,
+			Metadata: url(sectionUrl),
+		})
 	}
+	return suggestions
+}
+
+type response[T any] struct {
+	Results []T
+}
+
+type person struct {
+	Name      string
+	BirthYear string `json:"birth_year"`
+}
+
+type planet struct {
+	Name       string
+	Population string
+}
+
+type species struct {
+	Name     string
+	Language string
+}
+
+type starship struct {
+	Name  string
+	Model string
+}
+
+type vehicle struct {
+	Name       string
+	Passengers string
+}
+
+type film struct {
+	Title       string
+	ReleaseDate string `json:"release_date"`
+}
+
+func getResource[T any](url url) []T {
+	res, _ := http.Get(string(url))
+	body, _ := io.ReadAll(res.Body)
+	resBody := response[T]{}
+	_ = json.Unmarshal(body, &resBody)
+	return resBody.Results
+}
+
+func newModel() customSearchbar {
+	textInput := simpleinput.New[url]()
 
 	pmodel := promptModel{
-		swapiClient: swapi.DefaultClient,
-		suggestions: suggestions,
+		suggestions: []suggestion.Suggestion[url]{},
 		textInput:   textInput,
-		filterer:    completer.NewPrefixFilter[any](),
+		filterer:    completer.NewPrefixFilter[url](),
 	}
 
 	suggestionStyle := suggestion.DefaultFormatters().Minimal()
 	suggestionStyle.Suggestions.Border(lipgloss.RoundedBorder(), false, true, true)
 
-	searchModel := searchbar.New[any](pmodel, textInput, newListModel(),
-		searchbar.WithSearchbarStyle[any](lipgloss.NewStyle().Border(lipgloss.RoundedBorder())),
-		searchbar.WithPromptOptions(prompt.WithFormatters[any](suggestionStyle)))
+	searchModel := searchbar.New[url](pmodel, textInput, newListModel(),
+		searchbar.WithSearchbarStyle[url](lipgloss.NewStyle().Border(lipgloss.RoundedBorder())),
+		searchbar.WithPromptOptions(prompt.WithFormatters[url](suggestionStyle)))
 	return customSearchbar{model: searchModel}
 }
 
 type customSearchbar struct {
-	model searchbar.Model[any]
+	model searchbar.Model[url]
 }
 
 func (s customSearchbar) Init() tea.Cmd {
@@ -55,7 +107,7 @@ func (s customSearchbar) Init() tea.Cmd {
 
 func (s customSearchbar) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	model, cmd := s.model.Update(msg)
-	s.model = model.(searchbar.Model[any])
+	s.model = model.(searchbar.Model[url])
 	return s, cmd
 }
 
@@ -82,13 +134,12 @@ func (s customSearchbar) View() string {
 }
 
 type promptModel struct {
-	swapiClient *swapi.Client
-	suggestions []suggestion.Suggestion[any]
-	textInput   *simpleinput.Model[any]
-	filterer    completer.Filterer[any]
+	suggestions []suggestion.Suggestion[url]
+	textInput   *simpleinput.Model[url]
+	filterer    completer.Filterer[url]
 }
 
-func (m promptModel) Complete(promptModel prompt.Model[any]) ([]suggestion.Suggestion[any], error) {
+func (m promptModel) Complete(promptModel prompt.Model[url]) ([]suggestion.Suggestion[url], error) {
 	if len(m.textInput.Tokens()) > 1 {
 		return nil, nil
 	}
@@ -96,68 +147,73 @@ func (m promptModel) Complete(promptModel prompt.Model[any]) ([]suggestion.Sugge
 	return m.filterer.Filter(m.textInput.CurrentTokenBeforeCursor(), m.suggestions), nil
 }
 
-func (m promptModel) Execute(input string, promptModel *prompt.Model[any]) (tea.Model, error) {
-	return executor.NewCmdModel("", func() tea.Msg { return m.getItems(input) }), nil
+func (m promptModel) Execute(input string, promptModel *prompt.Model[url]) (tea.Model, error) {
+	selected := promptModel.SuggestionManager().SelectedSuggestion()
+	return executor.NewCmdModel("", func() tea.Msg { return m.getItems(selected.Text, selected.Metadata) }), nil
 }
 
-func (m promptModel) getItems(input string) []list.Item {
+func (m promptModel) getItems(input string, url url) []list.Item {
 	switch input {
 	case "people":
-		people, err := m.swapiClient.AllPeople(context.Background())
-		if err != nil {
-			return nil
-		}
-		items := []list.Item{}
-		for _, p := range people {
-			items = append(items, listItem{title: p.Name, description: "From: " + p.Homeworld})
+		people := getResource[person](url)
+
+		items := make([]list.Item, len(people))
+		for i, p := range people {
+			items[i] = listItem{title: p.Name, description: "Birth Year: " + p.BirthYear}
 		}
 		return items
 	case "planets":
-		planets, err := m.swapiClient.AllPlanets(context.Background())
-		if err != nil {
-			return nil
-		}
-		items := make([]list.Item, len(planets))
+		planets := getResource[planet](url)
 
-		for _, p := range planets {
-			items = append(items, listItem{title: p.Name, description: "Population: " + p.Population})
+		items := make([]list.Item, len(planets))
+		for i, p := range planets {
+			items[i] = listItem{title: p.Name, description: "Population: " + p.Population}
 		}
 		return items
 	case "species":
-		species, err := m.swapiClient.AllSpecies(context.Background())
-		if err != nil {
-			return nil
-		}
+		species := getResource[species](url)
+
 		items := make([]list.Item, len(species))
-		for _, p := range species {
-			items = append(items, listItem{title: p.Name, description: "Speaks: " + p.Language})
+		for i, p := range species {
+			items[i] = listItem{title: p.Name, description: "Speaks: " + p.Language}
 		}
 		return items
 	case "starships":
-		starships, err := m.swapiClient.AllStarships(context.Background())
-		if err != nil {
-			return nil
-		}
+		starships := getResource[starship](url)
+
 		items := make([]list.Item, len(starships))
-		for _, p := range starships {
-			items = append(items, listItem{title: p.Name, description: "Model: " + p.Model})
+		for i, p := range starships {
+			items[i] = listItem{title: p.Name, description: "Model: " + p.Model}
 		}
 		return items
 	case "vehicles":
-		vehicles, err := m.swapiClient.AllVehicles(context.Background())
-		if err != nil {
-			return nil
-		}
+		vehicles := getResource[vehicle](url)
+
 		items := make([]list.Item, len(vehicles))
-		for _, p := range vehicles {
-			items = append(items, listItem{title: p.Name, description: "Class: " + p.VehicleClass})
+		for i, p := range vehicles {
+			items[i] = listItem{title: p.Name, description: "Passengers: " + p.Passengers}
+		}
+		return items
+	case "films":
+		vehicles := getResource[film](url)
+
+		items := make([]list.Item, len(vehicles))
+		for i, p := range vehicles {
+			items[i] = listItem{title: p.Title, description: "Release Date: " + p.ReleaseDate}
 		}
 		return items
 	}
 	return []list.Item{}
 }
 
-func (m promptModel) Update(msg tea.Msg) (prompt.InputHandler[any], tea.Cmd) {
+func (m promptModel) Init() tea.Cmd {
+	return suggestion.RefreshSuggestions(getSections)
+}
+
+func (m promptModel) Update(msg tea.Msg) (prompt.InputHandler[url], tea.Cmd) {
+	if msg, ok := msg.(suggestion.RefreshSuggestionsMessage[url]); ok {
+		m.suggestions = msg
+	}
 	return m, nil
 }
 

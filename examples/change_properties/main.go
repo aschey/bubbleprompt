@@ -152,6 +152,10 @@ func (m model) Execute(inputStr string, promptModel *prompt.Model[cmdMetadata]) 
 	return executor.NewStringModel("input updated"), nil
 }
 
+func (m model) Init() tea.Cmd {
+	return nil
+}
+
 func (m model) Update(msg tea.Msg) (prompt.InputHandler[cmdMetadata], tea.Cmd) {
 	return m, nil
 }

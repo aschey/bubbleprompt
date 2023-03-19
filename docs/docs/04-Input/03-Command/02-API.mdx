@@ -124,6 +124,10 @@ func (m model) Execute(input string, promptModel *prompt.Model[cmdMetadata]) (te
 	return nil, fmt.Errorf("Invalid input")
 }
 
+func (m model) Init() tea.Cmd {
+	return nil
+}
+
 func (m model) Update(msg tea.Msg) (prompt.InputHandler[cmdMetadata], tea.Cmd) {
 	if msg, ok := msg.(secretMsg); ok {
 		m.secret = string(msg)

@@ -156,6 +156,10 @@ func (m inputModel) Execute(
 	return nil, nil
 }
 
+func (m inputModel) Init() tea.Cmd {
+	return nil
+}
+
 func (m inputModel) Update(msg tea.Msg) (prompt.InputHandler[cmdMetadata], tea.Cmd) {
 	if msg, ok := msg.(prompt.ExecutorFinishedMsg); ok {
 		if model, ok := msg.(textModel); ok {

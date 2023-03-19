@@ -33,6 +33,10 @@ func (m model) formatOutput(choice string) string {
 	)
 }
 
+func (m model) Init() tea.Cmd {
+	return nil
+}
+
 func (m model) Update(msg tea.Msg) (prompt.InputHandler[any], tea.Cmd) {
 	return m, nil
 }

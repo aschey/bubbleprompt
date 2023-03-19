@@ -44,6 +44,10 @@ func (m model) Execute(input string, promptModel *prompt.Model[metadata]) (tea.M
 	return executor.NewStringModel("You picked: " + m.outputStyle.Render(allValues)), nil
 }
 
+func (m model) Init() tea.Cmd {
+	return nil
+}
+
 func (m model) Update(cmd tea.Msg) (prompt.InputHandler[metadata], tea.Cmd) {
 	return m, nil
 }

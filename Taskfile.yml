@@ -118,7 +118,7 @@ tasks:
         --template-file file=./docs/templates/file.gotxt \
         --template frontmatter="" \
         --output ./docs/docs/03-Prompt/02-API.mdx .
-        - |
+      - |
         gomarkdoc \
         --template-file package=./docs/templates/package.gotxt \
         --template-file text=./docs/templates/text.gotxt \

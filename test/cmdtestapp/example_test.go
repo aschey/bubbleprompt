@@ -60,6 +60,10 @@ var flags = []commandinput.FlagInput{
 	{Short: "t", Long: "test", Description: "test flag"},
 }
 
+func (m model) Init() tea.Cmd {
+	return nil
+}
+
 func (m model) Update(msg tea.Msg) (prompt.InputHandler[cmdMetadata], tea.Cmd) {
 	switch msg.(type) {
 	case changeTextMsg:
