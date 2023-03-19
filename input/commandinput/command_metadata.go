@@ -14,6 +14,7 @@ type CommandMetadata[T any] struct {
 	// FlagArgPlaceholder is the placeholder
 	FlagArgPlaceholder  FlagArgPlaceholder
 	PreservePlaceholder bool
+	Variadic            bool
 	Children            []suggestion.Suggestion[CommandMetadata[T]]
 	Extra               T
 }

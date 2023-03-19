@@ -84,6 +84,7 @@ type modelState[T any] struct {
 	subcommand         *suggestion.Suggestion[CommandMetadata[T]]
 	selectedFlag       *suggestion.Suggestion[CommandMetadata[T]]
 	argNumber          int
+	variadicTokenStart int
 }
 
 func (m modelState[T]) isFlagSuggestion() bool {
@@ -292,8 +293,24 @@ func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	if tokenLen < len(m.states) {
 		m.states = m.states[:tokenLen]
 	}
+
+	if current.Index < len(m.states) {
+		variadicStart := m.states[current.Index].variadicTokenStart
+		// Starting another token after variadic arguments
+		// Ensure we have a quote before the first variadic token so everything after gets counted as a single token
+		if variadicStart > -1 && variadicStart == current.Index-1 {
+			prev := m.Tokens()[current.Index-1]
+			if !strings.HasPrefix(prev.Value, "\"") && !strings.HasPrefix(prev.Value, "'") {
+				value := m.Runes()
+				m.SetValue(string(value[:prev.Start]) + "\"" + string(value[prev.Start:]))
+				// We added a quote so we need to move the cursor over one to account for this
+				m.SetCursor(m.CursorIndex() + 1)
+			}
+		}
+	}
+
 	if current.Index > len(m.states)-1 {
-		newState := modelState[T]{}
+		newState := modelState[T]{variadicTokenStart: -1}
 		m.states = append(m.states, newState)
 	}
 
@@ -419,7 +436,7 @@ func (m *Model[T]) OnUpdateFinish(
 			m.states[index].subcommand = nil
 			m.states[index].argNumber = 0
 		}
-
+		m.states[index].variadicTokenStart = m.states[index-1].variadicTokenStart
 		if m.states[index-1].isFlag() {
 			m.states[index].selectedFlag = m.states[index-1].selectedFlag
 		}
@@ -435,6 +452,9 @@ func (m *Model[T]) OnUpdateFinish(
 		}
 		if m.states[index].isFlagSuggestion() {
 			m.states[index].selectedFlag = suggestion
+		}
+		if suggestion.Metadata.Variadic && m.states[index].variadicTokenStart == -1 {
+			m.states[index].variadicTokenStart = index
 		}
 	}
 
