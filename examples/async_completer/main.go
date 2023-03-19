@@ -21,7 +21,6 @@ type model struct {
 }
 
 func (m model) Complete(promptModel prompt.Model[any]) ([]suggestion.Suggestion[any], error) {
-	time.Sleep(time.Second)
 	return m.suggestions, nil
 }
 
@@ -41,7 +40,7 @@ func generateSuggestions(maxSeconds int) func() []suggestion.Suggestion[any] {
 }
 
 func (m model) Init() tea.Cmd {
-	return suggestion.RefreshSuggestions(generateSuggestions(1))
+	return suggestion.RefreshSuggestions(generateSuggestions(2))
 }
 
 func (m model) Update(msg tea.Msg) (prompt.InputHandler[any], tea.Cmd) {

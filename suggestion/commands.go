@@ -35,8 +35,9 @@ func RefreshSuggestions[T any](init func() []Suggestion[T]) tea.Cmd {
 type CompleteMsg struct{}
 
 type SuggestionMsg[T any] struct {
-	Suggestions []Suggestion[T]
-	Err         error
+	Suggestions    []Suggestion[T]
+	SequenceNumber int
+	Err            error
 }
 
 func Complete() tea.Msg {

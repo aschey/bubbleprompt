@@ -37,6 +37,7 @@ type Model[T any] struct {
 	typedRunes              []rune
 	ready                   bool
 	size                    tea.WindowSizeMsg
+	sequenceNumber          int
 	err                     error
 }
 

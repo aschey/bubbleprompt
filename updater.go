@@ -35,9 +35,11 @@ func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	case suggestion.CompleteMsg, suggestion.RefreshSuggestionsMessage[T]:
+		sequenceNumber := m.sequenceNumber
+		m.sequenceNumber++
 		cmds = append(cmds, func() tea.Msg {
 			filtered, err := m.inputHandler.Complete(m)
-			return suggestion.SuggestionMsg[T]{Suggestions: filtered, Err: err}
+			return suggestion.SuggestionMsg[T]{Suggestions: filtered, SequenceNumber: sequenceNumber, Err: err}
 		})
 	}
 
@@ -237,7 +239,8 @@ func (m *Model[T]) submit(msg tea.KeyMsg, cmds []tea.Cmd) []tea.Cmd {
 		// Since the bubbletea event loop is already running, this won't happen automatically.
 		cmds = append(cmds, tea.Sequence(executorManager.Init(), func() tea.Msg { return m.size }))
 	}
-
+	// Clear suggestions so we don't try to run any more logic against outdated info
+	m.suggestionManager.ClearSuggestions()
 	return append(cmds, m.suggestionManager.ResetSuggestions())
 }
 

@@ -355,7 +355,7 @@ func (m *Model[T]) currentState() modelState[T] {
 	if index >= 0 {
 		return m.states[index]
 	} else {
-		return modelState[T]{}
+		return modelState[T]{variadicTokenStart: -1}
 	}
 }
 
@@ -568,8 +568,8 @@ func (m *Model[T]) SetValue(s string) {
 
 // ResetValue clears the entire input.
 func (m *Model[T]) ResetValue() {
-	m.textinput.SetValue("")
-	m.parsedText = &statement{}
+	m.SetValue("")
+	m.states = []modelState[T]{{variadicTokenStart: -1}}
 }
 
 func (m *Model[T]) isDelimiter(s string) bool {

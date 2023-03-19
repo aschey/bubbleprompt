@@ -10,16 +10,8 @@ import (
 	"github.com/mattn/go-runewidth"
 )
 
-type completerState int
-
-const (
-	idle completerState = iota
-	running
-)
-
 type Model[T any] struct {
 	textInput          input.Input[T]
-	state              completerState
 	suggestions        []suggestion.Suggestion[T]
 	lastKeyMsg         tea.KeyMsg
 	maxSuggestions     int
@@ -27,8 +19,7 @@ type Model[T any] struct {
 	prevScroll         int
 	selectedKey        *string
 	prevRunes          []rune
-	queueNext          bool
-	ignoreCount        int
+	sequenceNumber     int
 	selectionIndicator string
 	scrollbar          string
 	scrollbarThumb     string
@@ -40,11 +31,11 @@ func NewDropdownSuggestionModel[T any](textInput input.Input[T], options ...Opti
 	defaultMaxSuggestions := 6
 	m := &Model[T]{
 		textInput:          textInput,
-		state:              idle,
 		maxSuggestions:     defaultMaxSuggestions,
 		selectionIndicator: "",
 		scrollbar:          " ",
 		scrollbarThumb:     " ",
+		sequenceNumber:     -1,
 		formatters:         suggestion.DefaultFormatters(),
 		prevRunes: []rune(
 			" ",
@@ -65,11 +56,8 @@ func (m *Model[T]) Init() tea.Cmd {
 func (m *Model[T]) Update(msg tea.Msg) tea.Cmd {
 	switch msg := msg.(type) {
 	case suggestion.SuggestionMsg[T]:
-		if m.ignoreCount > 0 {
-			// Request was in progress when resetSuggestions was called, don't update suggestions
-			m.ignoreCount--
-		} else {
-			m.state = idle
+		if m.sequenceNumber < msg.SequenceNumber {
+			m.sequenceNumber = msg.SequenceNumber
 			if msg.Suggestions == nil {
 				m.suggestions = []suggestion.Suggestion[T]{}
 			} else {
@@ -80,12 +68,6 @@ func (m *Model[T]) Update(msg tea.Msg) tea.Cmd {
 			// Selection is out of range of the current view or the key is no longer present
 			if m.scrollPosition > len(m.suggestions)-1 || m.SelectedSuggestion() == nil {
 				m.UnselectSuggestion()
-			}
-
-			if m.queueNext {
-				// Start another update if it was requested while running
-				m.queueNext = false
-				return m.UpdateSuggestions()
 			}
 		}
 	case suggestion.PeriodicCompleterMsg:
@@ -186,29 +168,13 @@ func (m *Model[T]) updateSuggestionsCmd(forceUpdate bool) tea.Cmd {
 		return nil
 	}
 
-	// Text has changed, but the completer is already running
-	// Run again once the current iteration has finished
-	if m.state == running {
-		m.queueNext = true
-		return nil
-	}
-
-	m.state = running
 	m.prevRunes = runesBeforeCursor
 
 	return suggestion.Complete
 }
 
 func (m *Model[T]) ResetSuggestions() tea.Cmd {
-	if m.state == running {
-		// If suggestion is currently running, ignore the next value and trigger another update
-		// This helps speed up getting the next valid result for slow completers
-		m.ignoreCount++
-	}
-
-	m.state = running
 	m.prevRunes = []rune("")
-
 	return suggestion.Complete
 }
 
