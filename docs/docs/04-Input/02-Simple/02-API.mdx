@@ -127,7 +127,6 @@ func main() {
   - [func \(m \*Model\[T\]\) CursorOffset\(\) int](<#func-modelt-cursoroffset>)
   - [func \(m \*Model\[T\]\) Focus\(\) tea.Cmd](<#func-modelt-focus>)
   - [func \(m \*Model\[T\]\) Focused\(\) bool](<#func-modelt-focused>)
-  - [func \(m \*Model\[T\]\) Init\(\) tea.Cmd](<#func-modelt-init>)
   - [func \(m \*Model\[T\]\) OnExecutorFinished\(\)](<#func-modelt-onexecutorfinished>)
   - [func \(m \*Model\[T\]\) OnSuggestionChanged\(suggestion suggestion.Suggestion\[T\]\)](<#func-modelt-onsuggestionchanged>)
   - [func \(m \*Model\[T\]\) OnSuggestionUnselected\(\)](<#func-modelt-onsuggestionunselected>)
@@ -244,16 +243,7 @@ func (m *Model[T]) Focused() bool
 
 Focused returns whether the keyboard is focused on the input.
 
-### func \(\*Model\[T\]\) [Init](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L191>)
-
-```go
-func (m *Model[T]) Init() tea.Cmd
-```
-
-Init is part of the [input.Input](/input/api#type-input) interface.
-It should not be invoked by users of this library.
-
-### func \(\*Model\[T\]\) [OnExecutorFinished](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L237>)
+### func \(\*Model\[T\]\) [OnExecutorFinished](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L231>)
 
 ```go
 func (m *Model[T]) OnExecutorFinished()
@@ -262,7 +252,7 @@ func (m *Model[T]) OnExecutorFinished()
 OnExecutorFinished is part of the [input.Input](/input/api#type-input) interface.
 It should not be invoked by users of this library.
 
-### func \(\*Model\[T\]\) [OnSuggestionChanged](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L231>)
+### func \(\*Model\[T\]\) [OnSuggestionChanged](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L225>)
 
 ```go
 func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T])
@@ -271,7 +261,7 @@ func (m *Model[T]) OnSuggestionChanged(suggestion suggestion.Suggestion[T])
 OnSuggestionChanged is part of the [input.Input](/input/api#type-input) interface.
 It should not be invoked by users of this library.
 
-### func \(\*Model\[T\]\) [OnSuggestionUnselected](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L243>)
+### func \(\*Model\[T\]\) [OnSuggestionUnselected](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L237>)
 
 ```go
 func (m *Model[T]) OnSuggestionUnselected()
@@ -280,7 +270,7 @@ func (m *Model[T]) OnSuggestionUnselected()
 OnSuggestionUnselected is part of the [input.Input](/input/api#type-input) interface.
 It should not be invoked by users of this library.
 
-### func \(\*Model\[T\]\) [OnUpdateFinish](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L221-L225>)
+### func \(\*Model\[T\]\) [OnUpdateFinish](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L215-L219>)
 
 ```go
 func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion[T], isSelected bool) tea.Cmd
@@ -289,7 +279,7 @@ func (m *Model[T]) OnUpdateFinish(msg tea.Msg, suggestion *suggestion.Suggestion
 OnUpdateFinish is part of the [input.Input](/input/api#type-input) interface.
 It should not be invoked by users of this library.
 
-### func \(\*Model\[T\]\) [OnUpdateStart](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L197>)
+### func \(\*Model\[T\]\) [OnUpdateStart](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L191>)
 
 ```go
 func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd
@@ -356,7 +346,7 @@ func (m *Model[T]) SetValue(value string)
 
 SetValue sets the text of the input.
 
-### func \(\*Model\[T\]\) [ShouldClearSuggestions](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L249>)
+### func \(\*Model\[T\]\) [ShouldClearSuggestions](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L243>)
 
 ```go
 func (m *Model[T]) ShouldClearSuggestions(prevText []rune, msg tea.KeyMsg) bool
@@ -365,7 +355,7 @@ func (m *Model[T]) ShouldClearSuggestions(prevText []rune, msg tea.KeyMsg) bool
 ShouldClearSuggestions is part of the [input.Input](/input/api#type-input) interface.
 It should not be invoked by users of this library.
 
-### func \(\*Model\[T\]\) [ShouldSelectSuggestion](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L209>)
+### func \(\*Model\[T\]\) [ShouldSelectSuggestion](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L203>)
 
 ```go
 func (m *Model[T]) ShouldSelectSuggestion(suggestion suggestion.Suggestion[T]) bool
@@ -374,7 +364,7 @@ func (m *Model[T]) ShouldSelectSuggestion(suggestion suggestion.Suggestion[T]) b
 ShouldSelectSuggestion is part of the [input.Input](/input/api#type-input) interface.
 It should not be invoked by users of this library.
 
-### func \(\*Model\[T\]\) [ShouldUnselectSuggestion](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L255>)
+### func \(\*Model\[T\]\) [ShouldUnselectSuggestion](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L249>)
 
 ```go
 func (m *Model[T]) ShouldUnselectSuggestion(prevText []rune, msg tea.KeyMsg) bool
@@ -383,7 +373,7 @@ func (m *Model[T]) ShouldUnselectSuggestion(prevText []rune, msg tea.KeyMsg) boo
 ShouldUnselectSuggestion is part of the [input.Input](/input/api#type-input) interface.
 It should not be invoked by users of this library.
 
-### func \(\*Model\[T\]\) [SuggestionRunes](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L215>)
+### func \(\*Model\[T\]\) [SuggestionRunes](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L209>)
 
 ```go
 func (m *Model[T]) SuggestionRunes(runes []rune) []rune
@@ -418,7 +408,7 @@ func (m *Model[T]) Value() string
 
 Value returns the raw text entered by the user.
 
-### func \(\*Model\[T\]\) [View](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L203>)
+### func \(\*Model\[T\]\) [View](<https://github.com/aschey/bubbleprompt/blob/main/input/simpleinput/model.go#L197>)
 
 ```go
 func (m *Model[T]) View(viewMode input.ViewMode) string

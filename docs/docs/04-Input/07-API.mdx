@@ -28,11 +28,10 @@ import "github.com/aschey/bubbleprompt/input"
 - [type ViewMode](<#type-viewmode>)
 
 
-## type [Input](<https://github.com/aschey/bubbleprompt/blob/main/input/input.go#L16-L44>)
+## type [Input](<https://github.com/aschey/bubbleprompt/blob/main/input/input.go#L16-L43>)
 
 ```go
 type Input[T any] interface {
-    Init() tea.Cmd
     OnUpdateStart(msg tea.Msg) tea.Cmd
     View(viewMode ViewMode) string
     Focus() tea.Cmd

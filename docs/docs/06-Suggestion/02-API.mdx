@@ -65,7 +65,7 @@ var (
 var DefaultIndicatorForeground = "8"
 ```
 
-## func [Complete](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/commands.go#L42>)
+## func [Complete](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/commands.go#L43>)
 
 ```go
 func Complete() tea.Msg
@@ -121,7 +121,7 @@ func DefaultFormatters() Formatters
 func (f Formatters) Minimal() Formatters
 ```
 
-## type [Manager](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/manager.go#L7-L38>)
+## type [Manager](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/manager.go#L7-L39>)
 
 ```go
 type Manager[T any] interface {
@@ -155,6 +155,7 @@ type Manager[T any] interface {
     ShouldChangeListPosition(msg tea.Msg) bool
     Formatters() Formatters
     SetFormatters(formatters Formatters)
+    SetShowSuggestions(showSuggestions bool)
 }
 ```
 
@@ -208,12 +209,13 @@ func (s Suggestion[T]) Key() *string
 func (s Suggestion[T]) Render(selected bool, maxNameLen int, maxDescLen int, formatters Formatters, scrollbar string, indicator string) string
 ```
 
-## type [SuggestionMsg](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/commands.go#L37-L40>)
+## type [SuggestionMsg](<https://github.com/aschey/bubbleprompt/blob/main/suggestion/commands.go#L37-L41>)
 
 ```go
 type SuggestionMsg[T any] struct {
-    Suggestions []Suggestion[T]
-    Err         error
+    Suggestions    []Suggestion[T]
+    SequenceNumber int
+    Err            error
 }
 ```
 

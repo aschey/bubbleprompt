@@ -10,6 +10,8 @@ import "github.com/aschey/bubbleprompt"
 
 ## Index
 
+- [func Blur() tea.Cmd](<#func-blur>)
+- [func Focus() tea.Cmd](<#func-focus>)
 - [func MsgFilter(_ tea.Model, msg tea.Msg) tea.Msg](<#func-msgfilter>)
 - [func SetRenderer(r renderer.Renderer, retainHistory bool) tea.Cmd](<#func-setrenderer>)
 - [type ExecutorFinishedMsg](<#type-executorfinishedmsg>)
@@ -24,6 +26,7 @@ import "github.com/aschey/bubbleprompt"
   - [func \(m Model\[T\]\) Update\(msg tea.Msg\) \(tea.Model, tea.Cmd\)](<#func-modelt-update>)
   - [func \(m Model\[T\]\) View\(\) string](<#func-modelt-view>)
 - [type Option](<#type-option>)
+  - [func WithFocusOnStart[T any](focusOnStart bool) Option[T]](<#func-withfocusonstart>)
   - [func WithFormatters[T any](formatters suggestion.Formatters) Option[T]](<#func-withformatters>)
   - [func WithRenderer[T any](r renderer.Renderer) Option[T]](<#func-withrenderer>)
   - [func WithSuggestionManager[T any](manager suggestion.Manager[T]) Option[T]](<#func-withsuggestionmanager>)
@@ -31,13 +34,25 @@ import "github.com/aschey/bubbleprompt"
   - [func WithViewportRenderer[T any](opts ...renderer.Option) Option[T]](<#func-withviewportrenderer>)
 
 
-## func [MsgFilter](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L93>)
+## func [Blur](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L97>)
+
+```go
+func Blur() tea.Cmd
+```
+
+## func [Focus](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L93>)
+
+```go
+func Focus() tea.Cmd
+```
+
+## func [MsgFilter](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L105>)
 
 ```go
 func MsgFilter(_ tea.Model, msg tea.Msg) tea.Msg
 ```
 
-## func [SetRenderer](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L80>)
+## func [SetRenderer](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L82>)
 
 ```go
 func SetRenderer(r renderer.Renderer, retainHistory bool) tea.Cmd
@@ -60,7 +75,7 @@ type InputHandler[T any] interface {
 }
 ```
 
-## type [Model](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L29-L41>)
+## type [Model](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L29-L43>)
 
 ```go
 type Model[T any] struct {
@@ -68,25 +83,25 @@ type Model[T any] struct {
 }
 ```
 
-### func [New](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L43-L47>)
+### func [New](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L45-L49>)
 
 ```go
 func New[T any](inputHandler InputHandler[T], textInput input.Input[T], opts ...Option[T]) Model[T]
 ```
 
-### func \(Model\[T\]\) [Init](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L101>)
+### func \(Model\[T\]\) [Init](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L121>)
 
 ```go
 func (m Model[T]) Init() tea.Cmd
 ```
 
-### func \(Model\[T\]\) [Renderer](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L71>)
+### func \(Model\[T\]\) [Renderer](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L73>)
 
 ```go
 func (m Model[T]) Renderer() renderer.Renderer
 ```
 
-### func \(\*Model\[T\]\) [SuggestionManager](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L63>)
+### func \(\*Model\[T\]\) [SuggestionManager](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L65>)
 
 ```go
 func (m *Model[T]) SuggestionManager() suggestion.Manager[T]
@@ -98,7 +113,7 @@ func (m *Model[T]) SuggestionManager() suggestion.Manager[T]
 func (m Model[T]) SuggestionOffset() int
 ```
 
-### func \(Model\[T\]\) [TextInput](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L67>)
+### func \(Model\[T\]\) [TextInput](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L69>)
 
 ```go
 func (m Model[T]) TextInput() input.Input[T]
@@ -110,7 +125,7 @@ func (m Model[T]) TextInput() input.Input[T]
 func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd)
 ```
 
-### func \(Model\[T\]\) [View](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L105>)
+### func \(Model\[T\]\) [View](<https://github.com/aschey/bubbleprompt/blob/main/prompt.go#L125>)
 
 ```go
 func (m Model[T]) View() string
@@ -120,6 +135,12 @@ func (m Model[T]) View() string
 
 ```go
 type Option[T any] func(model *Model[T])
+```
+
+### func [WithFocusOnStart](<https://github.com/aschey/bubbleprompt/blob/main/option.go#L40>)
+
+```go
+func WithFocusOnStart[T any](focusOnStart bool) Option[T]
 ```
 
 ### func [WithFormatters](<https://github.com/aschey/bubbleprompt/blob/main/option.go#L10>)
