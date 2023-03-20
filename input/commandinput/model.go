@@ -156,11 +156,6 @@ func (m *Model[T]) ParseUsage(placeholders string) ([]PositionalArg, error) {
 	return positionalArgs, nil
 }
 
-// Init is part of the [input.Input] interface. It should not be invoked by users of this library.
-func (m *Model[T]) Init() tea.Cmd {
-	return m.textinput.Focus()
-}
-
 // SetFormatters sets the formatters used by the input.
 func (m *Model[T]) SetFormatters(formatters Formatters) {
 	m.formatters = formatters

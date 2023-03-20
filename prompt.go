@@ -38,6 +38,7 @@ type Model[T any] struct {
 	ready                   bool
 	size                    tea.WindowSizeMsg
 	sequenceNumber          int
+	focusOnStart            bool
 	err                     error
 }
 
@@ -46,11 +47,11 @@ func New[T any](
 	textInput input.Input[T],
 	opts ...Option[T],
 ) Model[T] {
-	// formatters := formatter.DefaultFormatters()
 	model := Model[T]{
-		suggestionManager: dropdown.NewDropdownSuggestionModel(textInput),
+		suggestionManager: dropdown.New(textInput),
 		inputHandler:      inputHandler,
 		textInput:         textInput,
+		focusOnStart:      true,
 		renderer:          renderer.NewUnmanagedRenderer(),
 	}
 
@@ -87,6 +88,16 @@ func SetRenderer(r renderer.Renderer, retainHistory bool) tea.Cmd {
 	}
 }
 
+type focusMsg bool
+
+func Focus() tea.Cmd {
+	return func() tea.Msg { return focusMsg(true) }
+}
+
+func Blur() tea.Cmd {
+	return func() tea.Msg { return focusMsg(false) }
+}
+
 var shutdown bool = false
 
 type quitAttempted struct{}
@@ -99,8 +110,16 @@ func MsgFilter(_ tea.Model, msg tea.Msg) tea.Msg {
 	return msg
 }
 
+func (m Model[T]) getInitFocus() tea.Cmd {
+	if m.focusOnStart {
+		return Focus()
+	} else {
+		return Blur()
+	}
+}
+
 func (m Model[T]) Init() tea.Cmd {
-	return tea.Batch(m.textInput.Init(), m.suggestionManager.Init(), m.inputHandler.Init())
+	return tea.Batch(m.suggestionManager.Init(), m.inputHandler.Init(), m.getInitFocus())
 }
 
 func (m Model[T]) View() string {

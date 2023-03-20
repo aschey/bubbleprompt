@@ -36,3 +36,9 @@ func WithSuggestionManager[T any](manager suggestion.Manager[T]) Option[T] {
 		model.suggestionManager = manager
 	}
 }
+
+func WithFocusOnStart[T any](focusOnStart bool) Option[T] {
+	return func(model *Model[T]) {
+		model.focusOnStart = focusOnStart
+	}
+}

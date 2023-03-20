@@ -186,12 +186,6 @@ func (m *Model[T]) SetPrompt(prompt string) {
 	m.lexerModel.SetPrompt(prompt)
 }
 
-// Init is part of the [input.Input] interface.
-// It should not be invoked by users of this library.
-func (m *Model[T]) Init() tea.Cmd {
-	return m.lexerModel.Init()
-}
-
 // OnUpdateStart is part of the [input.Input] interface.
 // It should not be invoked by end users.
 func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {

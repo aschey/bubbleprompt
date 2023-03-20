@@ -41,6 +41,14 @@ func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			filtered, err := m.inputHandler.Complete(m)
 			return suggestion.SuggestionMsg[T]{Suggestions: filtered, SequenceNumber: sequenceNumber, Err: err}
 		})
+	case focusMsg:
+		m.suggestionManager.SetShowSuggestions(bool(msg))
+		if msg {
+			cmds = append(cmds, m.textInput.Focus())
+		} else {
+			m.textInput.Blur()
+		}
+
 	}
 
 	m.inputHandler, cmd = m.inputHandler.Update(msg)

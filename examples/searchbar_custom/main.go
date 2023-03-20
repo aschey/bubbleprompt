@@ -106,9 +106,20 @@ func (s customSearchbar) Init() tea.Cmd {
 }
 
 func (s customSearchbar) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	cmds := []tea.Cmd{}
 	model, cmd := s.model.Update(msg)
+	cmds = append(cmds, cmd)
 	s.model = model.(searchbar.Model[url])
-	return s, cmd
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "f":
+			cmds = append(cmds, prompt.Focus())
+		case "b":
+			cmds = append(cmds, prompt.Blur())
+		}
+	}
+	return s, tea.Batch(cmds...)
 }
 
 func (s customSearchbar) View() string {

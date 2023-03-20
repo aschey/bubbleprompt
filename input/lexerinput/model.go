@@ -48,10 +48,6 @@ func NewModel[T any](lexer parser.Lexer, options ...Option[T]) *Model[T] {
 	return model
 }
 
-func (m *Model[T]) Init() tea.Cmd {
-	return m.textinput.Focus()
-}
-
 func (m *Model[T]) createWhitespaceToken(start int, end int, index int) input.Token {
 	token := input.Token{
 		Value: string(m.Runes()[start:end]),

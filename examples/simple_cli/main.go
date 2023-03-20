@@ -126,7 +126,7 @@ func main() {
 			Text:        "get",
 			Description: "retrieve things",
 			Metadata: cmdMetadata{
-				PositionalArgs: textInput.NewPositionalArgs("<command"),
+				PositionalArgs: textInput.NewPositionalArgs("<command>"),
 				Children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "secret",
@@ -146,6 +146,7 @@ func main() {
 			Text:        "set",
 			Description: "update things",
 			Metadata: cmdMetadata{
+				PositionalArgs: textInput.NewPositionalArgs("<command>"),
 				Children: []suggestion.Suggestion[cmdMetadata]{
 					{
 						Text:        "secret",

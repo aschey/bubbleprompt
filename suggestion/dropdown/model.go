@@ -14,6 +14,7 @@ type Model[T any] struct {
 	textInput          input.Input[T]
 	suggestions        []suggestion.Suggestion[T]
 	lastKeyMsg         tea.KeyMsg
+	showSuggestions    bool
 	maxSuggestions     int
 	scrollPosition     int
 	prevScroll         int
@@ -27,19 +28,19 @@ type Model[T any] struct {
 	err                error
 }
 
-func NewDropdownSuggestionModel[T any](textInput input.Input[T], options ...Option[T]) *Model[T] {
+func New[T any](textInput input.Input[T], options ...Option[T]) *Model[T] {
 	defaultMaxSuggestions := 6
 	m := &Model[T]{
 		textInput:          textInput,
 		maxSuggestions:     defaultMaxSuggestions,
+		showSuggestions:    false,
 		selectionIndicator: "",
 		scrollbar:          " ",
 		scrollbarThumb:     " ",
 		sequenceNumber:     -1,
 		formatters:         suggestion.DefaultFormatters(),
-		prevRunes: []rune(
-			" ",
-		), // Need to set the previous text to something in order to force the initial render
+		// Need to set the previous text to something in order to force the initial render
+		prevRunes: []rune(" "),
 	}
 	for _, option := range options {
 		option(m)
@@ -143,6 +144,10 @@ func (c Model[T]) ScrollbarBounds() (int, int) {
 	}
 
 	return scrollbarTop, scrollbarTop + scrollbarHeight
+}
+
+func (m *Model[T]) SetShowSuggestions(showSuggestions bool) {
+	m.showSuggestions = showSuggestions
 }
 
 func (m *Model[T]) UpdateSuggestions() tea.Cmd {
@@ -374,7 +379,10 @@ func (m *Model[T]) SetFormatters(formatters suggestion.Formatters) {
 }
 
 func (m *Model[T]) Suggestions() []suggestion.Suggestion[T] {
-	return m.suggestions
+	if m.showSuggestions {
+		return m.suggestions
+	}
+	return []suggestion.Suggestion[T]{}
 }
 
 func (m *Model[T]) windowHeight() int {

@@ -14,7 +14,6 @@ const (
 )
 
 type Input[T any] interface {
-	Init() tea.Cmd
 	OnUpdateStart(msg tea.Msg) tea.Cmd
 	View(viewMode ViewMode) string
 	Focus() tea.Cmd

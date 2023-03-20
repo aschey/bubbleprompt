@@ -35,4 +35,5 @@ type Manager[T any] interface {
 	ShouldChangeListPosition(msg tea.Msg) bool
 	Formatters() Formatters
 	SetFormatters(formatters Formatters)
+	SetShowSuggestions(showSuggestions bool)
 }

@@ -2,3 +2,4 @@
 
 echo "Running pre-commit..."
 golangci-lint run
+task gen-docs
