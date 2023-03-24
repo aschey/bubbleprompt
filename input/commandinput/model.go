@@ -505,7 +505,7 @@ func (m *Model[T]) OnSuggestionUnselected() {
 }
 
 // SuggestionRunes is part of the [input.Input] interface. It should not be invoked by users of this library.
-func (m *Model[T]) SuggestionRunes(runes []rune) []rune {
+func (m Model[T]) SuggestionRunes(runes []rune) []rune {
 	expr, _ := m.parser.Parse(string(runes))
 	tokens := m.allTokens(expr)
 	token := m.currentToken(tokens, input.RoundUp).Value
@@ -524,24 +524,24 @@ func (m Model[T]) Focused() bool {
 }
 
 // Value returns the raw text entered by the user.
-func (m *Model[T]) Value() string {
+func (m Model[T]) Value() string {
 	return m.textinput.Value()
 }
 
 // Runes returns the raw text entered by the user as a list of runes.
 // This is useful for indexing and length checks because doing these
 // operations on strings does not work well with some unicode characters.
-func (m *Model[T]) Runes() []rune {
+func (m Model[T]) Runes() []rune {
 	return []rune(m.textinput.Value())
 }
 
 // ParsedValue returns the input parsed into a [Statement].
-func (m *Model[T]) ParsedValue() Statement {
+func (m Model[T]) ParsedValue() Statement {
 	return (*m.parsedText).toStatement()
 }
 
 // CommandBeforeCursor returns the portion of the command (first input token) before the cursor position.
-func (m *Model[T]) CommandBeforeCursor() string {
+func (m Model[T]) CommandBeforeCursor() string {
 	parsed := m.parsedText
 	commandRunes := []rune(parsed.Command.Value)
 	if m.CursorIndex() >= len(commandRunes) {
@@ -567,7 +567,7 @@ func (m *Model[T]) ResetValue() {
 	m.states = []modelState[T]{{variadicTokenStart: -1}}
 }
 
-func (m *Model[T]) isDelimiter(s string) bool {
+func (m Model[T]) isDelimiter(s string) bool {
 	return m.delimiterRegex.MatchString(s)
 }
 

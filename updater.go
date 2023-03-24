@@ -42,6 +42,7 @@ func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return suggestion.SuggestionMsg[T]{Suggestions: filtered, SequenceNumber: sequenceNumber, Err: err}
 		})
 	case focusMsg:
+		m.focus = bool(msg)
 		m.suggestionManager.SetShowSuggestions(bool(msg))
 		if msg {
 			cmds = append(cmds, m.textInput.Focus())
@@ -62,11 +63,13 @@ func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmd = m.textInput.OnUpdateStart(msg)
 	cmds = append(cmds, cmd)
 
-	if m.suggestionManager.ShouldChangeListPosition(msg) {
-		m.saveCurrentInput()
-	}
+	if m.focus {
+		if m.suggestionManager.ShouldChangeListPosition(msg) {
+			m.saveCurrentInput()
+		}
 
-	cmds = append(cmds, m.suggestionManager.Update(msg))
+		cmds = append(cmds, m.suggestionManager.Update(msg))
+	}
 
 	// Scroll to bottom if the user typed something
 	scrollToBottom := false
@@ -95,6 +98,7 @@ func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m *Model[T]) updateExecuting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool) {
 	executorManager, cmd := (*m.executionManager).Update(msg)
+	cmds = append(cmds, cmd)
 	m.executionManager = &executorManager
 
 	switch msg.(type) {
@@ -102,8 +106,10 @@ func (m *Model[T]) updateExecuting(msg tea.Msg, cmds []tea.Cmd) ([]tea.Cmd, bool
 	// When this happens we just want to quit the executor, not the entire program
 	case quitAttempted:
 		cmds = append(cmds, m.finalizeExecutor(m.executionManager))
-		// Re-focus input when finished
-		return append(cmds, m.textInput.Focus()), true
+		// Re-focus input when finished unless the user already blurred the input
+		if m.focus {
+			cmds = append(cmds, m.textInput.Focus())
+		}
 	default:
 		if m.textInput.Focused() {
 			m.textInput.Blur()

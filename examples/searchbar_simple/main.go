@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 
 	prompt "github.com/aschey/bubbleprompt"
 	"github.com/aschey/bubbleprompt/completer"
@@ -104,8 +105,18 @@ func (m promptModel) Complete(promptModel prompt.Model[url]) ([]suggestion.Sugge
 
 func (m promptModel) Execute(input string, promptModel *prompt.Model[url]) (tea.Model, error) {
 	selected := promptModel.SuggestionManager().SelectedSuggestion()
-	return executor.NewCmdModel("", func() tea.Msg { return m.getItems(selected.Text, selected.Metadata) }), nil
+	getItems := func() tea.Msg {
+		return itemsMsg(m.getItems(selected.Text, selected.Metadata))
+	}
+	getTitle := func() tea.Msg {
+		return titleMsg(strings.ToUpper(input[0:1]) + input[1:])
+	}
+	return executor.NewCmdModel("", tea.Batch(getItems, getTitle)), nil
 }
+
+type titleMsg string
+
+type itemsMsg []list.Item
 
 func (m promptModel) getItems(input string, url url) []list.Item {
 	switch input {
@@ -182,14 +193,14 @@ func (i listItem) Description() string { return i.description }
 func (i listItem) FilterValue() string { return i.title }
 
 type listModel struct {
-	list.Model
+	list *list.Model
 }
 
 func newListModel() listModel {
 	list := list.New([]list.Item{}, list.NewDefaultDelegate(), 0, 0)
 	list.SetShowTitle(false)
 	list.SetShowStatusBar(false)
-	return listModel{list}
+	return listModel{list: &list}
 }
 
 func (m listModel) Init() tea.Cmd {
@@ -197,17 +208,29 @@ func (m listModel) Init() tea.Cmd {
 }
 
 func (m listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmds []tea.Cmd
 	switch msg := msg.(type) {
-	case []list.Item:
-		cmd := m.Model.SetItems(msg)
-		return m, cmd
+	case titleMsg:
+		m.list.Title = string(msg)
+	case itemsMsg:
+		m.list.StopSpinner()
+		cmds = append(cmds, m.list.SetItems(msg))
 	case tea.WindowSizeMsg:
-		m.Model.SetSize(msg.Width, msg.Height)
-		return m, nil
+		m.list.SetSize(msg.Width, msg.Height-1)
+	case tea.KeyMsg:
+		if msg.Type == tea.KeyEnter {
+			m.list.SetShowTitle(true)
+			cmds = append(cmds, m.list.StartSpinner())
+		}
 	}
-	list, cmd := m.Model.Update(msg)
-	m.Model = list
-	return m, cmd
+	list, cmd := m.list.Update(msg)
+	cmds = append(cmds, cmd)
+	m.list = &list
+	return m, tea.Batch(cmds...)
+}
+
+func (m listModel) View() string {
+	return "\n" + m.list.View()
 }
 
 func main() {

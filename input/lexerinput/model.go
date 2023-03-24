@@ -120,17 +120,17 @@ func (m *Model[T]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	return cmd
 }
 
-func (m *Model[T]) Error() error {
+func (m Model[T]) Error() error {
 	return m.err
 }
 
-func (m *Model[T]) unstyledView(text []rune, showCursor bool, viewMode input.ViewMode) string {
+func (m Model[T]) unstyledView(text []rune, showCursor bool, viewMode input.ViewMode) string {
 	viewBuilder := input.NewViewBuilder(m.CursorIndex(), m.formatters.Cursor, " ", showCursor)
 	viewBuilder.Render(text, 0, lipgloss.NewStyle())
 	return m.renderWithPlaceholder(viewBuilder, viewMode)
 }
 
-func (m *Model[T]) styledView(
+func (m Model[T]) styledView(
 	formatterTokens []parser.FormatterToken,
 	showCursor bool,
 	viewMode input.ViewMode,
@@ -146,7 +146,7 @@ func (m *Model[T]) styledView(
 	return m.renderWithPlaceholder(viewBuilder, viewMode)
 }
 
-func (m *Model[T]) renderWithPlaceholder(
+func (m Model[T]) renderWithPlaceholder(
 	viewBuilder *input.ViewBuilder,
 	viewMode input.ViewMode,
 ) string {
@@ -182,7 +182,7 @@ func (m *Model[T]) renderWithPlaceholder(
 	return m.prompt + viewBuilder.View()
 }
 
-func (m *Model[T]) View(viewMode input.ViewMode) string {
+func (m Model[T]) View(viewMode input.ViewMode) string {
 	showCursor := !m.textinput.Cursor.Blink
 	if viewMode == input.Static {
 		showCursor = false
@@ -194,7 +194,7 @@ func (m *Model[T]) View(viewMode input.ViewMode) string {
 	return m.styledView(m.formatterTokens, showCursor, viewMode)
 }
 
-func (m *Model[T]) FormatText(text string) string {
+func (m Model[T]) FormatText(text string) string {
 	if m.tokenFormatter == nil {
 		return m.unstyledView([]rune(text), false, input.Static)
 	}
@@ -206,15 +206,15 @@ func (m *Model[T]) Focus() tea.Cmd {
 	return m.textinput.Focus()
 }
 
-func (m *Model[T]) Focused() bool {
+func (m Model[T]) Focused() bool {
 	return m.textinput.Focused()
 }
 
-func (m *Model[T]) Value() string {
+func (m Model[T]) Value() string {
 	return m.textinput.Value()
 }
 
-func (m *Model[T]) Runes() []rune {
+func (m Model[T]) Runes() []rune {
 	return []rune(m.textinput.Value())
 }
 
@@ -237,11 +237,11 @@ func (m *Model[T]) Blur() {
 	m.textinput.Blur()
 }
 
-func (m *Model[T]) CursorIndex() int {
+func (m Model[T]) CursorIndex() int {
 	return m.textinput.Position()
 }
 
-func (m *Model[T]) CursorOffset() int {
+func (m Model[T]) CursorOffset() int {
 	cursorIndex := m.CursorIndex()
 	runesBeforeCursor := m.Runes()[:cursorIndex]
 	return runewidth.StringWidth(string(runesBeforeCursor))
@@ -264,7 +264,7 @@ func (m *Model[T]) SetFormatters(formatters Formatters) {
 	m.formatters = formatters
 }
 
-func (m *Model[T]) Prompt() string {
+func (m Model[T]) Prompt() string {
 	return m.prompt
 }
 
@@ -272,13 +272,13 @@ func (m *Model[T]) SetPrompt(prompt string) {
 	m.prompt = prompt
 }
 
-func (m *Model[T]) ShouldSelectSuggestion(suggestion suggestion.Suggestion[T]) bool {
+func (m Model[T]) ShouldSelectSuggestion(suggestion suggestion.Suggestion[T]) bool {
 	token := m.CurrentToken()
 	tokenStr := token.Value
 	return m.CursorIndex() == token.End() && tokenStr == suggestion.Text
 }
 
-func (m *Model[T]) currentToken(
+func (m Model[T]) currentToken(
 	runes []rune,
 	tokenPos int,
 	roundingBehavior input.RoundingBehavior,
@@ -294,15 +294,15 @@ func (m *Model[T]) currentToken(
 	)
 }
 
-func (m *Model[T]) CurrentToken() input.Token {
+func (m Model[T]) CurrentToken() input.Token {
 	return m.currentToken(m.Runes(), m.CursorIndex()-1, input.RoundUp)
 }
 
-func (m *Model[T]) CurrentTokenRoundDown() input.Token {
+func (m Model[T]) CurrentTokenRoundDown() input.Token {
 	return m.currentToken(m.Runes(), m.CursorIndex()-1, input.RoundDown)
 }
 
-func (m *Model[T]) FindLast(filter func(token input.Token, symbol string) bool) *input.Token {
+func (m Model[T]) FindLast(filter func(token input.Token, symbol string) bool) *input.Token {
 	currentToken := m.CurrentToken()
 	for i := currentToken.Index; i >= 0; i-- {
 		token := m.tokens[i]
@@ -315,7 +315,7 @@ func (m *Model[T]) FindLast(filter func(token input.Token, symbol string) bool) 
 	return nil
 }
 
-func (m *Model[T]) PreviousToken() *input.Token {
+func (m Model[T]) PreviousToken() *input.Token {
 	currentToken := m.CurrentToken()
 	if currentToken.Index <= 0 {
 		return nil
@@ -323,16 +323,16 @@ func (m *Model[T]) PreviousToken() *input.Token {
 	return &m.tokens[currentToken.Index-1]
 }
 
-func (m *Model[T]) SuggestionRunes(runes []rune) []rune {
+func (m Model[T]) SuggestionRunes(runes []rune) []rune {
 	token := m.currentToken(runes, m.CursorIndex()-1, input.RoundUp)
 	return []rune(token.Value)
 }
 
-func (m *Model[T]) Tokens() []input.Token {
+func (m Model[T]) Tokens() []input.Token {
 	return m.tokens
 }
 
-func (m *Model[T]) TokensBeforeCursor() []input.Token {
+func (m Model[T]) TokensBeforeCursor() []input.Token {
 	tokens := []input.Token{}
 	cursor := m.CursorIndex()
 	for _, token := range m.tokens {
@@ -351,7 +351,7 @@ func (m *Model[T]) TokensBeforeCursor() []input.Token {
 	return tokens
 }
 
-func (m *Model[T]) TokenValues() []string {
+func (m Model[T]) TokenValues() []string {
 	tokens := []string{}
 	for _, token := range m.tokens {
 		tokens = append(tokens, token.Value)
@@ -372,7 +372,7 @@ func (m *Model[T]) OnUpdateFinish(
 	return nil
 }
 
-func (m *Model[T]) IsDelimiterToken(token input.Token) bool {
+func (m Model[T]) IsDelimiterToken(token input.Token) bool {
 	// Dummy whitespace tokens won't be registered with the lexer so check them separately
 	return slices.Contains(m.delimiters, token.Value) ||
 		slices.Contains(m.delimiterTokens, token.Type) ||
@@ -408,15 +408,15 @@ func (m *Model[T]) OnSuggestionUnselected() {
 	m.setSelectedToken(nil)
 }
 
-func (m *Model[T]) ShouldClearSuggestions(prevText []rune, msg tea.KeyMsg) bool {
+func (m Model[T]) ShouldClearSuggestions(prevText []rune, msg tea.KeyMsg) bool {
 	return false
 }
 
-func (m *Model[T]) ShouldUnselectSuggestion(prevText []rune, msg tea.KeyMsg) bool {
+func (m Model[T]) ShouldUnselectSuggestion(prevText []rune, msg tea.KeyMsg) bool {
 	return true
 }
 
-func (m *Model[T]) CompletableTokenBeforeCursor() string {
+func (m Model[T]) CompletableTokenBeforeCursor() string {
 	token := m.CurrentToken()
 	if m.IsDelimiterToken(token) {
 		// Don't filter suggestions on delimiters
@@ -425,12 +425,12 @@ func (m *Model[T]) CompletableTokenBeforeCursor() string {
 	return string(m.currentTokenBeforeCursor(token))
 }
 
-func (m *Model[T]) CurrentTokenBeforeCursor() string {
+func (m Model[T]) CurrentTokenBeforeCursor() string {
 	token := m.CurrentToken()
 	return string(m.currentTokenBeforeCursor(token))
 }
 
-func (m *Model[T]) currentTokenBeforeCursor(token input.Token) []rune {
+func (m Model[T]) currentTokenBeforeCursor(token input.Token) []rune {
 	start := token.Start
 	cursor := m.CursorIndex()
 	if start > cursor {

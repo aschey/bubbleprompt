@@ -38,7 +38,7 @@ type Model[T any] struct {
 	ready                   bool
 	size                    tea.WindowSizeMsg
 	sequenceNumber          int
-	focusOnStart            bool
+	focus                   bool
 	err                     error
 }
 
@@ -51,7 +51,7 @@ func New[T any](
 		suggestionManager: dropdown.New(textInput),
 		inputHandler:      inputHandler,
 		textInput:         textInput,
-		focusOnStart:      true,
+		focus:             true,
 		renderer:          renderer.NewUnmanagedRenderer(),
 	}
 
@@ -111,7 +111,7 @@ func MsgFilter(_ tea.Model, msg tea.Msg) tea.Msg {
 }
 
 func (m Model[T]) getInitFocus() tea.Cmd {
-	if m.focusOnStart {
+	if m.focus {
 		return Focus()
 	} else {
 		return Blur()

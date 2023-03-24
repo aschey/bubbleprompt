@@ -79,19 +79,29 @@ func (m Model[T]) Init() tea.Cmd {
 func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmds := []tea.Cmd{}
 	promptModel, cmd := m.promptModel.Update(msg)
+
 	m.promptModel = promptModel.(prompt.Model[T])
 	cmds = append(cmds, cmd)
-
+	updateContent := true
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.contentModel, cmd = m.contentModel.Update(tea.WindowSizeMsg{
 			Width:  msg.Width,
 			Height: msg.Height - m.searchbarHeight,
 		})
-	default:
-		m.contentModel, cmd = m.contentModel.Update(msg)
+		cmds = append(cmds, cmd)
+		updateContent = false
+	case tea.KeyMsg:
+		switch msg.Type {
+		case tea.KeyEnter:
+			cmds = append(cmds, prompt.Blur())
+		}
 	}
-	cmds = append(cmds, cmd)
+
+	if updateContent {
+		m.contentModel, cmd = m.contentModel.Update(msg)
+		cmds = append(cmds, cmd)
+	}
 
 	return m, tea.Batch(cmds...)
 }

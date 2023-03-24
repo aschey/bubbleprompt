@@ -29,11 +29,11 @@ func (m *Model[T, G]) OnUpdateStart(msg tea.Msg) tea.Cmd {
 	return cmd
 }
 
-func (m *Model[T, G]) Parsed() *G {
+func (m Model[T, G]) Parsed() *G {
 	return m.parsedText
 }
 
-func (m *Model[T, G]) ParsedBeforeCursor() (*G, error) {
+func (m Model[T, G]) ParsedBeforeCursor() (*G, error) {
 	return m.parser.Parse(string(m.Runes()[:m.CursorIndex()]))
 }
 
@@ -47,7 +47,7 @@ func (m *Model[T, G]) updateParsed() {
 	}
 }
 
-func (m *Model[T, G]) Error() error {
+func (m Model[T, G]) Error() error {
 	if m.err != nil {
 		return m.err
 	}
