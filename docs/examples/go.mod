@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/aschey/bubbleprompt v0.0.0
-	github.com/charmbracelet/bubbletea v0.23.2
+	github.com/charmbracelet/bubbletea v0.24.2
 	github.com/charmbracelet/lipgloss v0.7.1
 
 )

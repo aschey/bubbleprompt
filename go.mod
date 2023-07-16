@@ -6,8 +6,8 @@ require (
 	github.com/alecthomas/chroma/v2 v2.5.0
 	github.com/alecthomas/participle/v2 v2.0.0-beta.5
 	github.com/aschey/tui-tester v0.0.0-20221013025214-ee61efd9b285
-	github.com/charmbracelet/bubbles v0.15.0
-	github.com/charmbracelet/bubbletea v0.23.2
+	github.com/charmbracelet/bubbles v0.16.1
+	github.com/charmbracelet/bubbletea v0.24.2
 	github.com/charmbracelet/lipgloss v0.7.1
 	github.com/mattn/go-runewidth v0.0.14
 	github.com/muesli/ansi v0.0.0-20230307104941-78d3738a59f2
