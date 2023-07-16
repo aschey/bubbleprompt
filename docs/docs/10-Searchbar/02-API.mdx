@@ -43,13 +43,13 @@ type Model[T any] struct {
 func New[T any](inputHandler prompt.InputHandler[T], textInput input.Input[T], contentModel tea.Model, options ...Option[T]) Model[T]
 ```
 
-### func \(Model\[T\]\) [BaseView](<https://github.com/aschey/bubbleprompt/blob/main/searchbar/searchbar.go#L111>)
+### func \(Model\[T\]\) [BaseView](<https://github.com/aschey/bubbleprompt/blob/main/searchbar/searchbar.go#L121>)
 
 ```go
 func (m Model[T]) BaseView() string
 ```
 
-### func \(Model\[T\]\) [Body](<https://github.com/aschey/bubbleprompt/blob/main/searchbar/searchbar.go#L120>)
+### func \(Model\[T\]\) [Body](<https://github.com/aschey/bubbleprompt/blob/main/searchbar/searchbar.go#L130>)
 
 ```go
 func (m Model[T]) Body() string
@@ -61,31 +61,31 @@ func (m Model[T]) Body() string
 func (m Model[T]) Init() tea.Cmd
 ```
 
-### func \(Model\[T\]\) [Input](<https://github.com/aschey/bubbleprompt/blob/main/searchbar/searchbar.go#L115>)
+### func \(Model\[T\]\) [Input](<https://github.com/aschey/bubbleprompt/blob/main/searchbar/searchbar.go#L125>)
 
 ```go
 func (m Model[T]) Input() string
 ```
 
-### func \(Model\[T\]\) [OverlayView](<https://github.com/aschey/bubbleprompt/blob/main/searchbar/searchbar.go#L125>)
+### func \(Model\[T\]\) [OverlayView](<https://github.com/aschey/bubbleprompt/blob/main/searchbar/searchbar.go#L135>)
 
 ```go
 func (m Model[T]) OverlayView() string
 ```
 
-### func \(Model\[T\]\) [OverlayX](<https://github.com/aschey/bubbleprompt/blob/main/searchbar/searchbar.go#L103>)
+### func \(Model\[T\]\) [OverlayX](<https://github.com/aschey/bubbleprompt/blob/main/searchbar/searchbar.go#L113>)
 
 ```go
 func (m Model[T]) OverlayX() int
 ```
 
-### func \(Model\[T\]\) [OverlayY](<https://github.com/aschey/bubbleprompt/blob/main/searchbar/searchbar.go#L107>)
+### func \(Model\[T\]\) [OverlayY](<https://github.com/aschey/bubbleprompt/blob/main/searchbar/searchbar.go#L117>)
 
 ```go
 func (m Model[T]) OverlayY() int
 ```
 
-### func \(Model\[T\]\) [PromptModel](<https://github.com/aschey/bubbleprompt/blob/main/searchbar/searchbar.go#L99>)
+### func \(Model\[T\]\) [PromptModel](<https://github.com/aschey/bubbleprompt/blob/main/searchbar/searchbar.go#L109>)
 
 ```go
 func (m Model[T]) PromptModel() *prompt.Model[T]
@@ -97,7 +97,7 @@ func (m Model[T]) PromptModel() *prompt.Model[T]
 func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd)
 ```
 
-### func \(Model\[T\]\) [View](<https://github.com/aschey/bubbleprompt/blob/main/searchbar/searchbar.go#L133>)
+### func \(Model\[T\]\) [View](<https://github.com/aschey/bubbleprompt/blob/main/searchbar/searchbar.go#L143>)
 
 ```go
 func (m Model[T]) View() string

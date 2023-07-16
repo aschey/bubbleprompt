@@ -14,10 +14,10 @@ import "github.com/aschey/bubbleprompt/input/parserinput"
 
 - [type Model](<#type-model>)
   - [func NewModel[T any, G any](parser parser.Parser[G], options ...lexerinput.Option[T]) *Model[T, G]](<#func-newmodel>)
-  - [func \(m \*Model\[T, G\]\) Error\(\) error](<#func-modelt-g-error>)
+  - [func \(m Model\[T, G\]\) Error\(\) error](<#func-modelt-g-error>)
   - [func \(m \*Model\[T, G\]\) OnUpdateStart\(msg tea.Msg\) tea.Cmd](<#func-modelt-g-onupdatestart>)
-  - [func \(m \*Model\[T, G\]\) Parsed\(\) \*G](<#func-modelt-g-parsed>)
-  - [func \(m \*Model\[T, G\]\) ParsedBeforeCursor\(\) \(\*G, error\)](<#func-modelt-g-parsedbeforecursor>)
+  - [func \(m Model\[T, G\]\) Parsed\(\) \*G](<#func-modelt-g-parsed>)
+  - [func \(m Model\[T, G\]\) ParsedBeforeCursor\(\) \(\*G, error\)](<#func-modelt-g-parsedbeforecursor>)
   - [func \(m \*Model\[T, G\]\) SetValue\(value string\)](<#func-modelt-g-setvalue>)
 
 
@@ -35,10 +35,10 @@ type Model[T any, G any] struct {
 func NewModel[T any, G any](parser parser.Parser[G], options ...lexerinput.Option[T]) *Model[T, G]
 ```
 
-### func \(\*Model\[T, G\]\) [Error](<https://github.com/aschey/bubbleprompt/blob/main/input/parserinput/model.go#L50>)
+### func \(Model\[T, G\]\) [Error](<https://github.com/aschey/bubbleprompt/blob/main/input/parserinput/model.go#L50>)
 
 ```go
-func (m *Model[T, G]) Error() error
+func (m Model[T, G]) Error() error
 ```
 
 ### func \(\*Model\[T, G\]\) [OnUpdateStart](<https://github.com/aschey/bubbleprompt/blob/main/input/parserinput/model.go#L26>)
@@ -47,16 +47,16 @@ func (m *Model[T, G]) Error() error
 func (m *Model[T, G]) OnUpdateStart(msg tea.Msg) tea.Cmd
 ```
 
-### func \(\*Model\[T, G\]\) [Parsed](<https://github.com/aschey/bubbleprompt/blob/main/input/parserinput/model.go#L32>)
+### func \(Model\[T, G\]\) [Parsed](<https://github.com/aschey/bubbleprompt/blob/main/input/parserinput/model.go#L32>)
 
 ```go
-func (m *Model[T, G]) Parsed() *G
+func (m Model[T, G]) Parsed() *G
 ```
 
-### func \(\*Model\[T, G\]\) [ParsedBeforeCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/parserinput/model.go#L36>)
+### func \(Model\[T, G\]\) [ParsedBeforeCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/parserinput/model.go#L36>)
 
 ```go
-func (m *Model[T, G]) ParsedBeforeCursor() (*G, error)
+func (m Model[T, G]) ParsedBeforeCursor() (*G, error)
 ```
 
 ### func \(\*Model\[T, G\]\) [SetValue](<https://github.com/aschey/bubbleprompt/blob/main/input/parserinput/model.go#L21>)

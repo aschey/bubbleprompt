@@ -222,7 +222,7 @@ func main() {
   - [func New[T any](opts ...Option[T]) *Model[T]](<#func-new>)
   - [func \(m \*Model\[T\]\) ArgsBeforeCursor\(\) \[\]string](<#func-modelt-argsbeforecursor>)
   - [func \(m \*Model\[T\]\) Blur\(\)](<#func-modelt-blur>)
-  - [func \(m \*Model\[T\]\) CommandBeforeCursor\(\) string](<#func-modelt-commandbeforecursor>)
+  - [func \(m Model\[T\]\) CommandBeforeCursor\(\) string](<#func-modelt-commandbeforecursor>)
   - [func \(m Model\[T\]\) CommandCompleted\(\) bool](<#func-modelt-commandcompleted>)
   - [func \(m \*Model\[T\]\) CompletedArgsBeforeCursor\(\) \[\]string](<#func-modelt-completedargsbeforecursor>)
   - [func \(m Model\[T\]\) CurrentToken\(\) input.Token](<#func-modelt-currenttoken>)
@@ -246,10 +246,10 @@ func main() {
   - [func \(m \*Model\[T\]\) OnUpdateFinish\(msg tea.Msg, suggestion \*suggestion.Suggestion\[CommandMetadata\[T\]\], isSelected bool\) tea.Cmd](<#func-modelt-onupdatefinish>)
   - [func \(m \*Model\[T\]\) OnUpdateStart\(msg tea.Msg\) tea.Cmd](<#func-modelt-onupdatestart>)
   - [func \(m \*Model\[T\]\) ParseUsage\(placeholders string\) \(\[\]PositionalArg, error\)](<#func-modelt-parseusage>)
-  - [func \(m \*Model\[T\]\) ParsedValue\(\) Statement](<#func-modelt-parsedvalue>)
+  - [func \(m Model\[T\]\) ParsedValue\(\) Statement](<#func-modelt-parsedvalue>)
   - [func \(m \*Model\[T\]\) Prompt\(\) string](<#func-modelt-prompt>)
   - [func \(m \*Model\[T\]\) ResetValue\(\)](<#func-modelt-resetvalue>)
-  - [func \(m \*Model\[T\]\) Runes\(\) \[\]rune](<#func-modelt-runes>)
+  - [func \(m Model\[T\]\) Runes\(\) \[\]rune](<#func-modelt-runes>)
   - [func \(m \*Model\[T\]\) SetCursor\(pos int\)](<#func-modelt-setcursor>)
   - [func \(m \*Model\[T\]\) SetCursorMode\(cursorMode cursor.Mode\) tea.Cmd](<#func-modelt-setcursormode>)
   - [func \(m \*Model\[T\]\) SetFormatters\(formatters Formatters\)](<#func-modelt-setformatters>)
@@ -258,10 +258,10 @@ func main() {
   - [func \(m \*Model\[T\]\) ShouldClearSuggestions\(prevText \[\]rune, msg tea.KeyMsg\) bool](<#func-modelt-shouldclearsuggestions>)
   - [func \(m \*Model\[T\]\) ShouldSelectSuggestion\(suggestion suggestion.Suggestion\[CommandMetadata\[T\]\]\) bool](<#func-modelt-shouldselectsuggestion>)
   - [func \(m \*Model\[T\]\) ShouldUnselectSuggestion\(prevRunes \[\]rune, msg tea.KeyMsg\) bool](<#func-modelt-shouldunselectsuggestion>)
-  - [func \(m \*Model\[T\]\) SuggestionRunes\(runes \[\]rune\) \[\]rune](<#func-modelt-suggestionrunes>)
+  - [func \(m Model\[T\]\) SuggestionRunes\(runes \[\]rune\) \[\]rune](<#func-modelt-suggestionrunes>)
   - [func \(m Model\[T\]\) Tokens\(\) \[\]input.Token](<#func-modelt-tokens>)
   - [func \(m Model\[T\]\) TokensBeforeCursor\(\) \[\]input.Token](<#func-modelt-tokensbeforecursor>)
-  - [func \(m \*Model\[T\]\) Value\(\) string](<#func-modelt-value>)
+  - [func \(m Model\[T\]\) Value\(\) string](<#func-modelt-value>)
   - [func \(m Model\[T\]\) Values\(\) \[\]string](<#func-modelt-values>)
   - [func \(m Model\[T\]\) ValuesBeforeCursor\(\) \[\]string](<#func-modelt-valuesbeforecursor>)
   - [func \(m Model\[T\]\) View\(viewMode input.ViewMode\) string](<#func-modelt-view>)
@@ -569,10 +569,10 @@ func (m *Model[T]) Blur()
 
 Blur removes the focus from the input.
 
-### func \(\*Model\[T\]\) [CommandBeforeCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L544>)
+### func \(Model\[T\]\) [CommandBeforeCursor](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L544>)
 
 ```go
-func (m *Model[T]) CommandBeforeCursor() string
+func (m Model[T]) CommandBeforeCursor() string
 ```
 
 CommandBeforeCursor returns the portion of the command (first input token) before the cursor position.
@@ -986,10 +986,10 @@ normal-arg
 </p>
 </details>
 
-### func \(\*Model\[T\]\) [ParsedValue](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L539>)
+### func \(Model\[T\]\) [ParsedValue](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L539>)
 
 ```go
-func (m *Model[T]) ParsedValue() Statement
+func (m Model[T]) ParsedValue() Statement
 ```
 
 ParsedValue returns the input parsed into a [Statement](/input/commandinput/api#type-statement).
@@ -1010,10 +1010,10 @@ func (m *Model[T]) ResetValue()
 
 ResetValue clears the entire input.
 
-### func \(\*Model\[T\]\) [Runes](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L534>)
+### func \(Model\[T\]\) [Runes](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L534>)
 
 ```go
-func (m *Model[T]) Runes() []rune
+func (m Model[T]) Runes() []rune
 ```
 
 Runes returns the raw text entered by the user as a list of runes.
@@ -1087,10 +1087,10 @@ func (m *Model[T]) ShouldUnselectSuggestion(prevRunes []rune, msg tea.KeyMsg) bo
 ShouldUnselectSuggestion is part of the [input.Input](/input/api#type-input) interface.
 It should not be invoked by users of this library.
 
-### func \(\*Model\[T\]\) [SuggestionRunes](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L508>)
+### func \(Model\[T\]\) [SuggestionRunes](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L508>)
 
 ```go
-func (m *Model[T]) SuggestionRunes(runes []rune) []rune
+func (m Model[T]) SuggestionRunes(runes []rune) []rune
 ```
 
 SuggestionRunes is part of the [input.Input](/input/api#type-input) interface. It should not be invoked by users of this library.
@@ -1111,10 +1111,10 @@ func (m Model[T]) TokensBeforeCursor() []input.Token
 
 TokensBeforeCursor returns the tokenized input before the cursor position.
 
-### func \(\*Model\[T\]\) [Value](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L527>)
+### func \(Model\[T\]\) [Value](<https://github.com/aschey/bubbleprompt/blob/main/input/commandinput/model.go#L527>)
 
 ```go
-func (m *Model[T]) Value() string
+func (m Model[T]) Value() string
 ```
 
 Value returns the raw text entered by the user.
