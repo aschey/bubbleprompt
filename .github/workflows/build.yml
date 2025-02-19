@@ -10,7 +10,7 @@ jobs:
       - name: "Set up Go"
         uses: actions/setup-go@v3
         with:
-          go-version: 1.20.x
+          go-version: 1.24.x
       - name: Test
         # Set TERM variable to force color output
         # Unset CI var because of https://github.com/muesli/termenv/commit/1111971edffa5f9ed2a38bd57f7e434b424f7b29
