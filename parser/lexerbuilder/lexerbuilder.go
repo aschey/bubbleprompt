@@ -7,7 +7,6 @@ import (
 
 type LexerBuilder struct {
 	rules        []Rule
-	lexerOptions []lexer.Option
 	chromaConfig *chroma.Config
 }
 
@@ -41,7 +40,7 @@ func (b *LexerBuilder) BuildRuleLists() ([]lexer.SimpleRule, []chroma.Rule) {
 
 func (b *LexerBuilder) BuildLexers() (*lexer.StatefulDefinition, *chroma.RegexLexer) {
 	lexerRules, chromaRules := b.BuildRuleLists()
-	lex := lexer.MustSimple(lexerRules, b.lexerOptions...)
+	lex := lexer.MustSimple(lexerRules)
 
 	styleLexer := chroma.MustNewLexer(b.chromaConfig,
 		func() chroma.Rules { return chroma.Rules{"root": chromaRules} })
