@@ -201,7 +201,7 @@ func main() {
 
 	statusBarHeight := 1
 	padding := 1
-	promptModel := prompt.New[cmdMetadata](
+	promptModel := prompt.New(
 		inputModel,
 		textInput,
 		prompt.WithViewportRenderer[cmdMetadata](
