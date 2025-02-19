@@ -332,13 +332,11 @@ func (c Model[T]) Render(paddingSize int) string {
 	if hasBorder {
 		borderPadding := 2
 		return c.formatters.Suggestions.
-			Copy().
 			MarginLeft(paddingSize - borderPadding).
 			PaddingLeft(1).
 			Render(allPrompts)
 	} else {
 		return c.formatters.Suggestions.
-			Copy().
 			PaddingLeft(paddingSize).
 			Render(allPrompts)
 	}
